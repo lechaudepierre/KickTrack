@@ -1,3 +1,10 @@
+export interface DailyStats {
+    date: string; // YYYY-MM-DD
+    gamesPlayed: number;
+    wins: number;
+    goalsScored: number;
+}
+
 export interface UserStats {
     totalGames: number;
     wins: number;
@@ -5,6 +12,7 @@ export interface UserStats {
     goalsScored: number;
     goalsConceded: number;
     winRate: number;
+    history?: Record<string, DailyStats>; // Key is YYYY-MM-DD
 }
 
 export interface User {

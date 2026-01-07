@@ -6,7 +6,13 @@ import {
     updateDoc,
     arrayUnion,
     onSnapshot,
-    Unsubscribe
+    Unsubscribe,
+    runTransaction,
+    query,
+    where,
+    orderBy,
+    getDocs,
+    limit
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
 import { Game, Goal, GoalPosition, Player, GameResults } from '@/types';
@@ -162,6 +168,76 @@ export async function endGame(gameId: string): Promise<GameResults> {
         winner
     });
 
+    // Update player stats
+    if (winner !== undefined) {
+        const goalsByPlayer: Record<string, number> = {};
+        game.goals.forEach(goal => {
+            goalsByPlayer[goal.scoredBy] = (goalsByPlayer[goal.scoredBy] || 0) + 1;
+        });
+
+        const updatePromises = [];
+
+        for (let teamIndex = 0; teamIndex < game.teams.length; teamIndex++) {
+            const team = game.teams[teamIndex];
+            const isWinner = teamIndex === winner;
+            const goalsConceded = game.teams[1 - teamIndex].score;
+
+            for (const player of team.players) {
+                const playerRef = doc(db, 'users', player.userId);
+
+                updatePromises.push(runTransaction(db, async (transaction) => {
+                    const userDoc = await transaction.get(playerRef);
+                    if (!userDoc.exists()) return;
+
+                    const userData = userDoc.data();
+                    const currentStats = userData.stats || {
+                        totalGames: 0,
+                        wins: 0,
+                        losses: 0,
+                        goalsScored: 0,
+                        goalsConceded: 0,
+                        winRate: 0
+                    };
+
+                    const today = new Date().toISOString().split('T')[0];
+                    const currentHistory = currentStats.history || {};
+                    const dailyStats = currentHistory[today] || {
+                        date: today,
+                        gamesPlayed: 0,
+                        wins: 0,
+                        goalsScored: 0
+                    };
+
+                    const newDailyStats = {
+                        date: today,
+                        gamesPlayed: dailyStats.gamesPlayed + 1,
+                        wins: dailyStats.wins + (isWinner ? 1 : 0),
+                        goalsScored: dailyStats.goalsScored + (goalsByPlayer[player.userId] || 0)
+                    };
+
+                    const newStats = {
+                        totalGames: currentStats.totalGames + 1,
+                        wins: currentStats.wins + (isWinner ? 1 : 0),
+                        losses: currentStats.losses + (isWinner ? 0 : 1),
+                        goalsScored: currentStats.goalsScored + (goalsByPlayer[player.userId] || 0),
+                        goalsConceded: currentStats.goalsConceded + goalsConceded,
+                        winRate: 0,
+                        history: {
+                            ...currentHistory,
+                            [today]: newDailyStats
+                        }
+                    };
+
+                    newStats.winRate = newStats.totalGames > 0 ? newStats.wins / newStats.totalGames : 0;
+
+                    transaction.update(playerRef, { stats: newStats });
+                }));
+            }
+        }
+
+        await Promise.all(updatePromises);
+    }
+
     return calculateGameResults({ ...game, status: 'completed', winner });
 }
 
@@ -172,6 +248,26 @@ export async function abandonGame(gameId: string): Promise<void> {
     await updateDoc(gameRef, {
         status: 'abandoned'
     });
+}
+
+// Get user's recent games
+export async function getUserGames(userId: string, limitCount: number = 10): Promise<Game[]> {
+    const db = getFirebaseDb();
+
+    // Try to query by playerIds if available, otherwise fallback (or just try playerIds first)
+    // Since we just added playerIds, old games won't have it.
+    // But for new games it will work.
+    // For now let's try querying by playerIds.
+
+    const q = query(
+        collection(db, GAMES_COLLECTION),
+        where('playerIds', 'array-contains', userId),
+        orderBy('startedAt', 'desc'),
+        limit(limitCount)
+    );
+
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => doc.data() as Game);
 }
 
 // Calculate game results

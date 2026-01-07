@@ -1,0 +1,65 @@
+@reference "../../app/globals.css";
+
+.container {
+    @apply flex flex-col items-center;
+}
+
+.qrWrapper {
+    @apply bg-white p-4 rounded-2xl shadow-xl;
+}
+
+.pinContainer {
+    @apply mt-6 text-center;
+}
+
+.pinLabel {
+    @apply text-slate-400 text-sm mb-2;
+}
+
+.pinBox {
+    @apply bg-slate-800/50 border border-slate-700 rounded-xl px-8 py-4;
+}
+
+.pinCode {
+    @apply text-4xl font-mono font-bold tracking-[0.3em] text-emerald-400;
+}
+
+.timer {
+    @apply mt-6 flex items-center gap-2 px-4 py-2 rounded-full border transition-colors;
+}
+
+.timerNormal {
+    @apply bg-slate-800/50 border-slate-700;
+}
+
+.timerLow {
+    @apply bg-red-500/20 border-red-500/30;
+}
+
+.timerDot {
+    @apply w-2 h-2 rounded-full;
+}
+
+.timerDotNormal {
+    @apply bg-emerald-500;
+}
+
+.timerDotLow {
+    @apply bg-red-500 animate-pulse;
+}
+
+.timerText {
+    @apply font-mono text-lg;
+}
+
+.timerTextNormal {
+    @apply text-slate-300;
+}
+
+.timerTextLow {
+    @apply text-red-400;
+}
+
+.timerLabel {
+    @apply text-slate-500 text-sm;
+}

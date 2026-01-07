@@ -37,6 +37,7 @@ export interface Game {
     goals: Goal[]; // Flat list of goals for timeline
     winner?: 0 | 1;
     startedAt: Date; // Alias for startTime to match some usages
+    playerIds?: string[]; // For easier querying
 }
 
 export type GameFormat = '1v1' | '2v2';

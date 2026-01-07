@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Player, Team, TeamColor } from '@/types';
 import { UserIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
+import styles from './TeamSetup.module.css';
 
 interface TeamSetupProps {
     players: Player[];
@@ -11,13 +12,13 @@ interface TeamSetupProps {
     onStartGame: (teams: [Team, Team]) => void;
 }
 
-const TEAM_COLORS: { id: TeamColor; hex: string; label: string }[] = [
-    { id: 'red', hex: '#EF4444', label: 'Rouge' },
-    { id: 'blue', hex: '#3B82F6', label: 'Bleu' },
-    { id: 'green', hex: '#10B981', label: 'Vert' },
-    { id: 'yellow', hex: '#F59E0B', label: 'Jaune' },
-    { id: 'orange', hex: '#F97316', label: 'Orange' },
-    { id: 'purple', hex: '#A855F7', label: 'Violet' }
+const TEAM_COLORS: { id: TeamColor; label: string }[] = [
+    { id: 'red', label: 'Rouge' },
+    { id: 'blue', label: 'Bleu' },
+    { id: 'green', label: 'Vert' },
+    { id: 'yellow', label: 'Jaune' },
+    { id: 'orange', label: 'Orange' },
+    { id: 'purple', label: 'Violet' }
 ];
 
 export default function TeamSetup({ players, format, onStartGame }: TeamSetupProps) {
@@ -89,50 +90,44 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
     };
 
     const renderTeamCard = (teamNum: 1 | 2, currentPlayers: Player[], color: TeamColor, setColor: (c: TeamColor) => void) => {
-        const teamColorObj = TEAM_COLORS.find(c => c.id === color)!;
-
         return (
-            <div
-                className="bg-[#1E293B] border-4 rounded-xl p-4 transition-colors"
-                style={{ borderColor: teamColorObj.hex }}
-            >
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-black text-white uppercase tracking-wider">Équipe {teamNum}</h3>
+            <div className={`${styles.teamCard} ${styles[color]}`}>
+                <div className={styles.cardHeader}>
+                    <h3 className={styles.teamName}>Équipe {teamNum}</h3>
 
                     {/* Color Picker */}
-                    <div className="flex gap-1">
+                    <div className={styles.colorPicker}>
                         {TEAM_COLORS.map((c) => (
                             <button
                                 key={c.id}
                                 onClick={() => setColor(c.id)}
-                                className={`w-6 h-6 rounded-full border-2 transition-transform ${color === c.id ? 'scale-110 border-white' : 'border-transparent opacity-50 hover:opacity-100'}`}
-                                style={{ backgroundColor: c.hex }}
+                                className={`${styles.colorButton} ${styles[c.id]} ${color === c.id ? styles.colorButtonActive : ''}`}
                                 title={c.label}
                             />
                         ))}
                     </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className={styles.playerList}>
                     {currentPlayers.map((player) => (
                         <div
                             key={player.userId}
-                            className="flex items-center gap-3 p-3 bg-[#0F172A] rounded-lg border border-[#334155]"
+                            className={styles.playerItem}
                         >
-                            <div className="w-8 h-8 rounded-full bg-[#334155] flex items-center justify-center text-white font-bold text-xs">
+                            <div className={styles.playerAvatar}>
                                 {player.username.charAt(0).toUpperCase()}
                             </div>
-                            <span className="text-white font-medium truncate flex-1">{player.username}</span>
+                            <span className={styles.playerName}>{player.username}</span>
                             <button
                                 onClick={() => handleSwapPlayer(player, teamNum)}
-                                className="text-[#94A3B8] hover:text-white text-xs font-bold uppercase"
+                                className={styles.swapButton}
                             >
                                 Changer
                             </button>
                         </div>
                     ))}
                     {currentPlayers.length === 0 && (
-                        <div className="p-4 text-center text-[#94A3B8] text-sm italic border border-dashed border-[#334155] rounded-lg">
+                        <div className={styles.emptyState}>
                             Aucun joueur
                         </div>
                     )}
@@ -142,17 +137,17 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
     };
 
     return (
-        <div className="flex flex-col gap-6">
-            <div className="text-center">
-                <h2 className="text-2xl font-black text-white mb-2">Préparation des équipes</h2>
-                <p className="text-[#94A3B8]">Choisissez vos couleurs et vos coéquipiers</p>
+        <div className={styles.container}>
+            <div className={styles.header}>
+                <h2 className={styles.title}>Préparation des équipes</h2>
+                <p className={styles.subtitle}>Choisissez vos couleurs et vos coéquipiers</p>
             </div>
 
-            <div className="grid gap-6">
+            <div className={styles.grid}>
                 {renderTeamCard(1, team1Players, team1Color, setTeam1Color)}
 
-                <div className="flex justify-center items-center">
-                    <div className="w-10 h-10 rounded-full bg-[#0F172A] border-2 border-[#334155] flex items-center justify-center text-[#94A3B8] font-black text-xs z-10">
+                <div className={styles.vsContainer}>
+                    <div className={styles.vsCircle}>
                         VS
                     </div>
                 </div>
@@ -163,7 +158,7 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
             <button
                 onClick={handleStart}
                 disabled={team1Color === team2Color}
-                className="w-full mt-4"
+                className={styles.startButtonWrapper}
             >
                 <div className="btn-primary">
                     <div className="btn-primary-shadow" />

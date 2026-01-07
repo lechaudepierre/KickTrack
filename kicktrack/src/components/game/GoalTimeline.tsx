@@ -2,6 +2,7 @@
 
 import { Goal, GoalPosition } from '@/types';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import styles from './GoalTimeline.module.css';
 
 interface GoalTimelineProps {
     goals: Goal[];
@@ -19,14 +20,14 @@ const positionLabels: Record<GoalPosition, string> = {
 export default function GoalTimeline({ goals, onRemoveGoal, canRemove = false }: GoalTimelineProps) {
     if (goals.length === 0) {
         return (
-            <div className="text-center py-8 text-slate-500">
+            <div className={styles.emptyContainer}>
                 Aucun but pour le moment
             </div>
         );
     }
 
     return (
-        <div className="space-y-2 max-h-48 overflow-y-auto">
+        <div className={styles.timelineContainer}>
             {[...goals].reverse().map((goal, index) => {
                 const isLastGoal = index === 0;
                 const goalTime = goal.timestamp instanceof Date
@@ -36,27 +37,23 @@ export default function GoalTimeline({ goals, onRemoveGoal, canRemove = false }:
                 return (
                     <div
                         key={goal.id || index}
-                        className={`flex items-center gap-3 p-3 rounded-xl transition-all ${goal.teamIndex === 0
-                            ? 'bg-blue-500/10 border border-blue-500/20'
-                            : 'bg-rose-500/10 border border-rose-500/20'
-                            }`}
+                        className={`${styles.goalItem} ${goal.teamIndex === 0 ? styles.goalItemTeam0 : styles.goalItemTeam1}`}
                     >
                         {/* Team indicator */}
-                        <div className={`w-2 h-8 rounded-full ${goal.teamIndex === 0 ? 'bg-blue-500' : 'bg-rose-500'
-                            }`} />
+                        <div className={`${styles.teamIndicator} ${goal.teamIndex === 0 ? styles.teamIndicator0 : styles.teamIndicator1}`} />
 
                         {/* Goal info */}
-                        <div className="flex-1 min-w-0">
-                            <p className="font-medium text-white truncate">
+                        <div className={styles.goalInfo}>
+                            <p className={styles.scorerName}>
                                 {goal.scorerName}
                             </p>
-                            <p className="text-xs text-slate-400">
+                            <p className={styles.goalPosition}>
                                 {goal.position ? positionLabels[goal.position] : 'Inconnu'}
                             </p>
                         </div>
 
                         {/* Time */}
-                        <span className="text-xs text-slate-500 font-mono">
+                        <span className={styles.timestamp}>
                             {goalTime.toLocaleTimeString('fr-FR', {
                                 hour: '2-digit',
                                 minute: '2-digit'
@@ -67,9 +64,9 @@ export default function GoalTimeline({ goals, onRemoveGoal, canRemove = false }:
                         {canRemove && isLastGoal && (
                             <button
                                 onClick={() => goal.id && onRemoveGoal?.(goal.id)}
-                                className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                                className={styles.removeButton}
                             >
-                                <XMarkIcon className="h-4 w-4" />
+                                <XMarkIcon className={styles.removeIcon} />
                             </button>
                         )}
                     </div>

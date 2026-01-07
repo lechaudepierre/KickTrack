@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { formatTime } from '@/lib/utils/code-generator';
+import styles from './GameTimer.module.css';
 
 interface GameTimerProps {
     startedAt: Date;
@@ -12,9 +13,20 @@ export default function GameTimer({ startedAt, isRunning = true }: GameTimerProp
     const [elapsed, setElapsed] = useState(0);
 
     useEffect(() => {
-        if (!isRunning) return;
+        if (!isRunning || !startedAt) return;
 
-        const start = startedAt instanceof Date ? startedAt : new Date(startedAt);
+        let start: Date;
+        // Handle Firestore Timestamp (has toDate method)
+        if (startedAt && typeof (startedAt as any).toDate === 'function') {
+            start = (startedAt as any).toDate();
+        } else {
+            start = startedAt instanceof Date ? startedAt : new Date(startedAt);
+        }
+
+        if (isNaN(start.getTime())) {
+            setElapsed(0);
+            return;
+        }
 
         const updateTimer = () => {
             const now = new Date();
@@ -31,9 +43,9 @@ export default function GameTimer({ startedAt, isRunning = true }: GameTimerProp
     const seconds = elapsed % 60;
 
     return (
-        <div className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-full">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="font-mono text-lg text-slate-300">
+        <div className={styles.container}>
+            <div className={styles.dot} />
+            <span className={styles.time}>
                 {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
             </span>
         </div>

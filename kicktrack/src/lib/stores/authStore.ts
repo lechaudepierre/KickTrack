@@ -43,15 +43,24 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
 
         // Dynamic import for client-side only
-        let unsubscribe: (() => void) | undefined;
+        let authUnsubscribe: (() => void) | undefined;
+        let userUnsubscribe: (() => void) | undefined;
 
-        import('@/lib/firebase/auth').then(({ onAuthChange, getCurrentUser }) => {
-            unsubscribe = onAuthChange(async (firebaseUser: FirebaseUser | null) => {
+        import('@/lib/firebase/auth').then(({ onAuthChange, subscribeToUser }) => {
+            authUnsubscribe = onAuthChange(async (firebaseUser: FirebaseUser | null) => {
                 set({ firebaseUser, isLoading: true });
 
+                // Clean up previous user subscription if exists
+                if (userUnsubscribe) {
+                    userUnsubscribe();
+                    userUnsubscribe = undefined;
+                }
+
                 if (firebaseUser) {
-                    const userData = await getCurrentUser();
-                    set({ user: userData, isAuthenticated: !!userData, isLoading: false });
+                    // Subscribe to real-time user updates
+                    userUnsubscribe = subscribeToUser(firebaseUser.uid, (userData) => {
+                        set({ user: userData, isAuthenticated: !!userData, isLoading: false });
+                    });
                 } else {
                     set({ user: null, isAuthenticated: false, isLoading: false });
                 }
@@ -59,7 +68,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         });
 
         return () => {
-            if (unsubscribe) unsubscribe();
+            if (authUnsubscribe) authUnsubscribe();
+            if (userUnsubscribe) userUnsubscribe();
         };
     }
 }));

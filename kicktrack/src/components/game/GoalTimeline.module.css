@@ -1,0 +1,57 @@
+@reference "../../app/globals.css";
+
+.emptyContainer {
+    @apply text-center py-8 text-slate-500;
+}
+
+.timelineContainer {
+    @apply space-y-2 max-h-48 overflow-y-auto;
+}
+
+.goalItem {
+    @apply flex items-center gap-3 p-3 rounded-xl transition-all;
+}
+
+.goalItemTeam0 {
+    @apply bg-blue-500/10 border border-blue-500/20;
+}
+
+.goalItemTeam1 {
+    @apply bg-rose-500/10 border border-rose-500/20;
+}
+
+.teamIndicator {
+    @apply w-2 h-8 rounded-full;
+}
+
+.teamIndicator0 {
+    @apply bg-blue-500;
+}
+
+.teamIndicator1 {
+    @apply bg-rose-500;
+}
+
+.goalInfo {
+    @apply flex-1 min-w-0;
+}
+
+.scorerName {
+    @apply font-medium text-white truncate;
+}
+
+.goalPosition {
+    @apply text-xs text-slate-400;
+}
+
+.timestamp {
+    @apply text-xs text-slate-500 font-mono;
+}
+
+.removeButton {
+    @apply p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all;
+}
+
+.removeIcon {
+    @apply h-4 w-4;
+}

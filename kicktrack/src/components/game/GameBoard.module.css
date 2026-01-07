@@ -1,0 +1,283 @@
+@reference "../../app/globals.css";
+
+/* Themes */
+.red {
+    --team-primary: #ef4444;
+    --team-text: #ef4444;
+    --team-border: #ef4444;
+    --team-shadow: rgba(239, 68, 68, 0.5);
+    --team-light: rgba(239, 68, 68, 0.2);
+    --team-gradient-to: #ef4444;
+}
+
+.blue {
+    --team-primary: #3b82f6;
+    --team-text: #3b82f6;
+    --team-border: #3b82f6;
+    --team-shadow: rgba(59, 130, 246, 0.5);
+    --team-light: rgba(59, 130, 246, 0.2);
+    --team-gradient-to: #3b82f6;
+}
+
+.green {
+    --team-primary: #10b981;
+    --team-text: #10b981;
+    --team-border: #10b981;
+    --team-shadow: rgba(16, 185, 129, 0.5);
+    --team-light: rgba(16, 185, 129, 0.2);
+    --team-gradient-to: #10b981;
+}
+
+.yellow {
+    --team-primary: #eab308;
+    --team-text: #eab308;
+    --team-border: #eab308;
+    --team-shadow: rgba(234, 179, 8, 0.5);
+    --team-light: rgba(234, 179, 8, 0.2);
+    --team-gradient-to: #eab308;
+}
+
+.orange {
+    --team-primary: #f97316;
+    --team-text: #f97316;
+    --team-border: #f97316;
+    --team-shadow: rgba(249, 115, 22, 0.5);
+    --team-light: rgba(249, 115, 22, 0.2);
+    --team-gradient-to: #f97316;
+}
+
+.purple {
+    --team-primary: #a855f7;
+    --team-text: #a855f7;
+    --team-border: #a855f7;
+    --team-shadow: rgba(168, 85, 247, 0.5);
+    --team-light: rgba(168, 85, 247, 0.2);
+    --team-gradient-to: #a855f7;
+}
+
+.slate {
+    --team-primary: #64748b;
+    --team-text: #64748b;
+    --team-border: #64748b;
+    --team-shadow: rgba(100, 116, 139, 0.5);
+    --team-light: rgba(100, 116, 139, 0.2);
+    --team-gradient-to: #64748b;
+}
+
+/* Layout */
+.container {
+    @apply flex flex-col gap-8 w-full max-w-4xl mx-auto;
+}
+
+/* Score Board */
+.scoreBoard {
+    @apply relative bg-[#1E293B]/80 backdrop-blur-md border border-[#334155] rounded-3xl p-8 shadow-2xl overflow-hidden;
+}
+
+.scoreBoardContent {
+    @apply flex items-center justify-between relative z-10;
+}
+
+.teamScore {
+    @apply flex-1 text-center;
+}
+
+.scoreValue {
+    @apply text-7xl font-black mb-2 drop-shadow-lg;
+    color: var(--team-text);
+}
+
+.teamInfo {
+    @apply flex flex-col items-center gap-1;
+}
+
+.playerAvatars {
+    @apply flex -space-x-2;
+}
+
+.avatar {
+    @apply w-8 h-8 rounded-full border-2 border-[#1E293B] flex items-center justify-center text-xs font-bold text-white;
+    background-color: var(--team-primary);
+}
+
+.teamLabel {
+    @apply text-[#94A3B8] text-sm font-medium uppercase tracking-wide;
+}
+
+.gradientAccent {
+    @apply absolute top-0 w-1/2 h-1 opacity-50;
+    background: linear-gradient(to right, transparent, var(--team-gradient-to));
+}
+
+.gradientAccentLeft {
+    @apply left-0;
+    background: linear-gradient(to right, transparent, var(--team-gradient-to));
+}
+
+.gradientAccentRight {
+    @apply right-0;
+    background: linear-gradient(to left, transparent, var(--team-gradient-to));
+}
+
+/* Center Info */
+.centerInfo {
+    @apply flex flex-col items-center px-8;
+}
+
+.timerWrapper {
+    @apply bg-[#0F172A] rounded-full px-6 py-2 border border-[#334155] mb-4 shadow-inner;
+}
+
+.vsLabel {
+    @apply text-[#64748B] font-bold text-xl;
+}
+
+.multiplierBadge {
+    @apply mt-2 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full text-white text-xs font-black animate-pulse shadow-lg shadow-orange-500/20;
+}
+
+/* Goal Controls */
+.controlsContainer {
+    @apply flex flex-col gap-8;
+}
+
+.buttonsGrid {
+    @apply grid grid-cols-2 gap-6;
+}
+
+.goalButton {
+    @apply relative overflow-hidden rounded-2xl p-6 transition-all border-2 bg-[#1E293B];
+    border-color: var(--team-border);
+}
+
+.goalButtonActive {
+    @apply border-transparent opacity-100;
+    background-color: var(--team-primary);
+}
+
+.goalButtonInactive {
+    @apply hover:scale-[1.02] active:scale-[0.98];
+}
+
+.goalButtonDisabled {
+    @apply opacity-50 grayscale;
+}
+
+.buttonOverlay {
+    @apply absolute inset-0 opacity-0 transition-opacity;
+    background-color: var(--team-primary);
+}
+
+.goalButton:hover .buttonOverlay {
+    @apply opacity-10;
+}
+
+.buttonContent {
+    @apply flex flex-col items-center gap-3;
+}
+
+.iconWrapper {
+    @apply w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-shadow;
+    background-color: var(--team-primary);
+}
+
+.iconWrapperActive {
+    @apply bg-white/20;
+}
+
+.goalButton:hover .iconWrapper {
+    @apply shadow-xl;
+}
+
+.plusIcon {
+    @apply w-8 h-8 text-white;
+}
+
+.buttonLabel {
+    @apply font-black text-xl uppercase tracking-wider;
+    color: var(--team-text);
+}
+
+.buttonLabelActive {
+    @apply text-white;
+}
+
+/* Input Panel */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-1rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.inputPanel {
+    @apply w-full bg-[#1E293B] border-2 rounded-2xl overflow-hidden shadow-2xl;
+    border-color: var(--team-border);
+    animation: slideIn 0.3s ease-out;
+}
+
+.inputHeader {
+    @apply p-5 flex items-center justify-between border-b;
+    background-color: var(--team-light);
+    border-color: var(--team-border);
+}
+
+.inputTitle {
+    @apply font-bold text-lg;
+    color: var(--team-text);
+}
+
+.closeButton {
+    @apply p-2 hover:bg-white/10 rounded-full transition-colors;
+}
+
+.closeIcon {
+    @apply w-6 h-6;
+    color: var(--team-text);
+}
+
+.inputContent {
+    @apply p-8 space-y-6;
+}
+
+.selectionGrid {
+    @apply grid grid-cols-2 sm:grid-cols-4 gap-4;
+}
+
+.playerButton {
+    @apply flex flex-col items-center gap-3 p-4 rounded-xl bg-[#0F172A] transition-all border border-[#334155];
+}
+
+.playerButton:hover {
+    @apply bg-[#334155] border-white/20;
+}
+
+.playerAvatar {
+    @apply w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-lg transition-transform;
+    background-color: var(--team-primary);
+}
+
+.playerButton:hover .playerAvatar {
+    @apply scale-110;
+}
+
+.playerName {
+    @apply text-sm font-medium text-white truncate w-full text-center;
+}
+
+.positionButton {
+    @apply p-4 rounded-xl border-2 border-[#334155] bg-[#0F172A] hover:bg-[#334155] transition-all text-sm font-bold text-slate-300 hover:text-white flex flex-col items-center justify-center gap-2 h-24;
+}
+
+.positionButton:hover {
+    border-color: var(--team-primary);
+}
+
+.positionLabel {
+    @apply text-lg;
+}

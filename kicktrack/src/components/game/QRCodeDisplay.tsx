@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { getRemainingTime, formatTime } from '@/lib/utils/code-generator';
+import styles from './QRCodeDisplay.module.css';
 
 interface QRCodeDisplayProps {
     qrData: string;
@@ -40,9 +41,9 @@ export default function QRCodeDisplay({
     const isLowTime = remainingTime < 60;
 
     return (
-        <div className="flex flex-col items-center">
+        <div className={styles.container}>
             {/* QR Code */}
-            <div className="bg-white p-4 rounded-2xl shadow-xl">
+            <div className={styles.qrWrapper}>
                 <QRCodeSVG
                     value={qrData}
                     size={200}
@@ -52,27 +53,22 @@ export default function QRCodeDisplay({
             </div>
 
             {/* PIN Code */}
-            <div className="mt-6 text-center">
-                <p className="text-slate-400 text-sm mb-2">Ou entrez ce code</p>
-                <div className="bg-slate-800/50 border border-slate-700 rounded-xl px-8 py-4">
-                    <p className="text-4xl font-mono font-bold tracking-[0.3em] text-emerald-400">
+            <div className={styles.pinContainer}>
+                <p className={styles.pinLabel}>Ou entrez ce code</p>
+                <div className={styles.pinBox}>
+                    <p className={styles.pinCode}>
                         {pinCode}
                     </p>
                 </div>
             </div>
 
             {/* Timer */}
-            <div className={`mt-6 flex items-center gap-2 px-4 py-2 rounded-full ${isLowTime
-                    ? 'bg-red-500/20 border border-red-500/30'
-                    : 'bg-slate-800/50 border border-slate-700'
-                }`}>
-                <div className={`w-2 h-2 rounded-full ${isLowTime ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'
-                    }`} />
-                <span className={`font-mono text-lg ${isLowTime ? 'text-red-400' : 'text-slate-300'
-                    }`}>
+            <div className={`${styles.timer} ${isLowTime ? styles.timerLow : styles.timerNormal}`}>
+                <div className={`${styles.timerDot} ${isLowTime ? styles.timerDotLow : styles.timerDotNormal}`} />
+                <span className={`${styles.timerText} ${isLowTime ? styles.timerTextLow : styles.timerTextNormal}`}>
                     {formatTime(remainingTime)}
                 </span>
-                <span className="text-slate-500 text-sm">restantes</span>
+                <span className={styles.timerLabel}>restantes</span>
             </div>
         </div>
     );

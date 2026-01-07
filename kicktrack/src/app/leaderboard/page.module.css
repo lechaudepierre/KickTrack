@@ -1,0 +1,233 @@
+/* Leaderboard Page Styles - Organic Rounded */
+
+.container {
+    min-height: 100vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-lg);
+}
+
+.contentWrapper {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 32rem;
+    margin: 0 auto;
+}
+
+/* Header */
+.header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.backButton {
+    padding: var(--spacing-sm);
+    color: var(--color-text-secondary);
+    transition: color var(--transition-normal);
+    cursor: pointer;
+}
+
+.backButton:hover {
+    color: var(--color-text-primary);
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+/* Top 3 Podium */
+.podium {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-2xl);
+    padding-top: var(--spacing-xl);
+}
+
+.podiumSpot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+}
+
+.firstPlace {
+    order: 2;
+    z-index: 2;
+    transform: scale(1.1);
+}
+
+.secondPlace {
+    order: 1;
+    z-index: 1;
+}
+
+.thirdPlace {
+    order: 3;
+    z-index: 1;
+}
+
+.avatarContainer {
+    position: relative;
+    margin-bottom: var(--spacing-sm);
+}
+
+.podiumAvatar {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background: var(--color-pitch-medium);
+    border: 3px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: white;
+    box-shadow: var(--shadow-medium);
+}
+
+.firstPlace .podiumAvatar {
+    width: 5rem;
+    height: 5rem;
+    border-color: var(--color-accent-yellow);
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: var(--color-pitch-dark);
+}
+
+.secondPlace .podiumAvatar {
+    border-color: #C0C0C0;
+    background: linear-gradient(135deg, #E0E0E0 0%, #B0B0B0 100%);
+    color: var(--color-pitch-dark);
+}
+
+.thirdPlace .podiumAvatar {
+    border-color: #CD7F32;
+    background: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%);
+}
+
+.crownIcon {
+    position: absolute;
+    top: -1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2rem;
+    height: 2rem;
+    color: var(--color-accent-yellow);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.podiumName {
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: white;
+    margin-bottom: 0.25rem;
+    max-width: 6rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.podiumScore {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--radius-full);
+}
+
+.firstPlace .podiumScore {
+    color: var(--color-accent-yellow);
+    background: rgba(255, 215, 0, 0.1);
+}
+
+/* List */
+.listContainer {
+    background: var(--color-pitch-medium);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.listHeader {
+    display: grid;
+    grid-template-columns: 3rem 1fr 4rem 4rem;
+    padding: var(--spacing-md);
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.listItem {
+    display: grid;
+    grid-template-columns: 3rem 1fr 4rem 4rem;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background var(--transition-normal);
+}
+
+.listItem:last-child {
+    border-bottom: none;
+}
+
+.listItem:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.currentUserItem {
+    background: rgba(76, 175, 80, 0.1);
+    border-left: 3px solid var(--color-field-green);
+}
+
+.rank {
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    text-align: center;
+}
+
+.playerInfo {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.listAvatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--color-pitch-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+}
+
+.playerName {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.statCol {
+    text-align: center;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.winRate {
+    color: var(--color-field-green);
+}

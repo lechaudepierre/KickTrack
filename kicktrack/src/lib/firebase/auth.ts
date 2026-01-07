@@ -9,7 +9,19 @@ import {
     onAuthStateChanged,
     User as FirebaseUser
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import {
+    doc,
+    setDoc,
+    getDoc,
+    updateDoc,
+    onSnapshot,
+    Unsubscribe,
+    collection,
+    query,
+    orderBy,
+    limit,
+    getDocs
+} from 'firebase/firestore';
 import { getFirebaseAuth, getFirebaseDb } from './config';
 import { User, UserStats } from '@/types';
 
@@ -110,6 +122,20 @@ export async function getCurrentUser(): Promise<User | null> {
     return null;
 }
 
+// Subscribe to user data
+export function subscribeToUser(userId: string, callback: (user: User | null) => void): Unsubscribe {
+    const db = getFirebaseDb();
+    const userRef = doc(db, 'users', userId);
+
+    return onSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+            callback(doc.data() as User);
+        } else {
+            callback(null);
+        }
+    });
+}
+
 // Subscribe to auth state changes
 export function onAuthChange(callback: (user: FirebaseUser | null) => void) {
     const auth = getFirebaseAuth();
@@ -121,4 +147,17 @@ export async function checkUsernameAvailable(username: string): Promise<boolean>
     // Note: This would require a separate collection or query
     // For MVP, we'll just return true
     return true;
+}
+
+// Get leaderboard (top users by wins)
+export async function getLeaderboard(limitCount: number = 20): Promise<User[]> {
+    const db = getFirebaseDb();
+    const q = query(
+        collection(db, 'users'),
+        orderBy('stats.wins', 'desc'),
+        limit(limitCount)
+    );
+
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => doc.data() as User);
 }

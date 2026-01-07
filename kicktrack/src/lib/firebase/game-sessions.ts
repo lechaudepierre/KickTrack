@@ -163,19 +163,29 @@ export async function startGame(
 
     const session = sessionSnap.data() as GameSession;
 
+    // Sanitize teams to remove undefined values
+    const sanitizedTeams = teams.map(team => ({
+        ...team,
+        players: team.players.map(player => ({
+            ...player,
+            avatarUrl: player.avatarUrl || null
+        }))
+    })) as [Team, Team];
+
     const game: Game = {
         gameId: gameRef.id,
-        venueId: session.venueId,
-        venueName: session.venueName,
+        venueId: session.venueId || 'unknown',
+        venueName: session.venueName || 'Unknown Venue',
         gameType: targetScore === 6 ? '6' : '11', // Map targetScore to gameType
-        teams: teams,
+        teams: sanitizedTeams,
         score: [0, 0],
         multiplier: 1,
         startTime: new Date(),
         duration: 0,
         status: 'in_progress',
         goals: [],
-        startedAt: new Date()
+        startedAt: new Date(),
+        playerIds: sanitizedTeams.flatMap(t => t.players.map(p => p.userId || '')).filter(id => id !== '')
     };
 
     await setDoc(gameRef, game);

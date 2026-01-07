@@ -299,7 +299,7 @@ export default function NewGamePage() {
                                         const testPlayer: Player = {
                                             userId: user.userId,
                                             username: user.username,
-                                            avatarUrl: user.avatarUrl
+                                            avatarUrl: user.avatarUrl || null
                                         };
 
                                         const teams: [Team, Team] = [
@@ -336,7 +336,13 @@ export default function NewGamePage() {
                         <QRCodeDisplay
                             qrData={session.qrCodeData}
                             pinCode={session.pinCode}
-                            createdAt={session.createdAt instanceof Date ? session.createdAt : new Date(session.createdAt)}
+                            createdAt={
+                                session.createdAt && typeof (session.createdAt as any).toDate === 'function'
+                                    ? (session.createdAt as any).toDate()
+                                    : session.createdAt instanceof Date
+                                        ? session.createdAt
+                                        : new Date(session.createdAt)
+                            }
                             onExpired={handleExpired}
                         />
 
