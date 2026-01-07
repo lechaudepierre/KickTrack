@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+@import '../styles/variables.css';
+@import '../styles/common.css';
+
+@theme inline {
+    --color-background: var(--color-pitch-dark);
+    --color-foreground: var(--color-text-primary);
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #1a3a2e 0%, #2d5a47 100%);
+    color: var(--color-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Field Line Decorations */
+.field-lines {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0.05;
+}
+
+.field-line {
+    position: absolute;
+    background: var(--color-line-white);
+    border-radius: var(--radius-full);
+}

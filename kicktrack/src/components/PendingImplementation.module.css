@@ -1,0 +1,138 @@
+/* Pending Implementation Page Styles - Organic Rounded */
+
+.container {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    max-width: 28rem;
+    width: 100%;
+}
+
+/* Icon Section */
+.iconSection {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-2xl);
+}
+
+.iconWrapper {
+    position: relative;
+}
+
+.iconShadow {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-lg);
+    transform: translateY(4px);
+    filter: blur(12px);
+}
+
+.iconBox {
+    position: relative;
+    padding: var(--spacing-2xl);
+    background: var(--color-pitch-medium);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+}
+
+.icon {
+    width: 5rem;
+    height: 5rem;
+    color: var(--color-accent-yellow);
+}
+
+/* Title */
+.title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-lg);
+    letter-spacing: -0.02em;
+}
+
+/* Status Badge */
+.statusBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-xl);
+    background: var(--color-pitch-medium);
+    border: 2px solid var(--color-accent-yellow);
+    border-radius: var(--radius-full);
+    margin-bottom: var(--spacing-2xl);
+}
+
+.statusDot {
+    width: 0.75rem;
+    height: 0.75rem;
+    background: var(--color-accent-yellow);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.statusText {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-accent-yellow);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Description */
+.descriptionCard {
+    background: var(--color-pitch-medium);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-2xl);
+    box-shadow: var(--shadow-soft);
+}
+
+.description {
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+/* Back Button */
+.backButton {
+    display: inline-block;
+}
+
+/* Footer */
+.footer {
+    margin-top: var(--spacing-2xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    color: var(--color-text-muted);
+}
+
+.footerDivider {
+    height: 2px;
+    width: 3rem;
+    background: linear-gradient(90deg, var(--color-field-green) 0%, var(--color-field-light) 100%);
+    border-radius: var(--radius-full);
+}
+
+.footerText {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}

@@ -1,0 +1,30 @@
+/* Field Decorations Component Styles */
+
+.fieldBackground {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.geometricAccentTop {
+    position: absolute;
+    width: 37.5rem;
+    height: 37.5rem;
+    opacity: 0.2;
+    background: linear-gradient(135deg, var(--color-field-green) 0%, transparent 70%);
+    top: -12.5rem;
+    right: -12.5rem;
+    clip-path: polygon(100% 0, 0 0, 100% 100%);
+}
+
+.geometricAccentBottom {
+    position: absolute;
+    width: 25rem;
+    height: 25rem;
+    opacity: 0.15;
+    background: linear-gradient(45deg, var(--color-field-green) 0%, transparent 70%);
+    bottom: -6.25rem;
+    left: -6.25rem;
+    clip-path: polygon(0 100%, 0 0, 100% 100%);
+}
