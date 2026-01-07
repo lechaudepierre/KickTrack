@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Button, Input } from '@/components/common/ui';
 import { createVenue } from '@/lib/firebase/firestore';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { FieldBackground } from '@/components/FieldDecorations';
@@ -13,8 +12,10 @@ import {
     HomeIcon,
     UserGroupIcon,
     MapPinIcon,
-    ArrowLeftIcon
+    ArrowLeftIcon,
+    ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
+import styles from './page.module.css';
 
 const venueTypes: { type: VenueType; label: string; icon: React.ElementType }[] = [
     { type: 'bar', label: 'Bar', icon: BuildingStorefrontIcon },
@@ -66,37 +67,35 @@ export default function AddVenuePage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0F172A] relative flex flex-col items-center justify-center p-6">
+        <div className={styles.container}>
             <FieldBackground />
 
-            <div className="relative z-10 w-full max-w-md">
-                <div className="mb-8">
-                    <Link
-                        href="/venues"
-                        className="inline-flex items-center text-[#94A3B8] hover:text-white transition-colors mb-6"
-                    >
+            <div className={styles.contentWrapper}>
+                <div className={styles.header}>
+                    <Link href="/venues" className={styles.backLink}>
                         <ArrowLeftIcon className="w-4 h-4 mr-2" />
                         Retour aux lieux
                     </Link>
 
-                    <h1 className="text-3xl font-black text-white mb-2">
-                        Ajouter un <span className="text-[#10B981]">Lieu</span>
+                    <h1 className={styles.title}>
+                        Ajouter un <span className={styles.titleAccent}>Lieu</span>
                     </h1>
-                    <p className="text-[#94A3B8]">Où se trouve ce nouveau babyfoot ?</p>
+                    <p className={styles.subtitle}>Où se trouve ce nouveau babyfoot ?</p>
                 </div>
 
-                <div className="bg-[#1E293B] border-4 border-[#334155] p-6 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-2 bg-[#10B981]" />
+                <div className={styles.formCard}>
+                    <div className={styles.cardAccent} />
 
                     {error && (
-                        <div className="mb-6 p-4 bg-[#0F172A] border-4 border-[#F97316] text-[#F97316] font-bold text-sm">
-                            ⚠ {error}
+                        <div className={styles.errorBox}>
+                            <ExclamationTriangleIcon className="w-5 h-5" />
+                            {error}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label className="block text-white font-black text-sm uppercase tracking-wide mb-2">
+                    <form onSubmit={handleSubmit} className={styles.form}>
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>
                                 Nom du lieu
                             </label>
                             <input
@@ -105,34 +104,31 @@ export default function AddVenuePage() {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 required
-                                className="w-full px-4 py-3 bg-[#0F172A] border-4 border-[#334155] text-white font-semibold placeholder-[#475569] focus:border-[#10B981] focus:outline-none transition-colors"
+                                className="input-field"
                             />
                         </div>
 
-                        <div>
-                            <label className="block text-white font-black text-sm uppercase tracking-wide mb-2">
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>
                                 Type de lieu
                             </label>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className={styles.typeGrid}>
                                 {venueTypes.map((vt) => (
                                     <button
                                         key={vt.type}
                                         type="button"
                                         onClick={() => setType(vt.type)}
-                                        className={`flex flex-col items-center justify-center p-3 border-4 transition-all ${type === vt.type
-                                            ? 'bg-[#10B981] border-[#10B981] text-[#0F172A]'
-                                            : 'bg-[#0F172A] border-[#334155] text-[#94A3B8] hover:border-[#475569]'
-                                            }`}
+                                        className={`${styles.typeButton} ${type === vt.type ? styles.typeButtonActive : styles.typeButtonInactive}`}
                                     >
-                                        <vt.icon className="w-6 h-6 mb-1" />
-                                        <span className="text-xs font-bold uppercase">{vt.label}</span>
+                                        <vt.icon className={styles.typeIcon} />
+                                        <span className={styles.typeLabel}>{vt.label}</span>
                                     </button>
                                 ))}
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-white font-black text-sm uppercase tracking-wide mb-2">
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>
                                 Adresse (optionnel)
                             </label>
                             <input
@@ -140,18 +136,19 @@ export default function AddVenuePage() {
                                 placeholder="Ex: 123 Rue de la Paix"
                                 value={address}
                                 onChange={(e) => setAddress(e.target.value)}
-                                className="w-full px-4 py-3 bg-[#0F172A] border-4 border-[#334155] text-white font-semibold placeholder-[#475569] focus:border-[#10B981] focus:outline-none transition-colors"
+                                className="input-field"
                             />
                         </div>
 
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full group relative mt-4"
+                            className="btn-primary w-full"
+                            style={{ padding: 0, border: 'none', background: 'transparent' }}
                         >
-                            <div className="absolute inset-0 bg-[#059669] translate-y-2" />
-                            <div className="relative bg-[#10B981] border-4 border-white text-[#0F172A] font-black text-lg py-4 transition-transform group-hover:-translate-y-1 group-active:translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed">
-                                {isLoading ? 'CRÉATION...' : 'AJOUTER LE LIEU'}
+                            <div className="btn-primary-shadow" />
+                            <div className="btn-primary-content" style={{ width: '100%' }}>
+                                {isLoading ? 'Création...' : 'Ajouter le lieu'}
                             </div>
                         </button>
                     </form>
