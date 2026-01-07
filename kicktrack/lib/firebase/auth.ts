@@ -1,0 +1,124 @@
+import {
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signInAnonymously,
+    signOut,
+    updateProfile,
+    linkWithCredential,
+    EmailAuthProvider,
+    onAuthStateChanged,
+    User as FirebaseUser
+} from 'firebase/auth';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { getFirebaseAuth, getFirebaseDb } from './config';
+import { User, UserStats } from '@/types';
+
+// Initial stats for new users
+const initialStats: UserStats = {
+    totalGames: 0,
+    wins: 0,
+    losses: 0,
+    goalsScored: 0,
+    goalsConceded: 0,
+    winRate: 0
+};
+
+// Create user document in Firestore
+async function createUserDocument(userId: string, username: string, email?: string): Promise<User> {
+    const db = getFirebaseDb();
+    const user: User = {
+        userId,
+        username,
+        email,
+        createdAt: new Date(),
+        stats: initialStats,
+        preferences: {
+            notifications: true
+        }
+    };
+
+    await setDoc(doc(db, 'users', userId), user);
+    return user;
+}
+
+// Quick registration (anonymous auth with username)
+export async function registerQuick(username: string): Promise<User> {
+    const auth = getFirebaseAuth();
+    const result = await signInAnonymously(auth);
+    await updateProfile(result.user, { displayName: username });
+    return createUserDocument(result.user.uid, username);
+}
+
+// Complete registration (email + password)
+export async function registerComplete(
+    username: string,
+    email: string,
+    password: string
+): Promise<User> {
+    const auth = getFirebaseAuth();
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(result.user, { displayName: username });
+    return createUserDocument(result.user.uid, username, email);
+}
+
+// Login with email/password
+export async function login(email: string, password: string): Promise<User | null> {
+    const auth = getFirebaseAuth();
+    const db = getFirebaseDb();
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+
+    if (userDoc.exists()) {
+        return userDoc.data() as User;
+    }
+    return null;
+}
+
+// Logout
+export async function logout(): Promise<void> {
+    const auth = getFirebaseAuth();
+    await signOut(auth);
+}
+
+// Upgrade anonymous account to email/password
+export async function upgradeAccount(email: string, password: string): Promise<void> {
+    const auth = getFirebaseAuth();
+    const db = getFirebaseDb();
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error('No user logged in');
+
+    const credential = EmailAuthProvider.credential(email, password);
+    await linkWithCredential(currentUser, credential);
+
+    // Update user document with email
+    await updateDoc(doc(db, 'users', currentUser.uid), {
+        email
+    });
+}
+
+// Get current user data
+export async function getCurrentUser(): Promise<User | null> {
+    const auth = getFirebaseAuth();
+    const db = getFirebaseDb();
+    const currentUser = auth.currentUser;
+    if (!currentUser) return null;
+
+    const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+    if (userDoc.exists()) {
+        return userDoc.data() as User;
+    }
+    return null;
+}
+
+// Subscribe to auth state changes
+export function onAuthChange(callback: (user: FirebaseUser | null) => void) {
+    const auth = getFirebaseAuth();
+    return onAuthStateChanged(auth, callback);
+}
+
+// Check if username is available
+export async function checkUsernameAvailable(username: string): Promise<boolean> {
+    // Note: This would require a separate collection or query
+    // For MVP, we'll just return true
+    return true;
+}
