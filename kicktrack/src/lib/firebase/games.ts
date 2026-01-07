@@ -15,9 +15,85 @@ import {
     limit
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
-import { Game, Goal, GoalPosition, Player, GameResults } from '@/types';
+import { Game, Goal, GoalPosition, Player, GameResults, Team } from '@/types';
+import { Firestore } from 'firebase/firestore';
 
 const GAMES_COLLECTION = 'games';
+
+// Helper function to update player stats after a game ends
+async function updatePlayerStatsAfterGame(
+    db: Firestore,
+    teams: Team[],
+    goals: Goal[],
+    winner: 0 | 1
+): Promise<void> {
+    const goalsByPlayer: Record<string, number> = {};
+    goals.forEach(goal => {
+        goalsByPlayer[goal.scoredBy] = (goalsByPlayer[goal.scoredBy] || 0) + 1;
+    });
+
+    const updatePromises = [];
+
+    for (let teamIndex = 0; teamIndex < teams.length; teamIndex++) {
+        const team = teams[teamIndex];
+        const isWinner = teamIndex === winner;
+        const goalsConceded = teams[1 - teamIndex].score;
+
+        for (const player of team.players) {
+            const playerRef = doc(db, 'users', player.userId);
+
+            updatePromises.push(runTransaction(db, async (transaction) => {
+                const userDoc = await transaction.get(playerRef);
+                if (!userDoc.exists()) return;
+
+                const userData = userDoc.data();
+                const currentStats = userData.stats || {
+                    totalGames: 0,
+                    wins: 0,
+                    losses: 0,
+                    goalsScored: 0,
+                    goalsConceded: 0,
+                    winRate: 0
+                };
+
+                const today = new Date().toISOString().split('T')[0];
+                const currentHistory = currentStats.history || {};
+                const dailyStats = currentHistory[today] || {
+                    date: today,
+                    gamesPlayed: 0,
+                    wins: 0,
+                    goalsScored: 0
+                };
+
+                const newDailyStats = {
+                    date: today,
+                    gamesPlayed: dailyStats.gamesPlayed + 1,
+                    wins: dailyStats.wins + (isWinner ? 1 : 0),
+                    goalsScored: dailyStats.goalsScored + (goalsByPlayer[player.userId] || 0)
+                };
+
+                const newStats = {
+                    totalGames: currentStats.totalGames + 1,
+                    wins: currentStats.wins + (isWinner ? 1 : 0),
+                    losses: currentStats.losses + (isWinner ? 0 : 1),
+                    goalsScored: currentStats.goalsScored + (goalsByPlayer[player.userId] || 0),
+                    goalsConceded: currentStats.goalsConceded + goalsConceded,
+                    winRate: 0,
+                    history: {
+                        ...currentHistory,
+                        [today]: newDailyStats
+                    }
+                };
+
+                newStats.winRate = newStats.totalGames > 0 ? newStats.wins / newStats.totalGames : 0;
+
+                transaction.update(playerRef, { stats: newStats });
+            }));
+        }
+    }
+
+    await Promise.all(updatePromises);
+}
 
 // Get game by ID
 export async function getGame(gameId: string): Promise<Game | null> {
@@ -103,6 +179,16 @@ export async function addGoal(
             winner: teamIndex
         } : {})
     });
+
+    // If game is won, update player stats
+    if (isGameWon) {
+        await updatePlayerStatsAfterGame(
+            db,
+            updatedTeams,
+            [...game.goals, goal],
+            teamIndex
+        );
+    }
 }
 
 // Remove last goal (undo)
@@ -168,74 +254,9 @@ export async function endGame(gameId: string): Promise<GameResults> {
         winner
     });
 
-    // Update player stats
+    // Update player stats if there's a winner
     if (winner !== undefined) {
-        const goalsByPlayer: Record<string, number> = {};
-        game.goals.forEach(goal => {
-            goalsByPlayer[goal.scoredBy] = (goalsByPlayer[goal.scoredBy] || 0) + 1;
-        });
-
-        const updatePromises = [];
-
-        for (let teamIndex = 0; teamIndex < game.teams.length; teamIndex++) {
-            const team = game.teams[teamIndex];
-            const isWinner = teamIndex === winner;
-            const goalsConceded = game.teams[1 - teamIndex].score;
-
-            for (const player of team.players) {
-                const playerRef = doc(db, 'users', player.userId);
-
-                updatePromises.push(runTransaction(db, async (transaction) => {
-                    const userDoc = await transaction.get(playerRef);
-                    if (!userDoc.exists()) return;
-
-                    const userData = userDoc.data();
-                    const currentStats = userData.stats || {
-                        totalGames: 0,
-                        wins: 0,
-                        losses: 0,
-                        goalsScored: 0,
-                        goalsConceded: 0,
-                        winRate: 0
-                    };
-
-                    const today = new Date().toISOString().split('T')[0];
-                    const currentHistory = currentStats.history || {};
-                    const dailyStats = currentHistory[today] || {
-                        date: today,
-                        gamesPlayed: 0,
-                        wins: 0,
-                        goalsScored: 0
-                    };
-
-                    const newDailyStats = {
-                        date: today,
-                        gamesPlayed: dailyStats.gamesPlayed + 1,
-                        wins: dailyStats.wins + (isWinner ? 1 : 0),
-                        goalsScored: dailyStats.goalsScored + (goalsByPlayer[player.userId] || 0)
-                    };
-
-                    const newStats = {
-                        totalGames: currentStats.totalGames + 1,
-                        wins: currentStats.wins + (isWinner ? 1 : 0),
-                        losses: currentStats.losses + (isWinner ? 0 : 1),
-                        goalsScored: currentStats.goalsScored + (goalsByPlayer[player.userId] || 0),
-                        goalsConceded: currentStats.goalsConceded + goalsConceded,
-                        winRate: 0,
-                        history: {
-                            ...currentHistory,
-                            [today]: newDailyStats
-                        }
-                    };
-
-                    newStats.winRate = newStats.totalGames > 0 ? newStats.wins / newStats.totalGames : 0;
-
-                    transaction.update(playerRef, { stats: newStats });
-                }));
-            }
-        }
-
-        await Promise.all(updatePromises);
+        await updatePlayerStatsAfterGame(db, game.teams, game.goals, winner);
     }
 
     return calculateGameResults({ ...game, status: 'completed', winner });

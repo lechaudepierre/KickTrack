@@ -6,6 +6,7 @@
     display: flex;
     flex-direction: column;
     padding: var(--spacing-lg);
+    padding-bottom: var(--spacing-3xl);
 }
 
 .contentWrapper {
@@ -125,7 +126,11 @@
     color: var(--color-field-green);
 }
 
-/* Recent Games */
+/* Section */
+.section {
+    margin-bottom: var(--spacing-xl);
+}
+
 .sectionTitle {
     font-size: 1.125rem;
     font-weight: 700;
@@ -136,6 +141,288 @@
     gap: var(--spacing-sm);
 }
 
+/* Form récente */
+.formCard {
+    background: var(--color-pitch-medium);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.formIndicators {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.formBadge {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.875rem;
+}
+
+.formWin {
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(76, 175, 80, 0.3) 100%);
+    color: var(--color-field-green);
+    border: 1px solid var(--color-field-green);
+}
+
+.formLoss {
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.2) 0%, rgba(255, 152, 0, 0.3) 100%);
+    color: var(--color-accent-orange);
+    border: 1px solid var(--color-accent-orange);
+}
+
+.formDraw {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.streakText {
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+/* Venue Card */
+.venueCard {
+    background: var(--color-pitch-medium);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.venueIcon {
+    width: 3rem;
+    height: 3rem;
+    background: linear-gradient(135deg, var(--color-accent-orange) 0%, var(--color-accent-yellow) 100%);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-pitch-dark);
+}
+
+.venueInfo {
+    flex: 1;
+}
+
+.venueName {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.venueStats {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.venueList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.venueListItem {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+}
+
+.venueListName {
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+}
+
+.venueListGames {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+/* Goals Grid */
+.goalsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-sm);
+}
+
+.goalCard {
+    background: var(--color-pitch-medium);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.goalValue {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-field-green);
+    line-height: 1;
+    margin-bottom: var(--spacing-xs);
+}
+
+.goalLabel {
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Position Card */
+.positionCard {
+    background: var(--color-pitch-medium);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.positionHighlight {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.positionName {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-field-green);
+}
+
+.positionGoals {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.positionBreakdown {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.positionRow {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.positionRowLabel {
+    width: 4.5rem;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+.positionBar {
+    flex: 1;
+    height: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.positionBarFill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-field-green) 0%, var(--color-field-light) 100%);
+    border-radius: var(--radius-full);
+    transition: width var(--transition-normal);
+}
+
+.positionRowCount {
+    width: 2rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    text-align: right;
+}
+
+/* Details Grid */
+.detailsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-sm);
+}
+
+.detailItem {
+    background: var(--color-pitch-medium);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.detailLabel {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+.detailValue {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+/* Format Grid */
+.formatGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.formatCard {
+    background: var(--color-pitch-medium);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    transition: all var(--transition-normal);
+}
+
+.formatCardActive {
+    border-color: var(--color-field-green);
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(129, 199, 132, 0.1) 100%);
+}
+
+.formatTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.formatGames {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.formatWinRate {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-field-green);
+}
+
+/* Recent Games */
 .gamesList {
     display: flex;
     flex-direction: column;
@@ -196,4 +483,95 @@
     background: var(--color-pitch-medium);
     border-radius: var(--radius-lg);
     border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+/* Perfect Games */
+.perfectGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.perfectCard {
+    background: var(--color-pitch-medium);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.perfectValue {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: var(--spacing-xs);
+}
+
+.perfectLabel {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.perfectDesc {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+/* Head-to-Head */
+.h2hList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.h2hCard {
+    background: var(--color-pitch-medium);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.h2hInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.h2hName {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.h2hGames {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+.h2hStats {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.h2hWins {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--color-field-green);
+}
+
+.h2hSeparator {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.h2hLosses {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--color-accent-orange);
 }
