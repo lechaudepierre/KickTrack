@@ -10,9 +10,7 @@ import {
     runTransaction,
     query,
     where,
-    orderBy,
-    getDocs,
-    limit
+    getDocs
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
 import { Game, Goal, GoalPosition, Player, GameResults, Team } from '@/types';
@@ -275,20 +273,25 @@ export async function abandonGame(gameId: string): Promise<void> {
 export async function getUserGames(userId: string, limitCount: number = 10): Promise<Game[]> {
     const db = getFirebaseDb();
 
-    // Try to query by playerIds if available, otherwise fallback (or just try playerIds first)
-    // Since we just added playerIds, old games won't have it.
-    // But for new games it will work.
-    // For now let's try querying by playerIds.
-
+    // Query without orderBy to avoid needing a composite index
+    // We'll sort client-side instead
     const q = query(
         collection(db, GAMES_COLLECTION),
-        where('playerIds', 'array-contains', userId),
-        orderBy('startedAt', 'desc'),
-        limit(limitCount)
+        where('playerIds', 'array-contains', userId)
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => doc.data() as Game);
+    const games = snapshot.docs.map(doc => doc.data() as Game);
+
+    // Sort by startedAt descending (client-side)
+    games.sort((a, b) => {
+        const dateA = a.startedAt instanceof Date ? a.startedAt : new Date((a.startedAt as any).seconds * 1000);
+        const dateB = b.startedAt instanceof Date ? b.startedAt : new Date((b.startedAt as any).seconds * 1000);
+        return dateB.getTime() - dateA.getTime();
+    });
+
+    // Apply limit
+    return games.slice(0, limitCount);
 }
 
 // Calculate game results
