@@ -1,68 +1,39 @@
-import { User } from './user';
+// Game-related TypeScript types
 
-export type GameFormat = '1v1' | '2v2';
-export type GameStatus = 'pending' | 'in_progress' | 'completed' | 'abandoned';
-export type GoalPosition = 'defense' | 'attack1' | 'attack2' | 'attack3';
+export type TeamColor = 'red' | 'blue' | 'green' | 'yellow' | 'orange' | 'purple';
 
-export interface Player {
-    userId: string;
-    username: string;
-    avatarUrl?: string;
+export type GoalType = 'attack' | 'defense' | 'goalkeeper' | 'ownGoal' | 'middle';
+
+export interface Goal {
+    timestamp: Date;
+    type: GoalType;
+    scoredBy: number; // team index (0 or 1)
+    points: number; // 1, 2, or 3
 }
 
 export interface Team {
-    players: Player[];
-    score: number;
-}
-
-export interface Goal {
-    goalId: string;
-    scorerId: string;
-    scorerName: string;
-    teamIndex: 0 | 1;
-    position: GoalPosition;
-    timestamp: Date;
-}
-
-export interface GameSession {
-    sessionId: string;
-    pinCode: string;
-    qrCodeData: string;
-    format: GameFormat;
-    venueId: string;
-    venueName: string;
-    initiatorId: string;
-    players: Player[];
-    maxPlayers: number;
-    createdAt: Date;
-    expiresAt: Date;
-    status: 'waiting' | 'ready' | 'started' | 'expired';
-}
-
-export interface Game {
-    gameId: string;
-    sessionId: string;
-    format: GameFormat;
-    venueId: string;
-    venueName: string;
-    teams: [Team, Team];
+    players: string[]; // player IDs
+    color: TeamColor;
     goals: Goal[];
-    targetScore: 6 | 11;
-    status: GameStatus;
-    startedAt: Date;
-    endedAt?: Date;
-    winnerId?: string; // Index of winning team (0 or 1)
-    duration?: number; // in seconds
 }
 
-export interface GameResults {
-    game: Game;
-    mvp: Player;
-    goalsByPlayer: Record<string, number>;
-    goalsByPosition: Record<GoalPosition, number>;
+export interface GameState {
+    gameId: string;
+    venueId: string;
+    venueName: string;
+    gameType: '6' | '11'; // Points to win
+    teams: [Team, Team];
+    score: [number, number];
+    multiplier: number; // 1, 2, or 3
+    startTime: Date;
+    duration: number; // seconds
+    isActive: boolean;
+    winner?: 0 | 1;
 }
 
-export interface Teams {
-    team1: Player[];
-    team2: Player[];
+export interface GameSetup {
+    players: string[]; // 2-4 player IDs
+    venueId: string;
+    venueName: string;
+    gameType: '6' | '11';
 }
