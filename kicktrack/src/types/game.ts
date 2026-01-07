@@ -2,7 +2,7 @@
 
 export type TeamColor = 'red' | 'blue' | 'green' | 'yellow' | 'orange' | 'purple';
 
-export type GoalType = 'attack' | 'defense' | 'goalkeeper' | 'ownGoal' | 'middle';
+export type GoalType = 'normal' | 'gamelle' | 'gamelle_rentrante' | 'ownGoal';
 
 export type GoalPosition = 'attack' | 'defense' | 'goalkeeper' | 'midfield';
 
@@ -15,6 +15,7 @@ export interface Goal {
     scorerName: string;
     teamIndex: 0 | 1;
     points: number; // 1, 2, or 3
+    previousMultiplier?: number;
 }
 
 export interface Team {

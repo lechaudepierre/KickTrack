@@ -15,7 +15,7 @@ import {
     limit
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
-import { Game, Goal, GoalPosition, Player, GameResults } from '@/types';
+import { Game, Goal, GoalPosition, Player, GameResults, GoalType } from '@/types';
 
 const GAMES_COLLECTION = 'games';
 
@@ -39,10 +39,16 @@ export function subscribeToGame(
     const db = getFirebaseDb();
     const gameRef = doc(db, GAMES_COLLECTION, gameId);
 
-    return onSnapshot(gameRef, (doc) => {
-        if (doc.exists()) {
-            callback(doc.data() as Game);
-        } else {
+    return onSnapshot(gameRef, {
+        next: (doc) => {
+            if (doc.exists()) {
+                callback(doc.data() as Game);
+            } else {
+                callback(null);
+            }
+        },
+        error: (error) => {
+            console.error('Error in game subscription:', error);
             callback(null);
         }
     });
@@ -54,7 +60,8 @@ export async function addGoal(
     scorerId: string,
     scorerName: string,
     teamIndex: 0 | 1,
-    position: GoalPosition
+    position: GoalPosition,
+    type: GoalType = 'normal'
 ): Promise<void> {
     const db = getFirebaseDb();
     const gameRef = doc(db, GAMES_COLLECTION, gameId);
@@ -65,19 +72,48 @@ export async function addGoal(
     }
 
     const game = gameSnap.data() as Game;
+    const currentMultiplier = game.multiplier || 1;
+    const isMidfield = position === 'midfield';
+    const isNormal = type === 'normal';
+    const isGamelle = type === 'gamelle';
+    const isGamelleRentrante = type === 'gamelle_rentrante';
+
+    let points = 0;
+    let opponentPointsChange = 0;
+    let nextMultiplier = currentMultiplier;
+
+    if (isMidfield) {
+        points = 0;
+        nextMultiplier = currentMultiplier + 1;
+    } else if (isNormal) {
+        points = currentMultiplier;
+        nextMultiplier = 1;
+    } else if (isGamelle) {
+        points = 0;
+        opponentPointsChange = -1;
+    } else if (isGamelleRentrante) {
+        points = 1;
+        opponentPointsChange = -1;
+    } else {
+        points = 1;
+        nextMultiplier = currentMultiplier;
+    }
 
     const goal: Goal = {
         id: `goal-${Date.now()}`,
         timestamp: new Date(),
-        type: 'attack', // Default type, can be updated if we add goal types later
+        type,
         position,
         scoredBy: scorerId,
         scorerName,
         teamIndex,
-        points: 1
+        points,
+        previousMultiplier: currentMultiplier
     };
 
-    const newScore = game.teams[teamIndex].score + 1;
+    const opponentIndex = 1 - teamIndex;
+    const newScore = game.teams[teamIndex].score + points;
+    const newOpponentScore = game.teams[opponentIndex].score + opponentPointsChange;
     const targetScore = parseInt(game.gameType);
 
     // Update local teams array
@@ -85,6 +121,10 @@ export async function addGoal(
     updatedTeams[teamIndex] = {
         ...updatedTeams[teamIndex],
         score: newScore
+    };
+    updatedTeams[opponentIndex] = {
+        ...updatedTeams[opponentIndex],
+        score: newOpponentScore
     };
 
     // Check if game is won
@@ -94,9 +134,10 @@ export async function addGoal(
         goals: arrayUnion(goal),
         teams: updatedTeams,
         score: [
-            teamIndex === 0 ? newScore : game.score[0],
-            teamIndex === 1 ? newScore : game.score[1]
+            teamIndex === 0 ? newScore : newOpponentScore,
+            teamIndex === 1 ? newScore : newOpponentScore
         ],
+        multiplier: nextMultiplier,
         ...(isGameWon ? {
             status: 'completed',
             endedAt: new Date(),
@@ -123,22 +164,40 @@ export async function removeLastGoal(gameId: string): Promise<void> {
 
     const lastGoal = game.goals[game.goals.length - 1];
     const newGoals = game.goals.slice(0, -1);
-    const newScore = game.teams[lastGoal.teamIndex].score - 1;
 
-    // Update local teams array
+    // We need to undo what was done in addGoal
+    // 1. Subtract points from the scorer's team
+    // 2. If it was a gamelle, it subtracted 1 from opponent, so we add 1 back
+    // Note: This is a bit simplified as it doesn't perfectly restore multiplier state 
+    // if we wanted to be 100% accurate, but it handles the scores.
+
+    const teamIndex = lastGoal.teamIndex;
+    const opponentIndex = 1 - teamIndex;
+    const points = lastGoal.points || 0;
+    const isGamelle = lastGoal.type === 'gamelle' || lastGoal.type === 'gamelle_rentrante';
+    const opponentPointsChange = isGamelle ? -1 : 0;
+
     const updatedTeams = [...game.teams];
-    updatedTeams[lastGoal.teamIndex] = {
-        ...updatedTeams[lastGoal.teamIndex],
-        score: Math.max(0, newScore)
+    const newScore = updatedTeams[teamIndex].score - points;
+    const newOpponentScore = updatedTeams[opponentIndex].score - opponentPointsChange;
+
+    updatedTeams[teamIndex] = {
+        ...updatedTeams[teamIndex],
+        score: newScore
+    };
+    updatedTeams[opponentIndex] = {
+        ...updatedTeams[opponentIndex],
+        score: newOpponentScore
     };
 
     await updateDoc(gameRef, {
         goals: newGoals,
         teams: updatedTeams,
         score: [
-            lastGoal.teamIndex === 0 ? Math.max(0, newScore) : game.score[0],
-            lastGoal.teamIndex === 1 ? Math.max(0, newScore) : game.score[1]
-        ]
+            teamIndex === 0 ? newScore : newOpponentScore,
+            teamIndex === 1 ? newScore : newOpponentScore
+        ],
+        multiplier: lastGoal.previousMultiplier || 1
     });
 }
 
@@ -172,7 +231,7 @@ export async function endGame(gameId: string): Promise<GameResults> {
     if (winner !== undefined) {
         const goalsByPlayer: Record<string, number> = {};
         game.goals.forEach(goal => {
-            goalsByPlayer[goal.scoredBy] = (goalsByPlayer[goal.scoredBy] || 0) + 1;
+            goalsByPlayer[goal.scoredBy] = (goalsByPlayer[goal.scoredBy] || 0) + (goal.points || 0);
         });
 
         const updatePromises = [];
@@ -248,6 +307,34 @@ export async function abandonGame(gameId: string): Promise<void> {
     await updateDoc(gameRef, {
         status: 'abandoned'
     });
+}
+
+// Forfeit game (one team abandons)
+export async function forfeitGame(gameId: string, forfeitingTeamIndex: 0 | 1): Promise<void> {
+    const db = getFirebaseDb();
+    const gameRef = doc(db, GAMES_COLLECTION, gameId);
+    const gameSnap = await getDoc(gameRef);
+
+    if (!gameSnap.exists()) throw new Error('Game not found');
+    const game = gameSnap.data() as Game;
+    const targetScore = parseInt(game.gameType);
+    const winningTeamIndex = 1 - forfeitingTeamIndex;
+
+    const updatedTeams = [...game.teams];
+    updatedTeams[winningTeamIndex] = {
+        ...updatedTeams[winningTeamIndex],
+        score: targetScore
+    };
+
+    await updateDoc(gameRef, {
+        teams: updatedTeams,
+        score: [
+            winningTeamIndex === 0 ? targetScore : game.score[0],
+            winningTeamIndex === 1 ? targetScore : game.score[1]
+        ]
+    });
+
+    await endGame(gameId);
 }
 
 // Get user's recent games

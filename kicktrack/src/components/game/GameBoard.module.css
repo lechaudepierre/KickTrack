@@ -133,7 +133,7 @@
 }
 
 .multiplierBadge {
-    @apply mt-2 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full text-white text-xs font-black animate-pulse shadow-lg shadow-orange-500/20;
+    @apply mt-2 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full text-white text-xs font-black animate-pulse shadow-lg shadow-orange-500/20 z-10 border border-white/20;
 }
 
 /* Goal Controls */
@@ -206,19 +206,46 @@
 @keyframes slideIn {
     from {
         opacity: 0;
-        transform: translateY(-1rem);
+        transform: translateY(20px) scale(0.95);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
     }
 }
 
-.inputPanel {
-    @apply w-full bg-[#1E293B] border-2 rounded-2xl overflow-hidden shadow-2xl;
+@keyframes scorePop {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+        filter: brightness(1.5);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.scoreValueAnimated {
+    animation: scorePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modalOverlay {
+    @apply fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm;
+}
+
+.modalContent {
+    @apply w-full max-w-lg bg-[#1E293B] border-2 rounded-3xl overflow-hidden shadow-2xl;
     border-color: var(--team-border);
-    animation: slideIn 0.3s ease-out;
+    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.inputPanel {
+    @apply w-full;
 }
 
 .inputHeader {
@@ -271,13 +298,170 @@
 }
 
 .positionButton {
-    @apply p-4 rounded-xl border-2 border-[#334155] bg-[#0F172A] hover:bg-[#334155] transition-all text-sm font-bold text-slate-300 hover:text-white flex flex-col items-center justify-center gap-2 h-24;
+    @apply w-24 h-24 rounded-full border-2 border-white/10 transition-all text-sm font-bold flex items-center justify-center text-center p-2;
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 .positionButton:hover {
-    border-color: var(--team-primary);
+    transform: scale(1.05);
+    border-color: white;
+}
+
+.bgGreen {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+    color: #6ee7b7 !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.bgBlue {
+    background-color: rgba(14, 165, 233, 0.2) !important;
+    color: #7dd3fc !important;
+    border-color: rgba(14, 165, 233, 0.3) !important;
+}
+
+.bgYellow {
+    background-color: rgba(245, 158, 11, 0.2) !important;
+    color: #fcd34d !important;
+    border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+.bgRed {
+    background-color: rgba(244, 63, 94, 0.2) !important;
+    color: #fda4af !important;
+    border-color: rgba(244, 63, 94, 0.3) !important;
 }
 
 .positionLabel {
-    @apply text-lg;
+    @apply text-sm font-bold uppercase tracking-wider;
+}
+
+.typeGrid {
+    @apply grid grid-cols-2 gap-4 w-full;
+}
+
+.typeButton {
+    @apply p-6 rounded-2xl border-2 border-white/10 transition-all flex flex-col items-center justify-center text-center gap-1 min-h-[100px];
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.typeButton:hover {
+    transform: translateY(-2px);
+    border-color: white;
+}
+
+.fullWidth {
+    @apply col-span-2;
+}
+
+.bgNormal {
+    background-color: rgba(71, 85, 105, 0.2) !important;
+    color: #cbd5e1 !important;
+    border-color: rgba(71, 85, 105, 0.3) !important;
+}
+
+.bgGamelle {
+    background-color: rgba(249, 115, 22, 0.2) !important;
+    color: #fdba74 !important;
+    border-color: rgba(249, 115, 22, 0.3) !important;
+}
+
+.bgGamelleRentrante {
+    background-color: rgba(236, 72, 153, 0.2) !important;
+    color: #f9a8d4 !important;
+    border-color: rgba(236, 72, 153, 0.3) !important;
+}
+
+.typeLabel {
+    @apply text-xl font-black uppercase tracking-wider;
+}
+
+.typeDesc {
+    @apply text-xs opacity-60 font-medium;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+    .container {
+        @apply gap-4;
+    }
+
+    .scoreBoard {
+        @apply p-4 rounded-2xl;
+    }
+
+    .scoreValue {
+        @apply text-5xl;
+    }
+
+    .teamLabel {
+        @apply text-xs;
+    }
+
+    .avatar {
+        @apply w-6 h-6 text-[10px];
+    }
+
+    .centerInfo {
+        @apply px-2;
+    }
+
+    .vsLabel {
+        @apply text-base;
+    }
+
+    .timerWrapper {
+        @apply px-3 py-1 mb-2;
+    }
+
+    .multiplierBadge {
+        @apply text-[10px] px-2;
+    }
+
+    .buttonsGrid {
+        @apply gap-3;
+    }
+
+    .goalButton {
+        @apply p-4 rounded-xl;
+    }
+
+    .buttonContent {
+        @apply gap-2;
+    }
+
+    .iconWrapper {
+        @apply w-12 h-12;
+    }
+
+    .plusIcon {
+        @apply w-6 h-6;
+    }
+
+    .buttonLabel {
+        @apply text-sm;
+    }
+
+    .inputContent {
+        @apply p-4 space-y-4;
+    }
+
+    .selectionGrid {
+        @apply gap-2;
+    }
+
+    .playerButton {
+        @apply p-3;
+    }
+
+    .playerAvatar {
+        @apply w-10 h-10 text-base;
+    }
+
+    .positionButton {
+        @apply h-20 p-2;
+    }
+
+    .positionLabel {
+        @apply text-base;
+    }
 }

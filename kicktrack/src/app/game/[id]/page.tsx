@@ -3,22 +3,24 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { subscribeToGame, addGoal, removeLastGoal, endGame, abandonGame } from '@/lib/firebase/games';
-import { Game, GoalPosition } from '@/types';
+import { subscribeToGame, addGoal, removeLastGoal, endGame, abandonGame, forfeitGame } from '@/lib/firebase/games';
+import { Game, GoalPosition, GoalType } from '@/types';
 import { Button } from '@/components/common/ui';
 import GameBoard from '@/components/game/GameBoard';
 import { FieldBackground } from '@/components/FieldDecorations';
 import {
     ArrowLeftIcon,
-    EllipsisVerticalIcon
+    EllipsisVerticalIcon,
+    XMarkIcon
 } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
+import gameStyles from './game-page.module.css';
 
 export default function GamePage() {
     const router = useRouter();
     const params = useParams();
     const gameId = params.id as string;
-    const { user, initialize } = useAuthStore();
+    const { user, initialize, isLoading: authLoading } = useAuthStore();
 
     const [game, setGame] = useState<Game | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -32,7 +34,7 @@ export default function GamePage() {
     }, [initialize]);
 
     useEffect(() => {
-        if (!gameId) return;
+        if (!gameId || authLoading) return;
 
         const unsubscribe = subscribeToGame(gameId, (updatedGame) => {
             setGame(updatedGame);
@@ -45,13 +47,15 @@ export default function GamePage() {
         });
 
         return () => unsubscribe();
-    }, [gameId, router]);
+    }, [gameId, router, authLoading]);
 
-    const handleAddGoal = async (teamIndex: 0 | 1, scorerId: string, scorerName: string, position: GoalPosition) => {
+    const [showEndModal, setShowEndModal] = useState(false);
+
+    const handleAddGoal = async (teamIndex: 0 | 1, scorerId: string, scorerName: string, position: GoalPosition, type: GoalType) => {
         if (!game) return;
 
         try {
-            await addGoal(game.gameId, scorerId, scorerName, teamIndex, position);
+            await addGoal(game.gameId, scorerId, scorerName, teamIndex, position, type);
         } catch (error) {
             console.error('Error adding goal:', error);
         }
@@ -69,24 +73,27 @@ export default function GamePage() {
 
     const handleEndGame = async () => {
         if (!game) return;
+        setShowEndModal(true);
+    };
 
+    const handleForfeit = async (teamIndex: 0 | 1) => {
+        if (!game) return;
         try {
-            await endGame(game.gameId);
+            await forfeitGame(game.gameId, teamIndex);
             router.push(`/game/${gameId}/results`);
         } catch (error) {
-            console.error('Error ending game:', error);
+            console.error('Error forfeiting game:', error);
         }
     };
 
-    const handleAbandon = async () => {
+    const handleCancelGame = async () => {
         if (!game) return;
-
-        if (confirm('Êtes-vous sûr de vouloir abandonner ? Cette partie sera supprimée.')) {
+        if (confirm('Êtes-vous sûr de vouloir annuler la partie ? Aucun score ne sera enregistré.')) {
             try {
                 await abandonGame(game.gameId);
                 router.push('/dashboard');
             } catch (error) {
-                console.error('Error abandoning game:', error);
+                console.error('Error cancelling game:', error);
             }
         }
     };
@@ -135,7 +142,7 @@ export default function GamePage() {
                     <div className="relative">
                         <button
                             onClick={() => setShowMenu(!showMenu)}
-                            className={styles.backButton}
+                            className={gameStyles.menuButton}
                         >
                             <EllipsisVerticalIcon className="h-6 w-6" />
                         </button>
@@ -146,31 +153,69 @@ export default function GamePage() {
                                     className="fixed inset-0 z-40"
                                     onClick={() => setShowMenu(false)}
                                 />
-                                <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--color-pitch-medium)] border border-[var(--color-border-default)] rounded-xl shadow-xl z-50 overflow-hidden">
+                                <div className={gameStyles.dropdownMenu}>
                                     <button
                                         onClick={() => { handleRemoveLastGoal(); setShowMenu(false); }}
-                                        className="w-full px-4 py-3 text-left text-sm text-white hover:bg-[var(--color-pitch-dark)] transition-colors"
+                                        className={gameStyles.menuItem}
                                         disabled={game.goals.length === 0}
                                     >
-                                        Annuler le dernier but
+                                        <span>Annuler le dernier but</span>
+                                        <span className="opacity-40 text-xs font-bold tracking-wider">UNDO</span>
                                     </button>
                                     <button
                                         onClick={() => { handleEndGame(); setShowMenu(false); }}
-                                        className="w-full px-4 py-3 text-left text-sm text-white hover:bg-[var(--color-pitch-dark)] transition-colors"
+                                        className={gameStyles.menuItem}
                                     >
-                                        Terminer la partie
-                                    </button>
-                                    <button
-                                        onClick={() => { handleAbandon(); setShowMenu(false); }}
-                                        className="w-full px-4 py-3 text-left text-sm text-[var(--color-accent-orange)] hover:bg-[rgba(255,152,0,0.1)] transition-colors"
-                                    >
-                                        Abandonner
+                                        <span>Terminer la partie</span>
+                                        <span className="opacity-40 text-xs font-bold tracking-wider">FINISH</span>
                                     </button>
                                 </div>
                             </>
                         )}
                     </div>
                 </div>
+
+                {/* End Game Modal */}
+                {showEndModal && (
+                    <div className={gameStyles.modalOverlay}>
+                        <div className={gameStyles.modalContent}>
+                            <div className={gameStyles.modalHeader}>
+                                <h3 className={gameStyles.modalTitle}>Terminer la partie</h3>
+                                <button onClick={() => setShowEndModal(false)} className={gameStyles.closeButton}>
+                                    <XMarkIcon className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            <div className={gameStyles.modalBody}>
+                                <button
+                                    onClick={() => handleForfeit(0)}
+                                    className={`${gameStyles.optionButton} ${gameStyles.forfeitButton}`}
+                                >
+                                    <span className={gameStyles.optionTitle}>Équipe 1 abandonne</span>
+                                    <span className={gameStyles.optionDesc}>Victoire par forfait ({game.gameType} pts) pour l'Équipe 2</span>
+                                </button>
+
+                                <button
+                                    onClick={() => handleForfeit(1)}
+                                    className={`${gameStyles.optionButton} ${gameStyles.forfeitButton}`}
+                                >
+                                    <span className={gameStyles.optionTitle}>Équipe 2 abandonne</span>
+                                    <span className={gameStyles.optionDesc}>Victoire par forfait ({game.gameType} pts) pour l'Équipe 1</span>
+                                </button>
+
+                                <div className="pt-4">
+                                    <button
+                                        onClick={handleCancelGame}
+                                        className={`${gameStyles.optionButton} ${gameStyles.cancelButton}`}
+                                    >
+                                        <span className={gameStyles.optionTitle}>Annuler la partie</span>
+                                        <span className={gameStyles.optionDesc}>Supprimer la partie sans enregistrer de stats</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Game Board */}
                 <GameBoard

@@ -1,103 +1,187 @@
-import { useState } from 'react';
-import { Game, Team, Player, GoalPosition } from '@/types';
+import { useState, useEffect } from 'react';
+import { Game, Team, Player, GoalPosition, GoalType } from '@/types';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import GameTimer from './GameTimer';
 import styles from './GameBoard.module.css';
 
 interface GameBoardProps {
     game: Game;
-    onAddGoal: (teamIndex: 0 | 1, scorerId: string, scorerName: string, position: GoalPosition) => void;
+    onAddGoal: (teamIndex: 0 | 1, scorerId: string, scorerName: string, position: GoalPosition, type: GoalType) => void;
     onPauseResume?: () => void;
 }
 
-const positions: { value: GoalPosition; label: string }[] = [
-    { value: 'defense', label: 'Défense' },
-    { value: 'midfield', label: 'Milieu' },
-    { value: 'attack', label: 'Attaque' },
-    { value: 'goalkeeper', label: 'Gardien' }
+const positions: { value: GoalPosition; label: string; color: string }[] = [
+    { value: 'goalkeeper', label: 'Gardien', color: 'green' },
+    { value: 'defense', label: 'Défense', color: 'blue' },
+    { value: 'midfield', label: 'Milieu', color: 'yellow' },
+    { value: 'attack', label: 'Attaque', color: 'red' }
+];
+
+const goalTypes: { value: GoalType; label: string; description: string }[] = [
+    { value: 'normal', label: 'Normal', description: 'But classique' },
+    { value: 'gamelle', label: 'Gamelle', description: 'Le ballon ressort' },
+    { value: 'gamelle_rentrante', label: 'Gamelle Rentrante', description: 'Ressort et rentre' }
 ];
 
 export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardProps) {
+    const [activeTeamIndex, setActiveTeamIndex] = useState<0 | 1 | null>(null);
+    const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+    const [selectedPosition, setSelectedPosition] = useState<GoalPosition | null>(null);
+    const [step, setStep] = useState<'player' | 'position' | 'type'>('player');
+
+    // Animation states for scores
+    const [animatingScore, setAnimatingScore] = useState<0 | 1 | null>(null);
+
     const team1 = game.teams[0];
     const team2 = game.teams[1];
+
+    // Trigger animation when score changes
+    useEffect(() => {
+        const prevScore = [game.score[0], game.score[1]];
+        // This is a bit tricky since we don't have the previous score easily
+        // But we can detect which one changed if we store it
+    }, [game.score]);
+
+    // Use a ref to track previous score for animation
+    const prevScoreRef = useState<[number, number]>(game.score);
+    useEffect(() => {
+        if (game.score[0] !== prevScoreRef[0][0]) {
+            setAnimatingScore(0);
+            setTimeout(() => setAnimatingScore(null), 600);
+        } else if (game.score[1] !== prevScoreRef[0][1]) {
+            setAnimatingScore(1);
+            setTimeout(() => setAnimatingScore(null), 600);
+        }
+        prevScoreRef[1](game.score);
+    }, [game.score]);
 
     const handleStartAddGoal = (teamIndex: 0 | 1) => {
         const team = game.teams[teamIndex];
         setActiveTeamIndex(teamIndex);
 
-        // Auto-select player if 1v1
         if (team.players.length === 1) {
             setSelectedPlayer(team.players[0]);
+            setStep('position');
         } else {
             setSelectedPlayer(null);
+            setStep('player');
         }
     };
 
     const handleCancel = () => {
         setActiveTeamIndex(null);
         setSelectedPlayer(null);
+        setSelectedPosition(null);
+        setStep('player');
     };
 
     const handleSelectPlayer = (player: Player) => {
         setSelectedPlayer(player);
+        setStep('position');
     };
 
     const handleSelectPosition = (position: GoalPosition) => {
-        if (activeTeamIndex !== null && selectedPlayer) {
-            onAddGoal(activeTeamIndex, selectedPlayer.userId, selectedPlayer.username, position);
-            // Reset state
-            setActiveTeamIndex(null);
-            setSelectedPlayer(null);
+        setSelectedPosition(position);
+        if (position === 'midfield') {
+            if (activeTeamIndex !== null && selectedPlayer) {
+                onAddGoal(activeTeamIndex, selectedPlayer.userId, selectedPlayer.username, position, 'normal');
+                handleCancel();
+            }
+        } else {
+            setStep('type');
         }
     };
 
-    const renderGoalInput = (teamIndex: 0 | 1, colors: any) => {
-        const team = game.teams[teamIndex];
+    const handleSelectGoalType = (type: GoalType) => {
+        if (activeTeamIndex !== null && selectedPlayer && selectedPosition) {
+            onAddGoal(activeTeamIndex, selectedPlayer.userId, selectedPlayer.username, selectedPosition, type);
+            handleCancel();
+        }
+    };
+
+    const renderGoalInput = () => {
+        if (activeTeamIndex === null) return null;
+
+        const team = game.teams[activeTeamIndex];
+        const teamColorClass = styles[team.color] || styles.slate;
 
         return (
-            <div className={`w-full bg-[#1E293B] border-2 ${colors.border} rounded-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300 shadow-2xl`}>
-                <div className={`p-5 flex items-center justify-between ${colors.light} border-b ${colors.border}`}>
-                    <span className={`font-bold text-lg ${colors.text}`}>
-                        {selectedPlayer ? 'Comment ?' : 'Qui a marqué ?'}
-                    </span>
-                    <button onClick={handleCancel} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                        <XMarkIcon className={`w-6 h-6 ${colors.text}`} />
-                    </button>
-                </div>
-
-                <div className="p-8 space-y-6">
-                    {/* Step 1: Player Selection (if not 1v1 or not selected) */}
-                    {!selectedPlayer && (
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                            {team.players.map(player => (
-                                <button
-                                    key={player.userId}
-                                    onClick={() => handleSelectPlayer(player)}
-                                    className="flex flex-col items-center gap-3 p-4 rounded-xl bg-[#0F172A] hover:bg-[#334155] transition-all border border-[#334155] hover:border-white/20 group"
-                                >
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white ${colors.bg} shadow-lg group-hover:scale-110 transition-transform`}>
-                                        {player.username?.charAt(0).toUpperCase() || '?'}
-                                    </div>
-                                    <span className="text-sm font-medium text-white truncate w-full text-center">{player.username}</span>
-                                </button>
-                            ))}
+            <div className={styles.modalOverlay} onClick={handleCancel}>
+                <div className={`${styles.modalContent} ${teamColorClass}`} onClick={e => e.stopPropagation()}>
+                    <div className={styles.inputHeader}>
+                        <div className="flex flex-col">
+                            <span className={styles.inputTitle}>
+                                {step === 'player' && 'Qui a marqué ?'}
+                                {step === 'position' && 'Depuis quelle position ?'}
+                                {step === 'type' && 'Quel type de but ?'}
+                            </span>
+                            {selectedPlayer && step !== 'player' && (
+                                <span className="text-xs opacity-70">Buteur: {selectedPlayer.username}</span>
+                            )}
                         </div>
-                    )}
+                        <button onClick={handleCancel} className={styles.closeButton}>
+                            <XMarkIcon className={styles.closeIcon} />
+                        </button>
+                    </div>
 
-                    {/* Step 2: Position Selection (if player selected) */}
-                    {selectedPlayer && (
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                            {positions.map(pos => (
-                                <button
-                                    key={pos.value}
-                                    onClick={() => handleSelectPosition(pos.value)}
-                                    className={`p-4 rounded-xl border-2 border-[#334155] bg-[#0F172A] hover:bg-[#334155] transition-all text-sm font-bold text-slate-300 hover:text-white hover:border-${colors.bg.split('-')[1]}-500 flex flex-col items-center justify-center gap-2 h-24`}
-                                >
-                                    <span className="text-lg">{pos.label}</span>
-                                </button>
-                            ))}
-                        </div>
-                    )}
+                    <div className={styles.inputContent}>
+                        {/* Step 1: Player Selection */}
+                        {step === 'player' && (
+                            <div className={styles.selectionGrid}>
+                                {team.players.map(player => (
+                                    <button
+                                        key={player.userId}
+                                        onClick={() => handleSelectPlayer(player)}
+                                        className={styles.playerButton}
+                                    >
+                                        <div className={styles.playerAvatar}>
+                                            {player.username?.charAt(0).toUpperCase() || '?'}
+                                        </div>
+                                        <span className={styles.playerName}>{player.username}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Step 2: Position Selection */}
+                        {step === 'position' && (
+                            <div className={styles.selectionGrid}>
+                                {positions.map(pos => (
+                                    <button
+                                        key={pos.value}
+                                        onClick={() => handleSelectPosition(pos.value)}
+                                        className={`${styles.positionButton} ${pos.color === 'green' ? styles.bgGreen :
+                                            pos.color === 'blue' ? styles.bgBlue :
+                                                pos.color === 'yellow' ? styles.bgYellow :
+                                                    styles.bgRed
+                                            }`}
+                                    >
+                                        <span className={styles.positionLabel}>{pos.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Step 3: Goal Type Selection */}
+                        {step === 'type' && (
+                            <div className={styles.typeGrid}>
+                                {goalTypes.map(type => (
+                                    <button
+                                        key={type.value}
+                                        onClick={() => handleSelectGoalType(type.value)}
+                                        className={`${styles.typeButton} ${type.value === 'normal' ? `${styles.bgNormal} ${styles.fullWidth}` :
+                                                type.value === 'gamelle' ? styles.bgGamelle :
+                                                    styles.bgGamelleRentrante
+                                            }`}
+                                    >
+                                        <span className={styles.typeLabel}>{type.label}</span>
+                                        <span className={styles.typeDesc}>{type.description}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
                 </div>
             </div>
         );
@@ -114,7 +198,7 @@ export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardP
                 <div className={styles.scoreBoardContent}>
                     {/* Team 1 Score */}
                     <div className={`${styles.teamScore} ${styles[team1.color] || styles.slate}`}>
-                        <div className={styles.scoreValue}>
+                        <div className={`${styles.scoreValue} ${animatingScore === 0 ? styles.scoreValueAnimated : ''}`}>
                             {game.score[0]}
                         </div>
                         <div className={styles.teamInfo}>
@@ -137,14 +221,14 @@ export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardP
                         <div className={styles.vsLabel}>VS</div>
                         {game.multiplier > 1 && (
                             <div className={styles.multiplierBadge}>
-                                {game.multiplier}x POINTS
+                                PROCHAIN BUT: {game.multiplier} PTS
                             </div>
                         )}
                     </div>
 
                     {/* Team 2 Score */}
                     <div className={`${styles.teamScore} ${styles[team2.color] || styles.slate}`}>
-                        <div className={styles.scoreValue}>
+                        <div className={`${styles.scoreValue} ${animatingScore === 1 ? styles.scoreValueAnimated : ''}`}>
                             {game.score[1]}
                         </div>
                         <div className={styles.teamInfo}>
@@ -209,7 +293,7 @@ export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardP
                         <div className={styles.buttonContent}>
                             <div className={`
                                 ${styles.iconWrapper} 
-                                ${activeTeamIndex === 1 ? styles.iconWrapperActive : styles.iconWrapperHover}
+                                ${activeTeamIndex === 1 ? styles.iconWrapperActive : ''}
                             `}>
                                 <PlusIcon className={styles.plusIcon} />
                             </div>
@@ -221,9 +305,10 @@ export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardP
                     </button>
                 </div>
 
-                {/* Inline Goal Input */}
-                {activeTeamIndex !== null && renderGoalInput(activeTeamIndex)}
+                {/* Modal Goal Input */}
+                {renderGoalInput()}
             </div>
         </div>
     );
 }
+

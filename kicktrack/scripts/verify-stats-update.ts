@@ -86,7 +86,7 @@ async function verifyStatsUpdate() {
             {
                 id: 'goal-1',
                 timestamp: new Date(),
-                type: 'attack',
+                type: 'normal',
                 position: 'attack',
                 scoredBy: testUserId,
                 scorerName: 'Test Stats User',
