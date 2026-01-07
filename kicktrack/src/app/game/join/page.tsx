@@ -85,7 +85,7 @@ function JoinGameContent() {
             });
 
             // Redirect to waiting room or game
-            if (session.status === 'started') {
+            if (session.status === 'active') {
                 router.push('/dashboard');
             } else {
                 router.push('/dashboard');

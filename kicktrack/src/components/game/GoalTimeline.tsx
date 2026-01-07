@@ -11,9 +11,9 @@ interface GoalTimelineProps {
 
 const positionLabels: Record<GoalPosition, string> = {
     defense: 'Défense',
-    attack1: 'Attaque 1',
-    attack2: 'Attaque 2',
-    attack3: 'Attaque 3'
+    midfield: 'Milieu',
+    attack: 'Attaque',
+    goalkeeper: 'Gardien'
 };
 
 export default function GoalTimeline({ goals, onRemoveGoal, canRemove = false }: GoalTimelineProps) {
@@ -35,10 +35,10 @@ export default function GoalTimeline({ goals, onRemoveGoal, canRemove = false }:
 
                 return (
                     <div
-                        key={goal.goalId}
+                        key={goal.id || index}
                         className={`flex items-center gap-3 p-3 rounded-xl transition-all ${goal.teamIndex === 0
-                                ? 'bg-blue-500/10 border border-blue-500/20'
-                                : 'bg-rose-500/10 border border-rose-500/20'
+                            ? 'bg-blue-500/10 border border-blue-500/20'
+                            : 'bg-rose-500/10 border border-rose-500/20'
                             }`}
                     >
                         {/* Team indicator */}
@@ -51,7 +51,7 @@ export default function GoalTimeline({ goals, onRemoveGoal, canRemove = false }:
                                 {goal.scorerName}
                             </p>
                             <p className="text-xs text-slate-400">
-                                {positionLabels[goal.position]}
+                                {goal.position ? positionLabels[goal.position] : 'Inconnu'}
                             </p>
                         </div>
 
@@ -66,7 +66,7 @@ export default function GoalTimeline({ goals, onRemoveGoal, canRemove = false }:
                         {/* Remove button (only for last goal) */}
                         {canRemove && isLastGoal && (
                             <button
-                                onClick={() => onRemoveGoal?.(goal.goalId)}
+                                onClick={() => goal.id && onRemoveGoal?.(goal.id)}
                                 className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                             >
                                 <XMarkIcon className="h-4 w-4" />

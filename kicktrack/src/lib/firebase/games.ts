@@ -61,26 +61,40 @@ export async function addGoal(
     const game = gameSnap.data() as Game;
 
     const goal: Goal = {
-        goalId: `goal-${Date.now()}`,
-        scorerId,
+        id: `goal-${Date.now()}`,
+        timestamp: new Date(),
+        type: 'attack', // Default type, can be updated if we add goal types later
+        position,
+        scoredBy: scorerId,
         scorerName,
         teamIndex,
-        position,
-        timestamp: new Date()
+        points: 1
     };
 
     const newScore = game.teams[teamIndex].score + 1;
+    const targetScore = parseInt(game.gameType);
+
+    // Update local teams array
+    const updatedTeams = [...game.teams];
+    updatedTeams[teamIndex] = {
+        ...updatedTeams[teamIndex],
+        score: newScore
+    };
 
     // Check if game is won
-    const isGameWon = newScore >= game.targetScore;
+    const isGameWon = newScore >= targetScore;
 
     await updateDoc(gameRef, {
         goals: arrayUnion(goal),
-        [`teams.${teamIndex}.score`]: newScore,
+        teams: updatedTeams,
+        score: [
+            teamIndex === 0 ? newScore : game.score[0],
+            teamIndex === 1 ? newScore : game.score[1]
+        ],
         ...(isGameWon ? {
             status: 'completed',
             endedAt: new Date(),
-            winnerId: teamIndex.toString()
+            winner: teamIndex
         } : {})
     });
 }
@@ -105,9 +119,20 @@ export async function removeLastGoal(gameId: string): Promise<void> {
     const newGoals = game.goals.slice(0, -1);
     const newScore = game.teams[lastGoal.teamIndex].score - 1;
 
+    // Update local teams array
+    const updatedTeams = [...game.teams];
+    updatedTeams[lastGoal.teamIndex] = {
+        ...updatedTeams[lastGoal.teamIndex],
+        score: Math.max(0, newScore)
+    };
+
     await updateDoc(gameRef, {
         goals: newGoals,
-        [`teams.${lastGoal.teamIndex}.score`]: Math.max(0, newScore)
+        teams: updatedTeams,
+        score: [
+            lastGoal.teamIndex === 0 ? Math.max(0, newScore) : game.score[0],
+            lastGoal.teamIndex === 1 ? Math.max(0, newScore) : game.score[1]
+        ]
     });
 }
 
@@ -127,17 +152,17 @@ export async function endGame(gameId: string): Promise<GameResults> {
     const duration = Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000);
 
     // Determine winner
-    const winnerId = game.teams[0].score > game.teams[1].score ? '0' :
-        game.teams[1].score > game.teams[0].score ? '1' : undefined;
+    const winner = game.teams[0].score > game.teams[1].score ? 0 :
+        game.teams[1].score > game.teams[0].score ? 1 : undefined;
 
     await updateDoc(gameRef, {
         status: 'completed',
         endedAt,
         duration,
-        winnerId
+        winner
     });
 
-    return calculateGameResults({ ...game, endedAt, duration, winnerId, status: 'completed' });
+    return calculateGameResults({ ...game, status: 'completed', winner });
 }
 
 // Abandon game (delete from stats)
@@ -155,14 +180,16 @@ function calculateGameResults(game: Game): GameResults {
     const goalsByPlayer: Record<string, number> = {};
     const goalsByPosition: Record<GoalPosition, number> = {
         defense: 0,
-        attack1: 0,
-        attack2: 0,
-        attack3: 0
+        midfield: 0,
+        attack: 0,
+        goalkeeper: 0
     };
 
     for (const goal of game.goals) {
-        goalsByPlayer[goal.scorerId] = (goalsByPlayer[goal.scorerId] || 0) + 1;
-        goalsByPosition[goal.position]++;
+        goalsByPlayer[goal.scoredBy] = (goalsByPlayer[goal.scoredBy] || 0) + 1;
+        if (goal.position) {
+            goalsByPosition[goal.position]++;
+        }
     }
 
     // Find MVP

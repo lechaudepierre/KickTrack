@@ -9,7 +9,8 @@ import PlayerList from '@/components/game/PlayerList';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getVenues } from '@/lib/firebase/firestore';
 import { createGameSession, subscribeToSession, cancelSession, startGame } from '@/lib/firebase/game-sessions';
-import { Venue, GameFormat, GameSession, Player } from '@/types';
+import TeamSetup from '@/components/game/TeamSetup';
+import { Venue, GameFormat, GameSession, Player, Team } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import {
     ArrowLeftIcon,
@@ -59,34 +60,39 @@ export default function NewGamePage() {
             if (updatedSession) {
                 setSession(updatedSession);
                 // Auto-advance when all players have joined
-                if (updatedSession.status === 'ready' && format === '1v1') {
-                    // For 1v1, skip team selection and start game directly
-                    handleStartGame(updatedSession.players);
-                } else if (updatedSession.status === 'ready') {
+                if (updatedSession.status === 'ready') {
                     setStep('teams');
                 }
             }
         });
 
         return () => unsubscribe();
-    }, [session?.sessionId, format]);
+    }, [session?.sessionId]);
 
     const loadVenues = async () => {
         try {
             const data = await getVenues({ limit: 20 });
             setVenues(data);
+            if (data.length > 0) {
+                setSelectedVenue(data[0]);
+            }
         } catch (error) {
             console.error('Error loading venues:', error);
         }
     };
 
     const handleCreateSession = async () => {
-        if (!selectedVenue || !user) return;
+        console.log('handleCreateSession called', { user, selectedVenue });
+        if (!selectedVenue || !user) {
+            console.error('Missing user or venue');
+            return;
+        }
 
         setIsLoading(true);
         setError('');
 
         try {
+            console.log('Creating session...');
             const newSession = await createGameSession(
                 user.userId,
                 user.username,
@@ -94,9 +100,11 @@ export default function NewGamePage() {
                 selectedVenue.name,
                 format
             );
+            console.log('Session created:', newSession);
             setSession(newSession);
             setStep('waiting');
         } catch (err: unknown) {
+            console.error('Error creating session:', err);
             const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la création';
             setError(errorMessage);
         } finally {
@@ -112,20 +120,23 @@ export default function NewGamePage() {
         setStep('config');
     };
 
-    const handleStartGame = async (players: Player[]) => {
+    const handleStartGame = async (teams: [Team, Team]) => {
         if (!session) return;
 
-        // For 1v1: simple team assignment
-        const teams = {
-            team1: [players[0]],
-            team2: [players[1]]
-        };
-
         try {
+            // Convert complex Team objects to simplified structure expected by startGame if needed
+            // But startGame expects { team1: Player[], team2: Player[] } currently
+            // We need to update startGame or adapt the data here.
+            // Actually, the new GameState uses [Team, Team].
+            // Let's check startGame signature in game-sessions.ts first.
+            // Assuming we need to update startGame to accept the new Team structure.
+            // For now, I'll pass the teams as is, assuming I will update game-sessions.ts next.
+
             const game = await startGame(session.sessionId, teams, targetScore);
             router.push(`/game/${game.gameId}`);
         } catch (err) {
             console.error('Error starting game:', err);
+            setError('Erreur lors du lancement de la partie');
         }
     };
 
@@ -157,7 +168,9 @@ export default function NewGamePage() {
                         <ArrowLeftIcon className="h-6 w-6" />
                     </button>
                     <h1 className={styles.pageTitle}>
-                        {step === 'config' ? 'Nouvelle Partie' : 'En attente...'}
+                        {step === 'config' ? 'Nouvelle Partie' :
+                            step === 'waiting' ? 'En attente...' :
+                                'Équipes'}
                     </h1>
                 </div>
 
@@ -245,18 +258,74 @@ export default function NewGamePage() {
                         </div>
 
                         {/* Create Button */}
-                        <button
-                            onClick={handleCreateSession}
-                            disabled={!selectedVenue || isLoading}
-                            style={{ width: '100%' }}
-                        >
-                            <div className="btn-primary">
-                                <div className="btn-primary-shadow" />
-                                <div className="btn-primary-content">
-                                    {isLoading ? 'Création...' : 'Générer le code'}
+                        <div className="flex flex-col gap-3 w-full">
+                            <button
+                                onClick={handleCreateSession}
+                                disabled={!selectedVenue || isLoading}
+                                style={{ width: '100%' }}
+                            >
+                                <div className="btn-primary">
+                                    <div className="btn-primary-shadow" />
+                                    <div className="btn-primary-content">
+                                        {isLoading ? 'Création...' : 'Générer le code'}
+                                    </div>
                                 </div>
-                            </div>
-                        </button>
+                            </button>
+
+                            {/* Test Button */}
+                            <button
+                                onClick={async () => {
+                                    if (!user) return;
+                                    setIsLoading(true);
+                                    try {
+                                        // Use selected venue or first available
+                                        const venue = selectedVenue || venues[0];
+                                        if (!venue) {
+                                            setError('Aucun lieu disponible');
+                                            setIsLoading(false);
+                                            return;
+                                        }
+
+                                        // Create a temporary session
+                                        const session = await createGameSession(
+                                            user.userId,
+                                            user.username,
+                                            venue.venueId,
+                                            venue.name,
+                                            '1v1'
+                                        );
+
+                                        // Start game immediately with user in both teams
+                                        const testPlayer: Player = {
+                                            userId: user.userId,
+                                            username: user.username,
+                                            avatarUrl: user.avatarUrl
+                                        };
+
+                                        const teams: [Team, Team] = [
+                                            { players: [testPlayer], color: 'blue', score: 0 },
+                                            { players: [testPlayer], color: 'red', score: 0 }
+                                        ];
+
+                                        const game = await startGame(session.sessionId, teams, targetScore);
+                                        router.push(`/game/${game.gameId}`);
+                                    } catch (err) {
+                                        console.error('Test mode error:', err);
+                                        setError('Erreur mode test');
+                                        setIsLoading(false);
+                                    }
+                                }}
+                                disabled={isLoading}
+                                className="w-full opacity-50 hover:opacity-100 transition-opacity"
+                            >
+                                <div className="btn-secondary">
+                                    <div className="btn-secondary-shadow" />
+                                    <div className="btn-secondary-content text-xs">
+                                        🧪 Mode Test (Solo)
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
                     </div>
                 )}
 
@@ -280,19 +349,6 @@ export default function NewGamePage() {
 
                         {/* Actions */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-                            {session.status === 'ready' && (
-                                <button
-                                    onClick={() => handleStartGame(session.players)}
-                                    style={{ width: '100%' }}
-                                >
-                                    <div className="btn-primary">
-                                        <div className="btn-primary-shadow" />
-                                        <div className="btn-primary-content">
-                                            Commencer la partie
-                                        </div>
-                                    </div>
-                                </button>
-                            )}
                             <button onClick={handleCancel} style={{ width: '100%' }}>
                                 <div className="btn-secondary">
                                     <div className="btn-secondary-shadow" />
@@ -303,6 +359,15 @@ export default function NewGamePage() {
                             </button>
                         </div>
                     </div>
+                )}
+
+                {/* Step 3: Team Setup */}
+                {step === 'teams' && session && (
+                    <TeamSetup
+                        players={session.players}
+                        format={format}
+                        onStartGame={handleStartGame}
+                    />
                 )}
             </div>
         </div>

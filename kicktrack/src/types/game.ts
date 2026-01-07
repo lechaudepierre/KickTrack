@@ -4,20 +4,26 @@ export type TeamColor = 'red' | 'blue' | 'green' | 'yellow' | 'orange' | 'purple
 
 export type GoalType = 'attack' | 'defense' | 'goalkeeper' | 'ownGoal' | 'middle';
 
+export type GoalPosition = 'attack' | 'defense' | 'goalkeeper' | 'midfield';
+
 export interface Goal {
+    id?: string;
     timestamp: Date;
     type: GoalType;
-    scoredBy: number; // team index (0 or 1)
+    position?: GoalPosition;
+    scoredBy: string; // player ID
+    scorerName: string;
+    teamIndex: 0 | 1;
     points: number; // 1, 2, or 3
 }
 
 export interface Team {
-    players: string[]; // player IDs
+    players: Player[]; // Full player objects
     color: TeamColor;
-    goals: Goal[];
+    score: number;
 }
 
-export interface GameState {
+export interface Game {
     gameId: string;
     venueId: string;
     venueName: string;
@@ -27,8 +33,35 @@ export interface GameState {
     multiplier: number; // 1, 2, or 3
     startTime: Date;
     duration: number; // seconds
-    isActive: boolean;
+    status: 'in_progress' | 'completed' | 'abandoned';
+    goals: Goal[]; // Flat list of goals for timeline
     winner?: 0 | 1;
+    startedAt: Date; // Alias for startTime to match some usages
+}
+
+export type GameFormat = '1v1' | '2v2';
+
+export interface Player {
+    userId: string;
+    username: string;
+    avatarUrl?: string;
+}
+
+export interface GameSession {
+    sessionId: string;
+    hostId: string;
+    hostName: string;
+    venueId: string;
+    venueName: string;
+    format: GameFormat;
+    status: 'waiting' | 'ready' | 'active' | 'finished' | 'cancelled';
+    players: Player[];
+    maxPlayers: number;
+    qrCodeData: string;
+    pinCode: string;
+    createdAt: Date;
+    initiatorId: string;
+    expiresAt: Date;
 }
 
 export interface GameSetup {
@@ -36,4 +69,11 @@ export interface GameSetup {
     venueId: string;
     venueName: string;
     gameType: '6' | '11';
+}
+
+export interface GameResults {
+    game: Game;
+    mvp: Player;
+    goalsByPlayer: Record<string, number>;
+    goalsByPosition: Record<GoalPosition, number>;
 }

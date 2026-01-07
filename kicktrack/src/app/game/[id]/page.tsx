@@ -6,14 +6,12 @@ import { useAuthStore } from '@/lib/stores/authStore';
 import { subscribeToGame, addGoal, removeLastGoal, endGame, abandonGame } from '@/lib/firebase/games';
 import { Game, GoalPosition } from '@/types';
 import { Button } from '@/components/common/ui';
-import GameTimer from '@/components/game/GameTimer';
-import GoalTimeline from '@/components/game/GoalTimeline';
+import GameBoard from '@/components/game/GameBoard';
 import AddGoalModal from '@/components/game/AddGoalModal';
 import { FieldBackground } from '@/components/FieldDecorations';
 import {
     ArrowLeftIcon,
-    EllipsisVerticalIcon,
-    PlusIcon
+    EllipsisVerticalIcon
 } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
 
@@ -59,6 +57,7 @@ export default function GamePage() {
 
         try {
             await addGoal(game.gameId, scorerId, scorerName, goalModal.teamIndex, position);
+            setGoalModal({ ...goalModal, isOpen: false });
         } catch (error) {
             console.error('Error adding goal:', error);
         }
@@ -119,9 +118,6 @@ export default function GamePage() {
         );
     }
 
-    const team1 = game.teams[0];
-    const team2 = game.teams[1];
-
     return (
         <div className={styles.pageContainer}>
             <FieldBackground />
@@ -138,7 +134,6 @@ export default function GamePage() {
                         </button>
                         <div>
                             <p className="text-sm text-secondary">{game.venueName}</p>
-                            <GameTimer startedAt={game.startedAt} />
                         </div>
                     </div>
 
@@ -183,126 +178,11 @@ export default function GamePage() {
                     </div>
                 </div>
 
-                {/* Score Display */}
-                <div style={{
-                    background: 'var(--color-pitch-medium)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 'var(--radius-lg)',
-                    padding: 'var(--spacing-lg)',
-                    marginBottom: 'var(--spacing-lg)',
-                    boxShadow: 'var(--shadow-soft)'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        {/* Team 1 */}
-                        <div style={{ textAlign: 'center', flex: 1 }}>
-                            <div style={{
-                                width: '3rem',
-                                height: '3rem',
-                                background: 'rgba(33, 150, 243, 0.2)',
-                                borderRadius: '50%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                margin: '0 auto var(--spacing-sm)'
-                            }}>
-                                <span className="text-xl">🔵</span>
-                            </div>
-                            <p className="text-sm text-secondary mb-1 truncate px-2">
-                                {team1.players.map(p => p.username).join(' & ')}
-                            </p>
-                            <p style={{ fontSize: '3rem', fontWeight: 800, color: '#60A5FA', lineHeight: 1 }}>{team1.score}</p>
-                        </div>
-
-                        {/* VS */}
-                        <div className="px-4">
-                            <p style={{ color: 'var(--color-text-muted)', fontSize: '1.125rem', fontWeight: 500 }}>vs</p>
-                        </div>
-
-                        {/* Team 2 */}
-                        <div style={{ textAlign: 'center', flex: 1 }}>
-                            <div style={{
-                                width: '3rem',
-                                height: '3rem',
-                                background: 'rgba(244, 67, 54, 0.2)',
-                                borderRadius: '50%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                margin: '0 auto var(--spacing-sm)'
-                            }}>
-                                <span className="text-xl">🔴</span>
-                            </div>
-                            <p className="text-sm text-secondary mb-1 truncate px-2">
-                                {team2.players.map(p => p.username).join(' & ')}
-                            </p>
-                            <p style={{ fontSize: '3rem', fontWeight: 800, color: '#F87171', lineHeight: 1 }}>{team2.score}</p>
-                        </div>
-                    </div>
-
-                    {/* Target Score */}
-                    <p className="text-center text-secondary text-sm mt-4">
-                        Premier à {game.targetScore} buts
-                    </p>
-                </div>
-
-                {/* Add Goal Buttons */}
-                <div className="grid-2" style={{ marginBottom: 'var(--spacing-xl)' }}>
-                    <button
-                        onClick={() => setGoalModal({ isOpen: true, teamIndex: 0 })}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.5rem',
-                            padding: '1.5rem',
-                            background: 'rgba(33, 150, 243, 0.1)',
-                            border: '2px solid rgba(33, 150, 243, 0.3)',
-                            borderRadius: 'var(--radius-md)',
-                            color: '#60A5FA',
-                            fontWeight: 600,
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        <PlusIcon className="h-6 w-6" />
-                        But 🔵
-                    </button>
-                    <button
-                        onClick={() => setGoalModal({ isOpen: true, teamIndex: 1 })}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.5rem',
-                            padding: '1.5rem',
-                            background: 'rgba(244, 67, 54, 0.1)',
-                            border: '2px solid rgba(244, 67, 54, 0.3)',
-                            borderRadius: 'var(--radius-md)',
-                            color: '#F87171',
-                            fontWeight: 600,
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        <PlusIcon className="h-6 w-6" />
-                        But 🔴
-                    </button>
-                </div>
-
-                {/* Goal Timeline */}
-                <div style={{
-                    background: 'var(--color-pitch-medium)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 'var(--radius-lg)',
-                    padding: 'var(--spacing-md)'
-                }}>
-                    <h3 className="text-sm font-medium text-secondary uppercase tracking-wider mb-3">
-                        Historique des buts
-                    </h3>
-                    <GoalTimeline
-                        goals={game.goals}
-                        onRemoveGoal={handleRemoveLastGoal}
-                        canRemove={game.goals.length > 0}
-                    />
-                </div>
+                {/* Game Board */}
+                <GameBoard
+                    game={game}
+                    onAddGoal={(teamIndex) => setGoalModal({ isOpen: true, teamIndex })}
+                />
             </div>
 
             {/* Add Goal Modal */}
@@ -311,8 +191,8 @@ export default function GamePage() {
                 onClose={() => setGoalModal({ ...goalModal, isOpen: false })}
                 onConfirm={handleAddGoal}
                 teamPlayers={game.teams[goalModal.teamIndex].players}
-                teamName={goalModal.teamIndex === 0 ? 'Équipe Bleue' : 'Équipe Rouge'}
-                teamColor={goalModal.teamIndex === 0 ? 'blue' : 'rose'}
+                teamName={goalModal.teamIndex === 0 ? 'Équipe 1' : 'Équipe 2'}
+                teamColor={game.teams[goalModal.teamIndex].color}
             />
         </div>
     );

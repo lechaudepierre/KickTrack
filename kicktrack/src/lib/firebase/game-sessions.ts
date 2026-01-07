@@ -12,7 +12,7 @@ import {
     Unsubscribe
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
-import { GameSession, Game, Player, Teams, GameFormat } from '@/types';
+import { GameSession, Game, Player, Team, GameFormat } from '@/types';
 import { generatePinCode, generateQRData } from '@/lib/utils/code-generator';
 
 const SESSIONS_COLLECTION = 'game_sessions';
@@ -20,8 +20,8 @@ const GAMES_COLLECTION = 'games';
 
 // Create a new game session
 export async function createGameSession(
-    initiatorId: string,
-    initiatorName: string,
+    hostId: string,
+    hostName: string,
     venueId: string,
     venueName: string,
     format: GameFormat
@@ -39,10 +39,12 @@ export async function createGameSession(
         format,
         venueId,
         venueName,
-        initiatorId,
+        hostId,
+        hostName,
+        initiatorId: hostId, // Keep for backward compatibility if needed, or remove from type later
         players: [{
-            userId: initiatorId,
-            username: initiatorName
+            userId: hostId,
+            username: hostName
         }],
         maxPlayers: format === '1v1' ? 2 : 4,
         createdAt: now,
@@ -140,7 +142,7 @@ export function subscribeToSession(
 // Start the game (create game document from session)
 export async function startGame(
     sessionId: string,
-    teams: Teams,
+    teams: [Team, Team],
     targetScore: 6 | 11 = 6
 ): Promise<Game> {
     const db = getFirebaseDb();
@@ -156,24 +158,24 @@ export async function startGame(
 
     const game: Game = {
         gameId: gameRef.id,
-        sessionId,
-        format: session.format,
         venueId: session.venueId,
         venueName: session.venueName,
-        teams: [
-            { players: teams.team1, score: 0 },
-            { players: teams.team2, score: 0 }
-        ],
-        goals: [],
-        targetScore,
+        gameType: targetScore === 6 ? '6' : '11', // Map targetScore to gameType
+        teams: teams,
+        score: [0, 0],
+        multiplier: 1,
+        startTime: new Date(),
+        duration: 0,
         status: 'in_progress',
+        goals: [],
         startedAt: new Date()
     };
 
     await setDoc(gameRef, game);
 
     // Update session status
-    await updateDoc(sessionRef, { status: 'started' });
+    await updateDoc(sessionRef, { status: 'active' }); // Changed from 'started' to 'active' to match GameSession status type if needed, or keep 'started' if that's what I defined. 
+    // Wait, GameSession status is 'waiting' | 'ready' | 'active' | 'finished' | 'cancelled'. So 'active' is correct.
 
     return game;
 }

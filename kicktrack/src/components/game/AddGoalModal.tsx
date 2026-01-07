@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Player, GoalPosition } from '@/types';
+import { Player, GoalPosition, TeamColor } from '@/types';
 import { Button } from '@/components/common/ui';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 
@@ -11,14 +11,14 @@ interface AddGoalModalProps {
     onConfirm: (scorerId: string, scorerName: string, position: GoalPosition) => void;
     teamPlayers: Player[];
     teamName: string;
-    teamColor: 'blue' | 'rose';
+    teamColor: TeamColor;
 }
 
 const positions: { value: GoalPosition; label: string }[] = [
     { value: 'defense', label: 'Défense' },
-    { value: 'attack1', label: 'Attaque 1' },
-    { value: 'attack2', label: 'Attaque 2' },
-    { value: 'attack3', label: 'Attaque 3' }
+    { value: 'midfield', label: 'Milieu' },
+    { value: 'attack', label: 'Attaque' },
+    { value: 'goalkeeper', label: 'Gardien' }
 ];
 
 export default function AddGoalModal({
@@ -30,7 +30,7 @@ export default function AddGoalModal({
     teamColor
 }: AddGoalModalProps) {
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-    const [selectedPosition, setSelectedPosition] = useState<GoalPosition>('attack1');
+    const [selectedPosition, setSelectedPosition] = useState<GoalPosition>('attack');
 
     if (!isOpen) return null;
 
@@ -38,26 +38,23 @@ export default function AddGoalModal({
         if (!selectedPlayer) return;
         onConfirm(selectedPlayer.userId, selectedPlayer.username, selectedPosition);
         setSelectedPlayer(null);
-        setSelectedPosition('attack1');
+        setSelectedPosition('attack');
         onClose();
     };
 
-    const colorClasses = {
-        blue: {
-            bg: 'bg-blue-500/20',
-            border: 'border-blue-500',
-            text: 'text-blue-400',
-            ring: 'ring-blue-500'
-        },
-        rose: {
-            bg: 'bg-rose-500/20',
-            border: 'border-rose-500',
-            text: 'text-rose-400',
-            ring: 'ring-rose-500'
+    const getColorClasses = (color: TeamColor) => {
+        switch (color) {
+            case 'blue': return { bg: 'bg-blue-500/20', border: 'border-blue-500', text: 'text-blue-400', ring: 'ring-blue-500', solid: 'bg-blue-500' };
+            case 'red': return { bg: 'bg-red-500/20', border: 'border-red-500', text: 'text-red-400', ring: 'ring-red-500', solid: 'bg-red-500' };
+            case 'green': return { bg: 'bg-emerald-500/20', border: 'border-emerald-500', text: 'text-emerald-400', ring: 'ring-emerald-500', solid: 'bg-emerald-500' };
+            case 'yellow': return { bg: 'bg-yellow-500/20', border: 'border-yellow-500', text: 'text-yellow-400', ring: 'ring-yellow-500', solid: 'bg-yellow-500' };
+            case 'orange': return { bg: 'bg-orange-500/20', border: 'border-orange-500', text: 'text-orange-400', ring: 'ring-orange-500', solid: 'bg-orange-500' };
+            case 'purple': return { bg: 'bg-purple-500/20', border: 'border-purple-500', text: 'text-purple-400', ring: 'ring-purple-500', solid: 'bg-purple-500' };
+            default: return { bg: 'bg-slate-500/20', border: 'border-slate-500', text: 'text-slate-400', ring: 'ring-slate-500', solid: 'bg-slate-500' };
         }
     };
 
-    const colors = colorClasses[teamColor];
+    const colors = getColorClasses(teamColor);
 
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
@@ -94,13 +91,12 @@ export default function AddGoalModal({
                                     key={player.userId}
                                     onClick={() => setSelectedPlayer(player)}
                                     className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${selectedPlayer?.userId === player.userId
-                                            ? `${colors.bg} ${colors.border}`
-                                            : 'bg-slate-800/50 border-slate-700 hover:border-slate-600'
+                                        ? `${colors.bg} ${colors.border}`
+                                        : 'bg-slate-800/50 border-slate-700 hover:border-slate-600'
                                         }`}
                                 >
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${teamColor === 'blue' ? 'bg-blue-500' : 'bg-rose-500'
-                                        }`}>
-                                        {player.username.charAt(0).toUpperCase()}
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${colors.solid}`}>
+                                        {player.username?.charAt(0).toUpperCase() || '?'}
                                     </div>
                                     <span className={`font-medium ${selectedPlayer?.userId === player.userId ? colors.text : 'text-white'
                                         }`}>
@@ -122,8 +118,8 @@ export default function AddGoalModal({
                                     key={value}
                                     onClick={() => setSelectedPosition(value)}
                                     className={`p-3 rounded-xl border-2 text-sm font-medium transition-all ${selectedPosition === value
-                                            ? `${colors.bg} ${colors.border} ${colors.text}`
-                                            : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:border-slate-600'
+                                        ? `${colors.bg} ${colors.border} ${colors.text}`
+                                        : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:border-slate-600'
                                         }`}
                                 >
                                     {label}
