@@ -44,7 +44,7 @@ export type GameFormat = '1v1' | '2v2';
 export interface Player {
     userId: string;
     username: string;
-    avatarUrl?: string;
+    avatarUrl?: string | null;
 }
 
 export interface GameSession {

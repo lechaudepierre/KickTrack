@@ -84,7 +84,14 @@ export async function joinGameSession(
         throw new Error('Session has expired');
     }
 
-    const updatedPlayers = [...session.players, player];
+    // Sanitize player object to remove undefined values
+    const safePlayer = {
+        userId: player.userId,
+        username: player.username,
+        avatarUrl: player.avatarUrl || null
+    };
+
+    const updatedPlayers = [...session.players, safePlayer];
     const isReady = updatedPlayers.length === session.maxPlayers;
 
     await updateDoc(sessionRef, {
