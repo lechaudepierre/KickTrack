@@ -7,7 +7,6 @@ import { subscribeToGame, addGoal, removeLastGoal, endGame, abandonGame } from '
 import { Game, GoalPosition } from '@/types';
 import { Button } from '@/components/common/ui';
 import GameBoard from '@/components/game/GameBoard';
-import AddGoalModal from '@/components/game/AddGoalModal';
 import { FieldBackground } from '@/components/FieldDecorations';
 import {
     ArrowLeftIcon,
@@ -24,10 +23,6 @@ export default function GamePage() {
     const [game, setGame] = useState<Game | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [showMenu, setShowMenu] = useState(false);
-    const [goalModal, setGoalModal] = useState<{ isOpen: boolean; teamIndex: 0 | 1 }>({
-        isOpen: false,
-        teamIndex: 0
-    });
 
     useEffect(() => {
         const unsubscribe = initialize();
@@ -52,12 +47,11 @@ export default function GamePage() {
         return () => unsubscribe();
     }, [gameId, router]);
 
-    const handleAddGoal = async (scorerId: string, scorerName: string, position: GoalPosition) => {
+    const handleAddGoal = async (teamIndex: 0 | 1, scorerId: string, scorerName: string, position: GoalPosition) => {
         if (!game) return;
 
         try {
-            await addGoal(game.gameId, scorerId, scorerName, goalModal.teamIndex, position);
-            setGoalModal({ ...goalModal, isOpen: false });
+            await addGoal(game.gameId, scorerId, scorerName, teamIndex, position);
         } catch (error) {
             console.error('Error adding goal:', error);
         }
@@ -181,19 +175,9 @@ export default function GamePage() {
                 {/* Game Board */}
                 <GameBoard
                     game={game}
-                    onAddGoal={(teamIndex) => setGoalModal({ isOpen: true, teamIndex })}
+                    onAddGoal={handleAddGoal}
                 />
             </div>
-
-            {/* Add Goal Modal */}
-            <AddGoalModal
-                isOpen={goalModal.isOpen}
-                onClose={() => setGoalModal({ ...goalModal, isOpen: false })}
-                onConfirm={handleAddGoal}
-                teamPlayers={game.teams[goalModal.teamIndex].players}
-                teamName={goalModal.teamIndex === 0 ? 'Équipe 1' : 'Équipe 2'}
-                teamColor={game.teams[goalModal.teamIndex].color}
-            />
         </div>
     );
 }
