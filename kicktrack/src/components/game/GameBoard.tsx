@@ -26,25 +26,14 @@ const goalTypes: { value: GoalType; label: string; description: string }[] = [
 export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardProps) {
     const [activeTeamIndex, setActiveTeamIndex] = useState<0 | 1 | null>(null);
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-<<<<<<< HEAD
     const [selectedPosition, setSelectedPosition] = useState<GoalPosition | null>(null);
     const [step, setStep] = useState<'player' | 'position' | 'type'>('player');
 
     // Animation states for scores
     const [animatingScore, setAnimatingScore] = useState<0 | 1 | null>(null);
-=======
->>>>>>> main
 
     const team1 = game.teams[0];
     const team2 = game.teams[1];
-
-<<<<<<< HEAD
-    // Trigger animation when score changes
-    useEffect(() => {
-        const prevScore = [game.score[0], game.score[1]];
-        // This is a bit tricky since we don't have the previous score easily
-        // But we can detect which one changed if we store it
-    }, [game.score]);
 
     // Use a ref to track previous score for animation
     const prevScoreRef = useState<[number, number]>(game.score);
@@ -58,7 +47,7 @@ export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardP
         }
         prevScoreRef[1](game.score);
     }, [game.score]);
-=======
+
     const getTeamColors = (teamIndex: 0 | 1) => {
         const team = game.teams[teamIndex];
         const colorMap: Record<string, { bg: string; border: string; text: string; light: string }> = {
@@ -72,7 +61,6 @@ export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardP
         };
         return colorMap[team.color] || colorMap.slate;
     };
->>>>>>> main
 
     const handleStartAddGoal = (teamIndex: 0 | 1) => {
         const team = game.teams[teamIndex];
@@ -118,89 +106,84 @@ export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardP
         }
     };
 
-    const renderGoalInput = () => {
-        if (activeTeamIndex === null) return null;
-
-        const team = game.teams[activeTeamIndex];
+    const renderGoalInput = (teamIndex: 0 | 1, colors: any) => {
+        const team = game.teams[teamIndex];
         const teamColorClass = styles[team.color] || styles.slate;
 
         return (
-            <div className={styles.modalOverlay} onClick={handleCancel}>
-                <div className={`${styles.modalContent} ${teamColorClass}`} onClick={e => e.stopPropagation()}>
-                    <div className={styles.inputHeader}>
-                        <div className="flex flex-col">
-                            <span className={styles.inputTitle}>
-                                {step === 'player' && 'Qui a marqué ?'}
-                                {step === 'position' && 'Depuis quelle position ?'}
-                                {step === 'type' && 'Quel type de but ?'}
-                            </span>
-                            {selectedPlayer && step !== 'player' && (
-                                <span className="text-xs opacity-70">Buteur: {selectedPlayer.username}</span>
-                            )}
+            <div className={`${styles.modalContent} ${teamColorClass} w-full mt-8`} style={{ animation: 'slideIn 0.3s ease-out' }}>
+                <div className={styles.inputHeader}>
+                    <div className="flex flex-col">
+                        <span className={styles.inputTitle}>
+                            {step === 'player' && 'Qui a marqué ?'}
+                            {step === 'position' && 'Depuis quelle position ?'}
+                            {step === 'type' && 'Quel type de but ?'}
+                        </span>
+                        {selectedPlayer && step !== 'player' && (
+                            <span className="text-xs opacity-70">Buteur: {selectedPlayer.username}</span>
+                        )}
+                    </div>
+                    <button onClick={handleCancel} className={styles.closeButton}>
+                        <XMarkIcon className={styles.closeIcon} />
+                    </button>
+                </div>
+
+                <div className={styles.inputContent}>
+                    {/* Step 1: Player Selection */}
+                    {step === 'player' && (
+                        <div className={styles.selectionGrid}>
+                            {team.players.map(player => (
+                                <button
+                                    key={player.userId}
+                                    onClick={() => handleSelectPlayer(player)}
+                                    className={styles.playerButton}
+                                >
+                                    <div className={styles.playerAvatar}>
+                                        {player.username?.charAt(0).toUpperCase() || '?'}
+                                    </div>
+                                    <span className={styles.playerName}>{player.username}</span>
+                                </button>
+                            ))}
                         </div>
-                        <button onClick={handleCancel} className={styles.closeButton}>
-                            <XMarkIcon className={styles.closeIcon} />
-                        </button>
-                    </div>
+                    )}
 
-                    <div className={styles.inputContent}>
-                        {/* Step 1: Player Selection */}
-                        {step === 'player' && (
-                            <div className={styles.selectionGrid}>
-                                {team.players.map(player => (
-                                    <button
-                                        key={player.userId}
-                                        onClick={() => handleSelectPlayer(player)}
-                                        className={styles.playerButton}
-                                    >
-                                        <div className={styles.playerAvatar}>
-                                            {player.username?.charAt(0).toUpperCase() || '?'}
-                                        </div>
-                                        <span className={styles.playerName}>{player.username}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+                    {/* Step 2: Position Selection */}
+                    {step === 'position' && (
+                        <div className={styles.selectionGrid}>
+                            {positions.map(pos => (
+                                <button
+                                    key={pos.value}
+                                    onClick={() => handleSelectPosition(pos.value)}
+                                    className={`${styles.positionButton} ${pos.color === 'green' ? styles.bgGreen :
+                                        pos.color === 'blue' ? styles.bgBlue :
+                                            pos.color === 'yellow' ? styles.bgYellow :
+                                                styles.bgRed
+                                        }`}
+                                >
+                                    <span className={styles.positionLabel}>{pos.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
 
-                        {/* Step 2: Position Selection */}
-                        {step === 'position' && (
-                            <div className={styles.selectionGrid}>
-                                {positions.map(pos => (
-                                    <button
-                                        key={pos.value}
-                                        onClick={() => handleSelectPosition(pos.value)}
-                                        className={`${styles.positionButton} ${pos.color === 'green' ? styles.bgGreen :
-                                            pos.color === 'blue' ? styles.bgBlue :
-                                                pos.color === 'yellow' ? styles.bgYellow :
-                                                    styles.bgRed
-                                            }`}
-                                    >
-                                        <span className={styles.positionLabel}>{pos.label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Step 3: Goal Type Selection */}
-                        {step === 'type' && (
-                            <div className={styles.typeGrid}>
-                                {goalTypes.map(type => (
-                                    <button
-                                        key={type.value}
-                                        onClick={() => handleSelectGoalType(type.value)}
-                                        className={`${styles.typeButton} ${type.value === 'normal' ? `${styles.bgNormal} ${styles.fullWidth}` :
-                                                type.value === 'gamelle' ? styles.bgGamelle :
-                                                    styles.bgGamelleRentrante
-                                            }`}
-                                    >
-                                        <span className={styles.typeLabel}>{type.label}</span>
-                                        <span className={styles.typeDesc}>{type.description}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
+                    {/* Step 3: Goal Type Selection */}
+                    {step === 'type' && (
+                        <div className={styles.typeGrid}>
+                            {goalTypes.map(type => (
+                                <button
+                                    key={type.value}
+                                    onClick={() => handleSelectGoalType(type.value)}
+                                    className={`${styles.typeButton} ${type.value === 'normal' ? `${styles.bgNormal} ${styles.fullWidth}` :
+                                        type.value === 'gamelle' ? styles.bgGamelle :
+                                            styles.bgGamelleRentrante
+                                        }`}
+                                >
+                                    <span className={styles.typeLabel}>{type.label}</span>
+                                    <span className={styles.typeDesc}>{type.description}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -324,13 +307,8 @@ export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardP
                     </button>
                 </div>
 
-<<<<<<< HEAD
-                {/* Modal Goal Input */}
-                {renderGoalInput()}
-=======
                 {/* Inline Goal Input */}
                 {activeTeamIndex !== null && renderGoalInput(activeTeamIndex, getTeamColors(activeTeamIndex))}
->>>>>>> main
             </div>
         </div>
     );

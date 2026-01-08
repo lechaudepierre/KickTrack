@@ -171,26 +171,6 @@ export default function DashboardPage() {
                     </Link>
                 </div>
 
-                {/* Recent Activity */}
-                <div className={styles.recentActivity}>
-                    <div className={styles.sectionHeader}>
-                        <div className={styles.sectionDivider} />
-                        <h3 className={styles.sectionTitle}>Dernières Parties</h3>
-                    </div>
-                    <div className={styles.emptyState}>
-                        <p className={styles.emptyText}>Aucune partie récente</p>
-                        <div className={styles.emptyAction}>
-                            <Link href="/game/new">
-                                <div className="btn-primary">
-                                    <div className="btn-primary-shadow" />
-                                    <div className="btn-primary-content">
-                                        Jouer ma première partie
-                                    </div>
-                                </div>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     );

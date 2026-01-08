@@ -71,24 +71,54 @@
 
 /* Score Board */
 .scoreBoard {
-    @apply relative bg-[#1E293B]/80 backdrop-blur-md border border-[#334155] rounded-3xl p-8 shadow-2xl overflow-hidden;
+    @apply relative bg-[#1E293B]/80 backdrop-blur-md border border-[#334155] rounded-2xl p-4 shadow-2xl overflow-hidden;
+}
+
+@media (min-width: 400px) {
+    .scoreBoard {
+        @apply rounded-3xl p-6;
+    }
+}
+
+@media (min-width: 500px) {
+    .scoreBoard {
+        @apply p-8;
+    }
 }
 
 .scoreBoardContent {
-    @apply flex items-center justify-between relative z-10;
+    @apply flex items-center justify-between relative z-10 gap-2;
 }
 
 .teamScore {
-    @apply flex-1 text-center;
+    @apply flex-1 text-center min-w-0;
 }
 
 .scoreValue {
-    @apply text-7xl font-black mb-2 drop-shadow-lg;
+    @apply text-4xl font-black mb-1 drop-shadow-lg;
     color: var(--team-text);
 }
 
+@media (min-width: 400px) {
+    .scoreValue {
+        @apply text-5xl mb-2;
+    }
+}
+
+@media (min-width: 500px) {
+    .scoreValue {
+        @apply text-7xl;
+    }
+}
+
 .teamInfo {
-    @apply flex flex-col items-center gap-1;
+    @apply flex flex-col items-center gap-0.5;
+}
+
+@media (min-width: 400px) {
+    .teamInfo {
+        @apply gap-1;
+    }
 }
 
 .playerAvatars {
@@ -96,12 +126,24 @@
 }
 
 .avatar {
-    @apply w-8 h-8 rounded-full border-2 border-[#1E293B] flex items-center justify-center text-xs font-bold text-white;
+    @apply w-6 h-6 rounded-full border-2 border-[#1E293B] flex items-center justify-center text-[10px] font-bold text-white;
     background-color: var(--team-primary);
 }
 
+@media (min-width: 400px) {
+    .avatar {
+        @apply w-8 h-8 text-xs;
+    }
+}
+
 .teamLabel {
-    @apply text-[#94A3B8] text-sm font-medium uppercase tracking-wide;
+    @apply text-[#94A3B8] text-xs font-medium uppercase tracking-wide;
+}
+
+@media (min-width: 400px) {
+    .teamLabel {
+        @apply text-sm;
+    }
 }
 
 .gradientAccent {
@@ -121,33 +163,111 @@
 
 /* Center Info */
 .centerInfo {
-    @apply flex flex-col items-center px-8;
+    @apply flex flex-col items-center px-2 shrink-0;
+}
+
+@media (min-width: 400px) {
+    .centerInfo {
+        @apply px-4;
+    }
+}
+
+@media (min-width: 500px) {
+    .centerInfo {
+        @apply px-8;
+    }
 }
 
 .timerWrapper {
-    @apply bg-[#0F172A] rounded-full px-6 py-2 border border-[#334155] mb-4 shadow-inner;
+    @apply bg-[#0F172A] rounded-full px-3 py-1 border border-[#334155] mb-2 shadow-inner;
+}
+
+@media (min-width: 400px) {
+    .timerWrapper {
+        @apply px-4 py-1.5 mb-3;
+    }
+}
+
+@media (min-width: 500px) {
+    .timerWrapper {
+        @apply px-6 py-2 mb-4;
+    }
 }
 
 .vsLabel {
-    @apply text-[#64748B] font-bold text-xl;
+    @apply text-[#64748B] font-bold text-base;
+}
+
+@media (min-width: 400px) {
+    .vsLabel {
+        @apply text-lg;
+    }
+}
+
+@media (min-width: 500px) {
+    .vsLabel {
+        @apply text-xl;
+    }
 }
 
 .multiplierBadge {
-    @apply mt-2 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full text-white text-xs font-black animate-pulse shadow-lg shadow-orange-500/20 z-10 border border-white/20;
+    @apply mt-1 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full text-white text-[10px] font-black animate-pulse shadow-lg shadow-orange-500/20 z-10 border border-white/20;
+}
+
+@media (min-width: 400px) {
+    .multiplierBadge {
+        @apply mt-2 px-4 py-1.5 text-xs;
+    }
 }
 
 /* Goal Controls */
 .controlsContainer {
-    @apply flex flex-col gap-8;
+    @apply flex flex-col gap-4;
+}
+
+@media (min-width: 400px) {
+    .controlsContainer {
+        @apply gap-6;
+    }
+}
+
+@media (min-width: 500px) {
+    .controlsContainer {
+        @apply gap-8;
+    }
 }
 
 .buttonsGrid {
-    @apply grid grid-cols-2 gap-6;
+    @apply grid grid-cols-2 gap-3;
+}
+
+@media (min-width: 400px) {
+    .buttonsGrid {
+        @apply gap-4;
+    }
+}
+
+@media (min-width: 500px) {
+    .buttonsGrid {
+        @apply gap-6;
+    }
 }
 
 .goalButton {
-    @apply relative overflow-hidden rounded-2xl p-6 transition-all border-2 bg-[#1E293B];
+    @apply relative overflow-hidden rounded-xl p-4 transition-all border-2 bg-[#1E293B];
     border-color: var(--team-border);
+}
+
+@media (min-width: 400px) {
+    .goalButton {
+        @apply rounded-2xl p-5;
+    }
+}
+
+@media (min-width: 500px) {
+    .goalButton {
+        @apply p-6;
+    }
 }
 
 .goalButtonActive {
@@ -173,12 +293,30 @@
 }
 
 .buttonContent {
-    @apply flex flex-col items-center gap-3;
+    @apply flex flex-col items-center gap-2;
+}
+
+@media (min-width: 400px) {
+    .buttonContent {
+        @apply gap-3;
+    }
 }
 
 .iconWrapper {
-    @apply w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-shadow;
+    @apply w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-shadow;
     background-color: var(--team-primary);
+}
+
+@media (min-width: 400px) {
+    .iconWrapper {
+        @apply w-12 h-12;
+    }
+}
+
+@media (min-width: 500px) {
+    .iconWrapper {
+        @apply w-16 h-16;
+    }
 }
 
 .iconWrapperActive {
@@ -190,12 +328,36 @@
 }
 
 .plusIcon {
-    @apply w-8 h-8 text-white;
+    @apply w-5 h-5 text-white;
+}
+
+@media (min-width: 400px) {
+    .plusIcon {
+        @apply w-6 h-6;
+    }
+}
+
+@media (min-width: 500px) {
+    .plusIcon {
+        @apply w-8 h-8;
+    }
 }
 
 .buttonLabel {
-    @apply font-black text-xl uppercase tracking-wider;
+    @apply font-black text-sm uppercase tracking-wider;
     color: var(--team-text);
+}
+
+@media (min-width: 400px) {
+    .buttonLabel {
+        @apply text-base;
+    }
+}
+
+@media (min-width: 500px) {
+    .buttonLabel {
+        @apply text-xl;
+    }
 }
 
 .buttonLabelActive {

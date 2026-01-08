@@ -1,17 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getUserGames } from '@/lib/firebase/games';
-import { Game } from '@/types';
+import { getVenues } from '@/lib/firebase/firestore';
+import { Game, Venue } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
+import { calculateAdvancedStats, getPositionLabel, AdvancedStats } from '@/lib/utils/statsCalculator';
 import {
     ArrowLeftIcon,
     ClockIcon,
+    MapPinIcon,
+    FireIcon,
+    TrophyIcon,
     ChartBarIcon,
-    TrophyIcon
+    ChevronDownIcon,
+    MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 
@@ -19,7 +24,17 @@ export default function ProfilePage() {
     const router = useRouter();
     const { user, isAuthenticated, isLoading: authLoading, initialize } = useAuthStore();
     const [recentGames, setRecentGames] = useState<Game[]>([]);
+    const [allGames, setAllGames] = useState<Game[]>([]);
     const [isLoadingGames, setIsLoadingGames] = useState(true);
+    const [advancedStats, setAdvancedStats] = useState<AdvancedStats | null>(null);
+
+    // Venue filter state
+    const [venues, setVenues] = useState<Venue[]>([]);
+    const [selectedVenue, setSelectedVenue] = useState<string>('all');
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    // Head-to-head search state
+    const [h2hSearchQuery, setH2hSearchQuery] = useState('');
 
     useEffect(() => {
         const unsubscribe = initialize();
@@ -36,21 +51,72 @@ export default function ProfilePage() {
 
     useEffect(() => {
         if (user) {
-            loadRecentGames();
+            loadGames();
+            loadVenues();
         }
     }, [user]);
 
-    const loadRecentGames = async () => {
+    // Recalculate stats when venue filter changes
+    useEffect(() => {
+        if (user && allGames.length > 0) {
+            const filteredGames = selectedVenue === 'all'
+                ? allGames
+                : allGames.filter(g => g.venueId === selectedVenue);
+
+            const stats = calculateAdvancedStats(filteredGames, user.userId);
+            setAdvancedStats(stats);
+
+            // Also update recent games based on filter
+            setRecentGames(filteredGames.slice(0, 10));
+        }
+    }, [selectedVenue, allGames, user]);
+
+    const loadVenues = async () => {
+        try {
+            const data = await getVenues();
+            setVenues(data);
+        } catch (error) {
+            console.error('Error loading venues:', error);
+        }
+    };
+
+    const loadGames = async () => {
         if (!user) return;
         try {
-            const games = await getUserGames(user.userId);
-            setRecentGames(games);
+            const games = await getUserGames(user.userId, 100);
+            setAllGames(games);
+            setRecentGames(games.slice(0, 10));
+
+            const stats = calculateAdvancedStats(games, user.userId);
+            setAdvancedStats(stats);
         } catch (error) {
             console.error('Error loading games:', error);
         } finally {
             setIsLoadingGames(false);
         }
     };
+
+    const getSelectedVenueName = () => {
+        if (selectedVenue === 'all') return 'Tous les lieux';
+        const venue = venues.find(v => v.venueId === selectedVenue);
+        return venue?.name || 'Sélectionner';
+    };
+
+    const handleVenueSelect = (venueId: string) => {
+        setSelectedVenue(venueId);
+        setIsDropdownOpen(false);
+    };
+
+    // Filter head-to-head based on search
+    const filteredH2H = useMemo(() => {
+        if (!advancedStats) return [];
+        if (!h2hSearchQuery.trim()) return advancedStats.headToHead.slice(0, 5);
+
+        const query = h2hSearchQuery.toLowerCase();
+        return advancedStats.headToHead.filter(h2h =>
+            h2h.opponentName.toLowerCase().includes(query)
+        );
+    }, [advancedStats, h2hSearchQuery]);
 
     if (authLoading) {
         return (
@@ -76,7 +142,6 @@ export default function ProfilePage() {
     const getGameResult = (game: Game) => {
         if (game.winner === undefined) return 'Nul';
 
-        // Find user's team index
         const userTeamIndex = game.teams.findIndex(t => t.players.some(p => p.userId === user.userId));
 
         if (userTeamIndex === -1) return '?';
@@ -93,7 +158,7 @@ export default function ProfilePage() {
                     <button onClick={() => router.back()} className={styles.backButton}>
                         <ArrowLeftIcon className="w-6 h-6" />
                     </button>
-                    <h1 className={styles.title}>Mon Profil</h1>
+                    <h1 className={styles.title}>Mes Stats</h1>
                 </div>
 
                 <div className={styles.profileHeader}>
@@ -108,34 +173,342 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
+                {/* Venue Filter Dropdown */}
+                <div className={styles.filterSection}>
+                    <div className={styles.dropdownContainer}>
+                        <button
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            className={styles.dropdownButton}
+                        >
+                            <MapPinIcon className="w-5 h-5" />
+                            <span>{getSelectedVenueName()}</span>
+                            <ChevronDownIcon className={`w-5 h-5 ${styles.chevron} ${isDropdownOpen ? styles.chevronOpen : ''}`} />
+                        </button>
+
+                        {isDropdownOpen && (
+                            <div className={styles.dropdownMenu}>
+                                <button
+                                    onClick={() => handleVenueSelect('all')}
+                                    className={`${styles.dropdownItem} ${selectedVenue === 'all' ? styles.dropdownItemActive : ''}`}
+                                >
+                                    Tous les lieux
+                                </button>
+                                {venues.map(venue => (
+                                    <button
+                                        key={venue.venueId}
+                                        onClick={() => handleVenueSelect(venue.venueId)}
+                                        className={`${styles.dropdownItem} ${selectedVenue === venue.venueId ? styles.dropdownItemActive : ''}`}
+                                    >
+                                        {venue.name}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Stats principales */}
                 <div className={styles.statsGrid}>
                     <div className={`${styles.statCard} ${styles.statCardHighlight}`}>
                         <p className={`${styles.statValue} ${styles.statValueHighlight}`}>
-                            {user.stats.wins}
+                            {advancedStats ? advancedStats.formatStats['6'].wins + advancedStats.formatStats['11'].wins : user.stats.wins}
                         </p>
                         <p className={styles.statLabel}>Victoires</p>
                     </div>
                     <div className={styles.statCard}>
                         <p className={styles.statValue} style={{ color: 'var(--color-accent-orange)' }}>
-                            {user.stats.losses}
+                            {advancedStats ? advancedStats.formatStats['6'].games + advancedStats.formatStats['11'].games - advancedStats.formatStats['6'].wins - advancedStats.formatStats['11'].wins : user.stats.losses}
                         </p>
                         <p className={styles.statLabel}>Défaites</p>
                     </div>
                     <div className={styles.statCard}>
                         <p className={styles.statValue}>
-                            {user.stats.totalGames}
+                            {advancedStats ? advancedStats.formatStats['6'].games + advancedStats.formatStats['11'].games : user.stats.totalGames}
                         </p>
                         <p className={styles.statLabel}>Parties</p>
                     </div>
                     <div className={styles.statCard}>
                         <p className={styles.statValue}>
-                            {user.stats.goalsScored}
+                            {advancedStats ? (() => {
+                                const totalGames = advancedStats.formatStats['6'].games + advancedStats.formatStats['11'].games;
+                                const totalWins = advancedStats.formatStats['6'].wins + advancedStats.formatStats['11'].wins;
+                                return totalGames > 0 ? `${Math.round((totalWins / totalGames) * 100)}%` : '0%';
+                            })() : '0%'}
                         </p>
-                        <p className={styles.statLabel}>Buts</p>
+                        <p className={styles.statLabel}>Ratio</p>
                     </div>
                 </div>
 
-                <div>
+                {/* Stats avancées */}
+                {advancedStats && !isLoadingGames && (
+                    <>
+                        {/* Forme récente */}
+                        {advancedStats.recentForm.length > 0 && (
+                            <div className={styles.section}>
+                                <h3 className={styles.sectionTitle}>
+                                    <FireIcon className="w-5 h-5" />
+                                    Forme récente
+                                </h3>
+                                <div className={styles.formCard}>
+                                    <div className={styles.formIndicators}>
+                                        {advancedStats.recentForm.map((result, i) => (
+                                            <div
+                                                key={i}
+                                                className={`${styles.formBadge} ${result === 'W' ? styles.formWin : result === 'L' ? styles.formLoss : styles.formDraw
+                                                    }`}
+                                            >
+                                                {result === 'W' ? 'V' : result === 'L' ? 'D' : 'N'}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {advancedStats.currentStreak.count > 0 && (
+                                        <p className={styles.streakText}>
+                                            {advancedStats.currentStreak.type === 'win'
+                                                ? `${advancedStats.currentStreak.count} victoire${advancedStats.currentStreak.count > 1 ? 's' : ''} d'affilée`
+                                                : `${advancedStats.currentStreak.count} défaite${advancedStats.currentStreak.count > 1 ? 's' : ''} d'affilée`
+                                            }
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Lieu préféré - Only show when "Tous les lieux" is selected */}
+                        {selectedVenue === 'all' && advancedStats.favoriteVenue && (
+                            <div className={styles.section}>
+                                <h3 className={styles.sectionTitle}>
+                                    <MapPinIcon className="w-5 h-5" />
+                                    Lieu préféré
+                                </h3>
+                                <div className={styles.venueCard}>
+                                    <div className={styles.venueIcon}>
+                                        <MapPinIcon className="w-6 h-6" />
+                                    </div>
+                                    <div className={styles.venueInfo}>
+                                        <p className={styles.venueName}>{advancedStats.favoriteVenue.name}</p>
+                                        <p className={styles.venueStats}>
+                                            {advancedStats.favoriteVenue.gamesPlayed} parties • {Math.round(advancedStats.favoriteVenue.winRate * 100)}% de victoires
+                                        </p>
+                                    </div>
+                                </div>
+                                {advancedStats.venueStats.length > 1 && (
+                                    <div className={styles.venueList}>
+                                        {advancedStats.venueStats.slice(1, 4).map((venue, i) => (
+                                            <div key={i} className={styles.venueListItem}>
+                                                <span className={styles.venueListName}>{venue.name}</span>
+                                                <span className={styles.venueListGames}>{venue.gamesPlayed} parties</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Moyenne de buts */}
+                        <div className={styles.section}>
+                            <h3 className={styles.sectionTitle}>
+                                <ChartBarIcon className="w-5 h-5" />
+                                Moyenne de buts
+                            </h3>
+                            <div className={styles.goalsGrid}>
+                                <div className={styles.goalCard}>
+                                    <p className={styles.goalValue}>
+                                        {advancedStats.goalsPerGame.overall.toFixed(1)}
+                                    </p>
+                                    <p className={styles.goalLabel}>Par match</p>
+                                </div>
+                                <div className={styles.goalCard}>
+                                    <p className={styles.goalValue}>
+                                        {advancedStats.goalsPerGame.match6.toFixed(1)}
+                                    </p>
+                                    <p className={styles.goalLabel}>Match en 6</p>
+                                </div>
+                                <div className={styles.goalCard}>
+                                    <p className={styles.goalValue}>
+                                        {advancedStats.goalsPerGame.match11.toFixed(1)}
+                                    </p>
+                                    <p className={styles.goalLabel}>Match en 11</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Position préférée */}
+                        {advancedStats.favoritePosition && (
+                            <div className={styles.section}>
+                                <h3 className={styles.sectionTitle}>
+                                    <TrophyIcon className="w-5 h-5" />
+                                    Zone de tir favorite
+                                </h3>
+                                <div className={styles.positionCard}>
+                                    <div className={styles.positionHighlight}>
+                                        <span className={styles.positionName}>
+                                            {getPositionLabel(advancedStats.favoritePosition)}
+                                        </span>
+                                        <span className={styles.positionGoals}>
+                                            {advancedStats.goalsByPosition[advancedStats.favoritePosition]} buts
+                                        </span>
+                                    </div>
+                                    <div className={styles.positionBreakdown}>
+                                        {Object.entries(advancedStats.goalsByPosition)
+                                            .filter(([, count]) => count > 0)
+                                            .sort(([, a], [, b]) => b - a)
+                                            .map(([position, count]) => {
+                                                const total = Object.values(advancedStats.goalsByPosition).reduce((a, b) => a + b, 0);
+                                                const percentage = total > 0 ? (count / total) * 100 : 0;
+                                                return (
+                                                    <div key={position} className={styles.positionRow}>
+                                                        <span className={styles.positionRowLabel}>
+                                                            {getPositionLabel(position as any)}
+                                                        </span>
+                                                        <div className={styles.positionBar}>
+                                                            <div
+                                                                className={styles.positionBarFill}
+                                                                style={{ width: `${percentage}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className={styles.positionRowCount}>{count}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Stats supplémentaires */}
+                        <div className={styles.section}>
+                            <h3 className={styles.sectionTitle}>
+                                <ChartBarIcon className="w-5 h-5" />
+                                Stats détaillées
+                            </h3>
+                            <div className={styles.detailsGrid}>
+                                <div className={styles.detailItem}>
+                                    <span className={styles.detailLabel}>Meilleure série</span>
+                                    <span className={styles.detailValue}>{advancedStats.winStreak} victoires</span>
+                                </div>
+                                <div className={styles.detailItem}>
+                                    <span className={styles.detailLabel}>Clean sheets</span>
+                                    <span className={styles.detailValue}>{advancedStats.cleanSheets}</span>
+                                </div>
+                                <div className={styles.detailItem}>
+                                    <span className={styles.detailLabel}>Remontadas</span>
+                                    <span className={styles.detailValue}>{advancedStats.comebacks}</span>
+                                </div>
+                                <div className={styles.detailItem}>
+                                    <span className={styles.detailLabel}>Durée moyenne</span>
+                                    <span className={styles.detailValue}>{advancedStats.averageGameDuration.toFixed(0)} min</span>
+                                </div>
+                                <div className={styles.detailItem}>
+                                    <span className={styles.detailLabel}>Buts marqués</span>
+                                    <span className={styles.detailValue}>{advancedStats.totalGoalsScored}</span>
+                                </div>
+                                <div className={styles.detailItem}>
+                                    <span className={styles.detailLabel}>Buts encaissés</span>
+                                    <span className={styles.detailValue}>{advancedStats.totalGoalsConceded}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Format préféré */}
+                        {advancedStats.preferredFormat && (
+                            <div className={styles.section}>
+                                <h3 className={styles.sectionTitle}>
+                                    <ChartBarIcon className="w-5 h-5" />
+                                    Par format de match
+                                </h3>
+                                <div className={styles.formatGrid}>
+                                    <div className={`${styles.formatCard} ${advancedStats.preferredFormat === '6' ? styles.formatCardActive : ''}`}>
+                                        <p className={styles.formatTitle}>Match en 6</p>
+                                        <p className={styles.formatGames}>{advancedStats.formatStats['6'].games} parties</p>
+                                        <p className={styles.formatWinRate}>
+                                            {Math.round(advancedStats.formatStats['6'].winRate * 100)}% de victoires
+                                        </p>
+                                    </div>
+                                    <div className={`${styles.formatCard} ${advancedStats.preferredFormat === '11' ? styles.formatCardActive : ''}`}>
+                                        <p className={styles.formatTitle}>Match en 11</p>
+                                        <p className={styles.formatGames}>{advancedStats.formatStats['11'].games} parties</p>
+                                        <p className={styles.formatWinRate}>
+                                            {Math.round(advancedStats.formatStats['11'].winRate * 100)}% de victoires
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Perfect Games */}
+                        {(advancedStats.perfectGames.inflicted > 0 || advancedStats.perfectGames.conceded > 0) && (
+                            <div className={styles.section}>
+                                <h3 className={styles.sectionTitle}>
+                                    <TrophyIcon className="w-5 h-5" />
+                                    Perfect Games
+                                </h3>
+                                <div className={styles.perfectGrid}>
+                                    <div className={styles.perfectCard}>
+                                        <p className={styles.perfectValue} style={{ color: 'var(--color-field-green)' }}>
+                                            {advancedStats.perfectGames.inflicted}
+                                        </p>
+                                        <p className={styles.perfectLabel}>Infligés</p>
+                                        <p className={styles.perfectDesc}>6-0 ou 11-0</p>
+                                    </div>
+                                    <div className={styles.perfectCard}>
+                                        <p className={styles.perfectValue} style={{ color: 'var(--color-accent-orange)' }}>
+                                            {advancedStats.perfectGames.conceded}
+                                        </p>
+                                        <p className={styles.perfectLabel}>Concédés</p>
+                                        <p className={styles.perfectDesc}>6-0 ou 11-0</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Head-to-Head */}
+                        {advancedStats.headToHead.length > 0 && (
+                            <div className={styles.section}>
+                                <h3 className={styles.sectionTitle}>
+                                    <ChartBarIcon className="w-5 h-5" />
+                                    Face à face
+                                </h3>
+
+                                {/* Search input */}
+                                <div className={styles.h2hSearch}>
+                                    <MagnifyingGlassIcon className={styles.h2hSearchIcon} />
+                                    <input
+                                        type="text"
+                                        placeholder="Rechercher un adversaire..."
+                                        value={h2hSearchQuery}
+                                        onChange={(e) => setH2hSearchQuery(e.target.value)}
+                                        className={styles.h2hSearchInput}
+                                    />
+                                </div>
+
+                                <div className={styles.h2hList}>
+                                    {filteredH2H.length === 0 ? (
+                                        <div className={styles.h2hEmpty}>
+                                            Aucun adversaire trouvé
+                                        </div>
+                                    ) : (
+                                        filteredH2H.map((h2h) => (
+                                            <div key={h2h.odentId} className={styles.h2hCard}>
+                                                <div className={styles.h2hInfo}>
+                                                    <span className={styles.h2hName}>{h2h.opponentName}</span>
+                                                    <span className={styles.h2hGames}>{h2h.gamesPlayed} parties</span>
+                                                </div>
+                                                <div className={styles.h2hStats}>
+                                                    <span className={styles.h2hWins}>{h2h.wins}V</span>
+                                                    <span className={styles.h2hSeparator}>-</span>
+                                                    <span className={styles.h2hLosses}>{h2h.losses}D</span>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* Dernières parties */}
+                <div className={styles.section}>
                     <h3 className={styles.sectionTitle}>
                         <ClockIcon className="w-5 h-5" />
                         Dernières parties
@@ -156,24 +529,22 @@ export default function ProfilePage() {
                                 const isWin = result === 'Victoire';
 
                                 return (
-                                    <Link key={game.gameId} href={`/game/${game.gameId}/results`}>
-                                        <div className={styles.gameCard}>
-                                            <div className={styles.gameInfo}>
-                                                <span className={`${styles.gameResult} ${isWin ? styles.resultWin : styles.resultLoss}`}>
-                                                    {result}
-                                                </span>
-                                                <span className={styles.gameDate}>
-                                                    {formatDate(game.startedAt)}
-                                                </span>
-                                                <span className="text-xs text-secondary">
-                                                    {game.venueName}
-                                                </span>
-                                            </div>
-                                            <div className={styles.gameScore}>
-                                                {game.score[0]} - {game.score[1]}
-                                            </div>
+                                    <div key={game.gameId} className={styles.gameCard}>
+                                        <div className={styles.gameInfo}>
+                                            <span className={`${styles.gameResult} ${isWin ? styles.resultWin : styles.resultLoss}`}>
+                                                {result}
+                                            </span>
+                                            <span className={styles.gameDate}>
+                                                {formatDate(game.startedAt)}
+                                            </span>
+                                            <span className="text-xs text-secondary">
+                                                {game.venueName}
+                                            </span>
                                         </div>
-                                    </Link>
+                                        <div className={styles.gameScore}>
+                                            {game.score[0]} - {game.score[1]}
+                                        </div>
+                                    </div>
                                 );
                             })}
                         </div>

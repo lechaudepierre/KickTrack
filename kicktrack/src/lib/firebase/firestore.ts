@@ -93,10 +93,45 @@ export async function searchVenues(searchQuery: string): Promise<Venue[]> {
     // Note: Firestore doesn't support native full-text search
     // For a production app, use Algolia or a similar service
     const venues = await getVenues();
-    const query = searchQuery.toLowerCase();
+    const q = searchQuery.toLowerCase();
 
     return venues.filter(venue =>
-        venue.name.toLowerCase().includes(query) ||
-        venue.address?.toLowerCase().includes(query)
+        venue.name.toLowerCase().includes(q) ||
+        venue.address?.toLowerCase().includes(q)
     );
+}
+
+// Recalculate venue stats from games (for fixing existing data)
+export async function recalculateVenueStats(): Promise<void> {
+    const db = getFirebaseDb();
+
+    // Get all venues
+    const venuesSnapshot = await getDocs(collection(db, VENUES_COLLECTION));
+    const venueIds = venuesSnapshot.docs.map(d => d.id);
+
+    // Get all completed games
+    const gamesQuery = query(
+        collection(db, 'games'),
+        where('status', '==', 'completed')
+    );
+    const gamesSnapshot = await getDocs(gamesQuery);
+
+    // Count games per venue
+    const gameCountByVenue = new Map<string, number>();
+    for (const gameDoc of gamesSnapshot.docs) {
+        const game = gameDoc.data();
+        const venueId = game.venueId;
+        if (venueId) {
+            gameCountByVenue.set(venueId, (gameCountByVenue.get(venueId) || 0) + 1);
+        }
+    }
+
+    // Update each venue's stats
+    for (const venueId of venueIds) {
+        const count = gameCountByVenue.get(venueId) || 0;
+        const venueRef = doc(db, VENUES_COLLECTION, venueId);
+        await updateDoc(venueRef, {
+            'stats.totalGames': count
+        });
+    }
 }
