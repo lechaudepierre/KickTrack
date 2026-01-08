@@ -159,24 +159,43 @@
 
 .listHeader {
     display: grid;
-    grid-template-columns: 3rem 1fr 4rem 4rem;
-    padding: var(--spacing-md);
+    grid-template-columns: 2rem minmax(0, 1fr) 2.5rem 3rem;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
     background: rgba(0, 0, 0, 0.2);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    font-size: 0.75rem;
+    font-size: 0.625rem;
     font-weight: 600;
     color: var(--color-text-secondary);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
+}
+
+@media (min-width: 400px) {
+    .listHeader {
+        grid-template-columns: 2.5rem minmax(0, 1fr) 3rem 3.5rem;
+        padding: var(--spacing-md);
+        font-size: 0.75rem;
+        gap: var(--spacing-sm);
+    }
 }
 
 .listItem {
     display: grid;
-    grid-template-columns: 3rem 1fr 4rem 4rem;
+    grid-template-columns: 2rem minmax(0, 1fr) 2.5rem 3rem;
+    gap: var(--spacing-xs);
     align-items: center;
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     transition: background var(--transition-normal);
+}
+
+@media (min-width: 400px) {
+    .listItem {
+        grid-template-columns: 2.5rem minmax(0, 1fr) 3rem 3.5rem;
+        padding: var(--spacing-md);
+        gap: var(--spacing-sm);
+    }
 }
 
 .listItem:last-child {
@@ -201,31 +220,66 @@
 .playerInfo {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
+    min-width: 0;
+    overflow: hidden;
+}
+
+@media (min-width: 400px) {
+    .playerInfo {
+        gap: var(--spacing-sm);
+    }
 }
 
 .listAvatar {
-    width: 2rem;
-    height: 2rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    min-width: 1.75rem;
     border-radius: 50%;
     background: var(--color-pitch-dark);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
+    font-size: 0.625rem;
     font-weight: 700;
     color: var(--color-text-secondary);
 }
 
+@media (min-width: 400px) {
+    .listAvatar {
+        width: 2rem;
+        height: 2rem;
+        min-width: 2rem;
+        font-size: 0.75rem;
+    }
+}
+
 .playerName {
     font-weight: 600;
+    font-size: 0.8125rem;
     color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (min-width: 400px) {
+    .playerName {
+        font-size: 0.9375rem;
+    }
 }
 
 .statCol {
     text-align: center;
     font-weight: 600;
+    font-size: 0.8125rem;
     color: var(--color-text-primary);
+}
+
+@media (min-width: 400px) {
+    .statCol {
+        font-size: 0.9375rem;
+    }
 }
 
 .winRate {

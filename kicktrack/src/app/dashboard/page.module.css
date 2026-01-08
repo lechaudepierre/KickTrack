@@ -127,21 +127,42 @@
 .statsGrid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
+}
+
+@media (min-width: 400px) {
+    .statsGrid {
+        gap: var(--spacing-md);
+    }
 }
 
 .statItem {
     text-align: center;
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-xs);
     background: var(--color-pitch-dark);
     border-radius: var(--radius-md);
     border: 1px solid rgba(255, 255, 255, 0.05);
+    min-width: 0;
+    overflow: hidden;
+}
+
+@media (min-width: 400px) {
+    .statItem {
+        padding: var(--spacing-md);
+    }
 }
 
 .statValue {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 800;
     margin-bottom: var(--spacing-xs);
+    line-height: 1.1;
+}
+
+@media (min-width: 400px) {
+    .statValue {
+        font-size: 2rem;
+    }
 }
 
 .statValueWins {
@@ -157,11 +178,21 @@
 }
 
 .statLabel {
-    font-size: 0.75rem;
+    font-size: 0.625rem;
     color: var(--color-text-secondary);
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.02em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (min-width: 400px) {
+    .statLabel {
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+    }
 }
 
 /* Quick Actions */
