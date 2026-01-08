@@ -112,6 +112,7 @@ export function calculateAdvancedStats(
     let cleanSheets = 0;
     let comebacks = 0;
     let totalDuration = 0;
+    let gamesWithDuration = 0;
     let maxWinStreak = 0;
     let currentStreakCount = 0;
     let currentStreakType: 'win' | 'loss' | 'none' = 'none';
@@ -219,9 +220,10 @@ export function calculateAdvancedStats(
             if (wasLosing) comebacks++;
         }
 
-        // Durée
-        if (game.duration) {
+        // Durée (game.duration est en secondes)
+        if (game.duration && game.duration > 0) {
             totalDuration += game.duration;
+            gamesWithDuration++;
         }
 
         // Calcul des séries
@@ -327,8 +329,8 @@ export function calculateAdvancedStats(
             type: currentStreakType,
             count: currentStreakCount - 1 // -1 car on compte le premier match
         },
-        averageGameDuration: completedGames.length > 0
-            ? (totalDuration / completedGames.length) / 60
+        averageGameDuration: gamesWithDuration > 0
+            ? (totalDuration / gamesWithDuration) / 60
             : 0,
         totalGoalsScored,
         totalGoalsConceded,

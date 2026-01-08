@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { doc, setDoc } from 'firebase/firestore';
 import { getFirebaseDb } from '@/lib/firebase/config';
+import { recalculateVenueStats } from '@/lib/firebase/firestore';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { FieldBackground } from '@/components/FieldDecorations';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
@@ -431,6 +432,28 @@ Tu peux maintenant aller voir tes stats.`);
                                 Voir mes stats
                             </button>
                         )}
+
+                        <div className="border-t border-white/10 pt-4 mt-4">
+                            <h3 className="text-white font-semibold mb-3">Outils de maintenance</h3>
+                            <button
+                                onClick={async () => {
+                                    setStatus('loading');
+                                    setMessage('Recalcul des stats des lieux...');
+                                    try {
+                                        await recalculateVenueStats();
+                                        setStatus('success');
+                                        setMessage('Stats des lieux recalculées avec succès!');
+                                    } catch (error) {
+                                        setStatus('error');
+                                        setMessage(`Erreur: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                                    }
+                                }}
+                                disabled={status === 'loading'}
+                                className="w-full py-3 px-4 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-amber-500/50"
+                            >
+                                Recalculer les stats des lieux
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

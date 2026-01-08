@@ -165,6 +165,15 @@ export async function addGoal(
     // Check if game is won
     const isGameWon = newScore >= targetScore;
 
+    // Calculate duration if game is won
+    let duration: number | undefined;
+    if (isGameWon) {
+        const startedAt = game.startedAt instanceof Date
+            ? game.startedAt
+            : new Date((game.startedAt as any).seconds * 1000);
+        duration = Math.floor((Date.now() - startedAt.getTime()) / 1000);
+    }
+
     await updateDoc(gameRef, {
         goals: arrayUnion(goal),
         teams: updatedTeams,
@@ -175,6 +184,7 @@ export async function addGoal(
         ...(isGameWon ? {
             status: 'completed',
             endedAt: new Date(),
+            duration,
             winner: teamIndex
         } : {})
     });
