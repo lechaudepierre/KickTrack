@@ -123,6 +123,11 @@
     box-shadow: 0 3px 0 #333333;
 }
 
+.typeButtonInactive:hover .typeIcon,
+.typeButtonInactive:hover .typeLabel {
+    color: var(--color-text-dark);
+}
+
 .typeIcon {
     width: 1.5rem;
     height: 1.5rem;

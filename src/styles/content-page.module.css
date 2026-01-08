@@ -139,8 +139,7 @@
 
 .listItem:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-soft);
-    border-color: var(--color-field-green);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* Grid Layouts */
