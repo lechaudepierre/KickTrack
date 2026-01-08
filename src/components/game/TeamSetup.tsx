@@ -195,13 +195,6 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
 
             <div className={styles.grid}>
                 {renderTeamCard(1, team1Players, team1Color, setTeam1Color)}
-
-                <div className={styles.vsContainer}>
-                    <div className={styles.vsCircle}>
-                        VS
-                    </div>
-                </div>
-
                 {renderTeamCard(2, team2Players, team2Color, setTeam2Color)}
             </div>
 

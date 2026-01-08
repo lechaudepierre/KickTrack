@@ -196,3 +196,40 @@
     background-color: var(--color-beige);
     color: var(--color-text-dark);
 }
+
+/* H2H Stats */
+.h2hContainer {
+    width: 100%;
+    max-width: 20rem;
+    margin-bottom: 1rem;
+}
+
+.h2hHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-weight: 900;
+    font-size: 0.875rem;
+}
+
+.h2hTitle {
+    font-size: 0.625rem;
+    opacity: 0.4;
+    letter-spacing: 0.1em;
+}
+
+.h2hBar {
+    height: 0.5rem;
+    width: 100%;
+    background-color: rgba(51, 51, 51, 0.1);
+    border-radius: 9999px;
+    overflow: hidden;
+    display: flex;
+    border: 2px solid #333333;
+}
+
+.h2hFill {
+    height: 100%;
+    transition: width 0.5s ease-out;
+}

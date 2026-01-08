@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { getGame } from '@/lib/firebase/games';
+import { getGame, getUserGames } from '@/lib/firebase/games';
 import { subscribeToSession, startGame } from '@/lib/firebase/game-sessions';
 import { Game, Player, GoalPosition, Team } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
@@ -26,6 +26,7 @@ export default function GameResultsPage() {
     const [game, setGame] = useState<Game | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isRematching, setIsRematching] = useState(false);
+    const [h2hStats, setH2HStats] = useState<{ team0Wins: number; team1Wins: number } | null>(null);
 
     useEffect(() => {
         initialize();
@@ -35,11 +36,51 @@ export default function GameResultsPage() {
     const loadGame = async () => {
         try {
             const gameData = await getGame(gameId);
-            setGame(gameData);
+            if (gameData) {
+                setGame(gameData);
+                loadH2HStats(gameData);
+            }
         } catch (error) {
             console.error('Error loading game:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const loadH2HStats = async (currentGame: Game) => {
+        try {
+            const hostId = currentGame.hostId;
+            const allHostGames = await getUserGames(hostId, 50); // Fetch last 50 games
+
+            const currentTeam0Ids = currentGame.teams[0].players.map(p => p.userId).sort();
+            const currentTeam1Ids = currentGame.teams[1].players.map(p => p.userId).sort();
+
+            let team0Wins = 0;
+            let team1Wins = 0;
+
+            allHostGames.forEach(g => {
+                if (g.status !== 'completed' || g.winner === undefined) return;
+
+                const gTeam0Ids = g.teams[0].players.map(p => p.userId).sort();
+                const gTeam1Ids = g.teams[1].players.map(p => p.userId).sort();
+
+                const isSameMatchup =
+                    (JSON.stringify(gTeam0Ids) === JSON.stringify(currentTeam0Ids) && JSON.stringify(gTeam1Ids) === JSON.stringify(currentTeam1Ids)) ||
+                    (JSON.stringify(gTeam0Ids) === JSON.stringify(currentTeam1Ids) && JSON.stringify(gTeam1Ids) === JSON.stringify(currentTeam0Ids));
+
+                if (isSameMatchup) {
+                    const side0IsTeam0 = JSON.stringify(gTeam0Ids) === JSON.stringify(currentTeam0Ids);
+                    if (g.winner === 0) {
+                        if (side0IsTeam0) team0Wins++; else team1Wins++;
+                    } else {
+                        if (side0IsTeam0) team1Wins++; else team0Wins++;
+                    }
+                }
+            });
+
+            setH2HStats({ team0Wins, team1Wins });
+        } catch (error) {
+            console.error('Error loading H2H stats:', error);
         }
     };
 
@@ -160,6 +201,33 @@ export default function GameResultsPage() {
                             {game.score[0]} — {game.score[1]}
                         </p>
                     </div>
+
+                    {/* H2H Stats */}
+                    {h2hStats && (h2hStats.team0Wins > 0 || h2hStats.team1Wins > 0) && (
+                        <div className={resultsStyles.h2hContainer}>
+                            <div className={resultsStyles.h2hHeader}>
+                                <span style={{ color: `var(--team-${game.teams[0].color})` }}>{h2hStats.team0Wins}</span>
+                                <span className={resultsStyles.h2hTitle}>FACE À FACE</span>
+                                <span style={{ color: `var(--team-${game.teams[1].color})` }}>{h2hStats.team1Wins}</span>
+                            </div>
+                            <div className={resultsStyles.h2hBar}>
+                                <div
+                                    className={resultsStyles.h2hFill}
+                                    style={{
+                                        width: `${(h2hStats.team0Wins / (h2hStats.team0Wins + h2hStats.team1Wins)) * 100}%`,
+                                        backgroundColor: `var(--team-${game.teams[0].color})`
+                                    }}
+                                />
+                                <div
+                                    className={resultsStyles.h2hFill}
+                                    style={{
+                                        width: `${(h2hStats.team1Wins / (h2hStats.team0Wins + h2hStats.team1Wins)) * 100}%`,
+                                        backgroundColor: `var(--team-${game.teams[1].color})`
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     {/* Stats Grid */}
                     <div className={resultsStyles.statsGrid}>
