@@ -125,6 +125,12 @@ export function calculateAdvancedStats(
     for (let i = 0; i < sortedGames.length; i++) {
         const game = sortedGames[i];
 
+        // Skip games with guest players (userId starts with 'guest_')
+        const hasGuestPlayers = game.teams.some(team =>
+            team.players.some(player => player.userId.startsWith('guest_'))
+        );
+        if (hasGuestPlayers) continue;
+
         // Trouver l'équipe du joueur
         const userTeamIndex = game.teams.findIndex(t =>
             t.players.some(p => p.userId === userId)
