@@ -144,8 +144,8 @@ export function calculateAdvancedStats(
         }
 
 
-        // Stats par lieu - only count games with a venue name
-        if (game.venueId && game.venueName) {
+        // Stats par lieu - exclude 'Aucun' venue
+        if (game.venueId && game.venueName && game.venueName.toLowerCase() !== 'aucun') {
             const venueKey = game.venueId;
             const venueData = venueMap.get(venueKey) || { name: game.venueName, games: 0, wins: 0 };
             venueData.games++;
