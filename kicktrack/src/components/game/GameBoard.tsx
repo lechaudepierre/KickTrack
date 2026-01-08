@@ -26,15 +26,19 @@ const goalTypes: { value: GoalType; label: string; description: string }[] = [
 export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardProps) {
     const [activeTeamIndex, setActiveTeamIndex] = useState<0 | 1 | null>(null);
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+<<<<<<< HEAD
     const [selectedPosition, setSelectedPosition] = useState<GoalPosition | null>(null);
     const [step, setStep] = useState<'player' | 'position' | 'type'>('player');
 
     // Animation states for scores
     const [animatingScore, setAnimatingScore] = useState<0 | 1 | null>(null);
+=======
+>>>>>>> main
 
     const team1 = game.teams[0];
     const team2 = game.teams[1];
 
+<<<<<<< HEAD
     // Trigger animation when score changes
     useEffect(() => {
         const prevScore = [game.score[0], game.score[1]];
@@ -54,6 +58,21 @@ export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardP
         }
         prevScoreRef[1](game.score);
     }, [game.score]);
+=======
+    const getTeamColors = (teamIndex: 0 | 1) => {
+        const team = game.teams[teamIndex];
+        const colorMap: Record<string, { bg: string; border: string; text: string; light: string }> = {
+            blue: { bg: 'bg-blue-500', border: 'border-blue-500', text: 'text-blue-500', light: 'bg-blue-500/10' },
+            red: { bg: 'bg-red-500', border: 'border-red-500', text: 'text-red-500', light: 'bg-red-500/10' },
+            green: { bg: 'bg-green-500', border: 'border-green-500', text: 'text-green-500', light: 'bg-green-500/10' },
+            yellow: { bg: 'bg-yellow-500', border: 'border-yellow-500', text: 'text-yellow-500', light: 'bg-yellow-500/10' },
+            purple: { bg: 'bg-purple-500', border: 'border-purple-500', text: 'text-purple-500', light: 'bg-purple-500/10' },
+            orange: { bg: 'bg-orange-500', border: 'border-orange-500', text: 'text-orange-500', light: 'bg-orange-500/10' },
+            slate: { bg: 'bg-slate-500', border: 'border-slate-500', text: 'text-slate-500', light: 'bg-slate-500/10' },
+        };
+        return colorMap[team.color] || colorMap.slate;
+    };
+>>>>>>> main
 
     const handleStartAddGoal = (teamIndex: 0 | 1) => {
         const team = game.teams[teamIndex];
@@ -305,8 +324,13 @@ export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardP
                     </button>
                 </div>
 
+<<<<<<< HEAD
                 {/* Modal Goal Input */}
                 {renderGoalInput()}
+=======
+                {/* Inline Goal Input */}
+                {activeTeamIndex !== null && renderGoalInput(activeTeamIndex, getTeamColors(activeTeamIndex))}
+>>>>>>> main
             </div>
         </div>
     );
