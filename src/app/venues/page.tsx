@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Input } from '@/components/common/ui';
 import { getVenues, searchVenues } from '@/lib/firebase/firestore';
 import { Venue, VenueType } from '@/types';
+import AddVenueModal from '@/components/venues/AddVenueModal';
 import { FieldBackground } from '@/components/FieldDecorations';
 import {
     MapPinIcon,
@@ -45,6 +46,7 @@ export default function VenuesPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [filter, setFilter] = useState<VenueType | 'all'>('all');
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         loadVenues();
@@ -90,15 +92,15 @@ export default function VenuesPage() {
                         <h1 className={styles.pageTitle}>Lieux de jeu</h1>
                         <p className="text-secondary text-sm">{venues.length} lieux enregistrés</p>
                     </div>
-                    <Link href="/venues/add">
+                    <button onClick={() => setIsModalOpen(true)} style={{ border: 'none', background: 'none', padding: 0 }}>
                         <div className="btn-primary" style={{ marginBottom: 0 }}>
                             <div className="btn-primary-shadow" />
-                            <div className="btn-primary-content" style={{ padding: '0.75rem 1.25rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div className="btn-primary-content" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <PlusIcon className="h-5 w-5" />
                                 Ajouter
                             </div>
                         </div>
-                    </Link>
+                    </button>
                 </div>
 
                 {/* Search */}
@@ -135,14 +137,14 @@ export default function VenuesPage() {
                     <div className={styles.emptyState}>
                         <MapPinIcon className={styles.emptyIcon} />
                         <p className={styles.emptyText}>Aucun lieu trouvé</p>
-                        <Link href="/venues/add">
+                        <button onClick={() => setIsModalOpen(true)} style={{ border: 'none', background: 'none', padding: 0 }}>
                             <div className="btn-secondary" style={{ display: 'inline-block' }}>
                                 <div className="btn-secondary-shadow" />
                                 <div className="btn-secondary-content">
                                     Ajouter un lieu
                                 </div>
                             </div>
-                        </Link>
+                        </button>
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
@@ -183,6 +185,13 @@ export default function VenuesPage() {
                         ← Retour au tableau de bord
                     </Link>
                 </div>
+
+                {/* Add Venue Modal */}
+                <AddVenueModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onSuccess={loadVenues}
+                />
             </div>
         </div>
     );
