@@ -16,7 +16,8 @@ import {
     ChartBarIcon,
     ChevronDownIcon,
     MagnifyingGlassIcon,
-    ArrowRightOnRectangleIcon
+    ArrowRightOnRectangleIcon,
+    InformationCircleIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 
@@ -35,6 +36,9 @@ export default function ProfilePage() {
 
     // Head-to-head search state
     const [h2hSearchQuery, setH2hSearchQuery] = useState('');
+
+    // Info modal state
+    const [showRemontadaInfo, setShowRemontadaInfo] = useState(false);
 
     useEffect(() => {
         const unsubscribe = initialize();
@@ -379,7 +383,24 @@ export default function ProfilePage() {
                                     <span className={styles.detailValue}>{advancedStats.cleanSheets}</span>
                                 </div>
                                 <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>Remontadas</span>
+                                    <span className={styles.detailLabel}>
+                                        Remontadas
+                                        <button
+                                            onClick={() => setShowRemontadaInfo(true)}
+                                            style={{
+                                                marginLeft: '0.25rem',
+                                                background: 'none',
+                                                border: 'none',
+                                                padding: 0,
+                                                cursor: 'pointer',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                verticalAlign: 'middle'
+                                            }}
+                                        >
+                                            <InformationCircleIcon className="w-4 h-4" style={{ color: 'rgba(51, 51, 51, 0.5)' }} />
+                                        </button>
+                                    </span>
                                     <span className={styles.detailValue}>{advancedStats.comebacks}</span>
                                 </div>
                                 <div className={styles.detailItem}>
@@ -554,6 +575,86 @@ export default function ProfilePage() {
                     )}
                 </div>
             </div>
+
+            {/* Remontada Info Modal */}
+            {showRemontadaInfo && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.7)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 9999,
+                        padding: 'var(--spacing-lg)'
+                    }}
+                    onClick={() => setShowRemontadaInfo(false)}
+                >
+                    <div
+                        style={{
+                            background: 'var(--color-beige)',
+                            border: '4px solid #333',
+                            borderRadius: 'var(--radius-lg)',
+                            padding: 'var(--spacing-xl)',
+                            maxWidth: '400px',
+                            width: '100%',
+                            boxShadow: '0 8px 0 #333'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 style={{
+                            fontSize: '1.25rem',
+                            fontWeight: 800,
+                            color: 'var(--color-text-dark)',
+                            marginBottom: 'var(--spacing-md)',
+                            textTransform: 'uppercase'
+                        }}>
+                            🔥 Remontadas
+                        </h3>
+                        <p style={{
+                            color: 'var(--color-text-dark)',
+                            fontSize: '0.875rem',
+                            lineHeight: 1.6,
+                            marginBottom: 'var(--spacing-md)',
+                            fontWeight: 600
+                        }}>
+                            Une <strong>remontada</strong> est une victoire où tu as été mené au score à un moment donné pendant le match.
+                        </p>
+                        <p style={{
+                            color: 'rgba(51, 51, 51, 0.7)',
+                            fontSize: '0.8rem',
+                            lineHeight: 1.5,
+                            marginBottom: 'var(--spacing-lg)',
+                            fontWeight: 600
+                        }}>
+                            <strong>Exemples :</strong><br />
+                            • Tu perds 0-2, puis tu gagnes 6-2 ✅<br />
+                            • Tu perds 3-5, puis tu gagnes 6-5 ✅<br />
+                            • Tu mènes tout le temps et gagnes 6-0 ❌
+                        </p>
+                        <button
+                            onClick={() => setShowRemontadaInfo(false)}
+                            style={{
+                                width: '100%',
+                                padding: 0,
+                                border: 'none',
+                                background: 'none'
+                            }}
+                        >
+                            <div className="btn-primary">
+                                <div className="btn-primary-shadow" />
+                                <div className="btn-primary-content">
+                                    Compris !
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <BottomNav />
         </div>
