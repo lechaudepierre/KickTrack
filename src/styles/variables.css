@@ -48,4 +48,12 @@
 
     /* Bottom Nav Height */
     --nav-height: 72px;
+
+    /* Team Colors */
+    --team-blue: #4B7BFF;
+    --team-red: #FF4B4B;
+    --team-green: #2ECC71;
+    --team-yellow: #F1C40F;
+    --team-orange: #E67E22;
+    --team-purple: #9B59B6;
 }

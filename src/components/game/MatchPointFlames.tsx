@@ -1,42 +1,53 @@
 import styles from './MatchPointFlames.module.css';
 
 export default function MatchPointFlames() {
+    // Create multiple flames for each side
+    const flameCount = 5;
+
     return (
         <div className={styles.flamesContainer}>
             {/* Top flames */}
-            <div className={styles.flameTop}>
-                <svg viewBox="0 0 100 100" className={styles.flame}>
-                    <path d="M50 10 Q45 30 50 50 Q55 30 50 10" fill="#FF6B35" />
-                    <path d="M50 20 Q47 35 50 50 Q53 35 50 20" fill="#FFA500" />
-                    <path d="M50 30 Q48 40 50 50 Q52 40 50 30" fill="#FFD700" />
-                </svg>
+            <div className={styles.flamesTop}>
+                {Array.from({ length: flameCount }).map((_, i) => (
+                    <svg key={i} viewBox="0 0 40 60" className={styles.flame} style={{ animationDelay: `${i * 0.15}s` }}>
+                        <path d="M20 5 Q15 20 20 40 Q25 20 20 5 Z" fill="#FF6B35" stroke="#333" strokeWidth="2" />
+                        <path d="M20 15 Q17 25 20 40 Q23 25 20 15 Z" fill="#FFA500" />
+                        <path d="M20 25 Q18 30 20 40 Q22 30 20 25 Z" fill="#FFD700" />
+                    </svg>
+                ))}
             </div>
 
             {/* Bottom flames */}
-            <div className={styles.flameBottom}>
-                <svg viewBox="0 0 100 100" className={styles.flame}>
-                    <path d="M50 90 Q45 70 50 50 Q55 70 50 90" fill="#FF6B35" />
-                    <path d="M50 80 Q47 65 50 50 Q53 65 50 80" fill="#FFA500" />
-                    <path d="M50 70 Q48 60 50 50 Q52 60 50 70" fill="#FFD700" />
-                </svg>
+            <div className={styles.flamesBottom}>
+                {Array.from({ length: flameCount }).map((_, i) => (
+                    <svg key={i} viewBox="0 0 40 60" className={styles.flame} style={{ animationDelay: `${i * 0.15}s` }}>
+                        <path d="M20 55 Q15 40 20 20 Q25 40 20 55 Z" fill="#FF6B35" stroke="#333" strokeWidth="2" />
+                        <path d="M20 45 Q17 35 20 20 Q23 35 20 45 Z" fill="#FFA500" />
+                        <path d="M20 35 Q18 30 20 20 Q22 30 20 35 Z" fill="#FFD700" />
+                    </svg>
+                ))}
             </div>
 
             {/* Left flames */}
-            <div className={styles.flameLeft}>
-                <svg viewBox="0 0 100 100" className={styles.flame}>
-                    <path d="M10 50 Q30 45 50 50 Q30 55 10 50" fill="#FF6B35" />
-                    <path d="M20 50 Q35 47 50 50 Q35 53 20 50" fill="#FFA500" />
-                    <path d="M30 50 Q40 48 50 50 Q40 52 30 50" fill="#FFD700" />
-                </svg>
+            <div className={styles.flamesLeft}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                    <svg key={i} viewBox="0 0 60 40" className={styles.flame} style={{ animationDelay: `${i * 0.2}s` }}>
+                        <path d="M5 20 Q20 15 40 20 Q20 25 5 20 Z" fill="#FF6B35" stroke="#333" strokeWidth="2" />
+                        <path d="M15 20 Q25 17 40 20 Q25 23 15 20 Z" fill="#FFA500" />
+                        <path d="M25 20 Q30 18 40 20 Q30 22 25 20 Z" fill="#FFD700" />
+                    </svg>
+                ))}
             </div>
 
             {/* Right flames */}
-            <div className={styles.flameRight}>
-                <svg viewBox="0 0 100 100" className={styles.flame}>
-                    <path d="M90 50 Q70 45 50 50 Q70 55 90 50" fill="#FF6B35" />
-                    <path d="M80 50 Q65 47 50 50 Q65 53 80 50" fill="#FFA500" />
-                    <path d="M70 50 Q60 48 50 50 Q60 52 70 50" fill="#FFD700" />
-                </svg>
+            <div className={styles.flamesRight}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                    <svg key={i} viewBox="0 0 60 40" className={styles.flame} style={{ animationDelay: `${i * 0.2}s` }}>
+                        <path d="M55 20 Q40 15 20 20 Q40 25 55 20 Z" fill="#FF6B35" stroke="#333" strokeWidth="2" />
+                        <path d="M45 20 Q35 17 20 20 Q35 23 45 20 Z" fill="#FFA500" />
+                        <path d="M35 20 Q30 18 20 20 Q30 22 35 20 Z" fill="#FFD700" />
+                    </svg>
+                ))}
             </div>
         </div>
     );
