@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KickTrack Sound Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .container {
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        h1 { color: #4CAF50; }
+        .info { 
+            background: #333; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 KickTrack Sound Generator</h1>
+    <div class="info">
+        <p>Click each button to preview and download the sound effect.</p>
+        <p>Save the files to <code>/public/sounds/</code> in your project.</p>
+    </div>
+    
+    <div class="container">
+        <h2>Goal Sounds</h2>
+        <button onclick="playAndDownload('goal-normal')">🎯 Generate Goal Normal</button>
+        <button onclick="playAndDownload('goal-gamelle')">⚽ Generate Goal Gamelle</button>
+        <button onclick="playAndDownload('match-point')">🔥 Generate Match Point</button>
+        <button onclick="playAndDownload('victory')">🏆 Generate Victory</button>
+    </div>
+
+    <script>
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function createGoalNormalSound() {
+            const duration = 0.4;
+            const sampleRate = audioContext.sampleRate;
+            const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+            const data = buffer.getChannelData(0);
+
+            for (let i = 0; i < buffer.length; i++) {
+                const t = i / sampleRate;
+                // Pleasant ascending tone
+                const freq1 = 523.25; // C5
+                const freq2 = 659.25; // E5
+                const freq3 = 783.99; // G5
+                
+                const envelope = Math.exp(-t * 8);
+                data[i] = envelope * (
+                    0.3 * Math.sin(2 * Math.PI * freq1 * t) +
+                    0.3 * Math.sin(2 * Math.PI * freq2 * t) +
+                    0.4 * Math.sin(2 * Math.PI * freq3 * t)
+                );
+            }
+            return buffer;
+        }
+
+        function createGoalGamelleSound() {
+            const duration = 0.5;
+            const sampleRate = audioContext.sampleRate;
+            const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+            const data = buffer.getChannelData(0);
+
+            for (let i = 0; i < buffer.length; i++) {
+                const t = i / sampleRate;
+                // Bouncy sound with multiple hits
+                const bounce1 = t < 0.15 ? Math.exp(-t * 20) * Math.sin(2 * Math.PI * 400 * t) : 0;
+                const bounce2 = t >= 0.15 && t < 0.28 ? Math.exp(-(t-0.15) * 25) * Math.sin(2 * Math.PI * 350 * t) : 0;
+                const bounce3 = t >= 0.28 ? Math.exp(-(t-0.28) * 30) * Math.sin(2 * Math.PI * 300 * t) : 0;
+                
+                data[i] = 0.6 * (bounce1 + bounce2 + bounce3);
+            }
+            return buffer;
+        }
+
+        function createMatchPointSound() {
+            const duration = 0.6;
+            const sampleRate = audioContext.sampleRate;
+            const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+            const data = buffer.getChannelData(0);
+
+            for (let i = 0; i < buffer.length; i++) {
+                const t = i / sampleRate;
+                // Intense alert sound
+                const freq = 800 + 200 * Math.sin(2 * Math.PI * 10 * t); // Vibrato
+                const envelope = Math.exp(-t * 4);
+                
+                data[i] = envelope * 0.5 * Math.sin(2 * Math.PI * freq * t);
+            }
+            return buffer;
+        }
+
+        function createVictorySound() {
+            const duration = 1.0;
+            const sampleRate = audioContext.sampleRate;
+            const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+            const data = buffer.getChannelData(0);
+
+            for (let i = 0; i < buffer.length; i++) {
+                const t = i / sampleRate;
+                // Triumphant fanfare
+                const notes = [
+                    { freq: 523.25, start: 0, duration: 0.3 },    // C5
+                    { freq: 659.25, start: 0.25, duration: 0.3 }, // E5
+                    { freq: 783.99, start: 0.5, duration: 0.5 }   // G5
+                ];
+                
+                let sample = 0;
+                notes.forEach(note => {
+                    if (t >= note.start && t < note.start + note.duration) {
+                        const localT = t - note.start;
+                        const envelope = Math.exp(-localT * 3);
+                        sample += envelope * Math.sin(2 * Math.PI * note.freq * t);
+                    }
+                });
+                
+                data[i] = 0.3 * sample;
+            }
+            return buffer;
+        }
+
+        function bufferToWav(buffer) {
+            const length = buffer.length * buffer.numberOfChannels * 2;
+            const arrayBuffer = new ArrayBuffer(44 + length);
+            const view = new DataView(arrayBuffer);
+            const channels = [];
+            let offset = 0;
+            let pos = 0;
+
+            // Write WAV header
+            const setUint16 = (data) => { view.setUint16(pos, data, true); pos += 2; };
+            const setUint32 = (data) => { view.setUint32(pos, data, true); pos += 4; };
+
+            // "RIFF"
+            setUint32(0x46464952);
+            setUint32(36 + length);
+            // "WAVE"
+            setUint32(0x45564157);
+            // "fmt "
+            setUint32(0x20746d66);
+            setUint32(16);
+            setUint16(1);
+            setUint16(buffer.numberOfChannels);
+            setUint32(buffer.sampleRate);
+            setUint32(buffer.sampleRate * 2 * buffer.numberOfChannels);
+            setUint16(buffer.numberOfChannels * 2);
+            setUint16(16);
+            // "data"
+            setUint32(0x61746164);
+            setUint32(length);
+
+            // Write audio data
+            for (let i = 0; i < buffer.numberOfChannels; i++) {
+                channels.push(buffer.getChannelData(i));
+            }
+
+            while (pos < arrayBuffer.byteLength) {
+                for (let i = 0; i < buffer.numberOfChannels; i++) {
+                    let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                    sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                    view.setInt16(pos, sample, true);
+                    pos += 2;
+                }
+                offset++;
+            }
+
+            return arrayBuffer;
+        }
+
+        function playAndDownload(soundType) {
+            let buffer;
+            
+            switch(soundType) {
+                case 'goal-normal':
+                    buffer = createGoalNormalSound();
+                    break;
+                case 'goal-gamelle':
+                    buffer = createGoalGamelleSound();
+                    break;
+                case 'match-point':
+                    buffer = createMatchPointSound();
+                    break;
+                case 'victory':
+                    buffer = createVictorySound();
+                    break;
+            }
+
+            // Play the sound
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            source.start();
+
+            // Download as WAV
+            const wav = bufferToWav(buffer);
+            const blob = new Blob([wav], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = soundType + '.wav';
+            a.click();
+            
+            console.log('✅ Generated and downloaded: ' + soundType + '.wav');
+        }
+    </script>
+</body>
+</html>

@@ -3,6 +3,7 @@ import { Game, Team, Player, GoalPosition, GoalType } from '@/types';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import GameTimer from './GameTimer';
 import MatchPointFlames from './MatchPointFlames';
+import { useSound } from '@/hooks/useSound';
 import styles from './GameBoard.module.css';
 
 interface GameBoardProps {
@@ -27,6 +28,7 @@ const goalTypes: { value: GoalType; label: string; description: string }[] = [
 
 export default function GameBoard({ game, onAddGoal, isViewer = false }: GameBoardProps) {
     const [isPortrait, setIsPortrait] = useState(true);
+    const { play: playSound } = useSound({ volume: 0.7 });
 
     useEffect(() => {
         const checkOrientation = () => {
@@ -108,6 +110,7 @@ export default function GameBoard({ game, onAddGoal, isViewer = false }: GameBoa
         if (position === 'midfield') {
             if (activeTeamIndex !== null && selectedPlayer) {
                 onAddGoal(activeTeamIndex, selectedPlayer.userId, selectedPlayer.username, position, 'normal');
+                playGoalSound('normal');
                 handleCancel();
             }
         } else {
@@ -118,7 +121,29 @@ export default function GameBoard({ game, onAddGoal, isViewer = false }: GameBoa
     const handleSelectGoalType = (type: GoalType) => {
         if (activeTeamIndex !== null && selectedPlayer && selectedPosition) {
             onAddGoal(activeTeamIndex, selectedPlayer.userId, selectedPlayer.username, selectedPosition, type);
+            playGoalSound(type);
             handleCancel();
+        }
+    };
+
+    const playGoalSound = (goalType: GoalType) => {
+        // Check if this goal wins the game
+        const targetScore = parseInt(game.gameType);
+        const currentScore = game.score[activeTeamIndex!];
+        const newScore = currentScore + 1;
+
+        const willWin = newScore >= targetScore;
+        const isMatchPoint = newScore === targetScore - 1;
+
+        if (willWin) {
+            playSound('victory');
+        } else if (isMatchPoint) {
+            // Match point - play intense sound
+            playSound('match-point');
+        } else if (goalType === 'gamelle' || goalType === 'gamelle_rentrante') {
+            playSound('goal-gamelle');
+        } else {
+            playSound('goal-normal');
         }
     };
 
