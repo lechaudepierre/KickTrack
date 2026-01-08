@@ -1,0 +1,114 @@
+@reference "../../app/globals.css";
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pinContainer {
+    text-align: center;
+}
+
+.pinLabel {
+    color: var(--color-text-dark);
+    opacity: 0.6;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.pinBox {
+    background-color: var(--color-beige);
+    border: 3px solid #333333;
+    border-radius: 0.75rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    box-shadow: 0 4px 0 #333333;
+}
+
+.pinCode {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: #2ECC71;
+}
+
+.timer {
+    margin-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-radius: 9999px;
+    border: 3px solid #333333;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+.timerNormal {
+    background-color: var(--color-beige);
+}
+
+.timerLow {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+}
+
+.timerDot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+}
+
+.timerDotNormal {
+    background-color: #10b981;
+}
+
+.timerDotLow {
+    background-color: #ef4444;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.timerText {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 700;
+}
+
+.timerTextNormal {
+    color: var(--color-text-dark);
+}
+
+.timerTextLow {
+    color: #ef4444;
+}
+
+.timerLabel {
+    color: var(--color-text-dark);
+    opacity: 0.5;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: .5;
+    }
+}

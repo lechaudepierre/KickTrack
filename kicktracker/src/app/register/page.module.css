@@ -1,0 +1,146 @@
+/* Register Page Styles - Flat Design */
+
+.screen {
+    height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+}
+
+.container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 28rem;
+}
+
+.logoSection {
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xs);
+    letter-spacing: -0.02em;
+}
+
+.titleAccent {
+    color: var(--color-text-dark);
+}
+
+/* Removed titleUnderline */
+
+.subtitle {
+    color: var(--color-text-dark);
+    font-weight: 600;
+}
+
+.card {
+    background: var(--color-beige);
+    border: 3px solid #333333;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-xl);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Removed cardAccent */
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+}
+
+.hint {
+    color: rgba(51, 51, 51, 0.6);
+    font-size: 0.75rem;
+    margin-top: var(--spacing-xs);
+    font-weight: 600;
+}
+
+.errorHint {
+    color: var(--color-accent-orange);
+    font-size: 0.75rem;
+    margin-top: var(--spacing-xs);
+    font-weight: 700;
+}
+
+.submitButton {
+    width: 100%;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--color-green-medium);
+    border: 3px solid #333333;
+    border-radius: var(--radius-md);
+    color: var(--color-text-dark);
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-top: var(--spacing-lg);
+}
+
+.submitButton:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3);
+}
+
+.submitButton:active {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
+}
+
+.divider {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 2px solid rgba(51, 51, 51, 0.1);
+    text-align: center;
+}
+
+.dividerText {
+    color: rgba(51, 51, 51, 0.6);
+    font-weight: 600;
+}
+
+.link {
+    color: var(--color-green-medium);
+    font-weight: 800;
+    transition: color var(--transition-normal);
+}
+
+.link:hover {
+    color: var(--color-green-dark);
+    text-decoration: underline;
+}
+
+.footer {
+    margin-top: var(--spacing-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    color: var(--color-text-muted);
+}
+
+.footerDivider {
+    height: 2px;
+    width: 3rem;
+    background: #333333;
+    border-radius: var(--radius-full);
+}
+
+.footerText {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}

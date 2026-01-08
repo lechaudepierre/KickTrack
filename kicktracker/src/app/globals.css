@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+@import '../styles/variables.css';
+@import '../styles/common.css';
+
+@theme inline {
+    --color-background: var(--color-green-dark);
+    --color-foreground: var(--color-text-primary);
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: repeating-linear-gradient(-45deg,
+            #1B5E20,
+            #1B5E20 200px,
+            #2E7D32 200px,
+            #2E7D32 400px);
+    background-attachment: fixed;
+    color: var(--color-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Phone container - centers content and handles scroll */
+.phone-container {
+    max-width: 480px;
+    height: 100vh;
+    height: 100dvh;
+    margin: 0 auto;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+}

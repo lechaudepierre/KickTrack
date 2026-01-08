@@ -1,0 +1,902 @@
+@reference "../../app/globals.css";
+
+/* Themes */
+/* Themes - Vibrant Flat Colors */
+.red {
+    --team-primary: #FF4B4B;
+    --team-text: #FF4B4B;
+    --team-border: #333333;
+    --team-shadow: rgba(255, 75, 75, 0.3);
+    --team-light: #FFEAEA;
+}
+
+.blue {
+    --team-primary: #4B7BFF;
+    --team-text: #4B7BFF;
+    --team-border: #333333;
+    --team-shadow: rgba(75, 123, 255, 0.3);
+    --team-light: #EAF0FF;
+}
+
+.green {
+    --team-primary: #2ECC71;
+    --team-text: #2ECC71;
+    --team-border: #333333;
+    --team-shadow: rgba(46, 204, 113, 0.3);
+    --team-light: #EAF9F1;
+}
+
+.yellow {
+    --team-primary: #F1C40F;
+    --team-text: #F1C40F;
+    --team-border: #333333;
+    --team-shadow: rgba(241, 196, 15, 0.3);
+    --team-light: #FEF9E7;
+}
+
+.orange {
+    --team-primary: #E67E22;
+    --team-text: #E67E22;
+    --team-border: #333333;
+    --team-shadow: rgba(230, 126, 34, 0.3);
+    --team-light: #FDF2E9;
+}
+
+.purple {
+    --team-primary: #9B59B6;
+    --team-text: #9B59B6;
+    --team-border: #333333;
+    --team-shadow: rgba(155, 89, 182, 0.3);
+    --team-light: #F5EEF8;
+}
+
+.slate {
+    --team-primary: #7F8C8D;
+    --team-text: #7F8C8D;
+    --team-border: #333333;
+    --team-shadow: rgba(127, 140, 141, 0.3);
+    --team-light: #F2F4F4;
+}
+
+/* Layout */
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+    max-width: 56rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Score Board */
+.scoreBoard {
+    position: relative;
+    background-color: var(--color-beige);
+    border: 3px solid #333333;
+    border-radius: 1rem;
+    padding: 1rem;
+    overflow: hidden;
+    box-shadow: 0 6px 0 #333333;
+}
+
+@media (min-width: 400px) {
+    .scoreBoard {
+        border-radius: 1.5rem;
+        padding: 1.5rem;
+    }
+}
+
+@media (min-width: 500px) {
+    .scoreBoard {
+        padding: 2rem;
+    }
+}
+
+.scoreBoardContent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 10;
+    gap: 0.5rem;
+}
+
+.teamScore {
+    flex: 1 1 0%;
+    text-align: center;
+    min-width: 0;
+}
+
+.scoreValue {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+    font-weight: 900;
+    margin-bottom: 0.25rem;
+    color: var(--color-text-dark);
+}
+
+@media (min-width: 400px) {
+    .scoreValue {
+        font-size: 3rem;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (min-width: 500px) {
+    .scoreValue {
+        font-size: 4.5rem;
+        line-height: 1;
+    }
+}
+
+.teamInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.125rem;
+}
+
+@media (min-width: 400px) {
+    .teamInfo {
+        gap: 0.25rem;
+    }
+}
+
+.playerAvatars {
+    display: flex;
+    margin-left: -0.5rem;
+}
+
+.avatar {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    border-width: 2px;
+    border-color: #333333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--color-text-dark);
+    background-color: var(--team-primary);
+}
+
+@media (min-width: 400px) {
+    .avatar {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.75rem;
+        line-height: 1rem;
+    }
+}
+
+.teamLabel {
+    color: #333333;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    opacity: 0.6;
+}
+
+@media (min-width: 400px) {
+    .teamLabel {
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+    }
+}
+
+/* Center Info */
+.centerInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    flex-shrink: 0;
+}
+
+@media (min-width: 400px) {
+    .centerInfo {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+@media (min-width: 500px) {
+    .centerInfo {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+}
+
+.timerWrapper {
+    margin-bottom: 0.5rem;
+}
+
+@media (min-width: 400px) {
+    .timerWrapper {
+        padding-left: 1rem;
+        padding-right: 1rem;
+        padding-top: 0.375rem;
+        padding-bottom: 0.375rem;
+        margin-bottom: 0.75rem;
+    }
+}
+
+@media (min-width: 500px) {
+    .timerWrapper {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+}
+
+.vsLabel {
+    color: #333333;
+    font-weight: 900;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    opacity: 0.4;
+}
+
+@media (min-width: 400px) {
+    .vsLabel {
+        font-size: 1.125rem;
+        line-height: 1.75rem;
+    }
+}
+
+@media (min-width: 500px) {
+    .vsLabel {
+        font-size: 1.25rem;
+        line-height: 1.75rem;
+    }
+}
+
+.multiplierBadge {
+    margin-top: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    background-color: #F1C40F;
+    border: 2px solid #333333;
+    border-radius: 0.5rem;
+    color: #333333;
+    font-size: 10px;
+    font-weight: 900;
+    box-shadow: 0 3px 0 #333333;
+    z-index: 10;
+}
+
+@media (min-width: 400px) {
+    .multiplierBadge {
+        margin-top: 0.5rem;
+        padding: 0.375rem 1rem;
+        font-size: 0.75rem;
+        line-height: 1rem;
+    }
+}
+
+/* Goal Controls */
+.controlsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+@media (min-width: 400px) {
+    .controlsContainer {
+        gap: 1.5rem;
+    }
+}
+
+@media (min-width: 500px) {
+    .controlsContainer {
+        gap: 2rem;
+    }
+}
+
+.buttonsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+@media (min-width: 400px) {
+    .buttonsGrid {
+        gap: 1rem;
+    }
+}
+
+@media (min-width: 500px) {
+    .buttonsGrid {
+        gap: 1.5rem;
+    }
+}
+
+.goalButton {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    border: 3px solid #333333;
+    background-color: var(--color-beige);
+    box-shadow: 0 4px 0 #333333;
+}
+
+.goalButton:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 0 #333333;
+    filter: brightness(0.9);
+}
+
+.goalButton:active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 0 #333333;
+}
+
+@media (min-width: 400px) {
+    .goalButton {
+        border-radius: 1rem;
+        padding: 1.25rem;
+    }
+}
+
+@media (min-width: 500px) {
+    .goalButton {
+        padding: 1.5rem;
+    }
+}
+
+.goalButtonActive {
+    border-color: transparent;
+    opacity: 1;
+    background-color: var(--team-primary);
+}
+
+.goalButtonInactive:hover {
+    transform: scale(1.02);
+}
+
+.goalButtonInactive:active {
+    transform: scale(0.98);
+}
+
+.goalButtonDisabled {
+    opacity: 0.5;
+    filter: grayscale(100%);
+}
+
+.buttonContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+@media (min-width: 400px) {
+    .buttonContent {
+        gap: 0.75rem;
+    }
+}
+
+.iconWrapper {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #333333;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    background-color: var(--team-primary);
+}
+
+@media (min-width: 400px) {
+    .iconWrapper {
+        width: 3rem;
+        height: 3rem;
+    }
+}
+
+@media (min-width: 500px) {
+    .iconWrapper {
+        width: 4rem;
+        height: 4rem;
+    }
+}
+
+.iconWrapperActive {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.goalButton:hover .iconWrapper {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.plusIcon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: white;
+}
+
+@media (min-width: 400px) {
+    .plusIcon {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+}
+
+@media (min-width: 500px) {
+    .plusIcon {
+        width: 2rem;
+        height: 2rem;
+    }
+}
+
+.buttonLabel {
+    font-weight: 900;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-dark);
+}
+
+@media (min-width: 400px) {
+    .buttonLabel {
+        font-size: 1rem;
+        line-height: 1.5rem;
+    }
+}
+
+@media (min-width: 500px) {
+    .buttonLabel {
+        font-size: 1.25rem;
+        line-height: 1.75rem;
+    }
+}
+
+.buttonLabelActive {
+    color: white;
+}
+
+/* Input Panel */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes scorePop {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+        filter: brightness(1.5);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.scoreValueAnimated {
+    animation: scorePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modalOverlay {
+    position: fixed;
+    inset: 0px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.modalContent {
+    width: 100%;
+    max-width: 480px;
+    background-color: var(--color-beige);
+    border: 3px solid #333333;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    box-shadow: 0 12px 0 rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.inputPanel {
+    width: 100%;
+}
+
+.inputHeader {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid #333333;
+    background-color: var(--team-light);
+}
+
+.inputTitle {
+    font-weight: 900;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    text-transform: uppercase;
+    letter-spacing: -0.025em;
+    color: var(--color-text-dark);
+}
+
+.inputSubtitle {
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-dark);
+}
+
+.closeButton {
+    padding: 0.5rem;
+    border-radius: 9999px;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+.closeButton:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.closeIcon {
+    width: 2rem;
+    height: 2rem;
+    color: var(--color-text-dark);
+}
+
+.inputContent {
+    padding: 2rem;
+}
+
+.inputContent>*+* {
+    margin-top: 1.5rem;
+}
+
+.selectionGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+@media (min-width: 640px) {
+    .selectionGrid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+.playerButton {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    background-color: white;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    border: 3px solid #333333;
+    box-shadow: 0 4px 0 #333333;
+}
+
+.playerButton:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 0 #333333;
+    filter: brightness(0.9);
+    background-color: #334155;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.playerButton:active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 0 #333333;
+}
+
+.playerAvatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 700;
+    color: white;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transition-property: transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    background-color: var(--team-primary);
+}
+
+.playerButton:hover .playerAvatar {
+    transform: scale(1.1);
+}
+
+.playerName {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 900;
+    color: #333333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.positionButton {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 1rem;
+    border: 3px solid #333333;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1rem;
+    box-shadow: 0 4px 0 #333333;
+    background-color: white;
+}
+
+.positionButton:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 0 #333333;
+    filter: brightness(0.9);
+    transform: scale(1.05);
+    border-color: white;
+}
+
+.positionButton:active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 0 #333333;
+}
+
+.bgGreen {
+    background-color: #2ECC71 !important;
+    color: white !important;
+}
+
+.bgBlue {
+    background-color: #4B7BFF !important;
+    color: white !important;
+}
+
+.bgYellow {
+    background-color: #F1C40F !important;
+    color: #333333 !important;
+}
+
+.bgRed {
+    background-color: #FF4B4B !important;
+    color: white !important;
+}
+
+.positionLabel {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.typeGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    width: 100%;
+}
+
+.typeButton {
+    padding: 2rem;
+    border-radius: 1rem;
+    border: 3px solid #333333;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.5rem;
+    min-height: 120px;
+    box-shadow: 0 4px 0 #333333;
+    background-color: white;
+}
+
+.typeButton:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 0 #333333;
+    filter: brightness(0.9);
+}
+
+.typeButton:active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 0 #333333;
+}
+
+.fullWidth {
+    grid-column: span 2 / span 2;
+}
+
+.bgNormal {
+    background-color: #ECF0F1 !important;
+    color: #333333 !important;
+}
+
+.bgGamelle {
+    background-color: #E67E22 !important;
+    color: white !important;
+}
+
+.bgGamelleRentrante {
+    background-color: #9B59B6 !important;
+    color: white !important;
+}
+
+.typeLabel {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.typeDesc {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    opacity: 0.6;
+    font-weight: 500;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+    .container {
+        gap: 1rem;
+    }
+
+    .scoreBoard {
+        padding: 1rem;
+        border-radius: 1rem;
+    }
+
+    .scoreValue {
+        font-size: 3rem;
+        line-height: 1;
+    }
+
+    .teamLabel {
+        font-size: 0.75rem;
+        line-height: 1rem;
+    }
+
+    .avatar {
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 10px;
+    }
+
+    .centerInfo {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .vsLabel {
+        font-size: 1rem;
+        line-height: 1.5rem;
+    }
+
+    .timerWrapper {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .multiplierBadge {
+        font-size: 10px;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .buttonsGrid {
+        gap: 0.75rem;
+    }
+
+    .goalButton {
+        padding: 1rem;
+        border-radius: 0.75rem;
+    }
+
+    .buttonContent {
+        gap: 0.5rem;
+    }
+
+    .iconWrapper {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    .plusIcon {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+
+    .buttonLabel {
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+    }
+
+    .inputContent {
+        padding: 1rem;
+    }
+
+    .inputContent>*+* {
+        margin-top: 1rem;
+    }
+
+    .selectionGrid {
+        gap: 0.5rem;
+    }
+
+    .playerButton {
+        padding: 0.75rem;
+    }
+
+    .playerAvatar {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+        line-height: 1.5rem;
+    }
+
+    .positionButton {
+        height: 5rem;
+        padding: 0.5rem;
+    }
+
+    .positionLabel {
+        font-size: 1rem;
+        line-height: 1.5rem;
+    }
+}

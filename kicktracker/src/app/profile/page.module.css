@@ -1,0 +1,709 @@
+/* Profile Page Styles - Flat Design */
+
+.container {
+    height: 100vh;
+    height: 100dvh;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.contentWrapper {
+    padding: var(--spacing-lg);
+    padding-bottom: calc(var(--nav-height) + var(--spacing-lg));
+}
+
+/* Header */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-xl);
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.logoutBtn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-beige);
+    border: 3px solid #333333;
+    border-radius: var(--radius-md);
+    color: var(--color-text-dark);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.logoutBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+}
+
+.logoutIcon {
+    width: 20px;
+    height: 20px;
+}
+
+/* Profile Header */
+.profileHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    background: var(--color-beige);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: 3px solid #333333;
+}
+
+.avatar {
+    width: 4rem;
+    height: 4rem;
+    background: var(--color-green-medium);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-white);
+    border: 3px solid #333333;
+}
+
+.userInfo {
+    flex: 1;
+}
+
+.username {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-text-dark);
+    margin-bottom: var(--spacing-xs);
+}
+
+.joinDate {
+    font-size: 0.75rem;
+    color: rgba(51, 51, 51, 0.6);
+}
+
+/* Stats Grid */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.statCard {
+    background: var(--color-beige);
+    color: var(--color-text-dark);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: 3px solid #333333;
+    text-align: center;
+}
+
+.statValue {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--color-text-dark);
+    margin-bottom: var(--spacing-xs);
+    line-height: 1;
+}
+
+.statLabel {
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: rgba(51, 51, 51, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.statCardHighlight {
+    background: var(--color-beige);
+    border-color: var(--color-text-dark);
+}
+
+.statValueHighlight {
+    color: var(--color-text-dark);
+}
+
+/* Section */
+.section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.sectionTitle {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+/* Form récente */
+.formCard {
+    background: var(--color-beige);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: 3px solid #333333;
+}
+
+.formIndicators {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.formBadge {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.875rem;
+}
+
+.formWin {
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(76, 175, 80, 0.3) 100%);
+    color: var(--color-field-green);
+    border: 1px solid var(--color-field-green);
+}
+
+.formLoss {
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.2) 0%, rgba(255, 152, 0, 0.3) 100%);
+    color: var(--color-accent-orange);
+    border: 1px solid var(--color-accent-orange);
+}
+
+.formDraw {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.streakText {
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+/* Venue Card */
+.venueCard {
+    background: var(--color-pitch-medium);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.venueIcon {
+    width: 3rem;
+    height: 3rem;
+    background: linear-gradient(135deg, var(--color-accent-orange) 0%, var(--color-accent-yellow) 100%);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-pitch-dark);
+}
+
+.venueInfo {
+    flex: 1;
+}
+
+.venueName {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.venueStats {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.venueList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.venueListItem {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+}
+
+.venueListName {
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+}
+
+.venueListGames {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+/* Goals Grid */
+.goalsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-sm);
+}
+
+.goalCard {
+    background: var(--color-beige);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 3px solid #333333;
+    text-align: center;
+}
+
+.goalValue {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-green-medium);
+    line-height: 1;
+    margin-bottom: var(--spacing-xs);
+}
+
+.goalLabel {
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: rgba(51, 51, 51, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Position Card */
+.positionCard {
+    background: var(--color-pitch-medium);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.positionHighlight {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.positionName {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-field-green);
+}
+
+.positionGoals {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.positionBreakdown {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.positionRow {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.positionRowLabel {
+    width: 4.5rem;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+.positionBar {
+    flex: 1;
+    height: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.positionBarFill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-field-green) 0%, var(--color-field-light) 100%);
+    border-radius: var(--radius-full);
+    transition: width var(--transition-normal);
+}
+
+.positionRowCount {
+    width: 2rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    text-align: right;
+}
+
+/* Details Grid */
+.detailsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-sm);
+}
+
+.detailItem {
+    background: var(--color-pitch-medium);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.detailLabel {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+.detailValue {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+/* Format Grid */
+.formatGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.formatCard {
+    background: var(--color-pitch-medium);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    transition: all var(--transition-normal);
+}
+
+.formatCardActive {
+    border-color: var(--color-field-green);
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(129, 199, 132, 0.1) 100%);
+}
+
+.formatTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.formatGames {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.formatWinRate {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-field-green);
+}
+
+/* Recent Games */
+.gamesList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.gameCard {
+    background: var(--color-pitch-medium);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.gameInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.gameResult {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.resultWin {
+    color: var(--color-field-green);
+}
+
+.resultLoss {
+    color: var(--color-accent-orange);
+}
+
+.gameDate {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+.gameScore {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.emptyState {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--color-text-secondary);
+    background: var(--color-pitch-medium);
+    border-radius: var(--radius-lg);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+/* Perfect Games */
+.perfectGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.perfectCard {
+    background: var(--color-pitch-medium);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.perfectValue {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: var(--spacing-xs);
+}
+
+.perfectLabel {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.perfectDesc {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+/* Head-to-Head */
+.h2hList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.h2hCard {
+    background: var(--color-pitch-medium);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.h2hInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.h2hName {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.h2hGames {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+.h2hStats {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.h2hWins {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--color-field-green);
+}
+
+.h2hSeparator {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.h2hLosses {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--color-accent-orange);
+}
+
+/* Filter Section */
+.filterSection {
+    margin-bottom: var(--spacing-lg);
+}
+
+.dropdownContainer {
+    position: relative;
+}
+
+.dropdownButton {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--color-beige);
+    border: 3px solid #333333;
+    border-radius: var(--radius-md);
+    color: var(--color-text-dark);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.dropdownButton:hover {
+    background: #f5e6c0;
+}
+
+.dropdownButton span {
+    flex: 1;
+    text-align: left;
+}
+
+.chevron {
+    transition: transform var(--transition-normal);
+    color: var(--color-text-dark);
+}
+
+.chevronOpen {
+    transform: rotate(180deg);
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: calc(100% + var(--spacing-xs));
+    left: 0;
+    right: 0;
+    background: var(--color-beige);
+    border: 3px solid #333333;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    z-index: 100;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.dropdownItem {
+    width: 100%;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: transparent;
+    border: none;
+    color: var(--color-text-dark);
+    font-size: 0.9375rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--transition-normal);
+}
+
+.dropdownItem:hover {
+    background: rgba(51, 51, 51, 0.1);
+}
+
+.dropdownItemActive {
+    background: var(--color-green-light);
+    color: var(--color-white);
+    font-weight: 600;
+}
+
+.dropdownItem:not(:last-child) {
+    border-bottom: 1px solid rgba(51, 51, 51, 0.2);
+}
+
+/* H2H Search */
+.h2hSearch {
+    position: relative;
+    margin-bottom: var(--spacing-md);
+}
+
+.h2hSearchIcon {
+    position: absolute;
+    left: var(--spacing-md);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--color-text-secondary);
+}
+
+.h2hSearchInput {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    padding-left: 2.75rem;
+    background: var(--color-pitch-dark);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: 0.9375rem;
+    transition: all var(--transition-normal);
+}
+
+.h2hSearchInput:focus {
+    outline: none;
+    border-color: var(--color-field-green);
+    background: var(--color-pitch-medium);
+}
+
+.h2hSearchInput::placeholder {
+    color: var(--color-text-secondary);
+}
+
+.h2hEmpty {
+    text-align: center;
+    padding: var(--spacing-lg);
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+}

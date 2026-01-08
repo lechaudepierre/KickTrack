@@ -1,0 +1,14 @@
+@reference "../../app/globals.css";
+
+.container {
+    @apply flex items-center gap-2;
+}
+
+.dot {
+    @apply w-2 h-2 bg-emerald-500 rounded-full animate-pulse;
+}
+
+.time {
+    @apply font-mono text-lg font-bold;
+    color: var(--color-text-dark);
+}

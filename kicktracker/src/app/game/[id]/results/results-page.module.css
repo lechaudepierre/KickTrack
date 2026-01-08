@@ -1,0 +1,198 @@
+@reference "../../../globals.css";
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    gap: 2rem;
+    padding: 1rem;
+}
+
+.trophyContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: zoomIn 0.5s ease-out;
+}
+
+.trophyCircle {
+    width: 6rem;
+    height: 6rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    border: 4px solid #333333;
+    box-shadow: 0 8px 0 rgba(0, 0, 0, 0.1);
+}
+
+.trophyIcon {
+    width: 3rem;
+    height: 3rem;
+}
+
+.winnerTitle {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+    font-weight: 900;
+    color: var(--color-text-dark);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: -0.025em;
+}
+
+.finalScore {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 800;
+    color: var(--color-text-dark);
+    opacity: 0.6;
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    width: 100%;
+    max-width: 28rem;
+}
+
+.statCard {
+    background-color: var(--color-beige);
+    border: 3px solid #333333;
+    border-radius: 1rem;
+    padding: 1.25rem;
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.1);
+    text-align: left;
+}
+
+.statHeader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.playerAvatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+    border: 3px solid #333333;
+}
+
+.playerInfo {
+    flex: 1;
+}
+
+.playerName {
+    font-weight: 800;
+    font-size: 1.125rem;
+    color: var(--color-text-dark);
+    text-transform: uppercase;
+}
+
+.playerGoals {
+    color: var(--color-green-medium);
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.positionBreakdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.positionPill {
+    padding: 0.25rem 0.75rem;
+    background-color: rgba(51, 51, 51, 0.05);
+    border: 2px solid #333333;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+    text-transform: uppercase;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 24rem;
+    margin-top: 1rem;
+}
+
+.mvpBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background-color: #F1C40F;
+    color: #333333;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.625rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+    border: 1px solid #333333;
+}
+
+@keyframes zoomIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Team Colors for Trophy */
+.redTrophy {
+    background-color: #FF4B4B;
+    color: white;
+}
+
+.blueTrophy {
+    background-color: #4B7BFF;
+    color: white;
+}
+
+.greenTrophy {
+    background-color: #2ECC71;
+    color: white;
+}
+
+.yellowTrophy {
+    background-color: #F1C40F;
+    color: #333333;
+}
+
+.orangeTrophy {
+    background-color: #E67E22;
+    color: white;
+}
+
+.purpleTrophy {
+    background-color: #9B59B6;
+    color: white;
+}
+
+.drawTrophy {
+    background-color: var(--color-beige);
+    color: var(--color-text-dark);
+}

@@ -1,0 +1,56 @@
+[04:16:09.546] Server  ERROR   ⨯ Error: Cannot find module 'next/dist/client/components/builtin/global-not-found'
+Require stack:
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/on-demand-entry-handler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/hot-reloader-turbopack.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-server.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/start-server.js
+[04:16:09.612] Server  ERROR   Error: Cannot find module 'next/dist/pages/_error'
+Require stack:
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/on-demand-entry-handler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/hot-reloader-turbopack.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-server.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/start-server.js
+[04:16:09.671] Server  ERROR   ⨯ Error: Cannot find module 'next/dist/pages/_error'
+Require stack:
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/on-demand-entry-handler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/hot-reloader-turbopack.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-server.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/start-server.js
+[04:16:09.882] Server  ERROR   Error: Cannot find module 'next/dist/pages/_error'
+Require stack:
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/on-demand-entry-handler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/hot-reloader-turbopack.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-server.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/start-server.js
+[04:16:11.462] Server  ERROR   ⨯ Error: Cannot find module 'next/dist/client/components/builtin/global-not-found'
+Require stack:
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/on-demand-entry-handler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/hot-reloader-turbopack.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-server.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/start-server.js
+[04:16:11.606] Server  ERROR   Error: Cannot find module 'next/dist/pages/_error'
+Require stack:
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/on-demand-entry-handler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/hot-reloader-turbopack.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-server.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/start-server.js
+[04:16:11.709] Server  ERROR   ⨯ Error: Cannot find module 'next/dist/pages/_error'
+Require stack:
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/on-demand-entry-handler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/hot-reloader-turbopack.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-server.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/start-server.js
+[04:16:11.786] Server  ERROR   Error: Cannot find module 'next/dist/pages/_error'
+Require stack:
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/on-demand-entry-handler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/dev/hot-reloader-turbopack.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/router-server.js
+- /Users/sacha/KickTrack/kicktrack/node_modules/next/dist/server/lib/start-server.js
