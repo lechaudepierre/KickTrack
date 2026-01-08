@@ -10,93 +10,38 @@
     z-index: 100;
 }
 
-.flame {
-    animation: flicker 0.4s ease-in-out infinite alternate;
-}
-
-.flamesTop {
+.border {
     position: absolute;
-    top: -5px;
-    left: -5px;
-    right: -5px;
-    height: 60px;
-    display: flex;
-    justify-content: space-between;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 8px solid;
+    border-image: linear-gradient(45deg,
+            #FF6B35,
+            #FFA500,
+            #FFD700,
+            #FFA500,
+            #FF6B35) 1;
+    animation: pulse 1s ease-in-out infinite alternate;
 }
 
-.flamesTop .flame {
-    width: 50px;
-    height: 60px;
-    margin: 0 -8px;
-    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.8));
-}
-
-.flamesBottom {
-    position: absolute;
-    bottom: -5px;
-    left: -5px;
-    right: -5px;
-    height: 60px;
-    display: flex;
-    justify-content: space-between;
-}
-
-.flamesBottom .flame {
-    width: 50px;
-    height: 60px;
-    margin: 0 -8px;
-    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.8));
-}
-
-.flamesLeft {
-    position: absolute;
-    left: -5px;
-    top: 55px;
-    bottom: 55px;
-    width: 60px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.flamesLeft .flame {
-    width: 60px;
-    height: 50px;
-    margin: -8px 0;
-    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.8));
-}
-
-.flamesRight {
-    position: absolute;
-    right: -5px;
-    top: 55px;
-    bottom: 55px;
-    width: 60px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.flamesRight .flame {
-    width: 60px;
-    height: 50px;
-    margin: -8px 0;
-    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.8));
-}
-
-@keyframes flicker {
+@keyframes pulse {
     0% {
-        opacity: 0.95;
-        transform: scale(1);
+        border-width: 8px;
+        opacity: 0.9;
+        filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.6));
     }
 
     50% {
+        border-width: 12px;
         opacity: 1;
-        transform: scale(1.05);
+        filter: drop-shadow(0 0 20px rgba(255, 107, 53, 0.9));
     }
 
     100% {
-        opacity: 0.9;
-        transform: scale(0.98);
+        border-width: 8px;
+        opacity: 0.85;
+        filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.6));
     }
 }
