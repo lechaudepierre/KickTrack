@@ -99,19 +99,18 @@
 
 /* Welcome */
 .welcome {
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
 }
 
-.greeting {
-    font-size: 1rem;
-    color: var(--color-text-secondary);
-    font-weight: 500;
+.welcomeText {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--color-text-dark);
+    letter-spacing: -0.02em;
 }
 
 .username {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--color-white);
+    color: var(--color-text-dark);
 }
 
 /* Actions */

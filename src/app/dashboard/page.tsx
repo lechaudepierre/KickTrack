@@ -53,8 +53,9 @@ export default function DashboardPage() {
 
                 {/* Welcome */}
                 <div className={styles.welcome}>
-                    <p className={styles.greeting}>Salut,</p>
-                    <h2 className={styles.username}>{user?.username || 'Joueur'}</h2>
+                    <h2 className={styles.welcomeText}>
+                        Salut <span className={styles.username}>{user?.username || 'Joueur'}</span> !
+                    </h2>
                 </div>
 
                 {/* Action Buttons */}
