@@ -485,11 +485,20 @@ export async function getVenueLeaderboard(venueId: string): Promise<VenueLeaderb
     for (const game of games) {
         if (game.winner === undefined) continue; // Skip draws
 
+        // Skip games with guest players
+        const hasGuestPlayers = game.teams.some(team =>
+            team.players.some(player => player.userId.startsWith('guest_'))
+        );
+        if (hasGuestPlayers) continue;
+
         for (let teamIndex = 0; teamIndex < game.teams.length; teamIndex++) {
             const team = game.teams[teamIndex];
             const isWinner = teamIndex === game.winner;
 
             for (const player of team.players) {
+                // Skip guest players
+                if (player.userId.startsWith('guest_')) continue;
+
                 const existing = playerStats.get(player.userId) || {
                     userId: player.userId,
                     username: player.username,
@@ -547,11 +556,20 @@ export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
     for (const game of games) {
         if (game.winner === undefined) continue; // Skip draws
 
+        // Skip games with guest players
+        const hasGuestPlayers = game.teams.some(team =>
+            team.players.some(player => player.userId.startsWith('guest_'))
+        );
+        if (hasGuestPlayers) continue;
+
         for (let teamIndex = 0; teamIndex < game.teams.length; teamIndex++) {
             const team = game.teams[teamIndex];
             const isWinner = teamIndex === game.winner;
 
             for (const player of team.players) {
+                // Skip guest players
+                if (player.userId.startsWith('guest_')) continue;
+
                 const existing = playerStats.get(player.userId) || {
                     userId: player.userId,
                     username: player.username,
