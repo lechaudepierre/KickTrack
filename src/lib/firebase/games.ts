@@ -26,6 +26,17 @@ async function updatePlayerStatsAfterGame(
     goals: Goal[],
     winner: 0 | 1
 ): Promise<void> {
+    // Check if any player is a guest (userId starts with 'guest_')
+    const hasGuestPlayers = teams.some(team =>
+        team.players.some(player => player.userId.startsWith('guest_'))
+    );
+
+    // Don't update stats if there are guest players
+    if (hasGuestPlayers) {
+        console.log('Skipping stats update - game contains guest players');
+        return;
+    }
+
     const goalsByPlayer: Record<string, number> = {};
     goals.forEach(goal => {
         goalsByPlayer[goal.scoredBy] = (goalsByPlayer[goal.scoredBy] || 0) + 1;

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Game, Team, Player, GoalPosition, GoalType } from '@/types';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import GameTimer from './GameTimer';
+import MatchPointFlames from './MatchPointFlames';
 import styles from './GameBoard.module.css';
 
 interface GameBoardProps {
@@ -211,8 +212,15 @@ export default function GameBoard({ game, onAddGoal, isViewer = false }: GameBoa
         return team.players.map(p => p.username).join(' & ');
     };
 
+    // Check if it's match point (either team is one goal away from winning)
+    const targetScore = parseInt(game.gameType);
+    const isMatchPoint = game.score[0] === targetScore - 1 || game.score[1] === targetScore - 1;
+
     return (
         <div className={`${styles.container} ${isViewer ? styles.viewerMode : ''} ${isViewer && isPortrait ? styles.forcedLandscape : ''}`}>
+            {/* Match Point Flames */}
+            {isMatchPoint && <MatchPointFlames />}
+
             {isViewer && (
                 <div className={styles.viewerBadge}>
                     MODE SPECTATEUR
