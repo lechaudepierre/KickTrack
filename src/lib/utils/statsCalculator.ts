@@ -68,8 +68,16 @@ export function calculateAdvancedStats(
     games: Game[],
     userId: string
 ): AdvancedStats {
-    // Filtrer les matchs complétés uniquement
-    const completedGames = games.filter(g => g.status === 'completed');
+    // Filtrer les matchs complétés uniquement et exclure les parties avec invités
+    const completedGames = games.filter(g => {
+        if (g.status !== 'completed') return false;
+
+        // Skip games with guest players
+        const hasGuestPlayers = g.teams.some(team =>
+            team.players.some(player => player.userId.startsWith('guest_'))
+        );
+        return !hasGuestPlayers;
+    });
 
     if (completedGames.length === 0) {
         return getEmptyStats();
@@ -124,12 +132,6 @@ export function calculateAdvancedStats(
 
     for (let i = 0; i < sortedGames.length; i++) {
         const game = sortedGames[i];
-
-        // Skip games with guest players (userId starts with 'guest_')
-        const hasGuestPlayers = game.teams.some(team =>
-            team.players.some(player => player.userId.startsWith('guest_'))
-        );
-        if (hasGuestPlayers) continue;
 
         // Trouver l'équipe du joueur
         const userTeamIndex = game.teams.findIndex(t =>
