@@ -13,6 +13,7 @@ import {
     getDocs
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
+import { updateVenueStats } from './firestore';
 import { Game, Goal, GoalPosition, Player, GameResults, Team } from '@/types';
 import { Firestore } from 'firebase/firestore';
 
@@ -178,7 +179,7 @@ export async function addGoal(
         } : {})
     });
 
-    // If game is won, update player stats
+    // If game is won, update player stats and venue stats
     if (isGameWon) {
         await updatePlayerStatsAfterGame(
             db,
@@ -186,6 +187,10 @@ export async function addGoal(
             [...game.goals, goal],
             teamIndex
         );
+
+        // Update venue stats
+        const totalPlayers = updatedTeams.reduce((sum, team) => sum + team.players.length, 0);
+        await updateVenueStats(game.venueId, { playersCount: totalPlayers });
     }
 }
 
@@ -256,6 +261,10 @@ export async function endGame(gameId: string): Promise<GameResults> {
     if (winner !== undefined) {
         await updatePlayerStatsAfterGame(db, game.teams, game.goals, winner);
     }
+
+    // Update venue stats
+    const totalPlayers = game.teams.reduce((sum, team) => sum + team.players.length, 0);
+    await updateVenueStats(game.venueId, { playersCount: totalPlayers });
 
     return calculateGameResults({ ...game, status: 'completed', winner });
 }
