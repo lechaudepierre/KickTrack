@@ -28,19 +28,19 @@
 
 @keyframes pulse {
     0% {
-        border-width: 8px;
+        border-width: 10px;
         opacity: 0.9;
         filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.6));
     }
 
     50% {
-        border-width: 12px;
+        border-width: 16px;
         opacity: 1;
         filter: drop-shadow(0 0 20px rgba(255, 107, 53, 0.9));
     }
 
     100% {
-        border-width: 8px;
+        border-width: 10px;
         opacity: 0.85;
         filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.6));
     }
