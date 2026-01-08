@@ -3,10 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { getLeaderboard } from '@/lib/firebase/auth';
 import { getVenues } from '@/lib/firebase/firestore';
-import { getVenueLeaderboard, VenueLeaderboardEntry } from '@/lib/firebase/games';
-import { User, Venue } from '@/types';
+import { getVenueLeaderboard, getGlobalLeaderboard, LeaderboardEntry } from '@/lib/firebase/games';
+import { Venue } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import {
     ArrowLeftIcon,
@@ -19,8 +18,7 @@ import styles from './page.module.css';
 export default function LeaderboardPage() {
     const router = useRouter();
     const { user: currentUser } = useAuthStore();
-    const [users, setUsers] = useState<User[]>([]);
-    const [venueLeaderboard, setVenueLeaderboard] = useState<VenueLeaderboardEntry[]>([]);
+    const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [venues, setVenues] = useState<Venue[]>([]);
     const [selectedVenue, setSelectedVenue] = useState<string>('all');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -47,13 +45,11 @@ export default function LeaderboardPage() {
         setIsLoading(true);
         try {
             if (selectedVenue === 'all') {
-                const data = await getLeaderboard(50);
-                setUsers(data);
-                setVenueLeaderboard([]);
+                const data = await getGlobalLeaderboard();
+                setLeaderboard(data);
             } else {
                 const data = await getVenueLeaderboard(selectedVenue);
-                setVenueLeaderboard(data);
-                setUsers([]);
+                setLeaderboard(data);
             }
         } catch (error) {
             console.error('Error loading leaderboard:', error);
@@ -73,9 +69,7 @@ export default function LeaderboardPage() {
         setIsDropdownOpen(false);
     };
 
-    // Get the display data based on selection
-    const displayData = selectedVenue === 'all' ? users : venueLeaderboard;
-    const hasData = displayData.length > 0;
+    const hasData = leaderboard.length > 0;
 
     return (
         <div className={styles.container}>
@@ -133,167 +127,84 @@ export default function LeaderboardPage() {
                     </div>
                 ) : (
                     <>
-                        {/* Podium - Global leaderboard only */}
-                        {selectedVenue === 'all' && users.length > 0 && (
+                        {/* Podium */}
+                        {leaderboard.length > 0 && (
                             <div className={styles.podium}>
                                 {/* 2nd Place */}
-                                {users[1] && (
+                                {leaderboard[1] && (
                                     <div className={`${styles.podiumSpot} ${styles.secondPlace}`}>
                                         <div className={styles.avatarContainer}>
                                             <div className={styles.podiumAvatar}>
-                                                {users[1].username.charAt(0).toUpperCase()}
+                                                {leaderboard[1].username.charAt(0).toUpperCase()}
                                             </div>
                                         </div>
-                                        <div className={styles.podiumName}>{users[1].username}</div>
-                                        <div className={styles.podiumScore}>{users[1].stats.wins} victoires</div>
+                                        <div className={styles.podiumName}>{leaderboard[1].username}</div>
+                                        <div className={styles.podiumScore}>{leaderboard[1].wins} victoires</div>
                                     </div>
                                 )}
 
                                 {/* 1st Place */}
-                                {users[0] && (
+                                {leaderboard[0] && (
                                     <div className={`${styles.podiumSpot} ${styles.firstPlace}`}>
                                         <div className={styles.avatarContainer}>
                                             <TrophyIcon className={styles.crownIcon} />
                                             <div className={styles.podiumAvatar}>
-                                                {users[0].username.charAt(0).toUpperCase()}
+                                                {leaderboard[0].username.charAt(0).toUpperCase()}
                                             </div>
                                         </div>
-                                        <div className={styles.podiumName}>{users[0].username}</div>
-                                        <div className={styles.podiumScore}>{users[0].stats.wins} victoires</div>
+                                        <div className={styles.podiumName}>{leaderboard[0].username}</div>
+                                        <div className={styles.podiumScore}>{leaderboard[0].wins} victoires</div>
                                     </div>
                                 )}
 
                                 {/* 3rd Place */}
-                                {users[2] && (
+                                {leaderboard[2] && (
                                     <div className={`${styles.podiumSpot} ${styles.thirdPlace}`}>
                                         <div className={styles.avatarContainer}>
                                             <div className={styles.podiumAvatar}>
-                                                {users[2].username.charAt(0).toUpperCase()}
+                                                {leaderboard[2].username.charAt(0).toUpperCase()}
                                             </div>
                                         </div>
-                                        <div className={styles.podiumName}>{users[2].username}</div>
-                                        <div className={styles.podiumScore}>{users[2].stats.wins} victoires</div>
+                                        <div className={styles.podiumName}>{leaderboard[2].username}</div>
+                                        <div className={styles.podiumScore}>{leaderboard[2].wins} victoires</div>
                                     </div>
                                 )}
                             </div>
                         )}
 
-                        {/* Podium - Venue leaderboard */}
-                        {selectedVenue !== 'all' && venueLeaderboard.length > 0 && (
-                            <div className={styles.podium}>
-                                {/* 2nd Place */}
-                                {venueLeaderboard[1] && (
-                                    <div className={`${styles.podiumSpot} ${styles.secondPlace}`}>
-                                        <div className={styles.avatarContainer}>
-                                            <div className={styles.podiumAvatar}>
-                                                {venueLeaderboard[1].username.charAt(0).toUpperCase()}
-                                            </div>
-                                        </div>
-                                        <div className={styles.podiumName}>{venueLeaderboard[1].username}</div>
-                                        <div className={styles.podiumScore}>{venueLeaderboard[1].wins} victoires</div>
-                                    </div>
-                                )}
-
-                                {/* 1st Place */}
-                                {venueLeaderboard[0] && (
-                                    <div className={`${styles.podiumSpot} ${styles.firstPlace}`}>
-                                        <div className={styles.avatarContainer}>
-                                            <TrophyIcon className={styles.crownIcon} />
-                                            <div className={styles.podiumAvatar}>
-                                                {venueLeaderboard[0].username.charAt(0).toUpperCase()}
-                                            </div>
-                                        </div>
-                                        <div className={styles.podiumName}>{venueLeaderboard[0].username}</div>
-                                        <div className={styles.podiumScore}>{venueLeaderboard[0].wins} victoires</div>
-                                    </div>
-                                )}
-
-                                {/* 3rd Place */}
-                                {venueLeaderboard[2] && (
-                                    <div className={`${styles.podiumSpot} ${styles.thirdPlace}`}>
-                                        <div className={styles.avatarContainer}>
-                                            <div className={styles.podiumAvatar}>
-                                                {venueLeaderboard[2].username.charAt(0).toUpperCase()}
-                                            </div>
-                                        </div>
-                                        <div className={styles.podiumName}>{venueLeaderboard[2].username}</div>
-                                        <div className={styles.podiumScore}>{venueLeaderboard[2].wins} victoires</div>
-                                    </div>
-                                )}
+                        {/* List */}
+                        <div className={styles.listContainer}>
+                            <div className={styles.listHeader}>
+                                <div className="text-center">#</div>
+                                <div>Joueur</div>
+                                <div className="text-center">V</div>
+                                <div className="text-center">%</div>
                             </div>
-                        )}
 
-                        {/* List - Global */}
-                        {selectedVenue === 'all' && (
-                            <div className={styles.listContainer}>
-                                <div className={styles.listHeader}>
-                                    <div className="text-center">#</div>
-                                    <div>Joueur</div>
-                                    <div className="text-center">V</div>
-                                    <div className="text-center">%</div>
+                            {leaderboard.map((player, index) => (
+                                <div
+                                    key={player.userId}
+                                    className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.currentUserItem : ''}`}
+                                >
+                                    <div className={styles.rank}>{index + 1}</div>
+                                    <div className={styles.playerInfo}>
+                                        <div className={styles.listAvatar}>
+                                            {player.username.charAt(0).toUpperCase()}
+                                        </div>
+                                        <span className={styles.playerName}>
+                                            {player.username}
+                                            {currentUser?.userId === player.userId && ' (Moi)'}
+                                        </span>
+                                    </div>
+                                    <div className={styles.statCol}>{player.wins}</div>
+                                    <div className={`${styles.statCol} ${styles.winRate}`}>
+                                        {player.totalGames > 0
+                                            ? Math.round(player.winRate * 100)
+                                            : 0}%
+                                    </div>
                                 </div>
-
-                                {users.map((player, index) => (
-                                    <div
-                                        key={player.userId}
-                                        className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.currentUserItem : ''}`}
-                                    >
-                                        <div className={styles.rank}>{index + 1}</div>
-                                        <div className={styles.playerInfo}>
-                                            <div className={styles.listAvatar}>
-                                                {player.username.charAt(0).toUpperCase()}
-                                            </div>
-                                            <span className={styles.playerName}>
-                                                {player.username}
-                                                {currentUser?.userId === player.userId && ' (Moi)'}
-                                            </span>
-                                        </div>
-                                        <div className={styles.statCol}>{player.stats.wins}</div>
-                                        <div className={`${styles.statCol} ${styles.winRate}`}>
-                                            {player.stats.totalGames > 0
-                                                ? Math.round((player.stats.wins / player.stats.totalGames) * 100)
-                                                : 0}%
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* List - Venue */}
-                        {selectedVenue !== 'all' && (
-                            <div className={styles.listContainer}>
-                                <div className={styles.listHeader}>
-                                    <div className="text-center">#</div>
-                                    <div>Joueur</div>
-                                    <div className="text-center">V</div>
-                                    <div className="text-center">%</div>
-                                </div>
-
-                                {venueLeaderboard.map((player, index) => (
-                                    <div
-                                        key={player.userId}
-                                        className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.currentUserItem : ''}`}
-                                    >
-                                        <div className={styles.rank}>{index + 1}</div>
-                                        <div className={styles.playerInfo}>
-                                            <div className={styles.listAvatar}>
-                                                {player.username.charAt(0).toUpperCase()}
-                                            </div>
-                                            <span className={styles.playerName}>
-                                                {player.username}
-                                                {currentUser?.userId === player.userId && ' (Moi)'}
-                                            </span>
-                                        </div>
-                                        <div className={styles.statCol}>{player.wins}</div>
-                                        <div className={`${styles.statCol} ${styles.winRate}`}>
-                                            {player.totalGames > 0
-                                                ? Math.round(player.winRate * 100)
-                                                : 0}%
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                            ))}
+                        </div>
                     </>
                 )}
             </div>
