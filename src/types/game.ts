@@ -61,7 +61,6 @@ export interface GameSession {
     status: 'waiting' | 'ready' | 'active' | 'finished' | 'cancelled';
     players: Player[];
     maxPlayers: number;
-    qrCodeData: string;
     pinCode: string;
     createdAt: Date;
     initiatorId: string;

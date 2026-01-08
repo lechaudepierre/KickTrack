@@ -43,11 +43,6 @@ export function formatPinCode(code: string): string {
     return cleaned;
 }
 
-// Generate QR code data URL (contains the PIN code and session info)
-export function generateQRData(sessionId: string, pinCode: string): string {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    return `${baseUrl}/game/join?code=${pinCode}&session=${sessionId}`;
-}
 
 // Calculate remaining time in seconds
 export function getRemainingTime(createdAt: Date, expirationMinutes: number = 5): number {

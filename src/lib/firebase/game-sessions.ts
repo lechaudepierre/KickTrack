@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
 import { GameSession, Game, Player, Team, GameFormat } from '@/types';
-import { generatePinCode, generateQRData } from '@/lib/utils/code-generator';
+import { generatePinCode } from '@/lib/utils/code-generator';
 
 const SESSIONS_COLLECTION = 'game_sessions';
 const GAMES_COLLECTION = 'games';
@@ -35,7 +35,6 @@ export async function createGameSession(
     const session: GameSession = {
         sessionId: sessionRef.id,
         pinCode,
-        qrCodeData: generateQRData(sessionRef.id, pinCode),
         format,
         venueId,
         venueName,

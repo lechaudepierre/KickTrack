@@ -2,22 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import { getRemainingTime, formatTime } from '@/lib/utils/code-generator';
-import styles from './QRCodeDisplay.module.css';
+import styles from './PinCodeDisplay.module.css';
 
-interface QRCodeDisplayProps {
-    qrData: string;
+interface PinCodeDisplayProps {
     pinCode: string;
     createdAt: Date;
     expirationMinutes?: number;
     onExpired?: () => void;
 }
 
-export default function QRCodeDisplay({
+export default function PinCodeDisplay({
     pinCode,
     createdAt,
     expirationMinutes = 5,
     onExpired
-}: QRCodeDisplayProps) {
+}: PinCodeDisplayProps) {
     const [remainingTime, setRemainingTime] = useState(() =>
         getRemainingTime(createdAt, expirationMinutes)
     );

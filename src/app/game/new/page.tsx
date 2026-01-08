@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/common/ui';
-import QRCodeDisplay from '@/components/game/QRCodeDisplay';
+import PinCodeDisplay from '@/components/game/PinCodeDisplay';
 import PlayerList from '@/components/game/PlayerList';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getVenues } from '@/lib/firebase/firestore';
@@ -364,8 +364,7 @@ export default function NewGamePage() {
                             padding: 'var(--spacing-xl)',
                             boxShadow: '0 8px 0 rgba(0, 0, 0, 0.1)'
                         }}>
-                            <QRCodeDisplay
-                                qrData={session.qrCodeData}
+                            <PinCodeDisplay
                                 pinCode={session.pinCode}
                                 createdAt={
                                     session.createdAt && typeof (session.createdAt as any).toDate === 'function'
