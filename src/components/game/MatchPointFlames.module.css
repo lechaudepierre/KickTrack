@@ -11,92 +11,92 @@
 }
 
 .flame {
-    animation: flicker 0.5s ease-in-out infinite alternate;
+    animation: flicker 0.4s ease-in-out infinite alternate;
 }
 
 .flamesTop {
     position: absolute;
-    top: -10px;
-    left: -10px;
-    right: -10px;
-    height: 80px;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    height: 60px;
     display: flex;
     justify-content: space-between;
 }
 
 .flamesTop .flame {
-    width: 70px;
-    height: 80px;
-    margin: 0 -10px;
-    filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.9));
+    width: 50px;
+    height: 60px;
+    margin: 0 -8px;
+    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.8));
 }
 
 .flamesBottom {
     position: absolute;
-    bottom: -10px;
-    left: -10px;
-    right: -10px;
-    height: 80px;
+    bottom: -5px;
+    left: -5px;
+    right: -5px;
+    height: 60px;
     display: flex;
     justify-content: space-between;
 }
 
 .flamesBottom .flame {
-    width: 70px;
-    height: 80px;
-    margin: 0 -10px;
-    filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.9));
+    width: 50px;
+    height: 60px;
+    margin: 0 -8px;
+    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.8));
 }
 
 .flamesLeft {
     position: absolute;
-    left: -10px;
-    top: 70px;
-    bottom: 70px;
-    width: 80px;
+    left: -5px;
+    top: 55px;
+    bottom: 55px;
+    width: 60px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
 }
 
 .flamesLeft .flame {
-    width: 80px;
-    height: 70px;
-    margin: -10px 0;
-    filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.9));
+    width: 60px;
+    height: 50px;
+    margin: -8px 0;
+    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.8));
 }
 
 .flamesRight {
     position: absolute;
-    right: -10px;
-    top: 70px;
-    bottom: 70px;
-    width: 80px;
+    right: -5px;
+    top: 55px;
+    bottom: 55px;
+    width: 60px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
 }
 
 .flamesRight .flame {
-    width: 80px;
-    height: 70px;
-    margin: -10px 0;
-    filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.9));
+    width: 60px;
+    height: 50px;
+    margin: -8px 0;
+    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.8));
 }
 
 @keyframes flicker {
     0% {
-        opacity: 0.9;
+        opacity: 0.95;
         transform: scale(1);
     }
 
     50% {
         opacity: 1;
-        transform: scale(1.08);
+        transform: scale(1.05);
     }
 
     100% {
-        opacity: 0.85;
+        opacity: 0.9;
         transform: scale(0.98);
     }
 }
