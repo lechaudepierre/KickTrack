@@ -417,11 +417,32 @@ export default function NewGamePage() {
                                 username: user.username,
                                 avatarUrl: user.avatarUrl || null
                             },
-                            {
-                                userId: `guest_${user.userId}`,
-                                username: 'Invité',
-                                avatarUrl: null
-                            }
+                            ...(format === '1v1'
+                                ? [
+                                    {
+                                        userId: `guest_${user.userId}_1`,
+                                        username: 'Invité 1',
+                                        avatarUrl: null
+                                    }
+                                ]
+                                : [
+                                    {
+                                        userId: `guest_${user.userId}_1`,
+                                        username: 'Invité 1',
+                                        avatarUrl: null
+                                    },
+                                    {
+                                        userId: `guest_${user.userId}_2`,
+                                        username: 'Invité 2',
+                                        avatarUrl: null
+                                    },
+                                    {
+                                        userId: `guest_${user.userId}_3`,
+                                        username: 'Invité 3',
+                                        avatarUrl: null
+                                    }
+                                ]
+                            )
                         ]}
                         format={format}
                         onStartGame={handleStartGame}

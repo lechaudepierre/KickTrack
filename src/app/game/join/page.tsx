@@ -85,10 +85,10 @@ function JoinGameContent() {
             });
 
             // Redirect to waiting room or game
-            if (session.status === 'active') {
-                router.push('/dashboard');
+            if (session.status === 'active' && session.gameId) {
+                router.push(`/game/${session.gameId}`);
             } else {
-                router.push('/dashboard');
+                router.push(`/game/session/${session.sessionId}`);
             }
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la connexion';

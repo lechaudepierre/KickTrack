@@ -1,7 +1,7 @@
 import { Game, GoalPosition } from '@/types';
 
 export interface HeadToHeadStats {
-    odentId: string;
+    opponentId: string;
     opponentName: string;
     gamesPlayed: number;
     wins: number;
@@ -301,8 +301,8 @@ export function calculateAdvancedStats(
 
     // Head-to-head stats triés par nombre de parties
     const headToHead: HeadToHeadStats[] = Array.from(h2hMap.entries())
-        .map(([odentId, data]) => ({
-            odentId,
+        .map(([opponentId, data]) => ({
+            opponentId,
             opponentName: data.name,
             gamesPlayed: data.wins + data.losses + data.draws,
             wins: data.wins,

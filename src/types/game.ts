@@ -39,6 +39,7 @@ export interface Game {
     winner?: 0 | 1;
     startedAt: Date; // Alias for startTime to match some usages
     playerIds?: string[]; // For easier querying
+    hostId: string;
 }
 
 export type GameFormat = '1v1' | '2v2';
@@ -64,6 +65,7 @@ export interface GameSession {
     createdAt: Date;
     initiatorId: string;
     expiresAt: Date;
+    gameId?: string;
 }
 
 export interface GameSetup {

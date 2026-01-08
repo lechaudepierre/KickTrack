@@ -185,13 +185,17 @@ export async function startGame(
         status: 'in_progress',
         goals: [],
         startedAt: new Date(),
-        playerIds: sanitizedTeams.flatMap(t => t.players.map(p => p.userId || '')).filter(id => id !== '')
+        playerIds: sanitizedTeams.flatMap(t => t.players.map(p => p.userId || '')).filter(id => id !== ''),
+        hostId: session.hostId
     };
 
     await setDoc(gameRef, game);
 
-    // Update session status
-    await updateDoc(sessionRef, { status: 'active' }); // Changed from 'started' to 'active' to match GameSession status type if needed, or keep 'started' if that's what I defined. 
+    // Update session status and store gameId
+    await updateDoc(sessionRef, {
+        status: 'active',
+        gameId: gameRef.id
+    });
     // Wait, GameSession status is 'waiting' | 'ready' | 'active' | 'finished' | 'cancelled'. So 'active' is correct.
 
     return game;

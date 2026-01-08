@@ -8,6 +8,7 @@ interface GameBoardProps {
     game: Game;
     onAddGoal: (teamIndex: 0 | 1, scorerId: string, scorerName: string, position: GoalPosition, type: GoalType) => void;
     onPauseResume?: () => void;
+    isViewer?: boolean;
 }
 
 const positions: { value: GoalPosition; label: string; color: string }[] = [
@@ -23,7 +24,7 @@ const goalTypes: { value: GoalType; label: string; description: string }[] = [
     { value: 'gamelle_rentrante', label: 'Gamelle Rentrante', description: 'Ressort et rentre' }
 ];
 
-export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardProps) {
+export default function GameBoard({ game, onAddGoal, onPauseResume, isViewer = false }: GameBoardProps) {
     const [activeTeamIndex, setActiveTeamIndex] = useState<0 | 1 | null>(null);
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
     const [selectedPosition, setSelectedPosition] = useState<GoalPosition | null>(null);
@@ -62,11 +63,14 @@ export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardP
         return colorMap[team.color] || colorMap.slate;
     };
 
-    const handleStartAddGoal = (teamIndex: 0 | 1) => {
+    const handleStartAddGoal = (teamIndex: 0 | 1, player?: Player) => {
         const team = game.teams[teamIndex];
         setActiveTeamIndex(teamIndex);
 
-        if (team.players.length === 1) {
+        if (player) {
+            setSelectedPlayer(player);
+            setStep('position');
+        } else if (team.players.length === 1) {
             setSelectedPlayer(team.players[0]);
             setStep('position');
         } else {
@@ -191,22 +195,18 @@ export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardP
         );
     };
 
-    const getTeamName = (teamIndex: 0 | 1) => {
+    const getTeamPlayerNames = (teamIndex: 0 | 1) => {
         const team = game.teams[teamIndex];
-        const colorMap: Record<string, string> = {
-            red: 'Équipe Rouge',
-            blue: 'Équipe Bleue',
-            green: 'Équipe Verte',
-            yellow: 'Équipe Jaune',
-            orange: 'Équipe Orange',
-            purple: 'Équipe Violette',
-            slate: 'Équipe'
-        };
-        return colorMap[team.color] || 'Équipe';
+        return team.players.map(p => p.username).join(' & ');
     };
 
     return (
-        <div className={styles.container}>
+        <div className={`${styles.container} ${isViewer ? styles.viewerMode : ''}`}>
+            {isViewer && (
+                <div className={styles.viewerBadge}>
+                    MODE SPECTATEUR
+                </div>
+            )}
             {/* Score Board */}
             <div className={styles.scoreBoard}>
                 {/* Background Accents */}
@@ -227,7 +227,7 @@ export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardP
                                     </div>
                                 ))}
                             </div>
-                            <span className={styles.teamLabel}>{getTeamName(0)}</span>
+                            <span className={styles.teamLabel}>{getTeamPlayerNames(0)}</span>
                         </div>
                     </div>
 
@@ -257,71 +257,81 @@ export default function GameBoard({ game, onAddGoal, onPauseResume }: GameBoardP
                                     </div>
                                 ))}
                             </div>
-                            <span className={styles.teamLabel}>{getTeamName(1)}</span>
+                            <span className={styles.teamLabel}>{getTeamPlayerNames(1)}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Goal Controls */}
-            <div className={styles.controlsContainer}>
-                <div className={styles.buttonsGrid}>
-                    {/* Team 1 Button */}
-                    <button
-                        onClick={() => handleStartAddGoal(0)}
-                        disabled={activeTeamIndex !== null}
-                        className={`
-                            ${styles.goalButton} 
-                            ${styles[team1.color] || styles.slate}
-                            ${activeTeamIndex === 0 ? styles.goalButtonActive : styles.goalButtonInactive}
-                            ${activeTeamIndex === 1 ? styles.goalButtonDisabled : ''}
-                        `}
-                    >
-
-                        <div className={styles.buttonContent}>
-                            <div className={`
-                                ${styles.iconWrapper} 
-                                ${activeTeamIndex === 0 ? styles.iconWrapperActive : ''}
-                            `}>
-                                <PlusIcon className={styles.plusIcon} />
-                            </div>
-                            <span className={`
-                                ${styles.buttonLabel}
-                                ${activeTeamIndex === 0 ? styles.buttonLabelActive : ''}
-                            `}>But {getTeamName(0)}</span>
+            {/* Goal Controls - Only for Host */}
+            {!isViewer && (
+                <div className={styles.controlsContainer}>
+                    <div className={styles.buttonsGrid}>
+                        {/* Team 1 Buttons */}
+                        <div className={styles.teamButtonsColumn}>
+                            {team1.players.map((player) => (
+                                <button
+                                    key={player.userId}
+                                    onClick={() => handleStartAddGoal(0, player)}
+                                    disabled={activeTeamIndex !== null}
+                                    className={`
+                                        ${styles.goalButton} 
+                                        ${styles[team1.color] || styles.slate}
+                                        ${(activeTeamIndex === 0 && selectedPlayer?.userId === player.userId) ? styles.goalButtonActive : styles.goalButtonInactive}
+                                        ${activeTeamIndex === 1 ? styles.goalButtonDisabled : ''}
+                                    `}
+                                >
+                                    <div className={styles.buttonContent}>
+                                        <div className={`
+                                            ${styles.iconWrapper} 
+                                            ${(activeTeamIndex === 0 && selectedPlayer?.userId === player.userId) ? styles.iconWrapperActive : ''}
+                                        `}>
+                                            <PlusIcon className={styles.plusIcon} />
+                                        </div>
+                                        <span className={`
+                                            ${styles.buttonLabel}
+                                            ${(activeTeamIndex === 0 && selectedPlayer?.userId === player.userId) ? styles.buttonLabelActive : ''}
+                                        `}>{player.username}</span>
+                                    </div>
+                                </button>
+                            ))}
                         </div>
-                    </button>
 
-                    {/* Team 2 Button */}
-                    <button
-                        onClick={() => handleStartAddGoal(1)}
-                        disabled={activeTeamIndex !== null}
-                        className={`
-                            ${styles.goalButton} 
-                            ${styles[team2.color] || styles.slate}
-                            ${activeTeamIndex === 1 ? styles.goalButtonActive : styles.goalButtonInactive}
-                            ${activeTeamIndex === 0 ? styles.goalButtonDisabled : ''}
-                        `}
-                    >
-
-                        <div className={styles.buttonContent}>
-                            <div className={`
-                                ${styles.iconWrapper} 
-                                ${activeTeamIndex === 1 ? styles.iconWrapperActive : ''}
-                            `}>
-                                <PlusIcon className={styles.plusIcon} />
-                            </div>
-                            <span className={`
-                                ${styles.buttonLabel}
-                                ${activeTeamIndex === 1 ? styles.buttonLabelActive : ''}
-                            `}>But {getTeamName(1)}</span>
+                        {/* Team 2 Buttons */}
+                        <div className={styles.teamButtonsColumn}>
+                            {team2.players.map((player) => (
+                                <button
+                                    key={player.userId}
+                                    onClick={() => handleStartAddGoal(1, player)}
+                                    disabled={activeTeamIndex !== null}
+                                    className={`
+                                        ${styles.goalButton} 
+                                        ${styles[team2.color] || styles.slate}
+                                        ${(activeTeamIndex === 1 && selectedPlayer?.userId === player.userId) ? styles.goalButtonActive : styles.goalButtonInactive}
+                                        ${activeTeamIndex === 0 ? styles.goalButtonDisabled : ''}
+                                    `}
+                                >
+                                    <div className={styles.buttonContent}>
+                                        <div className={`
+                                            ${styles.iconWrapper} 
+                                            ${(activeTeamIndex === 1 && selectedPlayer?.userId === player.userId) ? styles.iconWrapperActive : ''}
+                                        `}>
+                                            <PlusIcon className={styles.plusIcon} />
+                                        </div>
+                                        <span className={`
+                                            ${styles.buttonLabel}
+                                            ${(activeTeamIndex === 1 && selectedPlayer?.userId === player.userId) ? styles.buttonLabelActive : ''}
+                                        `}>{player.username}</span>
+                                    </div>
+                                </button>
+                            ))}
                         </div>
-                    </button>
+                    </div>
+
+                    {/* Inline Goal Input */}
+                    {activeTeamIndex !== null && renderGoalInput(activeTeamIndex)}
                 </div>
-
-                {/* Inline Goal Input */}
-                {activeTeamIndex !== null && renderGoalInput(activeTeamIndex)}
-            </div>
+            )}
         </div>
     );
 }

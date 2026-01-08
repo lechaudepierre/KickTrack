@@ -50,6 +50,7 @@ export default function GamePage() {
     }, [gameId, router, authLoading]);
 
     const [showEndModal, setShowEndModal] = useState(false);
+    const [showBackModal, setShowBackModal] = useState(false);
 
     const handleAddGoal = async (teamIndex: 0 | 1, scorerId: string, scorerName: string, position: GoalPosition, type: GoalType) => {
         if (!game) return;
@@ -88,13 +89,11 @@ export default function GamePage() {
 
     const handleCancelGame = async () => {
         if (!game) return;
-        if (confirm('Êtes-vous sûr de vouloir annuler la partie ? Aucun score ne sera enregistré.')) {
-            try {
-                await abandonGame(game.gameId);
-                router.push('/dashboard');
-            } catch (error) {
-                console.error('Error cancelling game:', error);
-            }
+        try {
+            await abandonGame(game.gameId);
+            router.push('/dashboard');
+        } catch (error) {
+            console.error('Error cancelling game:', error);
         }
     };
 
@@ -128,7 +127,13 @@ export default function GamePage() {
                 <div className={`${styles.pageHeader} justify-between`}>
                     <div className="flex items-center gap-4">
                         <button
-                            onClick={() => router.push('/dashboard')}
+                            onClick={() => {
+                                if (user?.userId === game.hostId) {
+                                    setShowBackModal(true);
+                                } else {
+                                    router.push('/dashboard');
+                                }
+                            }}
                             className={styles.backButton}
                         >
                             <ArrowLeftIcon className="h-6 w-6" />
@@ -138,41 +143,43 @@ export default function GamePage() {
                         </div>
                     </div>
 
-                    {/* Menu */}
-                    <div className="relative">
-                        <button
-                            onClick={() => setShowMenu(!showMenu)}
-                            className={gameStyles.menuButton}
-                        >
-                            <EllipsisVerticalIcon className="h-6 w-6" />
-                        </button>
+                    {/* Menu - Only for Host */}
+                    {user?.userId === game.hostId && (
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowMenu(!showMenu)}
+                                className={gameStyles.menuButton}
+                            >
+                                <EllipsisVerticalIcon className="h-6 w-6" />
+                            </button>
 
-                        {showMenu && (
-                            <>
-                                <div
-                                    className="fixed inset-0 z-40"
-                                    onClick={() => setShowMenu(false)}
-                                />
-                                <div className={gameStyles.dropdownMenu}>
-                                    <button
-                                        onClick={() => { handleRemoveLastGoal(); setShowMenu(false); }}
-                                        className={gameStyles.menuItem}
-                                        disabled={game.goals.length === 0}
-                                    >
-                                        <span>Annuler le dernier but</span>
-                                        <span className="opacity-40 text-xs font-bold tracking-wider">UNDO</span>
-                                    </button>
-                                    <button
-                                        onClick={() => { handleEndGame(); setShowMenu(false); }}
-                                        className={gameStyles.menuItem}
-                                    >
-                                        <span>Terminer la partie</span>
-                                        <span className="opacity-40 text-xs font-bold tracking-wider">FINISH</span>
-                                    </button>
-                                </div>
-                            </>
-                        )}
-                    </div>
+                            {showMenu && (
+                                <>
+                                    <div
+                                        className="fixed inset-0 z-40"
+                                        onClick={() => setShowMenu(false)}
+                                    />
+                                    <div className={gameStyles.dropdownMenu}>
+                                        <button
+                                            onClick={() => { handleRemoveLastGoal(); setShowMenu(false); }}
+                                            className={gameStyles.menuItem}
+                                            disabled={game.goals.length === 0}
+                                        >
+                                            <span>Annuler le dernier but</span>
+                                            <span className="opacity-40 text-xs font-bold tracking-wider">UNDO</span>
+                                        </button>
+                                        <button
+                                            onClick={() => { handleEndGame(); setShowMenu(false); }}
+                                            className={gameStyles.menuItem}
+                                        >
+                                            <span>Terminer la partie</span>
+                                            <span className="opacity-40 text-xs font-bold tracking-wider">FINISH</span>
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* End Game Modal */}
@@ -217,10 +224,48 @@ export default function GamePage() {
                     </div>
                 )}
 
+                {/* Back Confirmation Modal */}
+                {showBackModal && (
+                    <div className={gameStyles.modalOverlay}>
+                        <div className={`${gameStyles.modalContent} max-w-sm`}>
+                            <div className={gameStyles.modalHeader}>
+                                <h3 className={gameStyles.modalTitle}>Quitter la partie ?</h3>
+                                <button onClick={() => setShowBackModal(false)} className={gameStyles.closeButton}>
+                                    <XMarkIcon className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            <div className={gameStyles.modalBody}>
+                                <p className="text-secondary mb-6 text-center">
+                                    Êtes-vous sûr de vouloir revenir en arrière ? Cela annulera toute la partie.
+                                </p>
+
+                                <div className="flex flex-col gap-3">
+                                    <button
+                                        onClick={handleCancelGame}
+                                        className={`${gameStyles.optionButton} ${gameStyles.cancelButton}`}
+                                    >
+                                        <span className={gameStyles.optionTitle}>Oui, annuler la partie</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => setShowBackModal(false)}
+                                        className={gameStyles.optionButton}
+                                        style={{ background: 'var(--color-beige)', color: 'var(--color-text-dark)' }}
+                                    >
+                                        <span className={gameStyles.optionTitle}>Non, continuer</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Game Board */}
                 <GameBoard
                     game={game}
                     onAddGoal={handleAddGoal}
+                    isViewer={user?.userId !== game.hostId}
                 />
             </div>
         </div>

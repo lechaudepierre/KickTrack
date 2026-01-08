@@ -22,50 +22,55 @@ const TEAM_COLORS: { id: TeamColor; label: string; name: string }[] = [
 ];
 
 export default function TeamSetup({ players, format, onStartGame }: TeamSetupProps) {
+    const [waitingPlayers, setWaitingPlayers] = useState<Player[]>([]);
     const [team1Players, setTeam1Players] = useState<Player[]>([]);
     const [team2Players, setTeam2Players] = useState<Player[]>([]);
     const [team1Color, setTeam1Color] = useState<TeamColor>('blue');
     const [team2Color, setTeam2Color] = useState<TeamColor>('red');
+    const [draggedPlayer, setDraggedPlayer] = useState<Player | null>(null);
+    const [dragSource, setDragSource] = useState<'waiting' | 'team1' | 'team2' | null>(null);
 
-    // Initialize teams based on players
+    // Initialize waiting list with all players
     useEffect(() => {
         if (players.length > 0) {
-            if (format === '1v1') {
-                setTeam1Players([players[0]]);
-                if (players.length > 1) setTeam2Players([players[1]]);
-            } else {
-                // 2v2 distribution
-                setTeam1Players(players.slice(0, 2));
-                setTeam2Players(players.slice(2, 4));
-            }
+            setWaitingPlayers(players);
+            setTeam1Players([]);
+            setTeam2Players([]);
         }
-    }, [players, format]);
+    }, [players]);
 
-    const handleSwapPlayer = (player: Player, currentTeam: 1 | 2) => {
-        if (format === '1v1') {
-            // Swap the two players
-            const t1 = team1Players[0];
-            const t2 = team2Players[0];
-            setTeam1Players([t2]);
-            setTeam2Players([t1]);
-        } else {
-            // For 2v2, move player to other team if space available or swap
-            if (currentTeam === 1) {
-                const playerToSwap = team2Players[0];
-                const newT2Swapped = [player, ...team2Players.slice(1)];
-                const newT1Swapped = [...team1Players.filter(p => p.userId !== player.userId), playerToSwap];
+    const handleDragStart = (player: Player, source: 'waiting' | 'team1' | 'team2') => {
+        setDraggedPlayer(player);
+        setDragSource(source);
+    };
 
-                setTeam1Players(newT1Swapped);
-                setTeam2Players(newT2Swapped);
-            } else {
-                const playerToSwap = team1Players[0];
-                const newT1Swapped = [player, ...team1Players.slice(1)];
-                const newT2Swapped = [...team2Players.filter(p => p.userId !== player.userId), playerToSwap];
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+    };
 
-                setTeam1Players(newT1Swapped);
-                setTeam2Players(newT2Swapped);
-            }
+    const handleDrop = (target: 'waiting' | 'team1' | 'team2') => {
+        if (!draggedPlayer || !dragSource || dragSource === target) return;
+
+        // Remove from source
+        if (dragSource === 'waiting') {
+            setWaitingPlayers(prev => prev.filter(p => p.userId !== draggedPlayer.userId));
+        } else if (dragSource === 'team1') {
+            setTeam1Players(prev => prev.filter(p => p.userId !== draggedPlayer.userId));
+        } else if (dragSource === 'team2') {
+            setTeam2Players(prev => prev.filter(p => p.userId !== draggedPlayer.userId));
         }
+
+        // Add to target
+        if (target === 'waiting') {
+            setWaitingPlayers(prev => [...prev, draggedPlayer]);
+        } else if (target === 'team1') {
+            setTeam1Players(prev => [...prev, draggedPlayer]);
+        } else if (target === 'team2') {
+            setTeam2Players(prev => [...prev, draggedPlayer]);
+        }
+
+        setDraggedPlayer(null);
+        setDragSource(null);
     };
 
     const handleStart = () => {
@@ -89,8 +94,16 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
     };
 
     const renderTeamCard = (teamNum: 1 | 2, currentPlayers: Player[], color: TeamColor, setColor: (c: TeamColor) => void) => {
+        const target = teamNum === 1 ? 'team1' : 'team2';
+        const maxPlayers = format === '1v1' ? 1 : 2;
+        const isFull = currentPlayers.length >= maxPlayers;
+
         return (
-            <div className={`${styles.teamCard} ${styles[color]}`}>
+            <div
+                className={`${styles.teamCard} ${styles[color]} ${draggedPlayer && !isFull ? styles.dropZoneActive : ''}`}
+                onDragOver={handleDragOver}
+                onDrop={() => !isFull && handleDrop(target)}
+            >
                 <div className={styles.cardHeader}>
                     <h3 className={styles.teamName}>{getTeamName(color)}</h3>
 
@@ -111,25 +124,19 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
                     {currentPlayers.map((player) => (
                         <div
                             key={player.userId}
-                            className={styles.playerItem}
+                            className={`${styles.playerItem} ${draggedPlayer?.userId === player.userId ? styles.dragging : ''}`}
+                            draggable
+                            onDragStart={() => handleDragStart(player, target)}
                         >
                             <div className={styles.playerAvatar}>
                                 {player.username.charAt(0).toUpperCase()}
                             </div>
                             <span className={styles.playerName}>{player.username}</span>
-                            {players.length > 1 && (
-                                <button
-                                    onClick={() => handleSwapPlayer(player, teamNum)}
-                                    className={styles.swapButton}
-                                >
-                                    Changer
-                                </button>
-                            )}
                         </div>
                     ))}
                     {currentPlayers.length === 0 && (
                         <div className={styles.emptyState}>
-                            Aucun joueur
+                            Glissez un joueur ici
                         </div>
                     )}
                 </div>
@@ -137,11 +144,45 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
         );
     };
 
+    const isStartDisabled = () => {
+        const requiredPlayers = format === '1v1' ? 1 : 2;
+        return team1Players.length !== requiredPlayers ||
+            team2Players.length !== requiredPlayers ||
+            team1Color === team2Color;
+    };
+
     return (
         <div className={styles.container}>
             <div className={styles.header}>
                 <h2 className={styles.title}>Préparation des équipes</h2>
-                <p className={styles.subtitle}>Choisissez vos couleurs et vos coéquipiers</p>
+                <p className={styles.subtitle}>Glissez les joueurs dans leurs équipes</p>
+            </div>
+
+            {/* Waiting List */}
+            <div
+                className={`${styles.waitingListContainer} ${draggedPlayer && dragSource !== 'waiting' ? styles.dropZoneActive : ''}`}
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop('waiting')}
+            >
+                <h3 className={styles.waitingListTitle}>Liste d'attente</h3>
+                <div className={styles.waitingPlayerList}>
+                    {waitingPlayers.map(player => (
+                        <div
+                            key={player.userId}
+                            className={`${styles.playerItem} ${draggedPlayer?.userId === player.userId ? styles.dragging : ''}`}
+                            draggable
+                            onDragStart={() => handleDragStart(player, 'waiting')}
+                        >
+                            <div className={styles.playerAvatar}>
+                                {player.username.charAt(0).toUpperCase()}
+                            </div>
+                            <span className={styles.playerName}>{player.username}</span>
+                        </div>
+                    ))}
+                    {waitingPlayers.length === 0 && (
+                        <p className={styles.emptyWaitingList}>Tous les joueurs sont en place !</p>
+                    )}
+                </div>
             </div>
 
             <div className={styles.grid}>
@@ -158,13 +199,15 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
 
             <button
                 onClick={handleStart}
-                disabled={team1Color === team2Color}
+                disabled={isStartDisabled()}
                 className={styles.startButtonWrapper}
             >
-                <div className="btn-primary">
+                <div className={`btn-primary ${isStartDisabled() ? 'opacity-50' : ''}`}>
                     <div className="btn-primary-shadow" />
                     <div className="btn-primary-content">
-                        {team1Color === team2Color ? 'Mêmes couleurs impossibles' : 'Lancer le match'}
+                        {team1Color === team2Color ? 'Mêmes couleurs impossibles' :
+                            (team1Players.length === 0 || team2Players.length === 0) ? 'Équipes incomplètes' :
+                                'Lancer le match'}
                     </div>
                 </div>
             </button>

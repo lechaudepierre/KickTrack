@@ -60,9 +60,7 @@
     border: 4px solid var(--team-color);
     border-radius: 0.75rem;
     padding: 1rem;
-    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
+    transition: all 0.2s ease;
     box-shadow: 0 4px 0 #333333;
 }
 
@@ -90,9 +88,7 @@
     height: 1.5rem;
     border-radius: 9999px;
     border: 2px solid transparent;
-    transition-property: transform;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
+    transition: transform 0.15s ease;
     opacity: 0.5;
     background-color: var(--team-color);
 }
@@ -117,10 +113,23 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.75rem;
-    background-color: var(--color-beige);
-    border-radius: 0.5rem;
-    border: 2px solid #333333;
+    padding: 0.75rem 1rem;
+    background-color: white;
+    border-radius: 0.75rem;
+    border: 3px solid #333333;
+    box-shadow: 0 4px 0 #333333;
+    cursor: grab;
+    transition: all 0.1s ease;
+    user-select: none;
+}
+
+.playerItem:active {
+    cursor: grabbing;
+}
+
+.playerItem:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #333333;
 }
 
 .playerAvatar {
@@ -145,22 +154,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     flex: 1 1 0%;
-}
-
-.swapButton {
-    color: var(--color-text-dark);
-    opacity: 0.6;
-    font-size: 0.75rem;
-    line-height: 1rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    transition-property: opacity;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
-}
-
-.swapButton:hover {
-    opacity: 1;
 }
 
 .emptyState {
@@ -201,4 +194,56 @@
 .startButtonWrapper {
     width: 100%;
     margin-top: 1rem;
+}
+
+.waitingListContainer {
+    background-color: var(--color-beige);
+    border: 3px solid #333333;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    margin-bottom: 1.5rem;
+}
+
+.waitingListTitle {
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--color-text-dark);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+    opacity: 0.8;
+}
+
+.waitingPlayerList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.emptyWaitingList {
+    width: 100%;
+    text-align: center;
+    color: var(--color-text-dark);
+    opacity: 0.4;
+    font-style: italic;
+    font-size: 0.875rem;
+}
+
+.dragging {
+    opacity: 0.4;
+    transform: scale(0.95);
+}
+
+.dropZoneActive {
+    border-style: dashed !important;
+    background-color: rgba(51, 51, 51, 0.05) !important;
+    transform: scale(1.02);
+}
+
+@media (min-width: 640px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
 }
