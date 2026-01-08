@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/authStore';
+import { getUserGames } from '@/lib/firebase/games';
+import { calculateAdvancedStats } from '@/lib/utils/statsCalculator';
 import { FieldBackground } from '@/components/FieldDecorations';
 import {
     PlusCircleIcon,
@@ -18,6 +20,7 @@ import styles from './page.module.css';
 export default function DashboardPage() {
     const router = useRouter();
     const { user, isAuthenticated, isLoading, logout, initialize } = useAuthStore();
+    const [stats, setStats] = useState({ totalGames: 0, wins: 0, losses: 0, winRate: 0 });
 
     useEffect(() => {
         const unsubscribe = initialize();
@@ -31,6 +34,25 @@ export default function DashboardPage() {
             router.push('/login');
         }
     }, [isLoading, isAuthenticated, router]);
+
+    // Load stats from actual games
+    useEffect(() => {
+        const loadStats = async () => {
+            if (!user) return;
+            try {
+                const games = await getUserGames(user.userId, 100);
+                const advancedStats = calculateAdvancedStats(games, user.userId);
+                const totalGames = advancedStats.formatStats['6'].games + advancedStats.formatStats['11'].games;
+                const wins = advancedStats.formatStats['6'].wins + advancedStats.formatStats['11'].wins;
+                const losses = totalGames - wins;
+                const winRate = totalGames > 0 ? wins / totalGames : 0;
+                setStats({ totalGames, wins, losses, winRate });
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        };
+        loadStats();
+    }, [user]);
 
     const handleLogout = async () => {
         await logout();
@@ -77,7 +99,7 @@ export default function DashboardPage() {
                         <div className={styles.profileInfo}>
                             <h2 className={styles.username}>{user?.username || 'Joueur'}</h2>
                             <p className={styles.gamesCount}>
-                                {user?.stats.totalGames || 0} Parties
+                                {stats.totalGames} Parties
                             </p>
                         </div>
                     </div>
@@ -86,19 +108,19 @@ export default function DashboardPage() {
                     <div className={styles.statsGrid}>
                         <div className={styles.statItem}>
                             <p className={`${styles.statValue} ${styles.statValueWins}`}>
-                                {user?.stats.wins || 0}
+                                {stats.wins}
                             </p>
                             <p className={styles.statLabel}>Victoires</p>
                         </div>
                         <div className={styles.statItem}>
                             <p className={`${styles.statValue} ${styles.statValueLosses}`}>
-                                {user?.stats.losses || 0}
+                                {stats.losses}
                             </p>
                             <p className={styles.statLabel}>Défaites</p>
                         </div>
                         <div className={styles.statItem}>
                             <p className={`${styles.statValue} ${styles.statValueRatio}`}>
-                                {user?.stats.winRate ? `${Math.round(user.stats.winRate * 100)}%` : '0%'}
+                                {stats.winRate ? `${Math.round(stats.winRate * 100)}%` : '0%'}
                             </p>
                             <p className={styles.statLabel}>Ratio</p>
                         </div>
