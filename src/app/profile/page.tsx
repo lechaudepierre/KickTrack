@@ -613,7 +613,7 @@ export default function ProfilePage() {
                             marginBottom: 'var(--spacing-md)',
                             textTransform: 'uppercase'
                         }}>
-                            🔥 Remontadas
+                            Remontadas
                         </h3>
                         <p style={{
                             color: 'var(--color-text-dark)',
@@ -632,9 +632,9 @@ export default function ProfilePage() {
                             fontWeight: 600
                         }}>
                             <strong>Exemples :</strong><br />
-                            • Tu perds 0-2, puis tu gagnes 6-2 ✅<br />
-                            • Tu perds 3-5, puis tu gagnes 6-5 ✅<br />
-                            • Tu mènes tout le temps et gagnes 6-0 ❌
+                            • Tu perds 0-2, puis tu gagnes 6-2<br />
+                            • Tu perds 3-5, puis tu gagnes 6-5<br />
+                            • Tu mènes tout le temps et gagnes 6-0 (pas une remontada)
                         </p>
                         <button
                             onClick={() => setShowRemontadaInfo(false)}
