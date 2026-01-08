@@ -7,7 +7,9 @@ import { useAuthStore } from '@/lib/stores/authStore';
 import BottomNav from '@/components/common/BottomNav';
 import {
     PlusCircleIcon,
-    QrCodeIcon
+    QrCodeIcon,
+    UserPlusIcon,
+    MapPinIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 
@@ -76,6 +78,26 @@ export default function DashboardPage() {
                             <span className={styles.actionSubtitle}>Scanner QR code</span>
                         </div>
                     </Link>
+
+                    {/* Small Actions */}
+                    <div className={styles.smallActions}>
+                        <button
+                            onClick={() => alert('Fonctionnalité bientôt disponible !')}
+                            className={styles.smallAction}
+                        >
+                            <div className={styles.smallActionIconWrapper}>
+                                <UserPlusIcon className={styles.smallActionIcon} />
+                            </div>
+                            <span className={styles.smallActionTitle}>Ajouter un ami</span>
+                        </button>
+
+                        <Link href="/venues" className={styles.smallAction}>
+                            <div className={styles.smallActionIconWrapper}>
+                                <MapPinIcon className={styles.smallActionIcon} />
+                            </div>
+                            <span className={styles.smallActionTitle}>Ajouter un lieu</span>
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Quick Stats */}

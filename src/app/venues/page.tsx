@@ -152,22 +152,22 @@ export default function VenuesPage() {
                                 href={`/venues/${venue.venueId}`}
                             >
                                 <div className={styles.listItem}>
-                                    <div className={`p-3 rounded-xl ${venueTypeColors[venue.type]}`}>
+                                    <div className={`p-3 rounded-xl`} style={{ background: 'rgba(51, 51, 51, 0.05)', color: 'var(--color-text-dark)' }}>
                                         {venueTypeIcons[venue.type]}
                                     </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <h3 style={{ fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        <h3 style={{ fontWeight: 700, color: 'var(--color-text-dark)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'uppercase', fontSize: '1rem' }}>
                                             {venue.name}
                                         </h3>
-                                        <p className="text-secondary" style={{ fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        <p style={{ fontSize: '0.875rem', color: 'rgba(51, 51, 51, 0.6)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
                                             {venue.address || venueTypeLabels[venue.type]}
                                         </p>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
-                                        <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-field-green)' }}>
+                                        <p style={{ fontSize: '1.125rem', fontWeight: 900, color: 'var(--color-text-dark)' }}>
                                             {venue.stats.totalGames}
                                         </p>
-                                        <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                                        <p style={{ fontSize: '0.625rem', color: 'rgba(51, 51, 51, 0.4)', fontWeight: 800, textTransform: 'uppercase' }}>
                                             parties
                                         </p>
                                     </div>

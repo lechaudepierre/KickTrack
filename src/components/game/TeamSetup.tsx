@@ -33,11 +33,17 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
     // Initialize waiting list with all players
     useEffect(() => {
         if (players.length > 0) {
-            setWaitingPlayers(players);
-            setTeam1Players([]);
-            setTeam2Players([]);
+            if (format === '1v1' && players.length >= 2) {
+                setTeam1Players([players[0]]);
+                setTeam2Players([players[1]]);
+                setWaitingPlayers(players.slice(2));
+            } else {
+                setWaitingPlayers(players);
+                setTeam1Players([]);
+                setTeam2Players([]);
+            }
         }
-    }, [players]);
+    }, [players, format]);
 
     const handleDragStart = (player: Player, source: 'waiting' | 'team1' | 'team2') => {
         setDraggedPlayer(player);
@@ -127,6 +133,7 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
                             className={`${styles.playerItem} ${draggedPlayer?.userId === player.userId ? styles.dragging : ''}`}
                             draggable
                             onDragStart={() => handleDragStart(player, target)}
+                            style={{ touchAction: 'none' }}
                         >
                             <div className={styles.playerAvatar}>
                                 {player.username.charAt(0).toUpperCase()}
@@ -172,6 +179,7 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
                             className={`${styles.playerItem} ${draggedPlayer?.userId === player.userId ? styles.dragging : ''}`}
                             draggable
                             onDragStart={() => handleDragStart(player, 'waiting')}
+                            style={{ touchAction: 'none' }}
                         >
                             <div className={styles.playerAvatar}>
                                 {player.username.charAt(0).toUpperCase()}

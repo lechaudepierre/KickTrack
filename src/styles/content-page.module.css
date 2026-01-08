@@ -69,12 +69,12 @@
 .searchInput {
     width: 100%;
     padding: 1rem 1rem 1rem 3rem;
-    background: var(--color-pitch-medium);
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: var(--color-beige);
+    border: 3px solid #333333;
     border-radius: var(--radius-md);
-    color: var(--color-text-primary);
-    font-weight: 500;
-    transition: all var(--transition-normal);
+    color: var(--color-text-dark);
+    font-weight: 600;
+    transition: all 0.2s ease;
 }
 
 .searchInput::placeholder {
@@ -107,14 +107,15 @@
 }
 
 .filterPillActive {
-    background: linear-gradient(135deg, var(--color-field-green) 0%, var(--color-field-light) 100%);
-    color: var(--color-line-white);
+    background: var(--color-green-medium);
+    color: white;
+    border: 3px solid #333333;
 }
 
 .filterPillInactive {
-    background: var(--color-pitch-medium);
-    color: var(--color-text-secondary);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--color-beige);
+    color: var(--color-text-dark);
+    border: 3px solid #333333;
 }
 
 .filterPillInactive:hover {
@@ -128,11 +129,11 @@
     align-items: center;
     gap: var(--spacing-md);
     padding: var(--spacing-md);
-    background: var(--color-pitch-medium);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--color-beige);
+    border: 3px solid #333333;
     border-radius: var(--radius-md);
     margin-bottom: var(--spacing-sm);
-    transition: all var(--transition-normal);
+    transition: all 0.2s ease;
     cursor: pointer;
 }
 
