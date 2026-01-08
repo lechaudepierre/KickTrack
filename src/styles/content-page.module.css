@@ -119,8 +119,8 @@
 }
 
 .filterPillInactive:hover {
-    color: var(--color-text-primary);
-    border-color: var(--color-field-green);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 /* List Items */
