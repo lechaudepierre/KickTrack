@@ -11,88 +11,92 @@
 }
 
 .flame {
-    animation: flicker 0.6s ease-in-out infinite alternate;
+    animation: flicker 0.5s ease-in-out infinite alternate;
 }
 
 .flamesTop {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    height: 80px;
     display: flex;
-    justify-content: space-evenly;
+    justify-content: space-between;
 }
 
 .flamesTop .flame {
-    width: 40px;
-    height: 60px;
-    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.8));
+    width: 70px;
+    height: 80px;
+    margin: 0 -10px;
+    filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.9));
 }
 
 .flamesBottom {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
+    bottom: -10px;
+    left: -10px;
+    right: -10px;
+    height: 80px;
     display: flex;
-    justify-content: space-evenly;
+    justify-content: space-between;
 }
 
 .flamesBottom .flame {
-    width: 40px;
-    height: 60px;
-    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.8));
+    width: 70px;
+    height: 80px;
+    margin: 0 -10px;
+    filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.9));
 }
 
 .flamesLeft {
     position: absolute;
-    left: 0;
-    top: 60px;
-    bottom: 60px;
-    width: 60px;
+    left: -10px;
+    top: 70px;
+    bottom: 70px;
+    width: 80px;
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
+    justify-content: space-between;
 }
 
 .flamesLeft .flame {
-    width: 60px;
-    height: 40px;
-    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.8));
+    width: 80px;
+    height: 70px;
+    margin: -10px 0;
+    filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.9));
 }
 
 .flamesRight {
     position: absolute;
-    right: 0;
-    top: 60px;
-    bottom: 60px;
-    width: 60px;
+    right: -10px;
+    top: 70px;
+    bottom: 70px;
+    width: 80px;
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
+    justify-content: space-between;
 }
 
 .flamesRight .flame {
-    width: 60px;
-    height: 40px;
-    filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.8));
+    width: 80px;
+    height: 70px;
+    margin: -10px 0;
+    filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.9));
 }
 
 @keyframes flicker {
     0% {
-        opacity: 0.85;
-        transform: scale(1) translateY(0);
+        opacity: 0.9;
+        transform: scale(1);
     }
 
     50% {
         opacity: 1;
-        transform: scale(1.1) translateY(-3px);
+        transform: scale(1.08);
     }
 
     100% {
-        opacity: 0.8;
-        transform: scale(0.95) translateY(2px);
+        opacity: 0.85;
+        transform: scale(0.98);
     }
 }
