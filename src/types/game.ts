@@ -40,6 +40,7 @@ export interface Game {
     startedAt: Date; // Alias for startTime to match some usages
     playerIds?: string[]; // For easier querying
     hostId: string;
+    sessionId?: string;
 }
 
 export type GameFormat = '1v1' | '2v2';

@@ -24,7 +24,18 @@ const goalTypes: { value: GoalType; label: string; description: string }[] = [
     { value: 'gamelle_rentrante', label: 'Gamelle Rentrante', description: 'Ressort et rentre' }
 ];
 
-export default function GameBoard({ game, onAddGoal, onPauseResume, isViewer = false }: GameBoardProps) {
+export default function GameBoard({ game, onAddGoal, isViewer = false }: GameBoardProps) {
+    const [isPortrait, setIsPortrait] = useState(true);
+
+    useEffect(() => {
+        const checkOrientation = () => {
+            setIsPortrait(window.innerHeight > window.innerWidth);
+        };
+
+        checkOrientation();
+        window.addEventListener('resize', checkOrientation);
+        return () => window.removeEventListener('resize', checkOrientation);
+    }, []);
     const [activeTeamIndex, setActiveTeamIndex] = useState<0 | 1 | null>(null);
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
     const [selectedPosition, setSelectedPosition] = useState<GoalPosition | null>(null);
@@ -201,7 +212,7 @@ export default function GameBoard({ game, onAddGoal, onPauseResume, isViewer = f
     };
 
     return (
-        <div className={`${styles.container} ${isViewer ? styles.viewerMode : ''}`}>
+        <div className={`${styles.container} ${isViewer ? styles.viewerMode : ''} ${isViewer && isPortrait ? styles.forcedLandscape : ''}`}>
             {isViewer && (
                 <div className={styles.viewerBadge}>
                     MODE SPECTATEUR

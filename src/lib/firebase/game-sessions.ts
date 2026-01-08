@@ -186,7 +186,8 @@ export async function startGame(
         goals: [],
         startedAt: new Date(),
         playerIds: sanitizedTeams.flatMap(t => t.players.map(p => p.userId || '')).filter(id => id !== ''),
-        hostId: session.hostId
+        hostId: session.hostId,
+        sessionId: session.sessionId
     };
 
     await setDoc(gameRef, game);

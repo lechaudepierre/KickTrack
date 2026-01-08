@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getGame } from '@/lib/firebase/games';
-import { Game, Player, GoalPosition } from '@/types';
+import { subscribeToSession, startGame } from '@/lib/firebase/game-sessions';
+import { Game, Player, GoalPosition, Team } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import { TrophyIcon, HomeIcon, ArrowPathIcon, StarIcon } from '@heroicons/react/24/solid';
 import styles from '@/styles/content-page.module.css';
@@ -21,9 +22,10 @@ export default function GameResultsPage() {
     const router = useRouter();
     const params = useParams();
     const gameId = params.id as string;
-    const { initialize } = useAuthStore();
+    const { user, initialize } = useAuthStore();
     const [game, setGame] = useState<Game | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isRematching, setIsRematching] = useState(false);
 
     useEffect(() => {
         initialize();
@@ -38,6 +40,43 @@ export default function GameResultsPage() {
             console.error('Error loading game:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    // Listen for rematch (session update)
+    useEffect(() => {
+        if (!game?.sessionId || user?.userId === game.hostId) return;
+
+        const unsubscribe = subscribeToSession(game.sessionId, (session) => {
+            if (session?.status === 'active' && session.gameId && session.gameId !== gameId) {
+                router.push(`/game/${session.gameId}`);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [game?.sessionId, gameId, user?.userId, router]);
+
+    const handleRematch = async () => {
+        if (!game || !game.sessionId || isRematching) return;
+
+        setIsRematching(true);
+        try {
+            // Reset scores for the new game
+            const newTeams: [Team, Team] = [
+                { ...game.teams[0], score: 0 },
+                { ...game.teams[1], score: 0 }
+            ];
+
+            const newGame = await startGame(
+                game.sessionId,
+                newTeams,
+                parseInt(game.gameType) as 6 | 11
+            );
+
+            router.push(`/game/${newGame.gameId}`);
+        } catch (error) {
+            console.error('Error starting rematch:', error);
+            setIsRematching(false);
         }
     };
 
@@ -163,17 +202,30 @@ export default function GameResultsPage() {
 
                     {/* Actions */}
                     <div className={resultsStyles.actions}>
-                        <button onClick={() => router.push('/game/new')} className="btn-primary" style={{ border: 'none', background: 'none', padding: 0 }}>
-                            <div className="btn-primary">
-                                <div className="btn-primary-shadow" />
-                                <div className="btn-primary-content flex items-center justify-center gap-2">
-                                    <ArrowPathIcon className="w-5 h-5" />
-                                    <span>Rejouer</span>
+                        {user?.userId === game.hostId ? (
+                            <button
+                                onClick={handleRematch}
+                                disabled={isRematching}
+                                className="btn-primary"
+                                style={{ border: 'none', background: 'none', padding: 0, width: '100%' }}
+                            >
+                                <div className="btn-primary">
+                                    <div className="btn-primary-shadow" />
+                                    <div className="btn-primary-content flex items-center justify-center gap-2">
+                                        <ArrowPathIcon className={`w-5 h-5 ${isRematching ? 'animate-spin' : ''}`} />
+                                        <span>{isRematching ? 'Lancement...' : 'Rejouer'}</span>
+                                    </div>
                                 </div>
+                            </button>
+                        ) : (
+                            <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10 w-full">
+                                <p className="text-sm font-bold opacity-60 uppercase tracking-widest">
+                                    En attente de l'hôte...
+                                </p>
                             </div>
-                        </button>
+                        )}
 
-                        <button onClick={() => router.push('/dashboard')} className="btn-secondary" style={{ border: 'none', background: 'none', padding: 0 }}>
+                        <button onClick={() => router.push('/dashboard')} className="btn-secondary" style={{ border: 'none', background: 'none', padding: 0, width: '100%' }}>
                             <div className="btn-secondary">
                                 <div className="btn-secondary-shadow" />
                                 <div className="btn-secondary-content flex items-center justify-center gap-2" style={{ color: 'white' }}>
