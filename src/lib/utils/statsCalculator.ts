@@ -143,12 +143,15 @@ export function calculateAdvancedStats(
             recentForm.push(isDraw ? 'D' : isWin ? 'W' : 'L');
         }
 
-        // Stats par lieu
-        const venueKey = game.venueId;
-        const venueData = venueMap.get(venueKey) || { name: game.venueName, games: 0, wins: 0 };
-        venueData.games++;
-        if (isWin) venueData.wins++;
-        venueMap.set(venueKey, venueData);
+
+        // Stats par lieu - only count games with a venue name
+        if (game.venueId && game.venueName) {
+            const venueKey = game.venueId;
+            const venueData = venueMap.get(venueKey) || { name: game.venueName, games: 0, wins: 0 };
+            venueData.games++;
+            if (isWin) venueData.wins++;
+            venueMap.set(venueKey, venueData);
+        }
 
         // Stats par format
         const format = game.gameType;
