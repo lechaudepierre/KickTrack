@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getUserGames } from '@/lib/firebase/games';
 import { Game } from '@/types';
@@ -418,24 +417,22 @@ export default function ProfilePage() {
                                 const isWin = result === 'Victoire';
 
                                 return (
-                                    <Link key={game.gameId} href={`/game/${game.gameId}/results`}>
-                                        <div className={styles.gameCard}>
-                                            <div className={styles.gameInfo}>
-                                                <span className={`${styles.gameResult} ${isWin ? styles.resultWin : styles.resultLoss}`}>
-                                                    {result}
-                                                </span>
-                                                <span className={styles.gameDate}>
-                                                    {formatDate(game.startedAt)}
-                                                </span>
-                                                <span className="text-xs text-secondary">
-                                                    {game.venueName}
-                                                </span>
-                                            </div>
-                                            <div className={styles.gameScore}>
-                                                {game.score[0]} - {game.score[1]}
-                                            </div>
+                                    <div key={game.gameId} className={styles.gameCard}>
+                                        <div className={styles.gameInfo}>
+                                            <span className={`${styles.gameResult} ${isWin ? styles.resultWin : styles.resultLoss}`}>
+                                                {result}
+                                            </span>
+                                            <span className={styles.gameDate}>
+                                                {formatDate(game.startedAt)}
+                                            </span>
+                                            <span className="text-xs text-secondary">
+                                                {game.venueName}
+                                            </span>
                                         </div>
-                                    </Link>
+                                        <div className={styles.gameScore}>
+                                            {game.score[0]} - {game.score[1]}
+                                        </div>
+                                    </div>
                                 );
                             })}
                         </div>
