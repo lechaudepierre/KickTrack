@@ -231,3 +231,98 @@
 .winRate {
     color: var(--color-field-green);
 }
+
+/* Filter Section */
+.filterSection {
+    margin-bottom: var(--spacing-xl);
+}
+
+.dropdownContainer {
+    position: relative;
+}
+
+.dropdownButton {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--color-pitch-medium);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.dropdownButton:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.dropdownButton span {
+    flex: 1;
+    text-align: left;
+}
+
+.chevron {
+    transition: transform var(--transition-normal);
+    color: var(--color-text-secondary);
+}
+
+.chevronOpen {
+    transform: rotate(180deg);
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: calc(100% + var(--spacing-xs));
+    left: 0;
+    right: 0;
+    background: var(--color-pitch-medium);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    z-index: 100;
+    box-shadow: var(--shadow-medium);
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.dropdownItem {
+    width: 100%;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: transparent;
+    border: none;
+    color: var(--color-text-primary);
+    font-size: 0.9375rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--transition-normal);
+}
+
+.dropdownItem:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.dropdownItemActive {
+    background: rgba(76, 175, 80, 0.1);
+    color: var(--color-field-green);
+    font-weight: 600;
+}
+
+.dropdownItem:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Empty State */
+.emptyState {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--color-text-secondary);
+    background: var(--color-pitch-medium);
+    border-radius: var(--radius-lg);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+}
