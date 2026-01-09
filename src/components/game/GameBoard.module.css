@@ -1311,7 +1311,7 @@
     grid-template-columns: repeat(4, 1fr) !important;
     gap: var(--spacing-md);
     width: 100%;
-    max-width: 500px;
+    max-width: 300px;
     /* Limite la largeur pour que les boutons soient plus "portraits" */
     margin: 0 auto;
     flex: 1;
@@ -1319,8 +1319,7 @@
 
 /* Position buttons plus grands en landscape */
 .hostLandscapeMode .positionButton {
-    padding: 0.5rem;
-    min-height: 180px;
+    min-height: 120px;
     /* Plus haut */
     height: 100%;
     font-size: 1rem;
@@ -1344,7 +1343,7 @@
 
 .hostLandscapeMode .typeButton {
     padding: 0.5rem;
-    min-height: 90px;
+    min-height: 120px;
     /* Réduit pour éviter que ça coupe en bas */
     height: 100%;
     display: flex;
