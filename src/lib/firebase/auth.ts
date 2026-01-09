@@ -18,6 +18,7 @@ import {
     Unsubscribe,
     collection,
     query,
+    where,
     orderBy,
     limit,
     getDocs
@@ -144,9 +145,13 @@ export function onAuthChange(callback: (user: FirebaseUser | null) => void) {
 
 // Check if username is available
 export async function checkUsernameAvailable(username: string): Promise<boolean> {
-    // Note: This would require a separate collection or query
-    // For MVP, we'll just return true
-    return true;
+    const db = getFirebaseDb();
+    const q = query(
+        collection(db, 'users'),
+        where('username', '==', username.trim())
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.empty;
 }
 
 // Get leaderboard (top users by wins)

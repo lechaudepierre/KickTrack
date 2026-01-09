@@ -9,6 +9,7 @@ export interface VenueStats {
 export interface Venue {
     venueId: string;
     name: string;
+    nameLowercase: string;
     type: VenueType;
     address?: string;
     tableCount?: number;

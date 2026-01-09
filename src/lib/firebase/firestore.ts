@@ -24,6 +24,7 @@ export async function createVenue(venueInput: VenueInput, userId: string): Promi
     const venue: Venue = {
         venueId: venueRef.id,
         ...venueInput,
+        nameLowercase: venueInput.name.toLowerCase().trim(),
         createdAt: new Date(),
         createdBy: userId,
         stats: {
@@ -70,7 +71,7 @@ export async function checkVenueDuplicate(name: string, address?: string): Promi
     const db = getFirebaseDb();
     const q = query(
         collection(db, VENUES_COLLECTION),
-        where('name', '==', name.toLowerCase().trim())
+        where('nameLowercase', '==', name.toLowerCase().trim())
     );
 
     const snapshot = await getDocs(q);

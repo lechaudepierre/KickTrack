@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createVenue } from '@/lib/firebase/firestore';
+import { createVenue, checkVenueDuplicate } from '@/lib/firebase/firestore';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { FieldBackground } from '@/components/FieldDecorations';
 import { VenueType } from '@/types';
@@ -51,6 +51,14 @@ export default function AddVenuePage() {
         setError('');
 
         try {
+            // Check for duplicate name
+            const isDuplicate = await checkVenueDuplicate(name.trim());
+            if (isDuplicate) {
+                setError('Un stade avec ce nom existe déjà');
+                setIsLoading(false);
+                return;
+            }
+
             await createVenue({
                 name: name.trim(),
                 type,
