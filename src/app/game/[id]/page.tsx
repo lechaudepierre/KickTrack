@@ -25,6 +25,17 @@ export default function GamePage() {
     const [game, setGame] = useState<Game | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [showMenu, setShowMenu] = useState(false);
+    const [isPortrait, setIsPortrait] = useState(true);
+
+    useEffect(() => {
+        const checkOrientation = () => {
+            setIsPortrait(window.innerHeight > window.innerWidth);
+        };
+
+        checkOrientation();
+        window.addEventListener('resize', checkOrientation);
+        return () => window.removeEventListener('resize', checkOrientation);
+    }, []);
 
     useEffect(() => {
         const unsubscribe = initialize();
@@ -122,7 +133,7 @@ export default function GamePage() {
         <div className={styles.pageContainer}>
             <FieldBackground />
 
-            <div className={styles.contentWrapper}>
+            <div className={`${styles.contentWrapper} ${isPortrait ? gameStyles.forcedLandscape : ''}`}>
                 {/* Header */}
                 <div className={`${styles.pageHeader} justify-between`}>
                     <div className="flex items-center gap-4">

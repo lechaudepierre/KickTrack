@@ -237,3 +237,40 @@
     background-color: rgba(51, 51, 51, 0.1);
     color: #333333;
 }
+
+/* Forced Landscape Mode - Rotate entire page */
+.forcedLandscape {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100vh !important;
+    height: 100vw !important;
+    transform: translate(-50%, -50%) rotate(90deg) !important;
+    transform-origin: center center !important;
+    z-index: 9999 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 0.5rem !important;
+    background-color: var(--color-background) !important;
+}
+
+/* Optimize layout for rotated view */
+.forcedLandscape .pageHeader {
+    flex-shrink: 0 !important;
+    padding: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.forcedLandscape .backButton {
+    padding: 0.5rem !important;
+}
+
+/* Menu positioning in landscape */
+.forcedLandscape .menuButton {
+    padding: 0.5rem !important;
+}
+
+.forcedLandscape .dropdownMenu {
+    right: 0.5rem !important;
+    top: 3rem !important;
+}
