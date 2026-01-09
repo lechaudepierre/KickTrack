@@ -1155,7 +1155,7 @@
 
 .hostLandscapeMode .scoreBoard {
     width: 100%;
-    max-width: 100%;
+    flex: 1;
     max-height: 500px;
     /* Augmenté pour prendre plus de place */
     padding: 0.25rem;
