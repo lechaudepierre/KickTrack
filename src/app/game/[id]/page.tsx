@@ -25,6 +25,7 @@ export default function GamePage() {
     const [game, setGame] = useState<Game | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [showMenu, setShowMenu] = useState(false);
+    const [showTimeLimitModal, setShowTimeLimitModal] = useState(false);
     const [isPortrait, setIsPortrait] = useState(true);
 
     useEffect(() => {
@@ -110,6 +111,16 @@ export default function GamePage() {
             router.push('/dashboard');
         } catch (error) {
             console.error('Error cancelling game:', error);
+        }
+    };
+
+    const handleTimeLimitReached = async () => {
+        if (!game || showTimeLimitModal) return;
+        setShowTimeLimitModal(true);
+        try {
+            await abandonGame(game.gameId);
+        } catch (error) {
+            console.error('Error auto-cancelling game:', error);
         }
     };
 
@@ -276,11 +287,36 @@ export default function GamePage() {
                         </div>
                     </div>
                 )}
+                {/* Time Limit Modal */}
+                {showTimeLimitModal && (
+                    <div className={gameStyles.modalOverlay}>
+                        <div className={`${gameStyles.modalContent} max-w-sm`}>
+                            <div className={gameStyles.modalHeader}>
+                                <h3 className={gameStyles.modalTitle}>Temps écoulé !</h3>
+                            </div>
+
+                            <div className={gameStyles.modalBody}>
+                                <p className="text-center mb-6" style={{ color: 'var(--color-text-dark)' }}>
+                                    La partie a dépassé la limite de 1 heure et a été annulée.
+                                    Aucune statistique ne sera enregistrée.
+                                </p>
+                                <button
+                                    onClick={() => router.push('/dashboard')}
+                                    className={gameStyles.optionButton}
+                                    style={{ background: '#333333', color: 'white' }}
+                                >
+                                    <span className={gameStyles.optionTitle}>Retour au tableau de bord</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Game Board */}
                 <GameBoard
                     game={game}
                     onAddGoal={handleAddGoal}
+                    onTimeLimitReached={handleTimeLimitReached}
                     isViewer={user?.userId !== game.hostId}
                 />
             </div>

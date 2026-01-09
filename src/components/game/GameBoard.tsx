@@ -10,6 +10,7 @@ interface GameBoardProps {
     game: Game;
     onAddGoal: (teamIndex: 0 | 1, scorerId: string, scorerName: string, position: GoalPosition, type: GoalType) => void;
     onPauseResume?: () => void;
+    onTimeLimitReached?: () => void;
     isViewer?: boolean;
 }
 
@@ -26,7 +27,7 @@ const goalTypes: { value: GoalType; label: string; description: string }[] = [
     { value: 'gamelle_rentrante', label: 'Gamelle Rentrante', description: 'Ressort et rentre' }
 ];
 
-export default function GameBoard({ game, onAddGoal, isViewer = false }: GameBoardProps) {
+export default function GameBoard({ game, onAddGoal, onTimeLimitReached, isViewer = false }: GameBoardProps) {
     const [isPortrait, setIsPortrait] = useState(true);
     const { play: playSound } = useSound({ volume: 0.7 });
 
@@ -39,6 +40,35 @@ export default function GameBoard({ game, onAddGoal, isViewer = false }: GameBoa
         window.addEventListener('resize', checkOrientation);
         return () => window.removeEventListener('resize', checkOrientation);
     }, []);
+
+    // Time limit check (1 hour)
+    useEffect(() => {
+        if (isViewer || !game.startTime) return;
+
+        const checkTimeLimit = () => {
+            let start: Date;
+            if (game.startTime && typeof (game.startTime as any).toDate === 'function') {
+                start = (game.startTime as any).toDate();
+            } else {
+                start = game.startTime instanceof Date ? game.startTime : new Date(game.startTime);
+            }
+
+            if (isNaN(start.getTime())) return;
+
+            const now = new Date();
+            const elapsedSeconds = Math.floor((now.getTime() - start.getTime()) / 1000);
+
+            if (elapsedSeconds >= 3600) { // 1 hour = 3600 seconds
+                onTimeLimitReached?.();
+            }
+        };
+
+        // Check every 10 seconds
+        const interval = setInterval(checkTimeLimit, 10000);
+        checkTimeLimit(); // Initial check
+
+        return () => clearInterval(interval);
+    }, [game.startTime, isViewer, onTimeLimitReached]);
     const [activeTeamIndex, setActiveTeamIndex] = useState<0 | 1 | null>(null);
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
     const [selectedPosition, setSelectedPosition] = useState<GoalPosition | null>(null);
