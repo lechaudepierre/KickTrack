@@ -1314,7 +1314,7 @@
     grid-template-columns: repeat(4, 1fr) !important;
     gap: var(--spacing-md);
     width: 100%;
-    max-width: 500px;
+    max-width: 700px;
     /* Augmenté pour que les boutons soient plus hauts verticalement */
     margin: auto;
     /* Centre dans le modalBody */
