@@ -1265,8 +1265,8 @@
 
 .hostLandscapeMode .modalContent {
     max-width: none;
-    width: calc(100% - 1.5rem);
-    max-height: calc(100% - 1.5rem);
+    width: 100%;
+    max-height: 100%;
     padding: 1rem;
     display: flex;
     flex-direction: column;
@@ -1295,7 +1295,8 @@
 /* Position buttons plus grands en landscape */
 .hostLandscapeMode .selectionButton {
     padding: 1rem 0.5rem;
-    min-height: 60px;
+    min-height: 100px;
+    /* Augmenté pour correspondre au type de but */
     height: 100%;
     /* Prend toute la hauteur */
     font-size: 0.875rem;
@@ -1305,10 +1306,10 @@
     justify-content: center;
 }
 
-/* Type de but button plus grand */
+/* Type de but button */
 .hostLandscapeMode .goalTypeButton {
     padding: 1.5rem;
-    min-height: 80px;
+    min-height: 100px;
     height: 100%;
     /* Prend toute la hauteur */
     display: flex;

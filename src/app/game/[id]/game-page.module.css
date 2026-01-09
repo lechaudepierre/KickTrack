@@ -324,13 +324,13 @@
 .forcedLandscape .pageHeader {
     flex-shrink: 0 !important;
     padding: 0.25rem !important;
-    margin-bottom: 0.25rem !important;
+    margin-bottom: 0.1rem !important;
     width: 100% !important;
     min-height: 30px !important;
 }
 
 .forcedLandscape .backButton {
-    padding: 0.25rem !important;
+    padding: 0.15rem !important;
     width: 30px !important;
     height: 30px !important;
 }
