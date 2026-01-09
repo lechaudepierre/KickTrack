@@ -307,7 +307,7 @@
     overflow-y: auto !important;
     overflow-x: hidden !important;
     padding: 0.5rem !important;
-    background-color: var(--color-background) !important;
+    background-color: transparent !important;
     display: flex !important;
     flex-direction: column !important;
     margin: 0 !important;
