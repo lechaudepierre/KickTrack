@@ -109,6 +109,25 @@ export async function upgradeAccount(email: string, password: string): Promise<v
     });
 }
 
+// Update username
+export async function updateUsername(userId: string, newUsername: string): Promise<void> {
+    const auth = getFirebaseAuth();
+    const db = getFirebaseDb();
+    const currentUser = auth.currentUser;
+
+    if (!currentUser || currentUser.uid !== userId) {
+        throw new Error('Non autorisé');
+    }
+
+    // 1. Update Firebase Auth Profile
+    await updateProfile(currentUser, { displayName: newUsername });
+
+    // 2. Update Firestore User Document
+    await updateDoc(doc(db, 'users', userId), {
+        username: newUsername
+    });
+}
+
 // Get current user data
 export async function getCurrentUser(): Promise<User | null> {
     const auth = getFirebaseAuth();

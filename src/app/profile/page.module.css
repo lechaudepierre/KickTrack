@@ -83,11 +83,33 @@
     flex: 1;
 }
 
+.usernameContainer {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-bottom: 2px;
+}
+
 .username {
     font-size: 1.125rem;
     font-weight: 800;
     color: var(--color-text-dark);
-    margin-bottom: 2px;
+}
+
+.editBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 4px;
+    color: rgba(51, 51, 51, 0.4);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.editBtn:hover {
+    color: var(--color-text-dark);
 }
 
 .joinDate {

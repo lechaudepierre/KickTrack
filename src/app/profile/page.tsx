@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { registerComplete, checkUsernameAvailable, updateUsername } from '@/lib/firebase/auth';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getUserGames } from '@/lib/firebase/games';
 import { getVenues } from '@/lib/firebase/firestore';
@@ -17,7 +18,9 @@ import {
     ChevronDownIcon,
     MagnifyingGlassIcon,
     ArrowRightOnRectangleIcon,
-    InformationCircleIcon
+    InformationCircleIcon,
+    PencilIcon,
+    XMarkIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 
@@ -39,6 +42,12 @@ export default function ProfilePage() {
 
     // Info modal state
     const [showRemontadaInfo, setShowRemontadaInfo] = useState(false);
+
+    // Username update state
+    const [showUpdateModal, setShowUpdateModal] = useState(false);
+    const [newUsername, setNewUsername] = useState('');
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [updateError, setUpdateError] = useState('');
 
     useEffect(() => {
         const unsubscribe = initialize();
@@ -168,6 +177,41 @@ export default function ProfilePage() {
         router.push('/');
     };
 
+    const handleUpdateUsername = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user || !newUsername.trim() || newUsername.trim() === user.username) {
+            setShowUpdateModal(false);
+            return;
+        }
+
+        setIsUpdating(true);
+        setUpdateError('');
+
+        try {
+            // Check availability if name changed
+            const isAvailable = await checkUsernameAvailable(newUsername.trim());
+            if (!isAvailable) {
+                setUpdateError('Ce pseudo est déjà pris');
+                setIsUpdating(false);
+                return;
+            }
+
+            await updateUsername(user.userId, newUsername.trim());
+            setShowUpdateModal(false);
+        } catch (error) {
+            console.error('Error updating username:', error);
+            setUpdateError('Erreur lors de la mise à jour');
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const openUpdateModal = () => {
+        setNewUsername(user.username);
+        setUpdateError('');
+        setShowUpdateModal(true);
+    };
+
     return (
         <div className={styles.container}>
             <div className={styles.contentWrapper}>
@@ -183,7 +227,12 @@ export default function ProfilePage() {
                         {user.username.charAt(0).toUpperCase()}
                     </div>
                     <div className={styles.userInfo}>
-                        <h2 className={styles.username}>{user.username}</h2>
+                        <div className={styles.usernameContainer}>
+                            <h2 className={styles.username}>{user.username}</h2>
+                            <button onClick={openUpdateModal} className={styles.editBtn}>
+                                <PencilIcon className="w-4 h-4" />
+                            </button>
+                        </div>
                         <p className={styles.joinDate}>
                             Membre depuis {formatDate(user.createdAt)}
                         </p>
@@ -667,6 +716,89 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Username Update Modal */}
+            {showUpdateModal && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.7)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 9999,
+                        padding: 'var(--spacing-lg)'
+                    }}
+                    onClick={() => !isUpdating && setShowUpdateModal(false)}
+                >
+                    <div
+                        style={{
+                            background: 'var(--color-beige)',
+                            border: '4px solid #333',
+                            borderRadius: 'var(--radius-lg)',
+                            padding: 'var(--spacing-xl)',
+                            maxWidth: '400px',
+                            width: '100%',
+                            boxShadow: '0 8px 0 #333'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text-dark)', textTransform: 'uppercase' }}>
+                                Changer de pseudo
+                            </h3>
+                            <button
+                                onClick={() => setShowUpdateModal(false)}
+                                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#333' }}
+                                disabled={isUpdating}
+                            >
+                                <XMarkIcon className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleUpdateUsername}>
+                            {updateError && (
+                                <div className="error-box" style={{ marginBottom: 'var(--spacing-md)' }}>
+                                    {updateError}
+                                </div>
+                            )}
+
+                            <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: 'rgba(51, 51, 51, 0.6)', textTransform: 'uppercase', marginBottom: 'var(--spacing-xs)' }}>
+                                    Nouveau pseudo
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newUsername}
+                                    onChange={(e) => setNewUsername(e.target.value)}
+                                    placeholder="Ex: KingOfBaby"
+                                    className="input-field"
+                                    autoFocus
+                                    disabled={isUpdating}
+                                    required
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isUpdating || !newUsername.trim() || newUsername.trim() === user.username}
+                                style={{ width: '100%', padding: 0, border: 'none', background: 'none' }}
+                            >
+                                <div className="btn-primary">
+                                    <div className="btn-primary-shadow" />
+                                    <div className="btn-primary-content">
+                                        {isUpdating ? 'Mise à jour...' : 'Enregistrer'}
+                                    </div>
+                                </div>
+                            </button>
+                        </form>
                     </div>
                 </div>
             )}
