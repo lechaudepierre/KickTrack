@@ -545,6 +545,24 @@ export async function getVenueLeaderboard(venueId: string): Promise<VenueLeaderb
 
     // Convert to array and sort by wins
     const leaderboard = Array.from(playerStats.values());
+
+    // Fetch current usernames to ensure they are up to date
+    if (leaderboard.length > 0) {
+        const userIds = leaderboard.map(e => e.userId);
+        for (let i = 0; i < userIds.length; i += 30) {
+            const batch = userIds.slice(i, i + 30);
+            const usersQ = query(collection(db, 'users'), where('userId', 'in', batch));
+            const usersSnapshot = await getDocs(usersQ);
+            usersSnapshot.forEach(doc => {
+                const userData = doc.data();
+                const entry = playerStats.get(doc.id);
+                if (entry) {
+                    entry.username = userData.username;
+                }
+            });
+        }
+    }
+
     leaderboard.sort((a, b) => {
         if (b.wins !== a.wins) return b.wins - a.wins;
         return b.winRate - a.winRate;
@@ -617,6 +635,24 @@ export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
 
     // Convert to array and sort by wins
     const leaderboard = Array.from(playerStats.values());
+
+    // Fetch current usernames to ensure they are up to date
+    if (leaderboard.length > 0) {
+        const userIds = leaderboard.map(e => e.userId);
+        for (let i = 0; i < userIds.length; i += 30) {
+            const batch = userIds.slice(i, i + 30);
+            const usersQ = query(collection(db, 'users'), where('userId', 'in', batch));
+            const usersSnapshot = await getDocs(usersQ);
+            usersSnapshot.forEach(doc => {
+                const userData = doc.data();
+                const entry = playerStats.get(doc.id);
+                if (entry) {
+                    entry.username = userData.username;
+                }
+            });
+        }
+    }
+
     leaderboard.sort((a, b) => {
         if (b.wins !== a.wins) return b.wins - a.wins;
         return b.winRate - a.winRate;
