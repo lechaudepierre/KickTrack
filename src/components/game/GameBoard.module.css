@@ -1276,9 +1276,13 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
+    /* Start from top to allow scrolling */
     align-items: center;
     width: 100%;
+    overflow-y: auto;
+    /* Permet le scroll si le contenu dépasse */
+    padding: 0.5rem;
 }
 
 /* Centre le contenu */
@@ -1297,26 +1301,42 @@
 /* Position buttons plus grands en landscape */
 .hostLandscapeMode .selectionButton {
     padding: 1rem 0.5rem;
-    min-height: 200px;
-    /* Augmenté pour correspondre au type de but */
-    height: 100%;
-    /* Prend toute la hauteur */
-    font-size: 0.875rem;
+    min-height: 250px;
+    /* Encore plus haut comme demandé */
+    height: auto;
+    font-size: 1rem;
     font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* Type de but button */
+/* Type de but grid et buttons en landscape */
+.hostLandscapeMode .typeGrid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--spacing-sm);
+    width: 100%;
+}
+
 .hostLandscapeMode .goalTypeButton {
-    padding: 1.5rem;
-    min-height: 100px;
-    height: 100%;
-    /* Prend toute la hauteur */
+    padding: 1rem;
+    min-height: 80px;
+    height: auto;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+}
+
+.hostLandscapeMode .typeLabel {
+    font-size: 0.875rem;
+}
+
+.hostLandscapeMode .typeDesc {
+    font-size: 0.7rem;
+    display: block;
+    /* S'assurer que la description est visible */
 }
 
 @media (max-width: 800px) {
