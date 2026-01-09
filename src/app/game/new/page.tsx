@@ -201,7 +201,7 @@ export default function NewGamePage() {
 
                 {/* Step 1: Configuration */}
                 {step === 'config' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
                         {/* Format Selection */}
                         <div>
                             <label style={{ display: 'block', marginBottom: 'var(--spacing-md)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
