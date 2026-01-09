@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Game, Team, Player, GoalPosition, GoalType } from '@/types';
-import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, XMarkIcon, StarIcon } from '@heroicons/react/24/solid';
 import GameTimer from './GameTimer';
 import MatchPointFlames from './MatchPointFlames';
 import { useSound } from '@/hooks/useSound';
@@ -138,16 +138,16 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, isViewe
     };
 
     const handleSelectPosition = (position: GoalPosition) => {
-        setSelectedPosition(position);
-        if (position === 'midfield') {
-            if (activeTeamIndex !== null && selectedPlayer) {
-                onAddGoal(activeTeamIndex, selectedPlayer.userId, selectedPlayer.username, position, 'normal');
-                playGoalSound('normal');
-                handleCancel();
-            }
-        } else {
-            setStep('type');
+        if (activeTeamIndex !== null && selectedPlayer) {
+            onAddGoal(activeTeamIndex, selectedPlayer.userId, selectedPlayer.username, position, 'normal');
+            playGoalSound('normal');
+            handleCancel();
         }
+    };
+
+    const handleOpenTypeSelection = (position: GoalPosition) => {
+        setSelectedPosition(position);
+        setStep('type');
     };
 
     const handleSelectGoalType = (type: GoalType) => {
@@ -225,17 +225,28 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, isViewe
                         {step === 'position' && (
                             <div className={styles.selectionGrid}>
                                 {positions.map(pos => (
-                                    <button
-                                        key={pos.value}
-                                        onClick={() => handleSelectPosition(pos.value)}
-                                        className={`${styles.positionButton} ${pos.color === 'green' ? styles.bgGreen :
-                                            pos.color === 'blue' ? styles.bgBlue :
-                                                pos.color === 'yellow' ? styles.bgYellow :
-                                                    styles.bgRed
-                                            }`}
-                                    >
-                                        <span className={styles.positionLabel}>{pos.label}</span>
-                                    </button>
+                                    <div key={pos.value} className={styles.positionContainer}>
+                                        <button
+                                            onClick={() => handleSelectPosition(pos.value)}
+                                            className={`${styles.positionButton} ${pos.color === 'green' ? styles.bgGreen :
+                                                pos.color === 'blue' ? styles.bgBlue :
+                                                    pos.color === 'yellow' ? styles.bgYellow :
+                                                        styles.bgRed
+                                                }`}
+                                        >
+                                            <span className={styles.positionLabel}>{pos.label}</span>
+                                        </button>
+                                        <button
+                                            onClick={() => handleOpenTypeSelection(pos.value)}
+                                            className={`${styles.starButton} ${pos.color === 'green' ? styles.bgGreen :
+                                                pos.color === 'blue' ? styles.bgBlue :
+                                                    pos.color === 'yellow' ? styles.bgYellow :
+                                                        styles.bgRed
+                                                }`}
+                                        >
+                                            <StarIcon className={styles.starIcon} />
+                                        </button>
+                                    </div>
                                 ))}
                             </div>
                         )}
