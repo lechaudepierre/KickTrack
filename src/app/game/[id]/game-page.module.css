@@ -23,6 +23,11 @@
     box-shadow: 0 3px 0 #333333;
 }
 
+.hostLandscapeMode .goalButton {
+    padding: 0.25rem;
+    border-radius: 0.375rem;
+}
+
 .dropdownMenu {
     position: absolute;
     right: 0px;
@@ -36,6 +41,18 @@
     overflow: hidden;
     box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2);
     animation: slideInDown 0.2s ease-out;
+}
+
+.hostLandscapeMode .scoreBoard {
+    width: 80%;
+    max-width: 900%;
+    max-height: 120px;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    background-color: var(--color-beige);
+    border: 2px solid #333333;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 .menuItem {
@@ -95,6 +112,15 @@
     animation: fadeIn 0.3s ease-out;
 }
 
+.hostLandscapeMode .centerInfo {
+    width: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
 .modalContent {
     position: relative;
     width: 100%;
@@ -141,6 +167,11 @@
     }
 }
 
+.hostLandscapeMode .timerWrapper {
+    transform: scale(0.8);
+    margin-bottom: 0;
+}
+
 .modalHeader {
     padding: 2rem;
     border-bottom: 3px solid #333333;
@@ -157,6 +188,12 @@
     color: #333333;
     text-transform: uppercase;
     letter-spacing: -0.025em;
+}
+
+.hostLandscapeMode .scoreValue {
+    font-size: 2.5rem;
+    line-height: 1;
+    font-weight: 900;
 }
 
 .modalBody {
@@ -183,6 +220,11 @@
     box-shadow: 0 4px 0 #333333;
 }
 
+.hostLandscapeMode .iconWrapper {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
 .optionButton:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 0 #333333;
@@ -197,11 +239,23 @@
     letter-spacing: 0.025em;
 }
 
+.hostLandscapeMode .avatar {
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 0.625rem;
+}
+
 .optionDesc {
     font-size: 0.75rem;
     line-height: 1rem;
     opacity: 0.5;
     font-weight: 500;
+}
+
+.hostLandscapeMode .vsLabel {
+    font-size: 0.875rem;
+    font-weight: 900;
+    opacity: 0.3;
 }
 
 .forfeitButton {
@@ -267,13 +321,16 @@
 /* Optimize layout for rotated view */
 .forcedLandscape .pageHeader {
     flex-shrink: 0 !important;
-    padding: 0.5rem !important;
-    margin-bottom: 0.5rem !important;
+    padding: 0.25rem !important;
+    margin-bottom: 0.25rem !important;
     width: 100% !important;
+    min-height: 30px !important;
 }
 
 .forcedLandscape .backButton {
-    padding: 0.5rem !important;
+    padding: 0.25rem !important;
+    width: 30px !important;
+    height: 30px !important;
 }
 
 /* Menu positioning in landscape */
