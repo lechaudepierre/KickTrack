@@ -1020,20 +1020,28 @@
     transform: translate(-50%, -50%) rotate(90deg) !important;
     transform-origin: center center !important;
     z-index: 9999 !important;
-    background-color: var(--color-beige) !important;
-    padding: 2rem !important;
-    overflow: hidden !important;
+    background-color: var(--color-background) !important;
+    padding: 1rem !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
 }
 
 .forcedLandscape .scoreBoard {
-    height: 100% !important;
+    height: auto !important;
+    max-height: 40% !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
+    margin-bottom: 1rem !important;
 }
 
 .forcedLandscape .scoreBoardContent {
     flex: 1 !important;
+}
+
+.forcedLandscape .controlsContainer {
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
 .forcedLandscape .viewerBadge {
