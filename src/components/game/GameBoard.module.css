@@ -552,11 +552,11 @@
 }
 
 .inputHeader {
-    padding: 1.5rem;
+    padding: 1rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 3px solid #333333;
+    border-bottom: 2px solid #333333;
     background-color: var(--team-light);
 }
 
@@ -1338,7 +1338,7 @@
 }
 
 .hostLandscapeMode .inputHeader {
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.5rem;
     /* Header plus compact */
 }
 
