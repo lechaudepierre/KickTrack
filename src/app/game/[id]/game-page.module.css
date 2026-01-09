@@ -10,12 +10,15 @@
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 150ms;
     box-shadow: 0 3px 0 #333333;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.menuButton:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 0 #333333;
-    filter: brightness(0.9);
+@media (hover: hover) {
+    .menuButton:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 0 #333333;
+        filter: brightness(0.9);
+    }
 }
 
 .menuButton:active {
@@ -77,8 +80,10 @@
     letter-spacing: -0.025em;
 }
 
-.menuItem:hover {
-    background-color: rgba(51, 51, 51, 0.05);
+@media (hover: hover) {
+    .menuItem:hover {
+        background-color: rgba(51, 51, 51, 0.05);
+    }
 }
 
 .menuItem:last-child {
@@ -94,8 +99,10 @@
     color: #FF4B4B;
 }
 
-.menuItemDanger:hover {
-    background-color: rgba(255, 75, 75, 0.1);
+@media (hover: hover) {
+    .menuItemDanger:hover {
+        background-color: rgba(255, 75, 75, 0.1);
+    }
 }
 
 /* Modal Styles */
@@ -218,6 +225,7 @@
     gap: 0.25rem;
     background-color: white;
     box-shadow: 0 4px 0 #333333;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .hostLandscapeMode .iconWrapper {
@@ -225,10 +233,12 @@
     height: 1.5rem;
 }
 
-.optionButton:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 0 #333333;
-    filter: brightness(0.9);
+@media (hover: hover) {
+    .optionButton:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 0 #333333;
+        filter: brightness(0.9);
+    }
 }
 
 .optionTitle {
@@ -263,9 +273,11 @@
     background-color: #FFEAEA;
 }
 
-.forfeitButton:hover {
-    border-color: rgba(244, 63, 94, 0.4);
-    background-color: rgba(244, 63, 94, 0.1);
+@media (hover: hover) {
+    .forfeitButton:hover {
+        border-color: rgba(244, 63, 94, 0.4);
+        background-color: rgba(244, 63, 94, 0.1);
+    }
 }
 
 .cancelButton {
@@ -273,9 +285,11 @@
     background-color: #F2F4F4;
 }
 
-.cancelButton:hover {
-    border-color: rgba(100, 116, 139, 0.4);
-    background-color: rgba(100, 116, 139, 0.1);
+@media (hover: hover) {
+    .cancelButton:hover {
+        border-color: rgba(100, 116, 139, 0.4);
+        background-color: rgba(100, 116, 139, 0.1);
+    }
 }
 
 .closeButton {
@@ -285,11 +299,14 @@
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 150ms;
     color: rgba(51, 51, 51, 0.4);
+    -webkit-tap-highlight-color: transparent;
 }
 
-.closeButton:hover {
-    background-color: rgba(51, 51, 51, 0.1);
-    color: #333333;
+@media (hover: hover) {
+    .closeButton:hover {
+        background-color: rgba(51, 51, 51, 0.1);
+        color: #333333;
+    }
 }
 
 /* Forced Landscape Mode - Rotate entire page */

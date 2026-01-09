@@ -347,10 +347,12 @@
     box-shadow: 0 4px 0 #333333;
 }
 
-.goalButton:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 0 #333333;
-    filter: brightness(0.9);
+@media (hover: hover) {
+    .goalButton:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 0 #333333;
+        filter: brightness(0.9);
+    }
 }
 
 .goalButton:active {
@@ -377,8 +379,10 @@
     background-color: var(--team-primary);
 }
 
-.goalButtonInactive:hover {
-    transform: scale(1.02);
+@media (hover: hover) {
+    .goalButtonInactive:hover {
+        transform: scale(1.02);
+    }
 }
 
 .goalButtonInactive:active {
@@ -435,8 +439,10 @@
     background-color: rgba(255, 255, 255, 0.2);
 }
 
-.goalButton:hover .iconWrapper {
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+@media (hover: hover) {
+    .goalButton:hover .iconWrapper {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
 }
 
 .plusIcon {
@@ -577,10 +583,14 @@
     transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 150ms;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.closeButton:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+@media (hover: hover) {
+    .closeButton:hover {
+        background-color: rgba(51, 51, 51, 0.1);
+        color: #333333;
+    }
 }
 
 .closeIcon {
@@ -622,14 +632,17 @@
     transition-duration: 150ms;
     border: 3px solid #333333;
     box-shadow: 0 4px 0 #333333;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.playerButton:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 0 #333333;
-    filter: brightness(0.9);
-    background-color: #334155;
-    border-color: rgba(255, 255, 255, 0.2);
+@media (hover: hover) {
+    .playerButton:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 0 #333333;
+        filter: brightness(0.9);
+        background-color: #334155;
+        border-color: rgba(255, 255, 255, 0.2);
+    }
 }
 
 .playerButton:active {
@@ -655,8 +668,10 @@
     background-color: var(--team-primary);
 }
 
-.playerButton:hover .playerAvatar {
-    transform: scale(1.1);
+@media (hover: hover) {
+    .playerButton:hover .playerAvatar {
+        transform: scale(1.1);
+    }
 }
 
 .playerName {
@@ -690,14 +705,17 @@
     padding: 1rem;
     box-shadow: 0 4px 0 #333333;
     background-color: white;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.positionButton:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 0 #333333;
-    filter: brightness(0.9);
-    transform: scale(1.05);
-    border-color: white;
+@media (hover: hover) {
+    .positionButton:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 0 #333333;
+        filter: brightness(0.9);
+        transform: scale(1.05);
+        border-color: white;
+    }
 }
 
 .positionButton:active {
@@ -758,10 +776,12 @@
     background-color: white;
 }
 
-.typeButton:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 0 #333333;
-    filter: brightness(0.9);
+@media (hover: hover) {
+    .typeButton:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 0 #333333;
+        filter: brightness(0.9);
+    }
 }
 
 .typeButton:active {
