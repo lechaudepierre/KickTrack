@@ -1186,32 +1186,46 @@
 
 /* Host Landscape Controls - Compact buttons for landscape */
 .hostLandscapeMode .controlsContainer {
+    display: flex;
+    /* Make sure it's visible */
     width: 100%;
     max-width: 1000px;
     gap: var(--spacing-md);
 }
 
 .hostLandscapeMode .buttonsGrid {
+    gap: var(--spacing-md);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* Keep 2 columns */
+}
+
+.hostLandscapeMode .teamButtonsColumn {
+    display: flex;
+    flex-direction: column;
     gap: var(--spacing-sm);
 }
 
 .hostLandscapeMode .goalButton {
-    padding: 0.75rem;
+    padding: 1rem;
     border-radius: 0.75rem;
 }
 
+.hostLandscapeMode .buttonContent {
+    gap: var(--spacing-sm);
+}
+
 .hostLandscapeMode .iconWrapper {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 3rem;
+    height: 3rem;
 }
 
 .hostLandscapeMode .plusIcon {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 .hostLandscapeMode .buttonLabel {
-    font-size: 0.875rem;
+    font-size: 1rem;
 }
 
 /* Almost-Fullscreen Modal for Landscape Mode */
