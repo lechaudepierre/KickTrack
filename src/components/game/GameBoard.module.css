@@ -1122,10 +1122,11 @@
 .hostLandscapeMode {
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    justify-content: center;
+    /* Centré verticalement */
     align-items: center;
     width: 100%;
-    max-height: 80%;
+    height: 100%;
     padding: 0.5rem;
     gap: 0.5rem;
 }
@@ -1134,9 +1135,12 @@
     width: 100%;
     max-width: 900%;
     max-height: 200px;
-    padding: 0.25rem;
+    padding: 0.5rem;
+    /* Plus de padding */
     display: flex;
     align-items: center;
+    justify-content: center;
+    /* Centré */
     background-color: var(--color-beige);
     border: 2px solid #333333;
     box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
@@ -1147,7 +1151,10 @@
     justify-content: space-around;
     align-items: center;
     gap: var(--spacing-md);
-    width: 90%;
+    width: 100%;
+    /* Prend toute la largeur */
+    height: 100%;
+    /* Prend toute la hauteur */
 }
 
 .hostLandscapeMode .teamScore {
@@ -1251,37 +1258,62 @@
 /* Almost-Fullscreen Modal for Landscape Mode */
 .hostLandscapeMode .modalOverlay {
     padding: 0.75rem;
-    /* Moins de padding pour modal plus grande */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .hostLandscapeMode .modalContent {
     max-width: none;
     width: calc(100% - 1.5rem);
-    /* Modal plus large */
     max-height: calc(100% - 1.5rem);
     padding: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.hostLandscapeMode .modalBody {
+    flex: 1;
+    /* Prend tout l'espace disponible */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* Centre le contenu */
 }
 
 /* Horizontal Position Grid for Landscape */
 .hostLandscapeMode .selectionGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    /* 4 colonnes égales */
     gap: var(--spacing-sm);
+    width: 100%;
+    flex: 1;
+    /* Prend tout l'espace */
 }
 
 /* Position buttons plus grands en landscape */
 .hostLandscapeMode .selectionButton {
     padding: 1rem 0.5rem;
-    /* Plus de padding vertical */
-    min-height: 80px;
-    /* Hauteur minimum */
+    min-height: 60px;
+    height: 100%;
+    /* Prend toute la hauteur */
     font-size: 0.875rem;
     font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Type de but button plus grand */
 .hostLandscapeMode .goalTypeButton {
     padding: 1.5rem;
-    min-height: 100px;
+    min-height: 80px;
+    height: 100%;
+    /* Prend toute la hauteur */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 @media (max-width: 800px) {
