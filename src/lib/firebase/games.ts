@@ -484,12 +484,7 @@ export async function getVenueLeaderboard(venueId: string): Promise<VenueLeaderb
 
     for (const game of games) {
         if (game.winner === undefined) continue; // Skip draws
-
-        // Skip games with guest players
-        const hasGuestPlayers = game.teams.some(team =>
-            team.players.some(player => player.userId.startsWith('guest_'))
-        );
-        if (hasGuestPlayers) continue;
+        if (game.isGuestGame) continue; // Skip guest games
 
         for (let teamIndex = 0; teamIndex < game.teams.length; teamIndex++) {
             const team = game.teams[teamIndex];
@@ -555,12 +550,7 @@ export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
 
     for (const game of games) {
         if (game.winner === undefined) continue; // Skip draws
-
-        // Skip games with guest players
-        const hasGuestPlayers = game.teams.some(team =>
-            team.players.some(player => player.userId.startsWith('guest_'))
-        );
-        if (hasGuestPlayers) continue;
+        if (game.isGuestGame) continue; // Skip guest games
 
         for (let teamIndex = 0; teamIndex < game.teams.length; teamIndex++) {
             const team = game.teams[teamIndex];
