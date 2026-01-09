@@ -117,7 +117,7 @@ export function calculateAdvancedStats(
     let currentStreakCount = 0;
     let currentStreakType: 'win' | 'loss' | 'none' = 'none';
     let tempStreak = 0;
-    let lastResult: 'win' | 'loss' | null = null;
+    let lastResult: 'win' | 'loss' | 'none' | null = null;
 
     // Forme récente (5 derniers matchs)
     const recentForm: Array<'W' | 'L' | 'D'> = [];
@@ -230,27 +230,38 @@ export function calculateAdvancedStats(
         }
 
         // Calcul des séries
-        const currentResult = isWin ? 'win' : 'loss';
+        const currentResult = isDraw ? 'none' : (isWin ? 'win' : 'loss');
 
         if (i === 0) {
-            currentStreakType = currentResult;
-            currentStreakCount = 1;
+            // Premier match
+            currentStreakType = currentResult === 'none' ? 'none' : currentResult;
+            currentStreakCount = currentResult === 'none' ? 0 : 1;
+        } else {
+            // Mise à jour streak actuel
+            if (currentResult === 'none') {
+                // Un match nul casse la série
+                currentStreakType = 'none';
+                currentStreakCount = 0;
+            } else if (currentStreakType === currentResult) {
+                // Continue la série
+                currentStreakCount++;
+            } else {
+                // Change de type de série - RESET à 1
+                currentStreakType = currentResult;
+                currentStreakCount = 1;
+            }
         }
 
-        if (lastResult === currentResult) {
+        // Calcul de la meilleure série de victoires
+        if (lastResult === currentResult && currentResult === 'win') {
             tempStreak++;
         } else {
             if (lastResult === 'win' && tempStreak > maxWinStreak) {
                 maxWinStreak = tempStreak;
             }
-            tempStreak = 1;
+            tempStreak = currentResult === 'win' ? 1 : 0;
         }
         lastResult = currentResult;
-
-        // Mise à jour streak actuel
-        if (currentStreakType === currentResult) {
-            currentStreakCount++;
-        }
     }
 
     // Finaliser la meilleure série

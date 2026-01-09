@@ -162,6 +162,11 @@ export async function startGame(
 
     const session = sessionSnap.data() as GameSession;
 
+    // Check if any player is a guest
+    const hasGuestPlayers = teams.some(team =>
+        team.players.some(player => player.userId.startsWith('guest_'))
+    );
+
     // Sanitize teams to remove undefined values
     const sanitizedTeams = teams.map(team => ({
         ...team,
@@ -189,14 +194,23 @@ export async function startGame(
         sessionId: session.sessionId
     };
 
-    await setDoc(gameRef, game);
+    // Only save to Firestore if there are NO guest players
+    if (!hasGuestPlayers) {
+        await setDoc(gameRef, game);
 
-    // Update session status and store gameId
-    await updateDoc(sessionRef, {
-        status: 'active',
-        gameId: gameRef.id
-    });
-    // Wait, GameSession status is 'waiting' | 'ready' | 'active' | 'finished' | 'cancelled'. So 'active' is correct.
+        // Update session status and store gameId
+        await updateDoc(sessionRef, {
+            status: 'active',
+            gameId: gameRef.id
+        });
+    } else {
+        console.log('Game contains guest players - not saving to Firestore');
+        // For guest games, we still update the session but don't create a game document
+        await updateDoc(sessionRef, {
+            status: 'active',
+            gameId: gameRef.id // Keep the ID for local tracking
+        });
+    }
 
     return game;
 }
