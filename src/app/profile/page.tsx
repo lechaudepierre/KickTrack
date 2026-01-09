@@ -153,6 +153,16 @@ export default function ProfilePage() {
         return game.winner === userTeamIndex ? 'Victoire' : 'Défaite';
     };
 
+    const getOpponentNames = (game: Game) => {
+        const userTeamIndex = game.teams.findIndex(t => t.players.some(p => p.userId === user.userId));
+        if (userTeamIndex === -1) return '';
+
+        const opponentTeamIndex = userTeamIndex === 0 ? 1 : 0;
+        const opponents = game.teams[opponentTeamIndex].players;
+
+        return opponents.map(p => p.username).join(' & ');
+    };
+
     const handleLogout = async () => {
         await logout();
         router.push('/');
@@ -551,6 +561,7 @@ export default function ProfilePage() {
                             {recentGames.map((game) => {
                                 const result = getGameResult(game);
                                 const isWin = result === 'Victoire';
+                                const opponentNames = getOpponentNames(game);
 
                                 return (
                                     <div key={game.gameId} className={styles.gameCard}>
@@ -558,10 +569,13 @@ export default function ProfilePage() {
                                             <span className={`${styles.gameResult} ${isWin ? styles.resultWin : styles.resultLoss}`}>
                                                 {result}
                                             </span>
+                                            <span className={styles.gameOpponent}>
+                                                vs {opponentNames}
+                                            </span>
                                             <span className={styles.gameDate}>
                                                 {formatDate(game.startedAt)}
                                             </span>
-                                            <span className="text-xs text-secondary">
+                                            <span className={styles.gameVenue}>
                                                 {game.venueName}
                                             </span>
                                         </div>

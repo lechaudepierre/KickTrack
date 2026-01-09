@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/authStore';
+import { getUserGames } from '@/lib/firebase/games';
+import { Game } from '@/types';
 import BottomNav from '@/components/common/BottomNav';
 import {
     PlusCircleIcon,
@@ -16,6 +18,7 @@ import styles from './page.module.css';
 export default function DashboardPage() {
     const router = useRouter();
     const { user, isAuthenticated, isLoading, initialize } = useAuthStore();
+    const [games, setGames] = useState<Game[]>([]);
 
     useEffect(() => {
         const unsubscribe = initialize();
@@ -29,6 +32,34 @@ export default function DashboardPage() {
             router.push('/');
         }
     }, [isLoading, isAuthenticated, router]);
+
+    useEffect(() => {
+        if (user) {
+            getUserGames(user.userId, 100).then(setGames);
+        }
+    }, [user]);
+
+    // Calculate stats from games (same logic as profile page)
+    const stats = useMemo(() => {
+        if (!user) return { wins: 0, totalGames: 0, winRate: 0 };
+
+        const completedGames = games.filter(g => g.status === 'completed');
+
+        let wins = 0;
+        for (const game of completedGames) {
+            const userTeamIndex = game.teams.findIndex(t =>
+                t.players.some(p => p.userId === user.userId)
+            );
+            if (userTeamIndex !== -1 && game.winner === userTeamIndex) {
+                wins++;
+            }
+        }
+
+        const totalGames = completedGames.length;
+        const winRate = totalGames > 0 ? wins / totalGames : 0;
+
+        return { wins, totalGames, winRate };
+    }, [games, user]);
 
     if (isLoading) {
         return (
@@ -104,16 +135,16 @@ export default function DashboardPage() {
                 {/* Quick Stats */}
                 <div className={styles.statsRow}>
                     <div className={styles.statBox}>
-                        <span className={styles.statValue}>{user?.stats?.wins || 0}</span>
+                        <span className={styles.statValue}>{stats.wins}</span>
                         <span className={styles.statLabel}>Victoires</span>
                     </div>
                     <div className={styles.statBox}>
-                        <span className={styles.statValue}>{user?.stats?.totalGames || 0}</span>
+                        <span className={styles.statValue}>{stats.totalGames}</span>
                         <span className={styles.statLabel}>Parties</span>
                     </div>
                     <div className={styles.statBox}>
                         <span className={styles.statValue}>
-                            {user?.stats?.winRate ? `${Math.round(user.stats.winRate * 100)}%` : '0%'}
+                            {stats.winRate ? `${Math.round(stats.winRate * 100)}%` : '0%'}
                         </span>
                         <span className={styles.statLabel}>Ratio</span>
                     </div>

@@ -483,10 +483,23 @@
     color: #FF9800;
 }
 
+.gameOpponent {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+    text-transform: uppercase;
+}
+
 .gameDate {
     font-size: 0.7rem;
     color: rgba(51, 51, 51, 0.6);
     font-weight: 600;
+}
+
+.gameVenue {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-text-dark);
 }
 
 .gameScore {
