@@ -1268,7 +1268,6 @@
     width: 100%;
     height: 100%;
     max-height: 100%;
-    padding: 1rem;
     display: flex;
     flex-direction: column;
 }
@@ -1298,7 +1297,7 @@
 /* Position buttons plus grands en landscape */
 .hostLandscapeMode .selectionButton {
     padding: 1rem 0.5rem;
-    min-height: 100px;
+    min-height: 200px;
     /* Augmenté pour correspondre au type de but */
     height: 100%;
     /* Prend toute la hauteur */
