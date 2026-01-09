@@ -252,6 +252,16 @@
     overflow-x: hidden !important;
     padding: 0.5rem !important;
     background-color: var(--color-background) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin: 0 !important;
+    max-width: none !important;
+}
+
+/* Remove any margins/padding that might offset content */
+.forcedLandscape>* {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
 }
 
 /* Optimize layout for rotated view */
@@ -259,6 +269,7 @@
     flex-shrink: 0 !important;
     padding: 0.5rem !important;
     margin-bottom: 0.5rem !important;
+    width: 100% !important;
 }
 
 .forcedLandscape .backButton {
