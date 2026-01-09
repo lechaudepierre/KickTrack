@@ -247,7 +247,7 @@ export default function NewGamePage() {
                         {/* Venue Selection - Custom Dropdown */}
                         <div>
                             <label style={{ display: 'block', marginBottom: 'var(--spacing-md)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                                Lieu
+                                Stade
                             </label>
                             <div className={styles.dropdownContainer}>
                                 <button

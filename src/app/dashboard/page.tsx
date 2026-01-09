@@ -127,7 +127,7 @@ export default function DashboardPage() {
                             <div className={styles.smallActionIconWrapper}>
                                 <MapPinIcon className={styles.smallActionIcon} />
                             </div>
-                            <span className={styles.smallActionTitle}>Ajouter un lieu</span>
+                            <span className={styles.smallActionTitle}>Ajouter un stade</span>
                         </Link>
                     </div>
                 </div>

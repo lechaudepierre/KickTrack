@@ -60,7 +60,7 @@ export default function LeaderboardPage() {
     };
 
     const getSelectedVenueName = () => {
-        if (selectedVenue === 'all') return 'Tous les lieux';
+        if (selectedVenue === 'all') return 'Tous les stades';
         const venue = venues.find(v => v.venueId === selectedVenue);
         return venue?.name || 'Sélectionner';
     };
@@ -97,7 +97,7 @@ export default function LeaderboardPage() {
                                     onClick={() => handleVenueSelect('all')}
                                     className={`${styles.dropdownItem} ${selectedVenue === 'all' ? styles.dropdownItemActive : ''}`}
                                 >
-                                    Tous les lieux
+                                    Tous les stades
                                 </button>
                                 {venues.map(venue => (
                                     <button
@@ -119,7 +119,7 @@ export default function LeaderboardPage() {
                     </div>
                 ) : !hasData ? (
                     <div className={styles.emptyState}>
-                        Aucun classement disponible pour ce lieu
+                        Aucun classement disponible pour ce stade
                     </div>
                 ) : (
                     <>

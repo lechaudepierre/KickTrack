@@ -89,8 +89,8 @@ export default function VenuesPage() {
                         <ArrowLeftIcon className="h-6 w-6" />
                     </button>
                     <div style={{ flex: 1 }}>
-                        <h1 className={styles.pageTitle}>Lieux de jeu</h1>
-                        <p className="text-secondary text-sm">{venues.length} lieux enregistrés</p>
+                        <h1 className={styles.pageTitle}>Stades de jeu</h1>
+                        <p className="text-secondary text-sm">{venues.length} stades enregistrés</p>
                     </div>
                     <button onClick={() => setIsModalOpen(true)} style={{ border: 'none', background: 'none', padding: 0 }}>
                         <div className="btn-primary" style={{ marginBottom: 0 }}>
@@ -108,7 +108,7 @@ export default function VenuesPage() {
                     <MagnifyingGlassIcon className={styles.searchIcon} />
                     <input
                         type="text"
-                        placeholder="Rechercher un lieu..."
+                        placeholder="Rechercher un stade..."
                         value={searchQuery}
                         onChange={(e) => handleSearch(e.target.value)}
                         className={styles.searchInput}
@@ -136,12 +136,12 @@ export default function VenuesPage() {
                 ) : filteredVenues.length === 0 ? (
                     <div className={styles.emptyState}>
                         <MapPinIcon className={styles.emptyIcon} />
-                        <p className={styles.emptyText}>Aucun lieu trouvé</p>
+                        <p className={styles.emptyText}>Aucun stade trouvé</p>
                         <button onClick={() => setIsModalOpen(true)} style={{ border: 'none', background: 'none', padding: 0 }}>
                             <div className="btn-secondary" style={{ display: 'inline-block' }}>
                                 <div className="btn-secondary-shadow" />
                                 <div className="btn-secondary-content">
-                                    Ajouter un lieu
+                                    Ajouter un stade
                                 </div>
                             </div>
                         </button>

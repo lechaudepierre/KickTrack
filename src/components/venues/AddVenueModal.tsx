@@ -40,12 +40,12 @@ export default function AddVenueModal({ isOpen, onClose, onSuccess }: AddVenueMo
         e.preventDefault();
 
         if (!user) {
-            setError('Vous devez être connecté pour ajouter un lieu');
+            setError('Vous devez être connecté pour ajouter un stade');
             return;
         }
 
         if (!name.trim()) {
-            setError('Le nom du lieu est requis');
+            setError('Le nom du stade est requis');
             return;
         }
 
@@ -68,7 +68,7 @@ export default function AddVenueModal({ isOpen, onClose, onSuccess }: AddVenueMo
             onClose();
         } catch (err) {
             console.error('Error creating venue:', err);
-            setError('Erreur lors de la création du lieu');
+            setError('Erreur lors de la création du stade');
         } finally {
             setIsLoading(false);
         }
@@ -94,7 +94,7 @@ export default function AddVenueModal({ isOpen, onClose, onSuccess }: AddVenueMo
                     <form onSubmit={handleSubmit} className={styles.form}>
                         <div className={styles.formGroup}>
                             <label className={styles.label}>
-                                Nom du lieu
+                                Nom du stade
                             </label>
                             <input
                                 type="text"
@@ -108,7 +108,7 @@ export default function AddVenueModal({ isOpen, onClose, onSuccess }: AddVenueMo
 
                         <div className={styles.formGroup}>
                             <label className={styles.label}>
-                                Type de lieu
+                                Type de stade
                             </label>
                             <div className={styles.typeGrid}>
                                 {venueTypes.map((vt) => (
@@ -146,7 +146,7 @@ export default function AddVenueModal({ isOpen, onClose, onSuccess }: AddVenueMo
                         >
                             <div className="btn-primary-shadow" />
                             <div className="btn-primary-content" style={{ width: '100%' }}>
-                                {isLoading ? 'Création...' : 'Ajouter le lieu'}
+                                {isLoading ? 'Création...' : 'Ajouter le stade'}
                             </div>
                         </button>
                     </form>

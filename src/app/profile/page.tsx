@@ -101,7 +101,7 @@ export default function ProfilePage() {
     };
 
     const getSelectedVenueName = () => {
-        if (selectedVenue === 'all') return 'Tous les lieux';
+        if (selectedVenue === 'all') return 'Tous les stades';
         const venue = venues.find(v => v.venueId === selectedVenue);
         return venue?.name || 'Sélectionner';
     };
@@ -208,7 +208,7 @@ export default function ProfilePage() {
                                     onClick={() => handleVenueSelect('all')}
                                     className={`${styles.dropdownItem} ${selectedVenue === 'all' ? styles.dropdownItemActive : ''}`}
                                 >
-                                    Tous les lieux
+                                    Tous les stades
                                 </button>
                                 {venues.map(venue => (
                                     <button
@@ -268,6 +268,7 @@ export default function ProfilePage() {
                                 </h3>
                                 <div className={styles.formCard}>
                                     <div className={styles.formIndicators}>
+                                        <div className={styles.formDots}>...</div>
                                         {advancedStats.recentForm.map((result, i) => (
                                             <div
                                                 key={i}
@@ -508,12 +509,12 @@ export default function ProfilePage() {
                             </div>
                         )}
 
-                        {/* 8. Lieu préféré (Lieux préférés) - Only show when "Tous les lieux" is selected */}
+                        {/* 8. Stade préféré (Stades préférés) - Only show when "Tous les stades" is selected */}
                         {selectedVenue === 'all' && advancedStats.favoriteVenue && (
                             <div className={styles.section}>
                                 <h3 className={styles.sectionTitle}>
                                     <MapPinIcon className="w-5 h-5" />
-                                    Lieu préféré
+                                    Stade préféré
                                 </h3>
                                 <div className={styles.venueCard}>
                                     <div className={styles.venueIcon}>

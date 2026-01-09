@@ -82,7 +82,7 @@ export function calculateAdvancedStats(
         return dateB.getTime() - dateA.getTime();
     });
 
-    // Stats par lieu
+    // Stats par stade
     const venueMap = new Map<string, { name: string; games: number; wins: number }>();
 
     // Stats par format
@@ -144,7 +144,7 @@ export function calculateAdvancedStats(
         }
 
 
-        // Stats par lieu - exclude 'Aucun' venue
+        // Stats par stade - exclude 'Aucun' venue
         if (game.venueId && game.venueName && game.venueName.toLowerCase() !== 'aucun') {
             const venueKey = game.venueId;
             const venueData = venueMap.get(venueKey) || { name: game.venueName, games: 0, wins: 0 };
@@ -266,7 +266,7 @@ export function calculateAdvancedStats(
         ? formatStats['11'].wins / formatStats['11'].games
         : 0;
 
-    // Trouver le lieu préféré
+    // Trouver le stade préféré
     const venueStats = Array.from(venueMap.values())
         .map(v => ({
             name: v.name,
@@ -330,7 +330,7 @@ export function calculateAdvancedStats(
         winStreak: maxWinStreak,
         currentStreak: {
             type: currentStreakType,
-            count: currentStreakCount - 1 // -1 car on compte le premier match
+            count: currentStreakCount
         },
         averageGameDuration: gamesWithDuration > 0
             ? (totalDuration / gamesWithDuration) / 60
@@ -341,7 +341,7 @@ export function calculateAdvancedStats(
         comebacks,
         preferredFormat,
         formatStats,
-        recentForm,
+        recentForm: recentForm.reverse(), // Most recent on the right
         headToHead,
         perfectGames: {
             inflicted: perfectGamesInflicted,

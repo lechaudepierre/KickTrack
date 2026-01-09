@@ -335,7 +335,7 @@ export default function SeedPage() {
                     }
                 });
             }
-            setMessage('Lieux créés...');
+            setMessage('Stades créés...');
 
             // Create test games
             const games = generateTestGames(user.userId, user.username, Date.now());
@@ -397,7 +397,7 @@ Tu peux maintenant aller voir tes stats.`);
                             <h3 className="text-white font-semibold mb-2">Données qui seront créées:</h3>
                             <ul className="text-gray-400 text-sm space-y-1">
                                 <li>• 4 adversaires fictifs</li>
-                                <li>• 3 lieux de jeu</li>
+                                <li>• 3 stades de jeu</li>
                                 <li>• 6 parties avec différents résultats:</li>
                                 <li className="ml-4">- 4 victoires, 2 défaites</li>
                                 <li className="ml-4">- 1 perfect game infligé (6-0)</li>
@@ -438,11 +438,11 @@ Tu peux maintenant aller voir tes stats.`);
                             <button
                                 onClick={async () => {
                                     setStatus('loading');
-                                    setMessage('Recalcul des stats des lieux...');
+                                    setMessage('Recalcul des stats des stades...');
                                     try {
                                         await recalculateVenueStats();
                                         setStatus('success');
-                                        setMessage('Stats des lieux recalculées avec succès!');
+                                        setMessage('Stats des stades recalculées avec succès!');
                                     } catch (error) {
                                         setStatus('error');
                                         setMessage(`Erreur: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -451,7 +451,7 @@ Tu peux maintenant aller voir tes stats.`);
                                 disabled={status === 'loading'}
                                 className="w-full py-3 px-4 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-amber-500/50"
                             >
-                                Recalculer les stats des lieux
+                                Recalculer les stats des stades
                             </button>
                         </div>
                     </div>
