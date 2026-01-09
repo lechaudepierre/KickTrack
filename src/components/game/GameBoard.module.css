@@ -1264,12 +1264,15 @@
 }
 
 .hostLandscapeMode .modalContent {
-    max-width: none;
-    width: 100%;
+    max-width: 85vh;
+    /* Limite la largeur pour tenir dans la hauteur du paysage (avec UI browser) */
+    width: 95%;
+    /* S'adapte si l'écran est encore plus petit */
     height: 100%;
     max-height: 100%;
     display: flex;
     flex-direction: column;
+    margin: 0 auto;
 }
 
 .hostLandscapeMode .modalBody {
@@ -1311,16 +1314,17 @@
     grid-template-columns: repeat(4, 1fr) !important;
     gap: var(--spacing-md);
     width: 100%;
-    max-width: 300px;
-    /* Limite la largeur pour que les boutons soient plus "portraits" */
-    margin: 0 auto;
-    flex: 1;
+    max-width: 450px;
+    /* Augmenté pour que les boutons soient plus hauts verticalement */
+    margin: auto;
+    /* Centre dans le modalBody */
 }
 
 /* Position buttons plus grands en landscape */
 .hostLandscapeMode .positionButton {
-    min-height: 120px;
-    /* Plus haut */
+    padding: 0.5rem;
+    min-height: 90px;
+    /* Réduit horizontalement pour être moins large */
     height: 100%;
     font-size: 1rem;
     font-weight: 800;
@@ -1336,15 +1340,14 @@
     grid-template-columns: repeat(2, 1fr) !important;
     gap: var(--spacing-md);
     width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    flex: 1;
+    max-width: 500px;
+    margin: auto;
 }
 
 .hostLandscapeMode .typeButton {
     padding: 0.5rem;
-    min-height: 120px;
-    /* Réduit pour éviter que ça coupe en bas */
+    min-height: 100px;
+    /* Ajusté pour tenir sans scroll */
     height: 100%;
     display: flex;
     flex-direction: column;
