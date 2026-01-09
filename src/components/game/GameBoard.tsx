@@ -14,10 +14,10 @@ interface GameBoardProps {
     isViewer?: boolean;
 }
 
-const positions: { value: GoalPosition; label: string; color: string }[] = [
-    { value: 'goalkeeper', label: 'Gardien', color: 'green' },
+const positions: { value: GoalPosition; label: string; color: string; isNarrow?: boolean }[] = [
+    { value: 'goalkeeper', label: 'Gardien', color: 'green', isNarrow: true },
     { value: 'defense', label: 'Défense', color: 'blue' },
-    { value: 'midfield', label: 'Milieu', color: 'yellow' },
+    { value: 'midfield', label: 'Milieu', color: 'yellow', isNarrow: true },
     { value: 'attack', label: 'Attaque', color: 'red' }
 ];
 
@@ -225,10 +225,10 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, isViewe
                         {step === 'position' && (
                             <div className={styles.selectionGrid}>
                                 {positions.map(pos => (
-                                    <div key={pos.value} className={styles.positionContainer}>
+                                    <div key={pos.value} className={`${styles.positionContainer} ${pos.isNarrow ? styles.narrowContainer : ''}`}>
                                         <button
                                             onClick={() => handleSelectPosition(pos.value)}
-                                            className={`${styles.positionButton} ${pos.color === 'green' ? styles.bgGreen :
+                                            className={`${styles.positionButton} ${pos.isNarrow ? styles.narrowButton : ''} ${pos.color === 'green' ? styles.bgGreen :
                                                 pos.color === 'blue' ? styles.bgBlue :
                                                     pos.color === 'yellow' ? styles.bgYellow :
                                                         styles.bgRed

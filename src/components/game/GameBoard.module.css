@@ -615,7 +615,7 @@
 
 @media (min-width: 640px) {
     .selectionGrid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: 0.7fr 1.3fr 0.7fr 1.3fr;
     }
 }
 
@@ -712,6 +712,16 @@
     box-shadow: 0 4px 0 #333333;
     background-color: white;
     -webkit-tap-highlight-color: transparent;
+}
+
+.narrowButton {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    padding: 0.5rem 0.25rem;
+}
+
+.narrowButton .positionLabel {
+    transform: rotate(180deg);
 }
 
 @media (hover: hover) {
