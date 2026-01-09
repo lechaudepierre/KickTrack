@@ -214,11 +214,12 @@ export function calculateAdvancedStats(
             h2hMap.set(opponent.userId, h2hData);
         }
 
-        // Comebacks (victoire après avoir été mené)
+        // Comebacks (Remontada)
         if (isWin) {
-            let wasLosing = false;
+            let isRemontada = false;
             let runningUserScore = 0;
             let runningOpponentScore = 0;
+            const targetScore = parseInt(game.gameType);
 
             for (const goal of game.goals) {
                 if (goal.teamIndex === userTeamIndex) {
@@ -226,11 +227,22 @@ export function calculateAdvancedStats(
                 } else {
                     runningOpponentScore++;
                 }
-                if (runningOpponentScore > runningUserScore) {
-                    wasLosing = true;
+
+                const deficit = runningOpponentScore - runningUserScore;
+
+                if (targetScore === 6) {
+                    // 6-pt match: opponent has 4 or 5 AND deficit >= 3
+                    if ((runningOpponentScore === 4 || runningOpponentScore === 5) && deficit >= 3) {
+                        isRemontada = true;
+                    }
+                } else if (targetScore === 11) {
+                    // 11-pt match: opponent has 8, 9 or 10 AND deficit >= 5
+                    if ((runningOpponentScore >= 8 && runningOpponentScore <= 10) && deficit >= 5) {
+                        isRemontada = true;
+                    }
                 }
             }
-            if (wasLosing) comebacks++;
+            if (isRemontada) comebacks++;
         }
 
         if (game.duration && game.duration > 0) {

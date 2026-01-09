@@ -686,7 +686,7 @@ export default function ProfilePage() {
                             marginBottom: 'var(--spacing-md)',
                             fontWeight: 600
                         }}>
-                            Une <strong>remontada</strong> est une victoire où tu as été mené au score à un moment donné pendant le match.
+                            Une <strong>remontada</strong> est une victoire épique après avoir été largement mené en fin de partie.
                         </p>
                         <p style={{
                             color: 'rgba(51, 51, 51, 0.7)',
@@ -695,10 +695,9 @@ export default function ProfilePage() {
                             marginBottom: 'var(--spacing-lg)',
                             fontWeight: 600
                         }}>
-                            <strong>Exemples :</strong><br />
-                            • Tu perds 0-2, puis tu gagnes 6-2<br />
-                            • Tu perds 3-5, puis tu gagnes 6-5<br />
-                            • Tu mènes tout le temps et gagnes 6-0 (pas une remontada)
+                            <strong>Critères :</strong><br />
+                            • En 6 pts : Être mené de 3+ buts quand l'adversaire a 4 ou 5.<br />
+                            • En 11 pts : Être mené de 5+ buts quand l'adversaire a 8, 9 ou 10.
                         </p>
                         <button
                             onClick={() => setShowRemontadaInfo(false)}
