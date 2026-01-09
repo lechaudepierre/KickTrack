@@ -609,9 +609,9 @@
 
 .selectionGrid {
     display: grid;
-    grid-template-columns: 0.7fr 1.3fr 0.7fr 1.3fr;
+    grid-template-columns: 0.5fr 1.5fr 0.5fr 1.5fr !important;
     gap: 1rem;
-    align-items: start;
+    align-items: start !important;
 }
 
 .playerButton {
@@ -687,13 +687,19 @@
     flex-direction: column;
     gap: 0.5rem;
     width: 100%;
+    align-items: center;
+}
+
+.narrowContainer {
+    width: 100%;
 }
 
 .positionButton {
     width: 100%;
-    min-height: 120px;
-    height: auto;
+    height: 120px !important;
+    min-height: 120px !important;
     border-radius: 0.75rem;
+    overflow: hidden;
     border: 3px solid #333333;
     transition-property: all;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -715,7 +721,8 @@
     writing-mode: vertical-rl;
     text-orientation: mixed;
     padding: 1rem 0.25rem;
-    min-height: 120px;
+    height: 120px !important;
+    min-height: 120px !important;
 }
 
 .narrowButton .positionLabel {
@@ -739,7 +746,7 @@
 
 .starButton {
     width: 100%;
-    height: 2.5rem;
+    height: 40px !important;
     border-radius: 0.5rem;
     border: 3px solid #333333;
     display: flex;
