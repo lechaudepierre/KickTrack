@@ -1319,7 +1319,7 @@
 /* Position buttons plus grands en landscape */
 .hostLandscapeMode .positionButton {
     padding: 0.5rem;
-    min-height: 120px;
+    min-height: 200px;
     /* Ajusté pour tenir sans scroll tout en étant haut */
     height: 100%;
     flex: 1;
@@ -1341,7 +1341,7 @@
 
 .hostLandscapeMode .typeButton {
     padding: 0.5rem;
-    min-height: 60px;
+    min-height: 150px;
     height: 100%;
     flex: 1;
     display: flex;
