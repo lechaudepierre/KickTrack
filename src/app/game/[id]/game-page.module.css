@@ -297,8 +297,10 @@
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;
-    width: 90vh !important;
+    width: 85vh !important;
+    /* AJUSTABLE: Contrôle la largeur du contenu en mode paysage */
     height: 100vw !important;
+    /* AJUSTABLE: Contrôle la hauteur du contenu en mode paysage */
     transform: translate(-50%, -50%) rotate(90deg) !important;
     transform-origin: center center !important;
     z-index: 9999 !important;
