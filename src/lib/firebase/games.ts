@@ -400,15 +400,27 @@ export async function getUserGames(userId: string, limitCount: number = 10): Pro
     const snapshot = await getDocs(q);
     const games = snapshot.docs.map(doc => doc.data() as Game);
 
+    // Filter out guest games (both new ones with flag and old ones without flag)
+    const nonGuestGames = games.filter(game => {
+        // If the flag exists and is true, filter it out
+        if (game.isGuestGame) return false;
+
+        // For old games without the flag, check if it contains guest players
+        const hasGuestPlayers = game.teams?.some(team =>
+            team.players?.some(player => player.userId.startsWith('guest_'))
+        );
+        return !hasGuestPlayers;
+    });
+
     // Sort by startedAt descending (client-side)
-    games.sort((a, b) => {
+    nonGuestGames.sort((a, b) => {
         const dateA = a.startedAt instanceof Date ? a.startedAt : new Date((a.startedAt as any).seconds * 1000);
         const dateB = b.startedAt instanceof Date ? b.startedAt : new Date((b.startedAt as any).seconds * 1000);
         return dateB.getTime() - dateA.getTime();
     });
 
     // Apply limit
-    return games.slice(0, limitCount);
+    return nonGuestGames.slice(0, limitCount);
 }
 
 // Calculate game results
@@ -486,6 +498,12 @@ export async function getVenueLeaderboard(venueId: string): Promise<VenueLeaderb
         if (game.winner === undefined) continue; // Skip draws
         if (game.isGuestGame) continue; // Skip guest games
 
+        // For old games without flag, check for guest players
+        const hasGuestPlayers = game.teams?.some(team =>
+            team.players?.some(player => player.userId.startsWith('guest_'))
+        );
+        if (hasGuestPlayers) continue;
+
         for (let teamIndex = 0; teamIndex < game.teams.length; teamIndex++) {
             const team = game.teams[teamIndex];
             const isWinner = teamIndex === game.winner;
@@ -551,6 +569,12 @@ export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
     for (const game of games) {
         if (game.winner === undefined) continue; // Skip draws
         if (game.isGuestGame) continue; // Skip guest games
+
+        // For old games without flag, check for guest players
+        const hasGuestPlayers = game.teams?.some(team =>
+            team.players?.some(player => player.userId.startsWith('guest_'))
+        );
+        if (hasGuestPlayers) continue;
 
         for (let teamIndex = 0; teamIndex < game.teams.length; teamIndex++) {
             const team = game.teams[teamIndex];
