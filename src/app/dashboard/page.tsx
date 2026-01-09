@@ -120,14 +120,14 @@ export default function DashboardPage() {
                             <div className={styles.smallActionIconWrapper}>
                                 <UserPlusIcon className={styles.smallActionIcon} />
                             </div>
-                            <span className={styles.smallActionTitle}>Ajouter un ami</span>
+                            <span className={styles.smallActionTitle}>+ Ami</span>
                         </button>
 
                         <Link href="/venues" className={styles.smallAction}>
                             <div className={styles.smallActionIconWrapper}>
                                 <MapPinIcon className={styles.smallActionIcon} />
                             </div>
-                            <span className={styles.smallActionTitle}>Ajouter un stade</span>
+                            <span className={styles.smallActionTitle}>+ Stade</span>
                         </Link>
                     </div>
                 </div>

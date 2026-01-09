@@ -203,7 +203,7 @@
     align-items: center;
     justify-content: center;
     gap: var(--spacing-xs);
-    padding: var(--spacing-sm) var(--spacing-sm);
+    padding: var(--spacing-sm) 0;
     background: var(--color-green-medium);
     border: 3px solid #333333;
     border-radius: var(--radius-md);
