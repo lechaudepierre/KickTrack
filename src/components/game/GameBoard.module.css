@@ -1133,13 +1133,13 @@
 .hostLandscapeMode .scoreBoard {
     width: 80%;
     max-width: 900%;
-    max-height: 30%;
-    padding: 0.5rem;
+    max-height: 120px;
+    padding: 0.25rem;
     display: flex;
     align-items: center;
     background-color: var(--color-beige);
-    border: 3px solid #333333;
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+    border: 2px solid #333333;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 .hostLandscapeMode .scoreBoardContent {
@@ -1161,40 +1161,40 @@
 }
 
 .hostLandscapeMode .scoreValue {
-    font-size: 4rem;
+    font-size: 2.5rem;
     line-height: 1;
     font-weight: 900;
 }
 
 .hostLandscapeMode .centerInfo {
-    width: 150px;
+    width: 100px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-sm);
+    gap: 0.25rem;
 }
 
 .hostLandscapeMode .vsLabel {
-    font-size: 1.25rem;
+    font-size: 0.875rem;
     font-weight: 900;
     opacity: 0.3;
 }
 
 .hostLandscapeMode .timerWrapper {
-    transform: scale(1);
-    margin-bottom: var(--spacing-xs);
+    transform: scale(0.8);
+    margin-bottom: 0;
 }
 
 .hostLandscapeMode .teamLabel {
-    font-size: 0.875rem;
+    font-size: 0.625rem;
     font-weight: 900;
 }
 
 .hostLandscapeMode .avatar {
-    width: 1.75rem;
-    height: 1.75rem;
-    font-size: 0.875rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 0.625rem;
 }
 
 /* Host Landscape Controls - Compact buttons for landscape */
@@ -1219,8 +1219,8 @@
 }
 
 .hostLandscapeMode .goalButton {
-    padding: 0.5rem;
-    border-radius: 0.5rem;
+    padding: 0.25rem;
+    border-radius: 0.375rem;
 }
 
 .hostLandscapeMode .buttonContent {
@@ -1228,17 +1228,17 @@
 }
 
 .hostLandscapeMode .iconWrapper {
-    width: 2rem;
-    height: 2rem;
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 .hostLandscapeMode .plusIcon {
-    width: 1rem;
-    height: 1rem;
+    width: 0.75rem;
+    height: 0.75rem;
 }
 
 .hostLandscapeMode .buttonLabel {
-    font-size: 0.75rem;
+    font-size: 0.625rem;
 }
 
 /* Almost-Fullscreen Modal for Landscape Mode */
