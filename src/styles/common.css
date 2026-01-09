@@ -148,6 +148,10 @@
     color: var(--color-text-muted);
 }
 
+.text-dark {
+    color: var(--color-text-dark);
+}
+
 /* === UTILITIES === */
 
 .container-center {

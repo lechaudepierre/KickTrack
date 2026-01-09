@@ -263,7 +263,7 @@ export default function GamePage() {
                             </div>
 
                             <div className={gameStyles.modalBody}>
-                                <p className="text-secondary mb-6 text-center">
+                                <p className="text-dark mb-6 text-center">
                                     Êtes-vous sûr de vouloir revenir en arrière ? Cela annulera toute la partie.
                                 </p>
 
