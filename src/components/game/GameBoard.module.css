@@ -1269,6 +1269,11 @@
     justify-content: center;
 }
 
+.hostLandscapeMode .buttonContentFourPlayers {
+    flex-direction: row !important;
+    gap: 0.5rem !important;
+}
+
 .hostLandscapeMode .iconWrapper {
     width: auto;
     height: auto;

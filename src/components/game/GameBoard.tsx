@@ -49,6 +49,8 @@ export default function GameBoard({ game, onAddGoal, isViewer = false }: GameBoa
 
     const team1 = game.teams[0];
     const team2 = game.teams[1];
+    const totalPlayers = team1.players.length + team2.players.length;
+    const isFourPlayers = totalPlayers === 4;
 
     // Use state to track previous score for animation
     const [prevScore, setPrevScore] = useState<[number, number]>(game.score);
@@ -325,17 +327,22 @@ export default function GameBoard({ game, onAddGoal, isViewer = false }: GameBoa
                                         ${activeTeamIndex === 1 ? styles.goalButtonDisabled : ''}
                                     `}
                                 >
-                                    <div className={styles.buttonContent}>
-                                        <span className={`
-                                            ${styles.buttonLabel}
-                                            ${(activeTeamIndex === 0 && selectedPlayer?.userId === player.userId) ? styles.buttonLabelActive : ''}
-                                        `}>{player.username}</span>
-                                        <div className={`
-                                            ${styles.iconWrapper} 
-                                            ${(activeTeamIndex === 0 && selectedPlayer?.userId === player.userId) ? styles.iconWrapperActive : ''}
-                                        `}>
-                                            <PlusIcon className={styles.plusIcon} />
-                                        </div>
+                                    <div className={`${styles.buttonContent} ${isFourPlayers ? styles.buttonContentFourPlayers : ''}`}>
+                                        {isFourPlayers ? (
+                                            <>
+                                                <div className={styles.iconWrapper}>
+                                                    <PlusIcon className={styles.plusIcon} />
+                                                </div>
+                                                <span className={styles.buttonLabel}>{player.username}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className={styles.buttonLabel}>{player.username}</span>
+                                                <div className={styles.iconWrapper}>
+                                                    <PlusIcon className={styles.plusIcon} />
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </button>
                             ))}
@@ -355,17 +362,22 @@ export default function GameBoard({ game, onAddGoal, isViewer = false }: GameBoa
                                         ${activeTeamIndex === 0 ? styles.goalButtonDisabled : ''}
                                     `}
                                 >
-                                    <div className={styles.buttonContent}>
-                                        <span className={`
-                                            ${styles.buttonLabel}
-                                            ${(activeTeamIndex === 1 && selectedPlayer?.userId === player.userId) ? styles.buttonLabelActive : ''}
-                                        `}>{player.username}</span>
-                                        <div className={`
-                                            ${styles.iconWrapper} 
-                                            ${(activeTeamIndex === 1 && selectedPlayer?.userId === player.userId) ? styles.iconWrapperActive : ''}
-                                        `}>
-                                            <PlusIcon className={styles.plusIcon} />
-                                        </div>
+                                    <div className={`${styles.buttonContent} ${isFourPlayers ? styles.buttonContentFourPlayers : ''}`}>
+                                        {isFourPlayers ? (
+                                            <>
+                                                <div className={styles.iconWrapper}>
+                                                    <PlusIcon className={styles.plusIcon} />
+                                                </div>
+                                                <span className={styles.buttonLabel}>{player.username}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className={styles.buttonLabel}>{player.username}</span>
+                                                <div className={styles.iconWrapper}>
+                                                    <PlusIcon className={styles.plusIcon} />
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </button>
                             ))}
