@@ -202,48 +202,6 @@ export default function NewGamePage() {
                 {/* Step 1: Configuration */}
                 {step === 'config' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-                        {/* Format Selection */}
-                        <div>
-                            <label style={{ display: 'block', marginBottom: 'var(--spacing-md)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                                Format de jeu
-                            </label>
-                            <div className={styles.grid2}>
-                                <button
-                                    onClick={() => setFormat('1v1')}
-                                    className={`${styles.selectionCard} ${format === '1v1' ? styles.selectionCardActive : styles.selectionCardInactive}`}
-                                >
-                                    <UserIcon className="h-8 w-8 mx-auto mb-2" style={{ color: format === '1v1' ? 'white' : 'var(--color-text-dark)' }} />
-                                    <p style={{ fontWeight: 600, color: format === '1v1' ? 'white' : 'var(--color-text-dark)' }}>1 vs 1</p>
-                                </button>
-                                <button
-                                    onClick={() => setFormat('2v2')}
-                                    className={`${styles.selectionCard} ${format === '2v2' ? styles.selectionCardActive : styles.selectionCardInactive}`}
-                                >
-                                    <UsersIcon className="h-8 w-8 mx-auto mb-2" style={{ color: format === '2v2' ? 'white' : 'var(--color-text-dark)' }} />
-                                    <p style={{ fontWeight: 600, color: format === '2v2' ? 'white' : 'var(--color-text-dark)' }}>2 vs 2</p>
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Target Score */}
-                        <div>
-                            <label style={{ display: 'block', marginBottom: 'var(--spacing-md)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                                Score de victoire
-                            </label>
-                            <div className={styles.grid2}>
-                                {([6, 11] as const).map((score) => (
-                                    <button
-                                        key={score}
-                                        onClick={() => setTargetScore(score)}
-                                        className={`${styles.selectionCard} ${targetScore === score ? styles.selectionCardActive : styles.selectionCardInactive}`}
-                                    >
-                                        <p style={{ fontSize: '1.5rem', fontWeight: 700, color: targetScore === score ? 'white' : 'var(--color-text-dark)' }}>{score}</p>
-                                        <p style={{ fontSize: '0.75rem', color: targetScore === score ? 'rgba(255,255,255,0.8)' : 'rgba(51,51,51,0.6)' }}>buts</p>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
                         {/* Venue Selection - Custom Dropdown */}
                         <div>
                             <label style={{ display: 'block', marginBottom: 'var(--spacing-md)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
@@ -284,6 +242,48 @@ export default function NewGamePage() {
                                         ))}
                                     </div>
                                 )}
+                            </div>
+                        </div>
+
+                        {/* Format Selection */}
+                        <div>
+                            <label style={{ display: 'block', marginBottom: 'var(--spacing-md)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                                Format de jeu
+                            </label>
+                            <div className={styles.grid2}>
+                                <button
+                                    onClick={() => setFormat('1v1')}
+                                    className={`${styles.selectionCard} ${format === '1v1' ? styles.selectionCardActive : styles.selectionCardInactive}`}
+                                >
+                                    <UserIcon className="h-8 w-8 mx-auto mb-2" style={{ color: format === '1v1' ? 'white' : 'var(--color-text-dark)' }} />
+                                    <p style={{ fontWeight: 600, color: format === '1v1' ? 'white' : 'var(--color-text-dark)' }}>1 vs 1</p>
+                                </button>
+                                <button
+                                    onClick={() => setFormat('2v2')}
+                                    className={`${styles.selectionCard} ${format === '2v2' ? styles.selectionCardActive : styles.selectionCardInactive}`}
+                                >
+                                    <UsersIcon className="h-8 w-8 mx-auto mb-2" style={{ color: format === '2v2' ? 'white' : 'var(--color-text-dark)' }} />
+                                    <p style={{ fontWeight: 600, color: format === '2v2' ? 'white' : 'var(--color-text-dark)' }}>2 vs 2</p>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Target Score */}
+                        <div>
+                            <label style={{ display: 'block', marginBottom: 'var(--spacing-md)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                                Score de victoire
+                            </label>
+                            <div className={styles.grid2}>
+                                {([6, 11] as const).map((score) => (
+                                    <button
+                                        key={score}
+                                        onClick={() => setTargetScore(score)}
+                                        className={`${styles.selectionCard} ${targetScore === score ? styles.selectionCardActive : styles.selectionCardInactive}`}
+                                    >
+                                        <p style={{ fontSize: '1.5rem', fontWeight: 700, color: targetScore === score ? 'white' : 'var(--color-text-dark)' }}>{score}</p>
+                                        <p style={{ fontSize: '0.75rem', color: targetScore === score ? 'rgba(255,255,255,0.8)' : 'rgba(51,51,51,0.6)' }}>buts</p>
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
