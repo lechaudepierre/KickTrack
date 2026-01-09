@@ -400,8 +400,11 @@ export async function getUserGames(userId: string, limitCount: number = 10): Pro
     const snapshot = await getDocs(q);
     const games = snapshot.docs.map(doc => doc.data() as Game);
 
-    // Filter out guest games (both new ones with flag and old ones without flag)
-    const nonGuestGames = games.filter(game => {
+    // Filter out non-completed games and guest games
+    const validGames = games.filter(game => {
+        // Only include completed games
+        if (game.status !== 'completed') return false;
+
         // If the flag exists and is true, filter it out
         if (game.isGuestGame) return false;
 
@@ -413,14 +416,14 @@ export async function getUserGames(userId: string, limitCount: number = 10): Pro
     });
 
     // Sort by startedAt descending (client-side)
-    nonGuestGames.sort((a, b) => {
+    validGames.sort((a, b) => {
         const dateA = a.startedAt instanceof Date ? a.startedAt : new Date((a.startedAt as any).seconds * 1000);
         const dateB = b.startedAt instanceof Date ? b.startedAt : new Date((b.startedAt as any).seconds * 1000);
         return dateB.getTime() - dateA.getTime();
     });
 
     // Apply limit
-    return nonGuestGames.slice(0, limitCount);
+    return validGames.slice(0, limitCount);
 }
 
 // Calculate game results
