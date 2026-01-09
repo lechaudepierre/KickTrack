@@ -188,8 +188,8 @@ export default function ProfilePage() {
         setUpdateError('');
 
         try {
-            // Check availability if name changed
-            const isAvailable = await checkUsernameAvailable(newUsername.trim());
+            // Check availability if name changed (ignoring case)
+            const isAvailable = await checkUsernameAvailable(newUsername.trim(), user.userId);
             if (!isAvailable) {
                 setUpdateError('Ce pseudo est déjà pris');
                 setIsUpdating(false);

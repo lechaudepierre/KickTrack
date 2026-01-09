@@ -42,6 +42,7 @@ async function createUserDocument(userId: string, username: string, email?: stri
     const user: User = {
         userId,
         username,
+        usernameLowercase: username.toLowerCase().trim(),
         email,
         createdAt: new Date(),
         stats: initialStats,
@@ -124,7 +125,8 @@ export async function updateUsername(userId: string, newUsername: string): Promi
 
     // 2. Update Firestore User Document
     await updateDoc(doc(db, 'users', userId), {
-        username: newUsername
+        username: newUsername,
+        usernameLowercase: newUsername.toLowerCase().trim()
     });
 }
 
@@ -163,14 +165,22 @@ export function onAuthChange(callback: (user: FirebaseUser | null) => void) {
 }
 
 // Check if username is available
-export async function checkUsernameAvailable(username: string): Promise<boolean> {
+export async function checkUsernameAvailable(username: string, excludeUserId?: string): Promise<boolean> {
     const db = getFirebaseDb();
     const q = query(
         collection(db, 'users'),
-        where('username', '==', username.trim())
+        where('usernameLowercase', '==', username.toLowerCase().trim())
     );
     const snapshot = await getDocs(q);
-    return snapshot.empty;
+
+    if (snapshot.empty) return true;
+
+    // If we have a match, check if it's the user we want to exclude
+    if (excludeUserId && snapshot.docs.length === 1 && snapshot.docs[0].id === excludeUserId) {
+        return true;
+    }
+
+    return !snapshot.empty ? false : true;
 }
 
 // Get leaderboard (top users by wins)

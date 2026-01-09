@@ -18,6 +18,7 @@ export interface UserStats {
 export interface User {
     userId: string;
     username: string;
+    usernameLowercase: string;
     email?: string;
     avatarUrl?: string;
     createdAt: Date;
