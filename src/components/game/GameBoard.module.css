@@ -609,14 +609,9 @@
 
 .selectionGrid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 0.7fr 1.3fr 0.7fr 1.3fr;
     gap: 1rem;
-}
-
-@media (min-width: 640px) {
-    .selectionGrid {
-        grid-template-columns: 0.7fr 1.3fr 0.7fr 1.3fr;
-    }
+    align-items: start;
 }
 
 .playerButton {
@@ -696,6 +691,8 @@
 
 .positionButton {
     width: 100%;
+    min-height: 120px;
+    height: auto;
     border-radius: 0.75rem;
     border: 3px solid #333333;
     transition-property: all;
@@ -717,7 +714,8 @@
 .narrowButton {
     writing-mode: vertical-rl;
     text-orientation: mixed;
-    padding: 0.5rem 0.25rem;
+    padding: 1rem 0.25rem;
+    min-height: 120px;
 }
 
 .narrowButton .positionLabel {
