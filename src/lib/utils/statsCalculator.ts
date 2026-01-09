@@ -128,7 +128,6 @@ export function calculateAdvancedStats(
     let currentStreakCount = 0;
     let currentStreakType: 'win' | 'loss' | 'none' = 'none';
     let tempStreak = 0;
-    let lastResult: 'win' | 'loss' | 'none' | null = null;
 
     // Forme récente (5 derniers matchs)
     const recentForm: Array<'W' | 'L' | 'D'> = [];
@@ -234,50 +233,54 @@ export function calculateAdvancedStats(
             if (wasLosing) comebacks++;
         }
 
-        // Durée (game.duration est en secondes)
         if (game.duration && game.duration > 0) {
             totalDuration += game.duration;
             gamesWithDuration++;
         }
-
-        // Calcul des séries
-        const currentResult = isDraw ? 'none' : (isWin ? 'win' : 'loss');
-
-        if (i === 0) {
-            // Premier match
-            currentStreakType = currentResult === 'none' ? 'none' : currentResult;
-            currentStreakCount = currentResult === 'none' ? 0 : 1;
-        } else {
-            // Mise à jour streak actuel
-            if (currentResult === 'none') {
-                // Un match nul casse la série
-                currentStreakType = 'none';
-                currentStreakCount = 0;
-            } else if (currentStreakType === currentResult) {
-                // Continue la série
-                currentStreakCount++;
-            } else {
-                // Change de type de série - RESET à 1
-                currentStreakType = currentResult;
-                currentStreakCount = 1;
-            }
-        }
-
-        // Calcul de la meilleure série de victoires
-        if (lastResult === currentResult && currentResult === 'win') {
-            tempStreak++;
-        } else {
-            if (lastResult === 'win' && tempStreak > maxWinStreak) {
-                maxWinStreak = tempStreak;
-            }
-            tempStreak = currentResult === 'win' ? 1 : 0;
-        }
-        lastResult = currentResult;
     }
 
-    // Finaliser la meilleure série
-    if (lastResult === 'win' && tempStreak > maxWinStreak) {
-        maxWinStreak = tempStreak;
+    // Calcul des séries (On utilise l'ordre chronologique pour plus de simplicité)
+    const chronologicalGames = [...sortedGames].reverse();
+    tempStreak = 0;
+    currentStreakCount = 0;
+    currentStreakType = 'none';
+
+    for (const game of chronologicalGames) {
+        // Determine user's team index for this specific game
+        const userTeamIndex = game.teams.findIndex(t =>
+            t.players.some(p => p.userId === userId)
+        );
+        if (userTeamIndex === -1) continue; // Should not happen if game was in completedGames
+
+        const isWin = game.winner === userTeamIndex;
+        const isDraw = game.winner === undefined;
+        const currentResult = isDraw ? 'none' : (isWin ? 'win' : 'loss');
+
+        // Meilleure série de victoires (maxWinStreak)
+        if (currentResult === 'win') {
+            tempStreak++;
+            if (tempStreak > maxWinStreak) {
+                maxWinStreak = tempStreak;
+            }
+        } else {
+            tempStreak = 0;
+        }
+
+        // Série actuelle (currentStreak)
+        // This logic calculates the streak ending with the *last* game processed in chronological order.
+        // Since chronologicalGames is oldest to newest, the last game processed is the most recent.
+        if (currentResult === 'none') {
+            currentStreakType = 'none';
+            currentStreakCount = 0;
+        } else if (currentStreakType === 'none' || currentResult === currentStreakType) {
+            // If it's the first non-draw game, or same type as previous
+            currentStreakType = currentResult;
+            currentStreakCount++;
+        } else {
+            // Streak type changed, reset count and set new type
+            currentStreakType = currentResult;
+            currentStreakCount = 1;
+        }
     }
 
     // Calculer winRates des formats
