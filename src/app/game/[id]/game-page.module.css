@@ -344,3 +344,55 @@
     right: 0.5rem !important;
     top: 3rem !important;
 }
+
+/* Landscape Modal Overrides */
+.forcedLandscape .modalOverlay {
+    padding: 0.5rem !important;
+}
+
+.forcedLandscape .modalContent {
+    max-width: 85vh !important;
+    /* Limite la largeur pour tenir dans la hauteur du paysage */
+    width: 95% !important;
+    max-height: 95% !important;
+    border-radius: 1.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.forcedLandscape .modalHeader {
+    padding: 0.75rem 1.5rem !important;
+}
+
+.forcedLandscape .modalTitle {
+    font-size: 1.125rem !important;
+    line-height: 1.5rem !important;
+}
+
+.forcedLandscape .modalBody {
+    padding: 1rem !important;
+    overflow-y: auto !important;
+    /* Permet le scroll si trop de boutons */
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+}
+
+.forcedLandscape .modalBody>*+* {
+    margin-top: 0 !important;
+}
+
+.forcedLandscape .optionButton {
+    padding: 0.75rem 1rem !important;
+    border-radius: 0.75rem !important;
+}
+
+.forcedLandscape .optionTitle {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+}
+
+.forcedLandscape .optionDesc {
+    font-size: 0.625rem !important;
+}

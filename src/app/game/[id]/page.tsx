@@ -97,6 +97,11 @@ export default function GamePage() {
             console.error('Error forfeiting game:', error);
         }
     };
+    const getTeamNames = (teamIndex: 0 | 1) => {
+        if (!game) return '';
+        const team = game.teams[teamIndex];
+        return team.players.map(p => p.username).join(' & ');
+    };
 
     const handleCancelGame = async () => {
         if (!game) return;
@@ -209,16 +214,16 @@ export default function GamePage() {
                                     onClick={() => handleForfeit(0)}
                                     className={`${gameStyles.optionButton} ${gameStyles.forfeitButton}`}
                                 >
-                                    <span className={gameStyles.optionTitle}>Équipe 1 abandonne</span>
-                                    <span className={gameStyles.optionDesc}>Victoire par forfait ({game.gameType} pts) pour l'Équipe 2</span>
+                                    <span className={gameStyles.optionTitle}>{getTeamNames(0)} abandonne</span>
+                                    <span className={gameStyles.optionDesc}>Victoire par forfait ({game.gameType} pts) pour {getTeamNames(1)}</span>
                                 </button>
 
                                 <button
                                     onClick={() => handleForfeit(1)}
                                     className={`${gameStyles.optionButton} ${gameStyles.forfeitButton}`}
                                 >
-                                    <span className={gameStyles.optionTitle}>Équipe 2 abandonne</span>
-                                    <span className={gameStyles.optionDesc}>Victoire par forfait ({game.gameType} pts) pour l'Équipe 1</span>
+                                    <span className={gameStyles.optionTitle}>{getTeamNames(1)} abandonne</span>
+                                    <span className={gameStyles.optionDesc}>Victoire par forfait ({game.gameType} pts) pour {getTeamNames(0)}</span>
                                 </button>
 
                                 <div className="pt-4">

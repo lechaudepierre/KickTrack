@@ -326,16 +326,16 @@ export default function GameBoard({ game, onAddGoal, isViewer = false }: GameBoa
                                     `}
                                 >
                                     <div className={styles.buttonContent}>
+                                        <span className={`
+                                            ${styles.buttonLabel}
+                                            ${(activeTeamIndex === 0 && selectedPlayer?.userId === player.userId) ? styles.buttonLabelActive : ''}
+                                        `}>{player.username}</span>
                                         <div className={`
                                             ${styles.iconWrapper} 
                                             ${(activeTeamIndex === 0 && selectedPlayer?.userId === player.userId) ? styles.iconWrapperActive : ''}
                                         `}>
                                             <PlusIcon className={styles.plusIcon} />
                                         </div>
-                                        <span className={`
-                                            ${styles.buttonLabel}
-                                            ${(activeTeamIndex === 0 && selectedPlayer?.userId === player.userId) ? styles.buttonLabelActive : ''}
-                                        `}>{player.username}</span>
                                     </div>
                                 </button>
                             ))}
@@ -356,16 +356,16 @@ export default function GameBoard({ game, onAddGoal, isViewer = false }: GameBoa
                                     `}
                                 >
                                     <div className={styles.buttonContent}>
+                                        <span className={`
+                                            ${styles.buttonLabel}
+                                            ${(activeTeamIndex === 1 && selectedPlayer?.userId === player.userId) ? styles.buttonLabelActive : ''}
+                                        `}>{player.username}</span>
                                         <div className={`
                                             ${styles.iconWrapper} 
                                             ${(activeTeamIndex === 1 && selectedPlayer?.userId === player.userId) ? styles.iconWrapperActive : ''}
                                         `}>
                                             <PlusIcon className={styles.plusIcon} />
                                         </div>
-                                        <span className={`
-                                            ${styles.buttonLabel}
-                                            ${(activeTeamIndex === 1 && selectedPlayer?.userId === player.userId) ? styles.buttonLabelActive : ''}
-                                        `}>{player.username}</span>
                                     </div>
                                 </button>
                             ))}
