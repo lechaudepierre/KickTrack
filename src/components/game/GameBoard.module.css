@@ -1103,3 +1103,168 @@
         margin-bottom: var(--spacing-xs);
     }
 }
+
+/* Host Landscape Mode - Same layout as viewer but with controls */
+.hostLandscapeMode {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 100px);
+    padding: var(--spacing-lg);
+    position: relative;
+    gap: var(--spacing-lg);
+}
+
+.hostLandscapeMode .scoreBoard {
+    width: 100%;
+    max-width: 1000px;
+    height: auto;
+    aspect-ratio: 16/9;
+    padding: var(--spacing-2xl);
+    display: flex;
+    align-items: center;
+    background-color: var(--color-beige);
+    border: 4px solid #333333;
+    box-shadow: 0 12px 0 rgba(0, 0, 0, 0.2);
+}
+
+.hostLandscapeMode .scoreBoardContent {
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    gap: var(--spacing-2xl);
+    width: 100%;
+}
+
+.hostLandscapeMode .teamScore {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-xl);
+}
+
+.hostLandscapeMode .scoreValue {
+    font-size: 10rem;
+    line-height: 1;
+    font-weight: 900;
+}
+
+.hostLandscapeMode .centerInfo {
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-lg);
+}
+
+.hostLandscapeMode .vsLabel {
+    font-size: 2.5rem;
+    font-weight: 900;
+    opacity: 0.3;
+}
+
+.hostLandscapeMode .timerWrapper {
+    transform: scale(1.8);
+    margin-bottom: var(--spacing-lg);
+}
+
+.hostLandscapeMode .teamLabel {
+    font-size: 1.25rem;
+    font-weight: 900;
+}
+
+.hostLandscapeMode .avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.125rem;
+}
+
+/* Host Landscape Controls - Compact buttons for landscape */
+.hostLandscapeMode .controlsContainer {
+    width: 100%;
+    max-width: 1000px;
+    gap: var(--spacing-md);
+}
+
+.hostLandscapeMode .buttonsGrid {
+    gap: var(--spacing-sm);
+}
+
+.hostLandscapeMode .goalButton {
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+}
+
+.hostLandscapeMode .iconWrapper {
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.hostLandscapeMode .plusIcon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.hostLandscapeMode .buttonLabel {
+    font-size: 0.875rem;
+}
+
+/* Almost-Fullscreen Modal for Landscape Mode */
+.hostLandscapeMode .modalOverlay {
+    padding: 1.5rem;
+}
+
+.hostLandscapeMode .modalContent {
+    max-width: none;
+    width: calc(100% - 3rem);
+    max-height: calc(100% - 3rem);
+}
+
+/* Horizontal Position Grid for Landscape */
+.hostLandscapeMode .selectionGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--spacing-md);
+}
+
+@media (max-width: 800px) {
+    .hostLandscapeMode .scoreValue {
+        font-size: 7rem;
+    }
+
+    .hostLandscapeMode .centerInfo {
+        width: 180px;
+    }
+
+    .hostLandscapeMode .timerWrapper {
+        transform: scale(1.4);
+    }
+}
+
+@media (max-width: 600px) {
+    .hostLandscapeMode .scoreValue {
+        font-size: 5rem;
+    }
+
+    .hostLandscapeMode .centerInfo {
+        width: 120px;
+    }
+
+    .hostLandscapeMode .timerWrapper {
+        transform: scale(1.2);
+    }
+
+    .hostLandscapeMode .teamLabel {
+        font-size: 1rem;
+    }
+
+    .hostLandscapeMode .avatar {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.875rem;
+    }
+}

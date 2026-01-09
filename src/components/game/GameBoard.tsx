@@ -242,7 +242,7 @@ export default function GameBoard({ game, onAddGoal, isViewer = false }: GameBoa
     const isMatchPoint = game.score[0] === targetScore - 1 || game.score[1] === targetScore - 1;
 
     return (
-        <div className={`${styles.container} ${isViewer ? styles.viewerMode : ''} ${isViewer && isPortrait ? styles.forcedLandscape : ''}`}>
+        <div className={`${styles.container} ${styles.hostLandscapeMode} ${isPortrait ? styles.forcedLandscape : ''}`}>
             {/* Match Point Flames */}
             {isMatchPoint && <MatchPointFlames />}
 
