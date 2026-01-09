@@ -68,8 +68,12 @@ export function calculateAdvancedStats(
     games: Game[],
     userId: string
 ): AdvancedStats {
-    // Filtrer les matchs complétés uniquement
-    const completedGames = games.filter(g => g.status === 'completed');
+    // Filtrer les matchs complétés uniquement et exclure les parties avec invités
+    const completedGames = games.filter(g => {
+        if (g.status !== 'completed') return false;
+        if (g.isGuestGame) return false; // Exclude guest games
+        return true;
+    });
 
     if (completedGames.length === 0) {
         return getEmptyStats();

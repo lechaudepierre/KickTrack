@@ -41,6 +41,7 @@ export interface Game {
     playerIds?: string[]; // For easier querying
     hostId: string;
     sessionId?: string;
+    isGuestGame?: boolean; // True if game contains guest players (won't affect stats)
 }
 
 export type GameFormat = '1v1' | '2v2';

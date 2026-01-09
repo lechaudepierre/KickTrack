@@ -180,7 +180,7 @@ export async function startGame(
         gameId: gameRef.id,
         venueId: session.venueId || 'unknown',
         venueName: session.venueName || 'Unknown Venue',
-        gameType: targetScore === 6 ? '6' : '11', // Map targetScore to gameType
+        gameType: targetScore === 6 ? '6' : '11',
         teams: sanitizedTeams,
         score: [0, 0],
         multiplier: 1,
@@ -191,26 +191,17 @@ export async function startGame(
         startedAt: new Date(),
         playerIds: sanitizedTeams.flatMap(t => t.players.map(p => p.userId || '')).filter(id => id !== ''),
         hostId: session.hostId,
-        sessionId: session.sessionId
+        sessionId: session.sessionId,
+        isGuestGame: hasGuestPlayers // Mark guest games
     };
 
-    // Only save to Firestore if there are NO guest players
-    if (!hasGuestPlayers) {
-        await setDoc(gameRef, game);
+    await setDoc(gameRef, game);
 
-        // Update session status and store gameId
-        await updateDoc(sessionRef, {
-            status: 'active',
-            gameId: gameRef.id
-        });
-    } else {
-        console.log('Game contains guest players - not saving to Firestore');
-        // For guest games, we still update the session but don't create a game document
-        await updateDoc(sessionRef, {
-            status: 'active',
-            gameId: gameRef.id // Keep the ID for local tracking
-        });
-    }
+    // Update session status and store gameId
+    await updateDoc(sessionRef, {
+        status: 'active',
+        gameId: gameRef.id
+    });
 
     return game;
 }
