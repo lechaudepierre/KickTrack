@@ -27,6 +27,18 @@ export interface User {
         favoriteVenue?: string;
         notifications?: boolean;
     };
+    friends?: string[]; // Array of userId
+    friendRequestsReceived?: string[]; // Array of userId who sent requests
+    friendRequestsSent?: string[]; // Array of userId to whom requests were sent
+}
+
+export interface FriendRequest {
+    fromUserId: string;
+    fromUsername: string;
+    toUserId: string;
+    toUsername: string;
+    createdAt: Date;
+    status: 'pending' | 'accepted' | 'rejected';
 }
 
 export interface UserInput {

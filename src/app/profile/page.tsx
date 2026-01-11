@@ -6,6 +6,7 @@ import { registerComplete, checkUsernameAvailable, updateUsername } from '@/lib/
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getUserGames } from '@/lib/firebase/games';
 import { getVenues } from '@/lib/firebase/firestore';
+import { getFriendRequestCount } from '@/lib/firebase/friends';
 import { Game, Venue } from '@/types';
 import BottomNav from '@/components/common/BottomNav';
 import { calculateAdvancedStats, getPositionLabel, AdvancedStats } from '@/lib/utils/statsCalculator';
@@ -20,7 +21,8 @@ import {
     ArrowRightOnRectangleIcon,
     InformationCircleIcon,
     PencilIcon,
-    XMarkIcon
+    XMarkIcon,
+    UserPlusIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 
@@ -49,6 +51,9 @@ export default function ProfilePage() {
     const [isUpdating, setIsUpdating] = useState(false);
     const [updateError, setUpdateError] = useState('');
 
+    // Friend requests count
+    const [friendRequestsCount, setFriendRequestsCount] = useState(0);
+
     useEffect(() => {
         const unsubscribe = initialize();
         return () => {
@@ -66,8 +71,19 @@ export default function ProfilePage() {
         if (user) {
             loadGames();
             loadVenues();
+            loadFriendRequestsCount();
         }
     }, [user]);
+
+    const loadFriendRequestsCount = async () => {
+        if (!user) return;
+        try {
+            const count = await getFriendRequestCount(user.userId);
+            setFriendRequestsCount(count);
+        } catch (error) {
+            console.error('Error loading friend requests count:', error);
+        }
+    };
 
     // Recalculate stats when venue filter changes
     useEffect(() => {
@@ -217,9 +233,17 @@ export default function ProfilePage() {
             <div className={styles.contentWrapper}>
                 <div className={styles.header}>
                     <h1 className={styles.title}>Mes Stats</h1>
-                    <button onClick={handleLogout} className={styles.logoutBtn}>
-                        <ArrowRightOnRectangleIcon className={styles.logoutIcon} />
-                    </button>
+                    <div className={styles.headerActions}>
+                        <button onClick={() => router.push('/friends')} className={styles.friendRequestsBtn}>
+                            <UserPlusIcon className={styles.logoutIcon} />
+                            {friendRequestsCount > 0 && (
+                                <span className={styles.friendRequestsBadge}>{friendRequestsCount}</span>
+                            )}
+                        </button>
+                        <button onClick={handleLogout} className={styles.logoutBtn}>
+                            <ArrowRightOnRectangleIcon className={styles.logoutIcon} />
+                        </button>
+                    </div>
                 </div>
 
                 <div className={styles.profileHeader}>

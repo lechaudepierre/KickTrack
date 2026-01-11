@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getVenues } from '@/lib/firebase/firestore';
-import { getVenueLeaderboard, getGlobalLeaderboard, LeaderboardEntry } from '@/lib/firebase/games';
+import { getVenueLeaderboard, getGlobalLeaderboard, getFriendsLeaderboard, LeaderboardEntry } from '@/lib/firebase/games';
+import { getFriends } from '@/lib/firebase/friends';
 import { Venue } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import BottomNav from '@/components/common/BottomNav';
@@ -12,26 +13,42 @@ import {
     ArrowLeftIcon,
     TrophyIcon,
     ChevronDownIcon,
-    MapPinIcon
+    MapPinIcon,
+    UsersIcon,
+    GlobeAltIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 
+type FilterType = 'general' | 'friends';
+
 export default function LeaderboardPage() {
     const router = useRouter();
-    const { user: currentUser } = useAuthStore();
+    const { user: currentUser, initialize } = useAuthStore();
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [venues, setVenues] = useState<Venue[]>([]);
     const [selectedVenue, setSelectedVenue] = useState<string>('all');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
+    // Filter type state
+    const [filterType, setFilterType] = useState<FilterType>('general');
+    const [friendIds, setFriendIds] = useState<string[]>([]);
+
+    useEffect(() => {
+        const unsubscribe = initialize();
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, [initialize]);
+
     useEffect(() => {
         loadVenues();
-    }, []);
+        loadFriendIds();
+    }, [currentUser]);
 
     useEffect(() => {
         loadLeaderboard();
-    }, [selectedVenue]);
+    }, [selectedVenue, filterType, friendIds]);
 
     const loadVenues = async () => {
         try {
@@ -42,10 +59,24 @@ export default function LeaderboardPage() {
         }
     };
 
+    const loadFriendIds = async () => {
+        if (!currentUser) return;
+        try {
+            const friends = await getFriends(currentUser.userId);
+            // Include current user in the list for friends leaderboard
+            setFriendIds([currentUser.userId, ...friends.map(f => f.userId)]);
+        } catch (error) {
+            console.error('Error loading friends:', error);
+        }
+    };
+
     const loadLeaderboard = async () => {
         setIsLoading(true);
         try {
-            if (selectedVenue === 'all') {
+            if (filterType === 'friends') {
+                const data = await getFriendsLeaderboard(friendIds);
+                setLeaderboard(data);
+            } else if (selectedVenue === 'all') {
                 const data = await getGlobalLeaderboard();
                 setLeaderboard(data);
             } else {
@@ -79,39 +110,59 @@ export default function LeaderboardPage() {
                     <h1 className={styles.title}>Classement</h1>
                 </div>
 
-                {/* Venue Filter Dropdown */}
-                <div className={styles.filterSection}>
-                    <div className={styles.dropdownContainer}>
-                        <button
-                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className={styles.dropdownButton}
-                        >
-                            <MapPinIcon className="w-5 h-5" />
-                            <span>{getSelectedVenueName()}</span>
-                            <ChevronDownIcon className={`w-5 h-5 ${styles.chevron} ${isDropdownOpen ? styles.chevronOpen : ''}`} />
-                        </button>
-
-                        {isDropdownOpen && (
-                            <div className={styles.dropdownMenu}>
-                                <button
-                                    onClick={() => handleVenueSelect('all')}
-                                    className={`${styles.dropdownItem} ${selectedVenue === 'all' ? styles.dropdownItemActive : ''}`}
-                                >
-                                    Tous les stades
-                                </button>
-                                {venues.map(venue => (
-                                    <button
-                                        key={venue.venueId}
-                                        onClick={() => handleVenueSelect(venue.venueId)}
-                                        className={`${styles.dropdownItem} ${selectedVenue === venue.venueId ? styles.dropdownItemActive : ''}`}
-                                    >
-                                        {venue.name}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                {/* Filter Type Tabs */}
+                <div className={styles.filterTabs}>
+                    <button
+                        onClick={() => setFilterType('general')}
+                        className={`${styles.filterTab} ${filterType === 'general' ? styles.filterTabActive : ''}`}
+                    >
+                        <GlobeAltIcon className="w-5 h-5" />
+                        <span>General</span>
+                    </button>
+                    <button
+                        onClick={() => setFilterType('friends')}
+                        className={`${styles.filterTab} ${filterType === 'friends' ? styles.filterTabActive : ''}`}
+                    >
+                        <UsersIcon className="w-5 h-5" />
+                        <span>Amis</span>
+                    </button>
                 </div>
+
+                {/* Venue Filter Dropdown - Only show for general filter */}
+                {filterType === 'general' && (
+                    <div className={styles.filterSection}>
+                        <div className={styles.dropdownContainer}>
+                            <button
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                className={styles.dropdownButton}
+                            >
+                                <MapPinIcon className="w-5 h-5" />
+                                <span>{getSelectedVenueName()}</span>
+                                <ChevronDownIcon className={`w-5 h-5 ${styles.chevron} ${isDropdownOpen ? styles.chevronOpen : ''}`} />
+                            </button>
+
+                            {isDropdownOpen && (
+                                <div className={styles.dropdownMenu}>
+                                    <button
+                                        onClick={() => handleVenueSelect('all')}
+                                        className={`${styles.dropdownItem} ${selectedVenue === 'all' ? styles.dropdownItemActive : ''}`}
+                                    >
+                                        Tous les stades
+                                    </button>
+                                    {venues.map(venue => (
+                                        <button
+                                            key={venue.venueId}
+                                            onClick={() => handleVenueSelect(venue.venueId)}
+                                            className={`${styles.dropdownItem} ${selectedVenue === venue.venueId ? styles.dropdownItemActive : ''}`}
+                                        >
+                                            {venue.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {isLoading ? (
                     <div className="flex justify-center py-12">
@@ -119,7 +170,10 @@ export default function LeaderboardPage() {
                     </div>
                 ) : !hasData ? (
                     <div className={styles.emptyState}>
-                        Aucun classement disponible pour ce stade
+                        {filterType === 'friends'
+                            ? 'Ajoute des amis pour voir leur classement !'
+                            : 'Aucun classement disponible pour ce stade'
+                        }
                     </div>
                 ) : (
                     <>

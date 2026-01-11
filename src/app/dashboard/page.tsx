@@ -113,15 +113,12 @@ export default function DashboardPage() {
 
                     {/* Small Actions */}
                     <div className={styles.smallActions}>
-                        <button
-                            onClick={() => alert('Fonctionnalité bientôt disponible !')}
-                            className={styles.smallAction}
-                        >
+                        <Link href="/friends" className={styles.smallAction}>
                             <div className={styles.smallActionIconWrapper}>
                                 <UserPlusIcon className={styles.smallActionIcon} />
                             </div>
                             <span className={styles.smallActionTitle}>+ Ami</span>
-                        </button>
+                        </Link>
 
                         <Link href="/venues" className={styles.smallAction}>
                             <div className={styles.smallActionIconWrapper}>

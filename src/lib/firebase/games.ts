@@ -571,6 +571,95 @@ export async function getVenueLeaderboard(venueId: string): Promise<VenueLeaderb
     return leaderboard;
 }
 
+// Get friends leaderboard (only friends stats)
+export async function getFriendsLeaderboard(friendIds: string[]): Promise<LeaderboardEntry[]> {
+    if (friendIds.length === 0) return [];
+
+    const db = getFirebaseDb();
+
+    // Get all completed games
+    const q = query(
+        collection(db, GAMES_COLLECTION),
+        where('status', '==', 'completed')
+    );
+
+    const snapshot = await getDocs(q);
+    const games = snapshot.docs.map(doc => doc.data() as Game);
+
+    // Calculate stats per player (only for friends)
+    const playerStats = new Map<string, LeaderboardEntry>();
+
+    for (const game of games) {
+        if (game.winner === undefined) continue;
+        if (game.isGuestGame) continue;
+
+        const hasGuestPlayers = game.teams?.some(team =>
+            team.players?.some(player => player.userId.startsWith('guest_'))
+        );
+        if (hasGuestPlayers) continue;
+
+        for (let teamIndex = 0; teamIndex < game.teams.length; teamIndex++) {
+            const team = game.teams[teamIndex];
+            const isWinner = teamIndex === game.winner;
+
+            for (const player of team.players) {
+                // Only include friends
+                if (!friendIds.includes(player.userId)) continue;
+                if (player.userId.startsWith('guest_')) continue;
+
+                const existing = playerStats.get(player.userId) || {
+                    userId: player.userId,
+                    username: player.username,
+                    wins: 0,
+                    losses: 0,
+                    totalGames: 0,
+                    goalsScored: 0,
+                    winRate: 0
+                };
+
+                existing.totalGames++;
+                if (isWinner) {
+                    existing.wins++;
+                } else {
+                    existing.losses++;
+                }
+
+                const playerGoals = game.goals.filter(g => g.scoredBy === player.userId).length;
+                existing.goalsScored += playerGoals;
+                existing.winRate = existing.totalGames > 0 ? existing.wins / existing.totalGames : 0;
+
+                playerStats.set(player.userId, existing);
+            }
+        }
+    }
+
+    const leaderboard = Array.from(playerStats.values());
+
+    // Fetch current usernames
+    if (leaderboard.length > 0) {
+        const userIds = leaderboard.map(e => e.userId);
+        for (let i = 0; i < userIds.length; i += 30) {
+            const batch = userIds.slice(i, i + 30);
+            const usersQ = query(collection(db, 'users'), where('userId', 'in', batch));
+            const usersSnapshot = await getDocs(usersQ);
+            usersSnapshot.forEach(doc => {
+                const userData = doc.data();
+                const entry = playerStats.get(doc.id);
+                if (entry) {
+                    entry.username = userData.username;
+                }
+            });
+        }
+    }
+
+    leaderboard.sort((a, b) => {
+        if (b.wins !== a.wins) return b.wins - a.wins;
+        return b.winRate - a.winRate;
+    });
+
+    return leaderboard;
+}
+
 // Get global leaderboard from all completed games
 export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
     const db = getFirebaseDb();

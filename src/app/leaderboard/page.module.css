@@ -289,9 +289,42 @@
 
 }
 
+/* Filter Tabs */
+.filterTabs {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.filterTab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-beige);
+    border: 3px solid #333333;
+    border-radius: var(--radius-md);
+    color: var(--color-text-dark);
+    font-weight: 700;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.filterTab:hover {
+    background: #f5e6c0;
+}
+
+.filterTabActive {
+    background: #4CAF50;
+    color: #333333;
+}
+
 /* Filter Section */
 .filterSection {
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
 }
 
 .dropdownContainer {
