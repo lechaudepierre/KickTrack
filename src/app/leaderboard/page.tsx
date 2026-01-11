@@ -74,7 +74,7 @@ export default function LeaderboardPage() {
         setIsLoading(true);
         try {
             if (filterType === 'friends') {
-                const data = await getFriendsLeaderboard(friendIds);
+                const data = await getFriendsLeaderboard(friendIds, selectedVenue);
                 setLeaderboard(data);
             } else if (selectedVenue === 'all') {
                 const data = await getGlobalLeaderboard();
@@ -128,41 +128,39 @@ export default function LeaderboardPage() {
                     </button>
                 </div>
 
-                {/* Venue Filter Dropdown - Only show for general filter */}
-                {filterType === 'general' && (
-                    <div className={styles.filterSection}>
-                        <div className={styles.dropdownContainer}>
-                            <button
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                className={styles.dropdownButton}
-                            >
-                                <MapPinIcon className="w-5 h-5" />
-                                <span>{getSelectedVenueName()}</span>
-                                <ChevronDownIcon className={`w-5 h-5 ${styles.chevron} ${isDropdownOpen ? styles.chevronOpen : ''}`} />
-                            </button>
+                {/* Venue Filter Dropdown - Show for both filters */}
+                <div className={styles.filterSection}>
+                    <div className={styles.dropdownContainer}>
+                        <button
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            className={styles.dropdownButton}
+                        >
+                            <MapPinIcon className="w-5 h-5" />
+                            <span>{getSelectedVenueName()}</span>
+                            <ChevronDownIcon className={`w-5 h-5 ${styles.chevron} ${isDropdownOpen ? styles.chevronOpen : ''}`} />
+                        </button>
 
-                            {isDropdownOpen && (
-                                <div className={styles.dropdownMenu}>
+                        {isDropdownOpen && (
+                            <div className={styles.dropdownMenu}>
+                                <button
+                                    onClick={() => handleVenueSelect('all')}
+                                    className={`${styles.dropdownItem} ${selectedVenue === 'all' ? styles.dropdownItemActive : ''}`}
+                                >
+                                    Tous les stades
+                                </button>
+                                {venues.map(venue => (
                                     <button
-                                        onClick={() => handleVenueSelect('all')}
-                                        className={`${styles.dropdownItem} ${selectedVenue === 'all' ? styles.dropdownItemActive : ''}`}
+                                        key={venue.venueId}
+                                        onClick={() => handleVenueSelect(venue.venueId)}
+                                        className={`${styles.dropdownItem} ${selectedVenue === venue.venueId ? styles.dropdownItemActive : ''}`}
                                     >
-                                        Tous les stades
+                                        {venue.name}
                                     </button>
-                                    {venues.map(venue => (
-                                        <button
-                                            key={venue.venueId}
-                                            onClick={() => handleVenueSelect(venue.venueId)}
-                                            className={`${styles.dropdownItem} ${selectedVenue === venue.venueId ? styles.dropdownItemActive : ''}`}
-                                        >
-                                            {venue.name}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
 
                 {isLoading ? (
                     <div className="flex justify-center py-12">

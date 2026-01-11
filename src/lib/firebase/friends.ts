@@ -28,10 +28,13 @@ export async function searchUsersByUsername(searchQuery: string, currentUserId: 
 
     const users = snapshot.docs
         .map(doc => doc.data() as User)
-        .filter(user =>
-            user.userId !== currentUserId &&
-            user.usernameLowercase.includes(q)
-        )
+        .filter(user => {
+            if (user.userId === currentUserId) return false;
+            // Check usernameLowercase first, fallback to username.toLowerCase()
+            const searchableUsername = user.usernameLowercase || user.username?.toLowerCase() || '';
+            // Search by prefix (starts with) instead of contains
+            return searchableUsername.startsWith(q);
+        })
         .slice(0, limitCount);
 
     return users;

@@ -318,8 +318,8 @@
 }
 
 .filterTabActive {
-    background: #4CAF50;
-    color: #333333;
+    background: #4CAF50 !important;
+    color: #333333 !important;
 }
 
 /* Filter Section */

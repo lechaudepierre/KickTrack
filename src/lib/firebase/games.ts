@@ -572,16 +572,25 @@ export async function getVenueLeaderboard(venueId: string): Promise<VenueLeaderb
 }
 
 // Get friends leaderboard (only friends stats)
-export async function getFriendsLeaderboard(friendIds: string[]): Promise<LeaderboardEntry[]> {
+export async function getFriendsLeaderboard(friendIds: string[], venueId?: string): Promise<LeaderboardEntry[]> {
     if (friendIds.length === 0) return [];
 
     const db = getFirebaseDb();
 
-    // Get all completed games
-    const q = query(
-        collection(db, GAMES_COLLECTION),
-        where('status', '==', 'completed')
-    );
+    // Get all completed games (optionally filtered by venue)
+    let q;
+    if (venueId && venueId !== 'all') {
+        q = query(
+            collection(db, GAMES_COLLECTION),
+            where('status', '==', 'completed'),
+            where('venueId', '==', venueId)
+        );
+    } else {
+        q = query(
+            collection(db, GAMES_COLLECTION),
+            where('status', '==', 'completed')
+        );
+    }
 
     const snapshot = await getDocs(q);
     const games = snapshot.docs.map(doc => doc.data() as Game);
