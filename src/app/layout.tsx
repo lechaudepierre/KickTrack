@@ -17,8 +17,8 @@ export const metadata: Metadata = {
         title: "KickTracker",
     },
     icons: {
-        icon: "/icons/icon-192x192.png",
-        apple: "/icons/icon-192x192.png",
+        icon: "/icons/kicktracker_logo.png",
+        apple: "/icons/kicktracker_logo.png",
     },
 };
 
