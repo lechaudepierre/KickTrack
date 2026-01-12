@@ -16,10 +16,6 @@ export const metadata: Metadata = {
         statusBarStyle: "black-translucent",
         title: "KickTracker",
     },
-    icons: {
-        icon: "/icons/kicktracker_logo.png",
-        apple: "/icons/kicktracker_logo.png",
-    },
 };
 
 export const viewport: Viewport = {
