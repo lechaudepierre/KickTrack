@@ -349,30 +349,83 @@ export async function autoAssignTeams(tournamentId: string): Promise<void> {
     });
 }
 
-// Generate Round Robin matches
+// Generate Round Robin matches with proper scheduling
+// Uses circle method to ensure fair distribution of matches
 function generateRoundRobinMatches(teams: TournamentTeam[]): TournamentMatch[] {
-    const matches: TournamentMatch[] = [];
     const n = teams.length;
 
-    // Round-robin algorithm: each team plays every other team once
-    for (let i = 0; i < n - 1; i++) {
-        for (let j = i + 1; j < n; j++) {
-            matches.push({
-                matchId: generateId(),
-                team1: teams[i],
-                team2: teams[j],
-                status: 'pending'
-            });
-        }
-    }
-
-    // Shuffle matches to randomize order
-    for (let i = matches.length - 1; i > 0; i--) {
+    // Shuffle teams first for random seeding
+    const shuffledTeams = [...teams];
+    for (let i = shuffledTeams.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [matches[i], matches[j]] = [matches[j], matches[i]];
+        [shuffledTeams[i], shuffledTeams[j]] = [shuffledTeams[j], shuffledTeams[i]];
     }
 
-    return matches;
+    // If odd number, add a "bye" placeholder
+    const hasOddTeams = n % 2 !== 0;
+    const teamsList = hasOddTeams
+        ? [...shuffledTeams, { teamId: 'BYE', name: 'BYE', players: [] }]
+        : shuffledTeams;
+
+    const numTeams = teamsList.length;
+    const numRounds = numTeams - 1;
+    const matchesPerRound = numTeams / 2;
+
+    const rounds: TournamentMatch[][] = [];
+
+    // Circle method algorithm for round-robin scheduling
+    // This ensures each team plays once per round and doesn't play back-to-back matches
+    for (let round = 0; round < numRounds; round++) {
+        const roundMatches: TournamentMatch[] = [];
+
+        for (let match = 0; match < matchesPerRound; match++) {
+            // Calculate team indices using circle method
+            let home: number;
+            let away: number;
+
+            if (match === 0) {
+                // First team is fixed
+                home = 0;
+                away = numTeams - 1 - round;
+                if (away === 0) away = numTeams - 1;
+            } else {
+                // Rotate other teams
+                home = ((numTeams - 1 - round) + match) % (numTeams - 1);
+                if (home === 0) home = numTeams - 1;
+                away = ((numTeams - 1 - round) - match + (numTeams - 1)) % (numTeams - 1);
+                if (away === 0) away = numTeams - 1;
+            }
+
+            // Ensure home < away to avoid duplicates
+            if (home > away) {
+                [home, away] = [away, home];
+            }
+
+            const team1 = teamsList[home];
+            const team2 = teamsList[away];
+
+            // Skip bye matches
+            if (team1.teamId !== 'BYE' && team2.teamId !== 'BYE') {
+                roundMatches.push({
+                    matchId: generateId(),
+                    team1,
+                    team2,
+                    status: 'pending'
+                });
+            }
+        }
+
+        rounds.push(roundMatches);
+    }
+
+    // Shuffle the order of rounds to add more randomness
+    for (let i = rounds.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rounds[i], rounds[j]] = [rounds[j], rounds[i]];
+    }
+
+    // Flatten into final match list
+    return rounds.flat();
 }
 
 // Generate Bracket matches with byes
@@ -395,38 +448,6 @@ function generateBracketMatches(teams: TournamentTeam[]): BracketRound[] {
         [shuffledTeams[i], shuffledTeams[j]] = [shuffledTeams[j], shuffledTeams[i]];
     }
 
-    // Create first round with byes
-    const firstRoundMatches: TournamentMatch[] = [];
-    let teamIndex = 0;
-    let byesRemaining = numByes;
-
-    for (let i = 0; i < bracketSize / 2; i++) {
-        if (byesRemaining > 0 && teamIndex < shuffledTeams.length) {
-            // This team gets a bye
-            firstRoundMatches.push({
-                matchId: generateId(),
-                team1: shuffledTeams[teamIndex],
-                team2: shuffledTeams[teamIndex], // Same team = bye
-                winnerId: shuffledTeams[teamIndex].teamId,
-                status: 'bye',
-                round: 1,
-                matchNumber: i + 1
-            });
-            teamIndex++;
-            byesRemaining--;
-        } else if (teamIndex + 1 < shuffledTeams.length) {
-            firstRoundMatches.push({
-                matchId: generateId(),
-                team1: shuffledTeams[teamIndex],
-                team2: shuffledTeams[teamIndex + 1],
-                status: 'pending',
-                round: 1,
-                matchNumber: i + 1
-            });
-            teamIndex += 2;
-        }
-    }
-
     // Determine round names
     const getRoundName = (roundNum: number, totalRounds: number): string => {
         const roundsFromFinal = totalRounds - roundNum;
@@ -447,21 +468,89 @@ function generateBracketMatches(teams: TournamentTeam[]): BracketRound[] {
         temp /= 2;
     }
 
+    // Create first round with byes distributed evenly
+    const firstRoundMatches: TournamentMatch[] = [];
+    let teamIndex = 0;
+
+    // Distribute byes evenly across the bracket for fairness
+    // Byes should be spread out, not all at the beginning
+    const byePositions: Set<number> = new Set();
+    const totalFirstRoundMatches = bracketSize / 2;
+
+    // Calculate positions for byes (distribute them evenly)
+    if (numByes > 0) {
+        const spacing = totalFirstRoundMatches / numByes;
+        for (let i = 0; i < numByes; i++) {
+            byePositions.add(Math.floor(i * spacing));
+        }
+    }
+
+    for (let i = 0; i < totalFirstRoundMatches; i++) {
+        if (byePositions.has(i) && teamIndex < shuffledTeams.length) {
+            // This team gets a bye
+            firstRoundMatches.push({
+                matchId: generateId(),
+                team1: shuffledTeams[teamIndex],
+                team2: { teamId: '', name: '-', players: [] }, // Empty opponent for bye
+                winnerId: shuffledTeams[teamIndex].teamId,
+                status: 'bye',
+                round: 1,
+                matchNumber: i + 1
+            });
+            teamIndex++;
+        } else if (teamIndex + 1 < shuffledTeams.length) {
+            firstRoundMatches.push({
+                matchId: generateId(),
+                team1: shuffledTeams[teamIndex],
+                team2: shuffledTeams[teamIndex + 1],
+                status: 'pending',
+                round: 1,
+                matchNumber: i + 1
+            });
+            teamIndex += 2;
+        } else if (teamIndex < shuffledTeams.length) {
+            // Last team gets a bye if odd number left
+            firstRoundMatches.push({
+                matchId: generateId(),
+                team1: shuffledTeams[teamIndex],
+                team2: { teamId: '', name: '-', players: [] },
+                winnerId: shuffledTeams[teamIndex].teamId,
+                status: 'bye',
+                round: 1,
+                matchNumber: i + 1
+            });
+            teamIndex++;
+        }
+    }
+
     rounds.push({
         roundNumber: 1,
         roundName: getRoundName(1, totalRounds),
         matches: firstRoundMatches
     });
 
-    // Create subsequent rounds (empty, will be filled as matches complete)
+    // Create subsequent rounds
     let matchesInRound = bracketSize / 4;
     for (let roundNum = 2; roundNum <= totalRounds; roundNum++) {
         const roundMatches: TournamentMatch[] = [];
+        const prevRound = rounds[roundNum - 2];
+
         for (let i = 0; i < matchesInRound; i++) {
+            // Check if this match should have teams from byes
+            const match1Index = i * 2;
+            const match2Index = i * 2 + 1;
+
+            const prevMatch1 = prevRound.matches[match1Index];
+            const prevMatch2 = prevRound.matches[match2Index];
+
+            // Get team from bye or TBD
+            const team1 = prevMatch1?.status === 'bye' ? prevMatch1.team1 : { teamId: '', name: 'TBD', players: [] };
+            const team2 = prevMatch2?.status === 'bye' ? prevMatch2.team1 : { teamId: '', name: 'TBD', players: [] };
+
             roundMatches.push({
                 matchId: generateId(),
-                team1: { teamId: '', name: 'TBD', players: [] },
-                team2: { teamId: '', name: 'TBD', players: [] },
+                team1,
+                team2,
                 status: 'pending',
                 round: roundNum,
                 matchNumber: i + 1
@@ -659,27 +748,44 @@ async function advanceBracket(
 ): Promise<Partial<Tournament>> {
     if (!tournament.bracket) return { matches: updatedMatches };
 
-    const updatedBracket = [...tournament.bracket];
-    let completedMatch: TournamentMatch | undefined;
+    // Deep copy the bracket to avoid mutation issues
+    const updatedBracket: BracketRound[] = tournament.bracket.map(round => ({
+        ...round,
+        matches: round.matches.map(m => ({ ...m }))
+    }));
+
     let roundIndex = -1;
     let matchIndex = -1;
 
-    // Find the completed match
+    // Find the completed match in bracket
     for (let r = 0; r < updatedBracket.length; r++) {
         const idx = updatedBracket[r].matches.findIndex(m => m.matchId === completedMatchId);
         if (idx !== -1) {
             roundIndex = r;
             matchIndex = idx;
-            completedMatch = updatedBracket[r].matches[idx];
             break;
         }
     }
 
-    if (!completedMatch || roundIndex === -1) {
+    if (roundIndex === -1 || matchIndex === -1) {
         return { matches: updatedMatches, bracket: updatedBracket };
     }
 
+    // Get the match data from updatedMatches (which has the score and winnerId)
+    const completedMatchData = updatedMatches.find(m => m.matchId === completedMatchId);
+    if (!completedMatchData) {
+        return { matches: updatedMatches, bracket: updatedBracket };
+    }
+
+    // Update the match in bracket with completed data
+    updatedBracket[roundIndex].matches[matchIndex] = {
+        ...updatedBracket[roundIndex].matches[matchIndex],
+        ...completedMatchData,
+        status: 'completed'
+    };
+
     // Find the winner team
+    const completedMatch = updatedBracket[roundIndex].matches[matchIndex];
     const winnerTeam = completedMatch.team1.teamId === winnerId
         ? completedMatch.team1
         : completedMatch.team2;
@@ -709,10 +815,9 @@ async function advanceBracket(
     // Check if tournament is complete (final match completed)
     const finalRound = updatedBracket[updatedBracket.length - 1];
     const finalMatch = finalRound.matches[0];
-    const isComplete = finalMatch.status === 'completed' ||
-        (completedMatchId === finalMatch.matchId);
+    const isComplete = completedMatchId === finalMatch.matchId;
 
-    // Update matches array from bracket
+    // Flatten the bracket to update matches array
     const flatMatches = updatedBracket.flatMap(round => round.matches);
 
     return {

@@ -233,109 +233,188 @@ export default function TournamentLivePage() {
                             fontSize: '1rem',
                             fontWeight: 700,
                             color: 'var(--color-text-dark)',
-                            marginBottom: 'var(--spacing-sm)',
+                            marginBottom: 'var(--spacing-md)',
                             textAlign: 'center'
                         }}>
                             Bracket
                         </h2>
                         <div style={{
                             overflowX: 'auto',
-                            paddingBottom: 'var(--spacing-sm)'
+                            paddingBottom: 'var(--spacing-md)'
                         }}>
                             <div style={{
                                 display: 'flex',
-                                gap: 'var(--spacing-sm)',
+                                alignItems: 'center',
                                 minWidth: 'fit-content',
                                 justifyContent: 'center',
                                 padding: '0 var(--spacing-sm)'
                             }}>
-                                {tournament.bracket.map((round) => (
-                                    <div key={round.roundNumber} style={{
-                                        minWidth: '140px',
-                                        maxWidth: '160px',
-                                        flex: '0 0 auto'
-                                    }}>
-                                        <p style={{
-                                            fontSize: '0.7rem',
-                                            fontWeight: 700,
-                                            color: 'rgba(51,51,51,0.6)',
-                                            marginBottom: '8px',
-                                            textAlign: 'center',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.5px'
-                                        }}>
-                                            {round.roundName}
-                                        </p>
-                                        <div style={{
+                                {tournament.bracket.map((round, roundIdx) => {
+                                    // Calculate height for proper vertical alignment
+                                    const matchHeight = 52; // Height of one match card
+                                    const baseGap = 8;
+                                    const totalMatchHeight = matchHeight + baseGap;
+
+                                    return (
+                                        <div key={round.roundNumber} style={{
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            gap: '8px',
-                                            justifyContent: 'space-around',
-                                            minHeight: round.roundNumber === 1 ? 'auto' : `${round.matches.length * 80}px`
+                                            alignItems: 'center'
                                         }}>
-                                            {round.matches.map((match) => (
-                                                <div
-                                                    key={match.matchId}
-                                                    style={{
-                                                        background: match.status === 'bye' ? 'rgba(51,51,51,0.05)' : 'var(--color-beige)',
-                                                        border: `2px solid ${match.status === 'in_progress' ? '#FFD700' : '#333333'}`,
-                                                        borderRadius: 'var(--radius-sm)',
-                                                        padding: '6px 8px',
-                                                        opacity: match.status === 'bye' ? 0.5 : 1
-                                                    }}
-                                                >
-                                                    <div style={{
-                                                        display: 'flex',
-                                                        justifyContent: 'space-between',
-                                                        alignItems: 'center',
-                                                        padding: '3px 0',
-                                                        borderBottom: '1px solid rgba(51,51,51,0.1)',
-                                                        gap: '4px'
-                                                    }}>
-                                                        <span style={{
-                                                            fontSize: '0.7rem',
-                                                            fontWeight: match.winnerId === match.team1.teamId ? 700 : 500,
-                                                            color: match.winnerId === match.team1.teamId ? '#2ECC71' : 'var(--color-text-dark)',
-                                                            overflow: 'hidden',
-                                                            textOverflow: 'ellipsis',
-                                                            whiteSpace: 'nowrap',
-                                                            flex: 1,
-                                                            minWidth: 0
-                                                        }}>
-                                                            {match.team1.name || 'TBD'}
-                                                        </span>
-                                                        {match.score && (
-                                                            <span style={{ fontSize: '0.7rem', fontWeight: 700, flexShrink: 0 }}>{match.score[0]}</span>
-                                                        )}
-                                                    </div>
-                                                    <div style={{
-                                                        display: 'flex',
-                                                        justifyContent: 'space-between',
-                                                        alignItems: 'center',
-                                                        padding: '3px 0',
-                                                        gap: '4px'
-                                                    }}>
-                                                        <span style={{
-                                                            fontSize: '0.7rem',
-                                                            fontWeight: match.winnerId === match.team2.teamId ? 700 : 500,
-                                                            color: match.winnerId === match.team2.teamId ? '#2ECC71' : 'var(--color-text-dark)',
-                                                            overflow: 'hidden',
-                                                            textOverflow: 'ellipsis',
-                                                            whiteSpace: 'nowrap',
-                                                            flex: 1,
-                                                            minWidth: 0
-                                                        }}>
-                                                            {match.status === 'bye' ? '-' : (match.team2.name || 'TBD')}
-                                                        </span>
-                                                        {match.score && (
-                                                            <span style={{ fontSize: '0.7rem', fontWeight: 700, flexShrink: 0 }}>{match.score[1]}</span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
+                                            {/* Round title */}
+                                            <p style={{
+                                                fontSize: '0.65rem',
+                                                fontWeight: 700,
+                                                color: 'rgba(51,51,51,0.5)',
+                                                marginBottom: '12px',
+                                                textAlign: 'center',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '0.5px',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                {round.roundName}
+                                            </p>
+
+                                            {/* Matches container */}
+                                            <div style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                justifyContent: 'space-around',
+                                                height: `${tournament.bracket![0].matches.length * totalMatchHeight}px`,
+                                                gap: roundIdx === 0 ? `${baseGap}px` : '0'
+                                            }}>
+                                                {round.matches.map((match) => {
+                                                    const isBye = match.status === 'bye';
+                                                    const isInProgress = match.status === 'in_progress';
+                                                    const isCompleted = match.status === 'completed';
+                                                    const isReady = match.status === 'pending' && match.team1.teamId && match.team2.teamId;
+
+                                                    return (
+                                                        <div
+                                                            key={match.matchId}
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center'
+                                                            }}
+                                                        >
+                                                            {/* Connector line from previous round */}
+                                                            {roundIdx > 0 && (
+                                                                <div style={{
+                                                                    width: '12px',
+                                                                    height: '2px',
+                                                                    background: '#333333',
+                                                                    opacity: 0.3
+                                                                }} />
+                                                            )}
+
+                                                            {/* Match card */}
+                                                            <div style={{
+                                                                width: '120px',
+                                                                background: isBye
+                                                                    ? 'rgba(51,51,51,0.03)'
+                                                                    : isInProgress
+                                                                        ? 'rgba(255, 215, 0, 0.15)'
+                                                                        : isCompleted
+                                                                            ? 'var(--color-beige)'
+                                                                            : 'white',
+                                                                border: `2px solid ${isInProgress ? '#FFD700' : isReady ? '#2ECC71' : '#333333'}`,
+                                                                borderRadius: '6px',
+                                                                overflow: 'hidden',
+                                                                opacity: isBye ? 0.4 : 1,
+                                                                boxShadow: isInProgress ? '0 0 8px rgba(255, 215, 0, 0.3)' : 'none'
+                                                            }}>
+                                                                {/* Team 1 */}
+                                                                <div style={{
+                                                                    display: 'flex',
+                                                                    justifyContent: 'space-between',
+                                                                    alignItems: 'center',
+                                                                    padding: '5px 8px',
+                                                                    borderBottom: '1px solid rgba(51,51,51,0.1)',
+                                                                    background: match.winnerId === match.team1.teamId
+                                                                        ? 'rgba(46, 204, 113, 0.15)'
+                                                                        : 'transparent'
+                                                                }}>
+                                                                    <span style={{
+                                                                        fontSize: '0.65rem',
+                                                                        fontWeight: match.winnerId === match.team1.teamId ? 700 : 500,
+                                                                        color: match.winnerId === match.team1.teamId
+                                                                            ? '#27AE60'
+                                                                            : match.team1.teamId
+                                                                                ? 'var(--color-text-dark)'
+                                                                                : 'rgba(51,51,51,0.3)',
+                                                                        overflow: 'hidden',
+                                                                        textOverflow: 'ellipsis',
+                                                                        whiteSpace: 'nowrap',
+                                                                        flex: 1
+                                                                    }}>
+                                                                        {match.team1.name || 'TBD'}
+                                                                    </span>
+                                                                    {match.score && (
+                                                                        <span style={{
+                                                                            fontSize: '0.65rem',
+                                                                            fontWeight: 700,
+                                                                            marginLeft: '4px',
+                                                                            color: match.winnerId === match.team1.teamId ? '#27AE60' : '#333'
+                                                                        }}>
+                                                                            {match.score[0]}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+
+                                                                {/* Team 2 */}
+                                                                <div style={{
+                                                                    display: 'flex',
+                                                                    justifyContent: 'space-between',
+                                                                    alignItems: 'center',
+                                                                    padding: '5px 8px',
+                                                                    background: match.winnerId === match.team2.teamId
+                                                                        ? 'rgba(46, 204, 113, 0.15)'
+                                                                        : 'transparent'
+                                                                }}>
+                                                                    <span style={{
+                                                                        fontSize: '0.65rem',
+                                                                        fontWeight: match.winnerId === match.team2.teamId ? 700 : 500,
+                                                                        color: match.winnerId === match.team2.teamId
+                                                                            ? '#27AE60'
+                                                                            : (isBye || !match.team2.teamId)
+                                                                                ? 'rgba(51,51,51,0.3)'
+                                                                                : 'var(--color-text-dark)',
+                                                                        overflow: 'hidden',
+                                                                        textOverflow: 'ellipsis',
+                                                                        whiteSpace: 'nowrap',
+                                                                        flex: 1
+                                                                    }}>
+                                                                        {isBye ? '-' : (match.team2.name || 'TBD')}
+                                                                    </span>
+                                                                    {match.score && (
+                                                                        <span style={{
+                                                                            fontSize: '0.65rem',
+                                                                            fontWeight: 700,
+                                                                            marginLeft: '4px',
+                                                                            color: match.winnerId === match.team2.teamId ? '#27AE60' : '#333'
+                                                                        }}>
+                                                                            {match.score[1]}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Connector line to next round */}
+                                                            {roundIdx < tournament.bracket!.length - 1 && (
+                                                                <div style={{
+                                                                    width: '12px',
+                                                                    height: '2px',
+                                                                    background: '#333333',
+                                                                    opacity: 0.3
+                                                                }} />
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
