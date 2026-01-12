@@ -214,10 +214,29 @@ export async function removePlayerFromTournament(
 export async function startTeamSetup(tournamentId: string): Promise<void> {
     const db = getFirebaseDb();
     const tournamentRef = doc(db, TOURNAMENTS_COLLECTION, tournamentId);
+    const tournamentSnap = await getDoc(tournamentRef);
 
-    await updateDoc(tournamentRef, {
-        status: 'team_setup'
-    });
+    if (!tournamentSnap.exists()) throw new Error('Tournoi non trouve');
+
+    const tournament = tournamentSnap.data() as Tournament;
+
+    // For 1v1, auto-assign teams immediately (skip team creation step)
+    if (tournament.format === '1v1') {
+        const teams: TournamentTeam[] = tournament.players.map((player) => ({
+            teamId: generateId(),
+            name: player.username,
+            players: [player]
+        }));
+
+        await updateDoc(tournamentRef, {
+            status: 'team_setup',
+            teams
+        });
+    } else {
+        await updateDoc(tournamentRef, {
+            status: 'team_setup'
+        });
+    }
 }
 
 // Create a team

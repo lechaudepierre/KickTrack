@@ -190,11 +190,13 @@ export default function TournamentLivePage() {
                                         color: 'var(--color-text-dark)',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '8px'
+                                        gap: '8px',
+                                        minWidth: 0
                                     }}>
                                         <span style={{
                                             width: '20px',
                                             height: '20px',
+                                            flexShrink: 0,
                                             background: index === 0 ? '#FFD700' : 'rgba(51,51,51,0.1)',
                                             borderRadius: '50%',
                                             display: 'flex',
@@ -205,7 +207,13 @@ export default function TournamentLivePage() {
                                         }}>
                                             {index + 1}
                                         </span>
-                                        {standing.teamName}
+                                        <span style={{
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap'
+                                        }}>
+                                            {standing.teamName}
+                                        </span>
                                     </span>
                                     <span style={{ textAlign: 'center', fontSize: '0.875rem' }}>{standing.played}</span>
                                     <span style={{ textAlign: 'center', fontSize: '0.875rem', color: '#2ECC71', fontWeight: 600 }}>{standing.wins}</span>
@@ -220,87 +228,115 @@ export default function TournamentLivePage() {
 
                 {/* Bracket View */}
                 {tournament.mode === 'bracket' && tournament.bracket && (
-                    <div style={{ marginBottom: 'var(--spacing-lg)', overflowX: 'auto' }}>
+                    <div style={{ marginBottom: 'var(--spacing-lg)' }}>
                         <h2 style={{
                             fontSize: '1rem',
                             fontWeight: 700,
                             color: 'var(--color-text-dark)',
-                            marginBottom: 'var(--spacing-sm)'
+                            marginBottom: 'var(--spacing-sm)',
+                            textAlign: 'center'
                         }}>
                             Bracket
                         </h2>
                         <div style={{
-                            display: 'flex',
-                            gap: 'var(--spacing-md)',
-                            minWidth: 'fit-content'
+                            overflowX: 'auto',
+                            paddingBottom: 'var(--spacing-sm)'
                         }}>
-                            {tournament.bracket.map((round) => (
-                                <div key={round.roundNumber} style={{ minWidth: '200px' }}>
-                                    <p style={{
-                                        fontSize: '0.75rem',
-                                        fontWeight: 700,
-                                        color: 'rgba(51,51,51,0.6)',
-                                        marginBottom: '8px',
-                                        textAlign: 'center'
+                            <div style={{
+                                display: 'flex',
+                                gap: 'var(--spacing-sm)',
+                                minWidth: 'fit-content',
+                                justifyContent: 'center',
+                                padding: '0 var(--spacing-sm)'
+                            }}>
+                                {tournament.bracket.map((round) => (
+                                    <div key={round.roundNumber} style={{
+                                        minWidth: '140px',
+                                        maxWidth: '160px',
+                                        flex: '0 0 auto'
                                     }}>
-                                        {round.roundName}
-                                    </p>
-                                    <div style={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '8px'
-                                    }}>
-                                        {round.matches.map((match) => (
-                                            <div
-                                                key={match.matchId}
-                                                style={{
-                                                    background: match.status === 'bye' ? 'rgba(51,51,51,0.05)' : 'var(--color-beige)',
-                                                    border: `2px solid ${match.status === 'in_progress' ? '#FFD700' : '#333333'}`,
-                                                    borderRadius: 'var(--radius-sm)',
-                                                    padding: '8px',
-                                                    opacity: match.status === 'bye' ? 0.5 : 1
-                                                }}
-                                            >
-                                                <div style={{
-                                                    display: 'flex',
-                                                    justifyContent: 'space-between',
-                                                    alignItems: 'center',
-                                                    padding: '4px 0',
-                                                    borderBottom: '1px solid rgba(51,51,51,0.1)'
-                                                }}>
-                                                    <span style={{
-                                                        fontSize: '0.75rem',
-                                                        fontWeight: match.winnerId === match.team1.teamId ? 700 : 500,
-                                                        color: match.winnerId === match.team1.teamId ? '#2ECC71' : 'var(--color-text-dark)'
+                                        <p style={{
+                                            fontSize: '0.7rem',
+                                            fontWeight: 700,
+                                            color: 'rgba(51,51,51,0.6)',
+                                            marginBottom: '8px',
+                                            textAlign: 'center',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.5px'
+                                        }}>
+                                            {round.roundName}
+                                        </p>
+                                        <div style={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '8px',
+                                            justifyContent: 'space-around',
+                                            minHeight: round.roundNumber === 1 ? 'auto' : `${round.matches.length * 80}px`
+                                        }}>
+                                            {round.matches.map((match) => (
+                                                <div
+                                                    key={match.matchId}
+                                                    style={{
+                                                        background: match.status === 'bye' ? 'rgba(51,51,51,0.05)' : 'var(--color-beige)',
+                                                        border: `2px solid ${match.status === 'in_progress' ? '#FFD700' : '#333333'}`,
+                                                        borderRadius: 'var(--radius-sm)',
+                                                        padding: '6px 8px',
+                                                        opacity: match.status === 'bye' ? 0.5 : 1
+                                                    }}
+                                                >
+                                                    <div style={{
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center',
+                                                        padding: '3px 0',
+                                                        borderBottom: '1px solid rgba(51,51,51,0.1)',
+                                                        gap: '4px'
                                                     }}>
-                                                        {match.team1.name || 'TBD'}
-                                                    </span>
-                                                    {match.score && (
-                                                        <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{match.score[0]}</span>
-                                                    )}
-                                                </div>
-                                                <div style={{
-                                                    display: 'flex',
-                                                    justifyContent: 'space-between',
-                                                    alignItems: 'center',
-                                                    padding: '4px 0'
-                                                }}>
-                                                    <span style={{
-                                                        fontSize: '0.75rem',
-                                                        fontWeight: match.winnerId === match.team2.teamId ? 700 : 500,
-                                                        color: match.winnerId === match.team2.teamId ? '#2ECC71' : 'var(--color-text-dark)'
+                                                        <span style={{
+                                                            fontSize: '0.7rem',
+                                                            fontWeight: match.winnerId === match.team1.teamId ? 700 : 500,
+                                                            color: match.winnerId === match.team1.teamId ? '#2ECC71' : 'var(--color-text-dark)',
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                            whiteSpace: 'nowrap',
+                                                            flex: 1,
+                                                            minWidth: 0
+                                                        }}>
+                                                            {match.team1.name || 'TBD'}
+                                                        </span>
+                                                        {match.score && (
+                                                            <span style={{ fontSize: '0.7rem', fontWeight: 700, flexShrink: 0 }}>{match.score[0]}</span>
+                                                        )}
+                                                    </div>
+                                                    <div style={{
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center',
+                                                        padding: '3px 0',
+                                                        gap: '4px'
                                                     }}>
-                                                        {match.status === 'bye' ? '-' : (match.team2.name || 'TBD')}
-                                                    </span>
-                                                    {match.score && (
-                                                        <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>{match.score[1]}</span>
-                                                    )}
+                                                        <span style={{
+                                                            fontSize: '0.7rem',
+                                                            fontWeight: match.winnerId === match.team2.teamId ? 700 : 500,
+                                                            color: match.winnerId === match.team2.teamId ? '#2ECC71' : 'var(--color-text-dark)',
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                            whiteSpace: 'nowrap',
+                                                            flex: 1,
+                                                            minWidth: 0
+                                                        }}>
+                                                            {match.status === 'bye' ? '-' : (match.team2.name || 'TBD')}
+                                                        </span>
+                                                        {match.score && (
+                                                            <span style={{ fontSize: '0.7rem', fontWeight: 700, flexShrink: 0 }}>{match.score[1]}</span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -331,44 +367,57 @@ export default function TournamentLivePage() {
                                     <div style={{
                                         display: 'flex',
                                         justifyContent: 'space-between',
-                                        alignItems: 'center'
+                                        alignItems: 'center',
+                                        gap: '12px'
                                     }}>
-                                        <div style={{ flex: 1 }}>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
                                             <div style={{
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'space-between',
-                                                marginBottom: '8px'
+                                                marginBottom: '8px',
+                                                gap: '8px'
                                             }}>
                                                 <span style={{
                                                     fontWeight: 700,
                                                     fontSize: '0.875rem',
-                                                    color: match.winnerId === match.team1.teamId ? '#2ECC71' : 'var(--color-text-dark)'
+                                                    color: match.winnerId === match.team1.teamId ? '#2ECC71' : 'var(--color-text-dark)',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                    flex: 1,
+                                                    minWidth: 0
                                                 }}>
                                                     {match.team1.name}
                                                 </span>
                                                 {match.score && (
-                                                    <span style={{ fontWeight: 800, fontSize: '1rem' }}>{match.score[0]}</span>
+                                                    <span style={{ fontWeight: 800, fontSize: '1rem', flexShrink: 0 }}>{match.score[0]}</span>
                                                 )}
                                             </div>
                                             <div style={{
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                justifyContent: 'space-between'
+                                                justifyContent: 'space-between',
+                                                gap: '8px'
                                             }}>
                                                 <span style={{
                                                     fontWeight: 700,
                                                     fontSize: '0.875rem',
-                                                    color: match.winnerId === match.team2.teamId ? '#2ECC71' : 'var(--color-text-dark)'
+                                                    color: match.winnerId === match.team2.teamId ? '#2ECC71' : 'var(--color-text-dark)',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                    flex: 1,
+                                                    minWidth: 0
                                                 }}>
                                                     {match.team2.name}
                                                 </span>
                                                 {match.score && (
-                                                    <span style={{ fontWeight: 800, fontSize: '1rem' }}>{match.score[1]}</span>
+                                                    <span style={{ fontWeight: 800, fontSize: '1rem', flexShrink: 0 }}>{match.score[1]}</span>
                                                 )}
                                             </div>
                                         </div>
-                                        <div style={{ marginLeft: '12px' }}>
+                                        <div style={{ flexShrink: 0 }}>
                                             {match.status === 'completed' && (
                                                 <CheckCircleIcon className="h-6 w-6" style={{ color: '#2ECC71' }} />
                                             )}
@@ -379,7 +428,8 @@ export default function TournamentLivePage() {
                                                     borderRadius: 'var(--radius-sm)',
                                                     fontSize: '0.7rem',
                                                     fontWeight: 700,
-                                                    color: '#333333'
+                                                    color: '#333333',
+                                                    whiteSpace: 'nowrap'
                                                 }}>
                                                     EN COURS
                                                 </div>
@@ -402,22 +452,39 @@ export default function TournamentLivePage() {
                         style={{
                             width: '100%',
                             display: 'flex',
+                            flexDirection: 'column',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            gap: '8px',
+                            gap: '4px',
                             padding: 'var(--spacing-md)',
                             background: '#2ECC71',
                             border: '3px solid #333333',
                             borderRadius: 'var(--radius-md)',
                             color: 'white',
                             fontWeight: 700,
-                            fontSize: '1rem',
                             cursor: isStartingMatch ? 'not-allowed' : 'pointer',
                             opacity: isStartingMatch ? 0.7 : 1
                         }}
                     >
-                        <PlayIcon className="h-5 w-5" />
-                        {isStartingMatch ? 'Lancement...' : `Lancer: ${nextMatch.team1.name} vs ${nextMatch.team2.name}`}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <PlayIcon className="h-5 w-5" />
+                            <span style={{ fontSize: '1rem' }}>
+                                {isStartingMatch ? 'Lancement...' : 'Lancer le match'}
+                            </span>
+                        </div>
+                        {!isStartingMatch && (
+                            <span style={{
+                                fontSize: '0.75rem',
+                                opacity: 0.9,
+                                maxWidth: '100%',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                padding: '0 var(--spacing-sm)'
+                            }}>
+                                {nextMatch.team1.name} vs {nextMatch.team2.name}
+                            </span>
+                        )}
                     </button>
                 )}
 

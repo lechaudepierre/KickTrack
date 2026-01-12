@@ -8,7 +8,6 @@ import {
     addGuestToTournament,
     removePlayerFromTournament,
     startTeamSetup,
-    autoAssignTeams,
     startTournament,
     cancelTournament,
     createTeam,
@@ -121,14 +120,6 @@ export default function TournamentLobbyPage() {
         }
     };
 
-    const handleAutoAssign = async () => {
-        try {
-            await autoAssignTeams(tournamentId);
-        } catch (err) {
-            console.error('Error auto-assigning teams:', err);
-            setError('Erreur lors de l\'assignation automatique');
-        }
-    };
 
     const handleStartTournament = async () => {
         try {
@@ -420,7 +411,7 @@ export default function TournamentLobbyPage() {
                                     }}
                                 >
                                     <UsersIcon className="h-5 w-5" />
-                                    Former les equipes
+                                    {tournament.format === '1v1' ? 'Continuer' : 'Former les equipes'}
                                 </button>
 
                                 {!canStartSetup && (
@@ -483,258 +474,372 @@ export default function TournamentLobbyPage() {
                 {/* Status: Team Setup */}
                 {tournament.status === 'team_setup' && (
                     <>
-                        {/* Formed Teams */}
-                        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                marginBottom: 'var(--spacing-sm)'
-                            }}>
-                                <span style={{ fontSize: '0.875rem', color: 'var(--color-text-dark)', opacity: 0.6, fontWeight: 600 }}>
-                                    Equipes formees
-                                </span>
-                                <span style={{ fontSize: '0.875rem', color: '#2ECC71', fontWeight: 700 }}>
-                                    {tournament.teams.length} equipe{tournament.teams.length > 1 ? 's' : ''}
-                                </span>
-                            </div>
-
-                            {tournament.teams.length === 0 ? (
-                                <div style={{
-                                    padding: 'var(--spacing-lg)',
-                                    background: 'var(--color-beige)',
-                                    border: '3px solid #333333',
-                                    borderRadius: 'var(--radius-md)',
-                                    textAlign: 'center',
-                                    color: 'rgba(51,51,51,0.6)'
-                                }}>
-                                    Aucune equipe formee
-                                </div>
-                            ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    {tournament.teams.map((team, index) => (
-                                        <div
-                                            key={team.teamId}
-                                            style={{
-                                                padding: '12px',
-                                                background: 'var(--color-beige)',
-                                                border: '3px solid #333333',
-                                                borderRadius: 'var(--radius-md)',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '12px'
-                                            }}
-                                        >
-                                            <div style={{
-                                                width: '40px',
-                                                height: '40px',
-                                                background: `linear-gradient(135deg, ${['#E74C3C', '#3498DB', '#2ECC71', '#9B59B6', '#F39C12', '#1ABC9C', '#E91E63', '#00BCD4'][index % 8]}, ${['#C0392B', '#2980B9', '#27AE60', '#8E44AD', '#D68910', '#16A085', '#C2185B', '#0097A7'][index % 8]})`,
-                                                borderRadius: '50%',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                color: 'white',
-                                                fontWeight: 800,
-                                                fontSize: '1rem',
-                                                border: '2px solid #333333'
-                                            }}>
-                                                {index + 1}
-                                            </div>
-                                            <div style={{ flex: 1 }}>
-                                                <p style={{
-                                                    fontWeight: 700,
-                                                    color: 'var(--color-text-dark)',
-                                                    fontSize: '0.875rem',
-                                                    marginBottom: '4px'
-                                                }}>
-                                                    {team.name}
-                                                </p>
-                                                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                                                    {team.players.map(player => (
-                                                        <span
-                                                            key={player.userId}
-                                                            style={{
-                                                                padding: '2px 8px',
-                                                                background: player.userId.startsWith('guest_') ? '#9B59B6' : '#2ECC71',
-                                                                borderRadius: '4px',
-                                                                color: 'white',
-                                                                fontSize: '0.7rem',
-                                                                fontWeight: 600
-                                                            }}
-                                                        >
-                                                            {player.username}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            {isHost && (
-                                                <button
-                                                    onClick={() => handleDeleteTeam(team.teamId)}
-                                                    style={{
-                                                        padding: '8px',
-                                                        background: 'rgba(231, 76, 60, 0.1)',
-                                                        borderRadius: 'var(--radius-sm)',
-                                                        border: 'none',
-                                                        cursor: 'pointer'
-                                                    }}
-                                                >
-                                                    <TrashIcon className="h-4 w-4" style={{ color: '#E74C3C' }} />
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Unassigned Players */}
-                        {unassignedPlayers.length > 0 && (
-                            <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                                <p style={{ fontSize: '0.875rem', color: 'var(--color-text-dark)', opacity: 0.6, fontWeight: 600, marginBottom: 'var(--spacing-sm)' }}>
-                                    Joueurs non assignes ({unassignedPlayers.length})
-                                </p>
-                                <div style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'repeat(2, 1fr)',
-                                    gap: '8px'
-                                }}>
-                                    {unassignedPlayers.map(player => (
-                                        <div
-                                            key={player.userId}
-                                            style={{
-                                                padding: '12px',
-                                                background: 'var(--color-beige)',
-                                                border: '2px dashed #333333',
-                                                borderRadius: 'var(--radius-sm)',
-                                                textAlign: 'center'
-                                            }}
-                                        >
-                                            <div style={{
-                                                width: '32px',
-                                                height: '32px',
-                                                background: player.userId.startsWith('guest_') ? '#9B59B6' : '#2ECC71',
-                                                borderRadius: '50%',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                color: 'white',
-                                                fontWeight: 700,
-                                                fontSize: '0.75rem',
-                                                margin: '0 auto 8px',
-                                                border: '2px solid #333333'
-                                            }}>
-                                                {player.username.charAt(0).toUpperCase()}
-                                            </div>
-                                            <p style={{
-                                                fontSize: '0.75rem',
-                                                fontWeight: 600,
-                                                color: 'var(--color-text-dark)'
-                                            }}>
-                                                {player.username}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Host Actions for Team Setup */}
-                        {isHost && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-                                {/* Auto-assign for 1v1 */}
-                                {tournament.format === '1v1' && tournament.teams.length === 0 && (
-                                    <button
-                                        onClick={handleAutoAssign}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '8px',
-                                            padding: 'var(--spacing-md)',
-                                            background: 'var(--color-beige)',
-                                            border: '3px solid #333333',
-                                            borderRadius: 'var(--radius-md)',
-                                            color: 'var(--color-text-dark)',
-                                            fontWeight: 700,
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        <UsersIcon className="h-5 w-5" />
-                                        Auto-assigner (1 joueur = 1 equipe)
-                                    </button>
-                                )}
-
-                                {/* Create team button */}
-                                {unassignedPlayers.length >= playersPerTeam && (
-                                    <button
-                                        onClick={() => {
-                                            setSelectedPlayers([]);
-                                            setTeamName('');
-                                            setShowTeamModal(true);
-                                        }}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '8px',
-                                            padding: 'var(--spacing-md)',
-                                            background: 'var(--color-beige)',
-                                            border: '3px solid #333333',
-                                            borderRadius: 'var(--radius-md)',
-                                            color: 'var(--color-text-dark)',
-                                            fontWeight: 700,
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        <PlusIcon className="h-5 w-5" />
-                                        Creer une equipe
-                                    </button>
-                                )}
-
-                                <button
-                                    onClick={handleStartTournament}
-                                    disabled={!canStartTournament}
-                                    style={{
+                        {/* For 1v1: Show participants list and start button directly */}
+                        {tournament.format === '1v1' ? (
+                            <>
+                                {/* Participants */}
+                                <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+                                    <div style={{
                                         display: 'flex',
                                         alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '8px',
-                                        padding: 'var(--spacing-md)',
-                                        background: canStartTournament ? '#2ECC71' : 'rgba(46, 204, 113, 0.3)',
-                                        border: '3px solid #333333',
-                                        borderRadius: 'var(--radius-md)',
-                                        color: 'white',
-                                        fontWeight: 700,
-                                        cursor: canStartTournament ? 'pointer' : 'not-allowed',
-                                        opacity: canStartTournament ? 1 : 0.5
-                                    }}
-                                >
-                                    <PlayIcon className="h-5 w-5" />
-                                    Demarrer le tournoi
-                                </button>
+                                        justifyContent: 'space-between',
+                                        marginBottom: 'var(--spacing-sm)'
+                                    }}>
+                                        <span style={{ fontSize: '0.875rem', color: 'var(--color-text-dark)', opacity: 0.6, fontWeight: 600 }}>
+                                            Participants
+                                        </span>
+                                        <span style={{ fontSize: '0.875rem', color: '#2ECC71', fontWeight: 700 }}>
+                                            {tournament.teams.length} joueur{tournament.teams.length > 1 ? 's' : ''}
+                                        </span>
+                                    </div>
 
-                                {!canStartTournament && (
-                                    <p style={{ fontSize: '0.75rem', color: 'rgba(51,51,51,0.6)', textAlign: 'center' }}>
-                                        Minimum 2 equipes requises
-                                    </p>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Non-host message */}
-                        {!isHost && (
-                            <div style={{ textAlign: 'center', marginTop: 'var(--spacing-lg)' }}>
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '8px',
-                                    color: 'rgba(51,51,51,0.6)'
-                                }}>
-                                    <ClockIcon className="h-5 w-5" />
-                                    <span>L'organisateur forme les equipes...</span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {tournament.teams.map((team) => (
+                                            <div
+                                                key={team.teamId}
+                                                style={{
+                                                    padding: '12px',
+                                                    background: 'var(--color-beige)',
+                                                    border: '3px solid #333333',
+                                                    borderRadius: 'var(--radius-md)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '12px'
+                                                }}
+                                            >
+                                                <div style={{
+                                                    width: '40px',
+                                                    height: '40px',
+                                                    background: team.players[0]?.userId.startsWith('guest_')
+                                                        ? 'linear-gradient(to bottom right, #F1C40F, #E67E22)'
+                                                        : 'linear-gradient(to bottom right, #2ECC71, #1abc9c)',
+                                                    borderRadius: '50%',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: '#333333',
+                                                    fontWeight: 700,
+                                                    fontSize: '0.875rem',
+                                                    border: '2px solid #333333'
+                                                }}>
+                                                    {team.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <p style={{
+                                                        fontWeight: 700,
+                                                        color: 'var(--color-text-dark)',
+                                                        fontSize: '0.875rem',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        whiteSpace: 'nowrap'
+                                                    }}>
+                                                        {team.name}
+                                                        {team.players[0]?.userId.startsWith('guest_') && (
+                                                            <span style={{ color: '#9B59B6', fontSize: '0.75rem', marginLeft: '8px' }}>(guest)</span>
+                                                        )}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+
+                                {/* Host Actions for 1v1 */}
+                                {isHost && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+                                        <button
+                                            onClick={handleStartTournament}
+                                            disabled={!canStartTournament}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '8px',
+                                                padding: 'var(--spacing-md)',
+                                                background: canStartTournament ? '#2ECC71' : 'rgba(46, 204, 113, 0.3)',
+                                                border: '3px solid #333333',
+                                                borderRadius: 'var(--radius-md)',
+                                                color: 'white',
+                                                fontWeight: 700,
+                                                cursor: canStartTournament ? 'pointer' : 'not-allowed',
+                                                opacity: canStartTournament ? 1 : 0.5
+                                            }}
+                                        >
+                                            <PlayIcon className="h-5 w-5" />
+                                            Demarrer le tournoi
+                                        </button>
+
+                                        {!canStartTournament && (
+                                            <p style={{ fontSize: '0.75rem', color: 'rgba(51,51,51,0.6)', textAlign: 'center' }}>
+                                                Minimum 2 joueurs requis
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Non-host message */}
+                                {!isHost && (
+                                    <div style={{ textAlign: 'center', marginTop: 'var(--spacing-lg)' }}>
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '8px',
+                                            color: 'rgba(51,51,51,0.6)'
+                                        }}>
+                                            <ClockIcon className="h-5 w-5" />
+                                            <span>En attente du demarrage...</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                {/* For 2v2: Show team formation interface */}
+                                {/* Formed Teams */}
+                                <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        marginBottom: 'var(--spacing-sm)'
+                                    }}>
+                                        <span style={{ fontSize: '0.875rem', color: 'var(--color-text-dark)', opacity: 0.6, fontWeight: 600 }}>
+                                            Equipes formees
+                                        </span>
+                                        <span style={{ fontSize: '0.875rem', color: '#2ECC71', fontWeight: 700 }}>
+                                            {tournament.teams.length} equipe{tournament.teams.length > 1 ? 's' : ''}
+                                        </span>
+                                    </div>
+
+                                    {tournament.teams.length === 0 ? (
+                                        <div style={{
+                                            padding: 'var(--spacing-lg)',
+                                            background: 'var(--color-beige)',
+                                            border: '3px solid #333333',
+                                            borderRadius: 'var(--radius-md)',
+                                            textAlign: 'center',
+                                            color: 'rgba(51,51,51,0.6)'
+                                        }}>
+                                            Aucune equipe formee
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {tournament.teams.map((team, index) => (
+                                                <div
+                                                    key={team.teamId}
+                                                    style={{
+                                                        padding: '12px',
+                                                        background: 'var(--color-beige)',
+                                                        border: '3px solid #333333',
+                                                        borderRadius: 'var(--radius-md)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '12px'
+                                                    }}
+                                                >
+                                                    <div style={{
+                                                        width: '40px',
+                                                        height: '40px',
+                                                        flexShrink: 0,
+                                                        background: `linear-gradient(135deg, ${['#E74C3C', '#3498DB', '#2ECC71', '#9B59B6', '#F39C12', '#1ABC9C', '#E91E63', '#00BCD4'][index % 8]}, ${['#C0392B', '#2980B9', '#27AE60', '#8E44AD', '#D68910', '#16A085', '#C2185B', '#0097A7'][index % 8]})`,
+                                                        borderRadius: '50%',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        color: 'white',
+                                                        fontWeight: 800,
+                                                        fontSize: '1rem',
+                                                        border: '2px solid #333333'
+                                                    }}>
+                                                        {index + 1}
+                                                    </div>
+                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <p style={{
+                                                            fontWeight: 700,
+                                                            color: 'var(--color-text-dark)',
+                                                            fontSize: '0.875rem',
+                                                            marginBottom: '4px',
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                            whiteSpace: 'nowrap'
+                                                        }}>
+                                                            {team.name}
+                                                        </p>
+                                                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                                            {team.players.map(player => (
+                                                                <span
+                                                                    key={player.userId}
+                                                                    style={{
+                                                                        padding: '2px 8px',
+                                                                        background: player.userId.startsWith('guest_') ? '#9B59B6' : '#2ECC71',
+                                                                        borderRadius: '4px',
+                                                                        color: 'white',
+                                                                        fontSize: '0.7rem',
+                                                                        fontWeight: 600,
+                                                                        maxWidth: '100px',
+                                                                        overflow: 'hidden',
+                                                                        textOverflow: 'ellipsis',
+                                                                        whiteSpace: 'nowrap'
+                                                                    }}
+                                                                >
+                                                                    {player.username}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    {isHost && (
+                                                        <button
+                                                            onClick={() => handleDeleteTeam(team.teamId)}
+                                                            style={{
+                                                                padding: '8px',
+                                                                flexShrink: 0,
+                                                                background: 'rgba(231, 76, 60, 0.1)',
+                                                                borderRadius: 'var(--radius-sm)',
+                                                                border: 'none',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        >
+                                                            <TrashIcon className="h-4 w-4" style={{ color: '#E74C3C' }} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Unassigned Players */}
+                                {unassignedPlayers.length > 0 && (
+                                    <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+                                        <p style={{ fontSize: '0.875rem', color: 'var(--color-text-dark)', opacity: 0.6, fontWeight: 600, marginBottom: 'var(--spacing-sm)' }}>
+                                            Joueurs non assignes ({unassignedPlayers.length})
+                                        </p>
+                                        <div style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: 'repeat(2, 1fr)',
+                                            gap: '8px'
+                                        }}>
+                                            {unassignedPlayers.map(player => (
+                                                <div
+                                                    key={player.userId}
+                                                    style={{
+                                                        padding: '12px',
+                                                        background: 'var(--color-beige)',
+                                                        border: '2px dashed #333333',
+                                                        borderRadius: 'var(--radius-sm)',
+                                                        textAlign: 'center',
+                                                        overflow: 'hidden'
+                                                    }}
+                                                >
+                                                    <div style={{
+                                                        width: '32px',
+                                                        height: '32px',
+                                                        background: player.userId.startsWith('guest_') ? '#9B59B6' : '#2ECC71',
+                                                        borderRadius: '50%',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        color: 'white',
+                                                        fontWeight: 700,
+                                                        fontSize: '0.75rem',
+                                                        margin: '0 auto 8px',
+                                                        border: '2px solid #333333'
+                                                    }}>
+                                                        {player.username.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <p style={{
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: 600,
+                                                        color: 'var(--color-text-dark)',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        whiteSpace: 'nowrap'
+                                                    }}>
+                                                        {player.username}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Host Actions for Team Setup */}
+                                {isHost && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+                                        {/* Create team button */}
+                                        {unassignedPlayers.length >= playersPerTeam && (
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedPlayers([]);
+                                                    setTeamName('');
+                                                    setShowTeamModal(true);
+                                                }}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: '8px',
+                                                    padding: 'var(--spacing-md)',
+                                                    background: 'var(--color-beige)',
+                                                    border: '3px solid #333333',
+                                                    borderRadius: 'var(--radius-md)',
+                                                    color: 'var(--color-text-dark)',
+                                                    fontWeight: 700,
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <PlusIcon className="h-5 w-5" />
+                                                Creer une equipe
+                                            </button>
+                                        )}
+
+                                        <button
+                                            onClick={handleStartTournament}
+                                            disabled={!canStartTournament}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '8px',
+                                                padding: 'var(--spacing-md)',
+                                                background: canStartTournament ? '#2ECC71' : 'rgba(46, 204, 113, 0.3)',
+                                                border: '3px solid #333333',
+                                                borderRadius: 'var(--radius-md)',
+                                                color: 'white',
+                                                fontWeight: 700,
+                                                cursor: canStartTournament ? 'pointer' : 'not-allowed',
+                                                opacity: canStartTournament ? 1 : 0.5
+                                            }}
+                                        >
+                                            <PlayIcon className="h-5 w-5" />
+                                            Demarrer le tournoi
+                                        </button>
+
+                                        {!canStartTournament && (
+                                            <p style={{ fontSize: '0.75rem', color: 'rgba(51,51,51,0.6)', textAlign: 'center' }}>
+                                                Minimum 2 equipes requises
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Non-host message */}
+                                {!isHost && (
+                                    <div style={{ textAlign: 'center', marginTop: 'var(--spacing-lg)' }}>
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '8px',
+                                            color: 'rgba(51,51,51,0.6)'
+                                        }}>
+                                            <ClockIcon className="h-5 w-5" />
+                                            <span>L'organisateur forme les equipes...</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </>
                 )}
