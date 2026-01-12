@@ -3,17 +3,13 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { getSessionByPinCode, joinGameSession } from '@/lib/firebase/game-sessions';
 import { getTournamentByPinCode, joinTournament } from '@/lib/firebase/tournaments';
 import { formatPinCode, validatePinCode } from '@/lib/utils/code-generator';
 import { FieldBackground } from '@/components/FieldDecorations';
-import {
-    ArrowLeftIcon,
-} from '@heroicons/react/24/outline';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
 
-
-function JoinGameContent() {
+function JoinTournamentContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { user, isAuthenticated, isLoading: authLoading, initialize } = useAuthStore();
@@ -35,7 +31,7 @@ function JoinGameContent() {
         }
     }, [authLoading, isAuthenticated, router]);
 
-    // Check for code in URL params (from QR scan)
+    // Check for code in URL params
     useEffect(() => {
         const code = searchParams.get('code');
         if (code) {
@@ -66,53 +62,30 @@ function JoinGameContent() {
         setError('');
 
         try {
-            // First, try to find a game session with this code
-            const session = await getSessionByPinCode(codeToUse);
+            const tournament = await getTournamentByPinCode(codeToUse);
 
-            if (session) {
-                // It's a game session
-                await joinGameSession(session.sessionId, {
+            if (!tournament) {
+                setError('Code invalide ou tournoi expire');
+                return;
+            }
+
+            if (tournament.status !== 'waiting') {
+                setError('Ce tournoi a deja commence');
+                return;
+            }
+
+            // Check if user is already in the tournament
+            const isAlreadyIn = tournament.players.some(p => p.userId === user.userId);
+
+            if (!isAlreadyIn) {
+                await joinTournament(tournament.tournamentId, {
                     userId: user.userId,
                     username: user.username,
                     avatarUrl: user.avatarUrl
                 });
-
-                // Redirect to waiting room or game
-                if (session.status === 'active' && session.gameId) {
-                    router.push(`/game/${session.gameId}`);
-                } else {
-                    router.push(`/game/session/${session.sessionId}`);
-                }
-                return;
             }
 
-            // If no session found, try to find a tournament
-            const tournament = await getTournamentByPinCode(codeToUse);
-
-            if (tournament) {
-                // It's a tournament
-                if (tournament.status !== 'waiting' && tournament.status !== 'team_setup') {
-                    setError('Ce tournoi a deja commence');
-                    return;
-                }
-
-                // Check if user is already in the tournament
-                const isAlreadyIn = tournament.players.some(p => p.userId === user.userId);
-
-                if (!isAlreadyIn) {
-                    await joinTournament(tournament.tournamentId, {
-                        userId: user.userId,
-                        username: user.username,
-                        avatarUrl: user.avatarUrl
-                    });
-                }
-
-                router.push(`/tournament/${tournament.tournamentId}`);
-                return;
-            }
-
-            // Neither session nor tournament found
-            setError('Code invalide ou session expiree');
+            router.push(`/tournament/${tournament.tournamentId}`);
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la connexion';
             setError(errorMessage);
@@ -142,12 +115,11 @@ function JoinGameContent() {
                     >
                         <ArrowLeftIcon className="h-6 w-6" />
                     </button>
-                    <h1 className={styles.pageTitle}>Rejoindre</h1>
+                    <h1 className={styles.pageTitle}>Rejoindre Tournoi</h1>
                 </div>
 
-
                 {error && (
-                    <div className="error-box">
+                    <div className="error-box" style={{ marginBottom: 'var(--spacing-md)' }}>
                         {error}
                     </div>
                 )}
@@ -155,7 +127,7 @@ function JoinGameContent() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)' }}>
                     <div className="text-center">
                         <p className="text-secondary" style={{ marginBottom: 'var(--spacing-lg)' }}>
-                            Entrez le code fourni par l&apos;hote
+                            Entrez le code fourni par l&apos;organisateur du tournoi
                         </p>
 
                         <div className="relative">
@@ -187,14 +159,31 @@ function JoinGameContent() {
                     <button
                         onClick={() => handleJoin()}
                         disabled={pinCode.length < 7 || isLoading}
-                        style={{ width: '100%' }}
+                        style={{
+                            width: '100%',
+                            padding: 'var(--spacing-md) var(--spacing-lg)',
+                            background: '#FFD700',
+                            border: '3px solid #333333',
+                            borderRadius: 'var(--radius-md)',
+                            color: 'var(--color-text-dark)',
+                            fontWeight: 700,
+                            fontSize: '1rem',
+                            cursor: pinCode.length < 7 || isLoading ? 'not-allowed' : 'pointer',
+                            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                            opacity: pinCode.length < 7 || isLoading ? 0.5 : 1
+                        }}
+                        onMouseEnter={(e) => {
+                            if (pinCode.length >= 7 && !isLoading) {
+                                e.currentTarget.style.transform = 'translateY(-4px)';
+                                e.currentTarget.style.boxShadow = '0 6px 0 rgba(0, 0, 0, 0.3)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = 'none';
+                        }}
                     >
-                        <div className="btn-primary">
-                            <div className="btn-primary-shadow" />
-                            <div className="btn-primary-content">
-                                {isLoading ? 'Connexion...' : 'Rejoindre'}
-                            </div>
-                        </div>
+                        {isLoading ? 'Connexion...' : 'Rejoindre le tournoi'}
                     </button>
                 </div>
 
@@ -212,7 +201,6 @@ function JoinGameContent() {
     );
 }
 
-// Loading fallback for Suspense
 function LoadingFallback() {
     return (
         <div className="container-center">
@@ -221,11 +209,10 @@ function LoadingFallback() {
     );
 }
 
-// Wrap with Suspense for useSearchParams
-export default function JoinGamePage() {
+export default function JoinTournamentPage() {
     return (
         <Suspense fallback={<LoadingFallback />}>
-            <JoinGameContent />
+            <JoinTournamentContent />
         </Suspense>
     );
 }

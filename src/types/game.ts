@@ -42,6 +42,8 @@ export interface Game {
     hostId: string;
     sessionId?: string;
     isGuestGame?: boolean; // True if game contains guest players (won't affect stats)
+    tournamentId?: string; // If this game is part of a tournament
+    tournamentMatchId?: string; // Reference to the match in the tournament
 }
 
 export type GameFormat = '1v1' | '2v2';

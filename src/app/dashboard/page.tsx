@@ -11,7 +11,8 @@ import {
     PlusCircleIcon,
     QrCodeIcon,
     UserPlusIcon,
-    MapPinIcon
+    MapPinIcon,
+    TrophyIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 
@@ -107,7 +108,17 @@ export default function DashboardPage() {
                         </div>
                         <div className={styles.actionText}>
                             <span className={styles.actionTitle}>Rejoindre</span>
-                            <span className={styles.actionSubtitle}>Scanner QR code</span>
+                            <span className={styles.actionSubtitle}>Code PIN</span>
+                        </div>
+                    </Link>
+
+                    <Link href="/tournament/new" className={styles.tournamentAction}>
+                        <div className={styles.actionIconWrapper}>
+                            <TrophyIcon className={styles.actionIcon} />
+                        </div>
+                        <div className={styles.actionText}>
+                            <span className={styles.actionTitle}>Tournoi</span>
+                            <span className={styles.actionSubtitle}>Creer un tournoi</span>
                         </div>
                     </Link>
 

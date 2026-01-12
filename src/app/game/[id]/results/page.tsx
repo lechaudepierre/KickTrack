@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getGame, getUserGames } from '@/lib/firebase/games';
 import { subscribeToSession, startGame } from '@/lib/firebase/game-sessions';
+import { completeTournamentMatch, getTournament } from '@/lib/firebase/tournaments';
 import { Game, Player, GoalPosition, Team } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import { TrophyIcon, HomeIcon, ArrowPathIcon, StarIcon } from '@heroicons/react/24/solid';
@@ -27,6 +28,7 @@ export default function GameResultsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isRematching, setIsRematching] = useState(false);
     const [h2hStats, setH2HStats] = useState<{ team0Wins: number; team1Wins: number } | null>(null);
+    const [tournamentUpdated, setTournamentUpdated] = useState(false);
 
     useEffect(() => {
         initialize();
@@ -39,6 +41,32 @@ export default function GameResultsPage() {
             if (gameData) {
                 setGame(gameData);
                 loadH2HStats(gameData);
+
+                // If this is a tournament match, update the tournament
+                if (gameData.tournamentId && gameData.tournamentMatchId && gameData.status === 'completed' && gameData.winner !== undefined && !tournamentUpdated) {
+                    setTournamentUpdated(true);
+                    try {
+                        // Get the tournament to find the teamId
+                        const tournament = await getTournament(gameData.tournamentId);
+                        if (tournament) {
+                            const match = tournament.matches.find(m => m.matchId === gameData.tournamentMatchId);
+                            if (match) {
+                                // Determine which tournament team won based on the game winner
+                                // Team 0 in game = team1 in tournament match
+                                const winnerTeamId = gameData.winner === 0 ? match.team1.teamId : match.team2.teamId;
+                                await completeTournamentMatch(
+                                    gameData.tournamentId,
+                                    gameData.tournamentMatchId,
+                                    gameData.gameId,
+                                    winnerTeamId,
+                                    [gameData.score[0], gameData.score[1]]
+                                );
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Error updating tournament match:', err);
+                    }
+                }
             }
         } catch (error) {
             console.error('Error loading game:', error);
@@ -270,7 +298,22 @@ export default function GameResultsPage() {
 
                     {/* Actions */}
                     <div className={resultsStyles.actions}>
-                        {user?.userId === game.hostId ? (
+                        {game.tournamentId ? (
+                            // Tournament match - show return to tournament
+                            <button
+                                onClick={() => router.push(`/tournament/${game.tournamentId}/live`)}
+                                className="btn-primary"
+                                style={{ border: 'none', background: 'none', padding: 0, width: '100%' }}
+                            >
+                                <div className="btn-primary">
+                                    <div className="btn-primary-shadow" />
+                                    <div className="btn-primary-content flex items-center justify-center gap-2">
+                                        <TrophyIcon className="w-5 h-5" />
+                                        <span>Retour au tournoi</span>
+                                    </div>
+                                </div>
+                            </button>
+                        ) : user?.userId === game.hostId ? (
                             <button
                                 onClick={handleRematch}
                                 disabled={isRematching}
