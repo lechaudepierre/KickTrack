@@ -564,8 +564,8 @@ export async function getVenueLeaderboard(venueId: string): Promise<VenueLeaderb
     }
 
     leaderboard.sort((a, b) => {
-        if (b.wins !== a.wins) return b.wins - a.wins;
-        return b.winRate - a.winRate;
+        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+        return b.wins - a.wins;
     });
 
     return leaderboard;

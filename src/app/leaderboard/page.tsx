@@ -139,7 +139,7 @@ export default function LeaderboardPage() {
                                             </div>
                                         </div>
                                         <div className={styles.podiumName}>{leaderboard[1].username}</div>
-                                        <div className={styles.podiumScore}>{leaderboard[1].wins} victoires</div>
+                                        <div className={styles.podiumScore}>{Math.round(leaderboard[1].winRate * 100)}% winrate</div>
                                     </div>
                                 )}
 
@@ -153,7 +153,7 @@ export default function LeaderboardPage() {
                                             </div>
                                         </div>
                                         <div className={styles.podiumName}>{leaderboard[0].username}</div>
-                                        <div className={styles.podiumScore}>{leaderboard[0].wins} victoires</div>
+                                        <div className={styles.podiumScore}>{Math.round(leaderboard[0].winRate * 100)}% winrate</div>
                                     </div>
                                 )}
 
@@ -166,7 +166,7 @@ export default function LeaderboardPage() {
                                             </div>
                                         </div>
                                         <div className={styles.podiumName}>{leaderboard[2].username}</div>
-                                        <div className={styles.podiumScore}>{leaderboard[2].wins} victoires</div>
+                                        <div className={styles.podiumScore}>{Math.round(leaderboard[2].winRate * 100)}% winrate</div>
                                     </div>
                                 )}
                             </div>
