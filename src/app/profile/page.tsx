@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation';
 import { registerComplete, checkUsernameAvailable, updateUsername } from '@/lib/firebase/auth';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getUserGames } from '@/lib/firebase/games';
-import { getVenues } from '@/lib/firebase/firestore';
 import { getFriendRequestCount } from '@/lib/firebase/friends';
 import { Game, Venue } from '@/types';
 import BottomNav from '@/components/common/BottomNav';
+import VenueDropdown from '@/components/venues/VenueDropdown';
 import { calculateAdvancedStats, getPositionLabel, AdvancedStats } from '@/lib/utils/statsCalculator';
 import {
     ClockIcon,
@@ -16,7 +16,6 @@ import {
     FireIcon,
     TrophyIcon,
     ChartBarIcon,
-    ChevronDownIcon,
     MagnifyingGlassIcon,
     ArrowRightOnRectangleIcon,
     InformationCircleIcon,
@@ -35,9 +34,7 @@ export default function ProfilePage() {
     const [advancedStats, setAdvancedStats] = useState<AdvancedStats | null>(null);
 
     // Venue filter state
-    const [venues, setVenues] = useState<Venue[]>([]);
-    const [selectedVenue, setSelectedVenue] = useState<string>('all');
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
 
     // Head-to-head search state
     const [h2hSearchQuery, setH2hSearchQuery] = useState('');
@@ -70,7 +67,6 @@ export default function ProfilePage() {
     useEffect(() => {
         if (user) {
             loadGames();
-            loadVenues();
             loadFriendRequestsCount();
         }
     }, [user]);
@@ -88,9 +84,9 @@ export default function ProfilePage() {
     // Recalculate stats when venue filter changes
     useEffect(() => {
         if (user && allGames.length > 0) {
-            const filteredGames = selectedVenue === 'all'
-                ? allGames
-                : allGames.filter(g => g.venueId === selectedVenue);
+            const filteredGames = selectedVenue
+                ? allGames.filter(g => g.venueId === selectedVenue.venueId)
+                : allGames;
 
             const stats = calculateAdvancedStats(filteredGames, user.userId);
             setAdvancedStats(stats);
@@ -99,15 +95,6 @@ export default function ProfilePage() {
             setRecentGames(filteredGames.slice(0, 5));
         }
     }, [selectedVenue, allGames, user]);
-
-    const loadVenues = async () => {
-        try {
-            const data = await getVenues();
-            setVenues(data);
-        } catch (error) {
-            console.error('Error loading venues:', error);
-        }
-    };
 
     const loadGames = async () => {
         if (!user) return;
@@ -123,17 +110,6 @@ export default function ProfilePage() {
         } finally {
             setIsLoadingGames(false);
         }
-    };
-
-    const getSelectedVenueName = () => {
-        if (selectedVenue === 'all') return 'Tous les stades';
-        const venue = venues.find(v => v.venueId === selectedVenue);
-        return venue?.name || 'Sélectionner';
-    };
-
-    const handleVenueSelect = (venueId: string) => {
-        setSelectedVenue(venueId);
-        setIsDropdownOpen(false);
     };
 
     // Filter head-to-head based on search
@@ -265,36 +241,12 @@ export default function ProfilePage() {
 
                 {/* Venue Filter Dropdown */}
                 <div className={styles.filterSection}>
-                    <div className={styles.dropdownContainer}>
-                        <button
-                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className={styles.dropdownButton}
-                        >
-                            <MapPinIcon className="w-5 h-5" />
-                            <span>{getSelectedVenueName()}</span>
-                            <ChevronDownIcon className={`w-5 h-5 ${styles.chevron} ${isDropdownOpen ? styles.chevronOpen : ''}`} />
-                        </button>
-
-                        {isDropdownOpen && (
-                            <div className={styles.dropdownMenu}>
-                                <button
-                                    onClick={() => handleVenueSelect('all')}
-                                    className={`${styles.dropdownItem} ${selectedVenue === 'all' ? styles.dropdownItemActive : ''}`}
-                                >
-                                    Tous les stades
-                                </button>
-                                {venues.map(venue => (
-                                    <button
-                                        key={venue.venueId}
-                                        onClick={() => handleVenueSelect(venue.venueId)}
-                                        className={`${styles.dropdownItem} ${selectedVenue === venue.venueId ? styles.dropdownItemActive : ''}`}
-                                    >
-                                        {venue.name}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    <VenueDropdown
+                        selectedVenue={selectedVenue}
+                        onSelectVenue={setSelectedVenue}
+                        showNoneOption={true}
+                        noneLabel="Tous les stades"
+                    />
                 </div>
 
                 {/* Stats principales */}
@@ -583,7 +535,7 @@ export default function ProfilePage() {
                         )}
 
                         {/* 8. Stade préféré (Stades préférés) - Only show when "Tous les stades" is selected */}
-                        {selectedVenue === 'all' && advancedStats.favoriteVenue && (
+                        {selectedVenue === null && advancedStats.favoriteVenue && (
                             <div className={styles.section}>
                                 <h3 className={styles.sectionTitle}>
                                     <MapPinIcon className="w-5 h-5" />
