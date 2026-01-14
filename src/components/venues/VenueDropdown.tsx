@@ -74,19 +74,26 @@ export default function VenueDropdown({
     };
 
     const handleToggleFavorite = async (venueId: string, e: React.MouseEvent) => {
+        // Prevent both default action and propagation to parent elements
         e.preventDefault();
         e.stopPropagation();
+
         if (!user) return;
+
+        // Optimistic update - update UI immediately
+        const wasFavorite = favoriteVenues.includes(venueId);
+        const newFavorites = wasFavorite
+            ? favoriteVenues.filter(id => id !== venueId)
+            : [...favoriteVenues, venueId];
+
+        setFavoriteVenues(newFavorites);
 
         try {
             await toggleVenueFavorite(user.userId, venueId);
-            setFavoriteVenues(prev =>
-                prev.includes(venueId)
-                    ? prev.filter(id => id !== venueId)
-                    : [...prev, venueId]
-            );
         } catch (error) {
             console.error('Error toggling favorite:', error);
+            // Rollback on error
+            setFavoriteVenues(favoriteVenues);
         }
     };
 
@@ -177,6 +184,7 @@ export default function VenueDropdown({
                                         <span className={styles.venueName}>{venue.name}</span>
                                         <div
                                             onClick={(e) => handleToggleFavorite(venue.venueId, e)}
+                                            onMouseDown={(e) => e.stopPropagation()}
                                             className={styles.favoriteButton}
                                         >
                                             {isFavorite ? (

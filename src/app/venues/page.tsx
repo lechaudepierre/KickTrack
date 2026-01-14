@@ -86,18 +86,24 @@ export default function VenuesPage() {
     };
 
     const handleToggleFavorite = async (venueId: string, e: React.MouseEvent) => {
+        e.preventDefault();
         e.stopPropagation();
         if (!user) return;
 
+        // Optimistic update
+        const wasFavorite = favoriteVenues.includes(venueId);
+        const newFavorites = wasFavorite
+            ? favoriteVenues.filter(id => id !== venueId)
+            : [...favoriteVenues, venueId];
+
+        setFavoriteVenues(newFavorites);
+
         try {
             await toggleVenueFavorite(user.userId, venueId);
-            setFavoriteVenues(prev =>
-                prev.includes(venueId)
-                    ? prev.filter(id => id !== venueId)
-                    : [...prev, venueId]
-            );
         } catch (error) {
             console.error('Error toggling favorite:', error);
+            // Rollback on error
+            setFavoriteVenues(favoriteVenues);
         }
     };
 
