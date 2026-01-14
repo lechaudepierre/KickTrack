@@ -77,6 +77,14 @@ export interface AdvancedStats {
         inflicted: number;  // Nombre de 6-0 ou 11-0 infligés
         conceded: number;   // Nombre de 6-0 ou 11-0 concédés
     };
+
+    // Gamelles
+    gamelleStats: {
+        total: number;
+        rentrantes: number;
+        totalPercentage: number;
+        rentrantesPercentage: number;
+    };
 }
 
 export function calculateAdvancedStats(
@@ -156,6 +164,8 @@ export function calculateAdvancedStats(
         attack: { games: 0, wins: 0, winRate: 0 },
         defense: { games: 0, wins: 0, winRate: 0 }
     };
+    let totalGamelles = 0;
+    let totalGamellesRentrantes = 0;
     const winRateHistory: Array<{ date: string; winRate: number }> = [];
     let cumulativeWins = 0;
 
@@ -195,7 +205,14 @@ export function calculateAdvancedStats(
         // Buts et positions
         const userGoals = game.goals.filter(g => g.scoredBy === userId);
         totalGoalsScored += userGoals.length;
-        userGoals.forEach(g => g.position && goalsByPosition[g.position]++);
+        userGoals.forEach(g => {
+            if (g.position) goalsByPosition[g.position]++;
+            if (g.type === 'gamelle') totalGamelles++;
+            if (g.type === 'gamelle_rentrante') {
+                totalGamelles++;
+                totalGamellesRentrantes++;
+            }
+        });
 
         // Rôles (2v2 uniquement, 100% des buts à la même position)
         const is2v2 = game.teams[0].players.length + game.teams[1].players.length === 4;
@@ -346,7 +363,13 @@ export function calculateAdvancedStats(
             return g.winner === undefined ? 'D' : g.winner === idx ? 'W' : 'L';
         }).reverse(),
         headToHead,
-        perfectGames: { inflicted: perfectGamesInflicted, conceded: perfectGamesConceded }
+        perfectGames: { inflicted: perfectGamesInflicted, conceded: perfectGamesConceded },
+        gamelleStats: {
+            total: totalGamelles,
+            rentrantes: totalGamellesRentrantes,
+            totalPercentage: chronologicalGames.length > 0 ? (totalGamelles / chronologicalGames.length) * 100 : 0,
+            rentrantesPercentage: chronologicalGames.length > 0 ? (totalGamellesRentrantes / chronologicalGames.length) * 100 : 0
+        }
     };
 }
 
@@ -377,7 +400,13 @@ function getEmptyStats(): AdvancedStats {
         },
         recentForm: [],
         headToHead: [],
-        perfectGames: { inflicted: 0, conceded: 0 }
+        perfectGames: { inflicted: 0, conceded: 0 },
+        gamelleStats: {
+            total: 0,
+            rentrantes: 0,
+            totalPercentage: 0,
+            rentrantesPercentage: 0
+        }
     };
 }
 

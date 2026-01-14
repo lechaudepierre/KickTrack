@@ -382,6 +382,26 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
+                        {/* Gamelles Section */}
+                        <div className={styles.section}>
+                            <h3 className={styles.sectionTitle}>
+                                <FireIcon className="w-5 h-5" />
+                                Gamelles
+                            </h3>
+                            <div className={styles.gamellesGrid}>
+                                <div className={styles.gamelleCard}>
+                                    <p className={styles.gamelleValue}>{advancedStats.gamelleStats.total}</p>
+                                    <p className={styles.gamelleLabel}>Total</p>
+                                    <p className={styles.gamelleSub}>{Math.round(advancedStats.gamelleStats.totalPercentage)}% des matchs</p>
+                                </div>
+                                <div className={styles.gamelleCard}>
+                                    <p className={styles.gamelleValue}>{advancedStats.gamelleStats.rentrantes}</p>
+                                    <p className={styles.gamelleLabel}>Rentrantes</p>
+                                    <p className={styles.gamelleSub}>{Math.round(advancedStats.gamelleStats.rentrantesPercentage)}% des matchs</p>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Roles Section (Only if 2v2 is possible) */}
                         {modeFilter !== '1v1' && (advancedStats.roleStats.attack.games > 0 || advancedStats.roleStats.defense.games > 0) && (
                             <div className={styles.section}>
