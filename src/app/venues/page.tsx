@@ -95,9 +95,8 @@ export default function VenuesPage() {
                     <button onClick={() => setIsModalOpen(true)} style={{ border: 'none', background: 'none', padding: 0 }}>
                         <div className="btn-primary" style={{ marginBottom: 0 }}>
                             <div className="btn-primary-shadow" />
-                            <div className="btn-primary-content" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <PlusIcon className="h-5 w-5" />
-                                Ajouter
+                            <div className="btn-primary-content" style={{ padding: '0.375rem 0.5rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0' }}>
+                                <PlusIcon className="h-4 w-4" />
                             </div>
                         </div>
                     </button>
@@ -149,32 +148,30 @@ export default function VenuesPage() {
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
                         {filteredVenues.map((venue) => (
-                            <Link
+                            <div
                                 key={venue.venueId}
-                                href={`/venues/${venue.venueId}`}
+                                className={styles.listItem}
                             >
-                                <div className={styles.listItem}>
-                                    <div className={`p-3 rounded-xl`} style={{ background: 'rgba(51, 51, 51, 0.05)', color: 'var(--color-text-dark)' }}>
-                                        {venueTypeIcons[venue.type]}
-                                    </div>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <h3 style={{ fontWeight: 700, color: 'var(--color-text-dark)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'uppercase', fontSize: '1rem' }}>
-                                            {venue.name}
-                                        </h3>
-                                        <p style={{ fontSize: '0.875rem', color: 'rgba(51, 51, 51, 0.6)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
-                                            {venue.address || venueTypeLabels[venue.type]}
-                                        </p>
-                                    </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <p style={{ fontSize: '1.125rem', fontWeight: 900, color: 'var(--color-text-dark)' }}>
-                                            {venue.stats.totalGames}
-                                        </p>
-                                        <p style={{ fontSize: '0.625rem', color: 'rgba(51, 51, 51, 0.4)', fontWeight: 800, textTransform: 'uppercase' }}>
-                                            parties
-                                        </p>
-                                    </div>
+                                <div className={`p-3 rounded-xl`} style={{ background: 'rgba(51, 51, 51, 0.05)', color: 'var(--color-text-dark)' }}>
+                                    {venueTypeIcons[venue.type]}
                                 </div>
-                            </Link>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <h3 style={{ fontWeight: 700, color: 'var(--color-text-dark)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'uppercase', fontSize: '1rem' }}>
+                                        {venue.name}
+                                    </h3>
+                                    <p style={{ fontSize: '0.875rem', color: 'rgba(51, 51, 51, 0.6)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
+                                        {venue.address || venueTypeLabels[venue.type]}
+                                    </p>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <p style={{ fontSize: '1.125rem', fontWeight: 900, color: 'var(--color-text-dark)' }}>
+                                        {venue.stats.totalGames}
+                                    </p>
+                                    <p style={{ fontSize: '0.625rem', color: 'rgba(51, 51, 51, 0.4)', fontWeight: 800, textTransform: 'uppercase' }}>
+                                        parties
+                                    </p>
+                                </div>
+                            </div>
                         ))}
                     </div>
                 )}

@@ -7,7 +7,7 @@ import { Button } from '@/components/common/ui';
 import PinCodeDisplay from '@/components/game/PinCodeDisplay';
 import PlayerList from '@/components/game/PlayerList';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { getVenues } from '@/lib/firebase/firestore';
+import { getVenues, getUserFavoriteVenues, getUserRecentVenues, toggleVenueFavorite } from '@/lib/firebase/firestore';
 import { createGameSession, subscribeToSession, cancelSession, startGame } from '@/lib/firebase/game-sessions';
 import TeamSetup from '@/components/game/TeamSetup';
 import { Venue, GameFormat, GameSession, Player, Team } from '@/types';
@@ -17,8 +17,11 @@ import {
     UserIcon,
     UsersIcon,
     MapPinIcon,
-    ChevronDownIcon
-} from '@heroicons/react/24/outline';
+    ChevronDownIcon,
+    MagnifyingGlassIcon,
+    StarIcon as StarIconSolid
+} from '@heroicons/react/24/solid';
+import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
 
 type Step = 'config' | 'waiting' | 'teams' | 'guest-teams';
@@ -37,6 +40,9 @@ export default function NewGamePage() {
     const [error, setError] = useState('');
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [venueSearch, setVenueSearch] = useState('');
+    const [favoriteVenues, setFavoriteVenues] = useState<string[]>([]);
+    const [recentVenues, setRecentVenues] = useState<string[]>([]);
 
     useEffect(() => {
         const unsubscribe = initialize();
@@ -74,10 +80,17 @@ export default function NewGamePage() {
 
     const loadVenues = async () => {
         try {
-            const data = await getVenues({ limit: 20 });
+            const data = await getVenues();
             setVenues(data);
-            // Default to null (Aucun)
             setSelectedVenue(null);
+
+            if (user) {
+                const favorites = await getUserFavoriteVenues(user.userId);
+                setFavoriteVenues(favorites);
+
+                const recent = await getUserRecentVenues(user.userId);
+                setRecentVenues(recent);
+            }
         } catch (error) {
             console.error('Error loading venues:', error);
         }
@@ -154,6 +167,45 @@ export default function NewGamePage() {
         }
     };
 
+    const handleToggleFavorite = async (venueId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!user) return;
+
+        try {
+            await toggleVenueFavorite(user.userId, venueId);
+            const newFavorites = favoriteVenues.includes(venueId)
+                ? favoriteVenues.filter(id => id !== venueId)
+                : [...favoriteVenues, venueId];
+            setFavoriteVenues(newFavorites);
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+        }
+    };
+
+    // Filter and sort venues
+    const filteredAndSortedVenues = venues
+        .filter(venue =>
+            venueSearch.trim() === '' ||
+            venue.name.toLowerCase().includes(venueSearch.toLowerCase())
+        )
+        .sort((a, b) => {
+            const aIsFavorite = favoriteVenues.includes(a.venueId);
+            const bIsFavorite = favoriteVenues.includes(b.venueId);
+            const aIsRecent = recentVenues.includes(a.venueId);
+            const bIsRecent = recentVenues.includes(b.venueId);
+
+            // Favorites first
+            if (aIsFavorite && !bIsFavorite) return -1;
+            if (!aIsFavorite && bIsFavorite) return 1;
+
+            // Then recently used
+            if (aIsRecent && !bIsRecent) return -1;
+            if (!aIsRecent && bIsRecent) return 1;
+
+            // Finally alphabetical
+            return a.name.localeCompare(b.name);
+        });
+
     const handleExpired = () => {
         setError('Le code a expiré. Veuillez en générer un nouveau.');
         setSession(null);
@@ -219,6 +271,28 @@ export default function NewGamePage() {
 
                                 {isDropdownOpen && (
                                     <div className={styles.dropdownMenu}>
+                                        {/* Search input */}
+                                        <div style={{ padding: '0.5rem', borderBottom: '1px solid rgba(51, 51, 51, 0.1)' }}>
+                                            <div style={{ position: 'relative' }}>
+                                                <MagnifyingGlassIcon style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: 'rgba(51, 51, 51, 0.4)' }} />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Rechercher..."
+                                                    value={venueSearch}
+                                                    onChange={(e) => setVenueSearch(e.target.value)}
+                                                    style={{
+                                                        width: '100%',
+                                                        padding: '0.5rem 0.75rem 0.5rem 2.25rem',
+                                                        border: '1px solid rgba(51, 51, 51, 0.2)',
+                                                        borderRadius: '0.375rem',
+                                                        fontSize: '0.875rem'
+                                                    }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Aucun option */}
                                         <button
                                             onClick={() => {
                                                 setSelectedVenue(null);
@@ -228,18 +302,41 @@ export default function NewGamePage() {
                                         >
                                             Aucun
                                         </button>
-                                        {venues.map(venue => (
-                                            <button
-                                                key={venue.venueId}
-                                                onClick={() => {
-                                                    setSelectedVenue(venue);
-                                                    setIsDropdownOpen(false);
-                                                }}
-                                                className={`${styles.dropdownItem} ${selectedVenue?.venueId === venue.venueId ? styles.dropdownItemActive : ''}`}
-                                            >
-                                                {venue.name}
-                                            </button>
-                                        ))}
+
+                                        {/* Filtered venues with stars */}
+                                        {filteredAndSortedVenues.map(venue => {
+                                            const isFavorite = favoriteVenues.includes(venue.venueId);
+                                            return (
+                                                <button
+                                                    key={venue.venueId}
+                                                    onClick={() => {
+                                                        setSelectedVenue(venue);
+                                                        setIsDropdownOpen(false);
+                                                    }}
+                                                    className={`${styles.dropdownItem} ${selectedVenue?.venueId === venue.venueId ? styles.dropdownItemActive : ''}`}
+                                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                                                >
+                                                    <span>{venue.name}</span>
+                                                    <button
+                                                        onClick={(e) => handleToggleFavorite(venue.venueId, e)}
+                                                        style={{
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            padding: '0.25rem',
+                                                            cursor: 'pointer',
+                                                            display: 'flex',
+                                                            alignItems: 'center'
+                                                        }}
+                                                    >
+                                                        {isFavorite ? (
+                                                            <StarIconSolid style={{ width: '1.25rem', height: '1.25rem', color: '#F1C40F' }} />
+                                                        ) : (
+                                                            <StarIconOutline style={{ width: '1.25rem', height: '1.25rem', color: 'rgba(51, 51, 51, 0.3)' }} />
+                                                        )}
+                                                    </button>
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>

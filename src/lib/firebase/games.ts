@@ -662,8 +662,8 @@ export async function getFriendsLeaderboard(friendIds: string[], venueId?: strin
     }
 
     leaderboard.sort((a, b) => {
-        if (b.wins !== a.wins) return b.wins - a.wins;
-        return b.winRate - a.winRate;
+        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+        return b.wins - a.wins;
     });
 
     return leaderboard;
@@ -731,7 +731,7 @@ export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
         }
     }
 
-    // Convert to array and sort by wins
+    // Convert to array and sort by winrate
     const leaderboard = Array.from(playerStats.values());
 
     // Fetch current usernames to ensure they are up to date
@@ -752,8 +752,8 @@ export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
     }
 
     leaderboard.sort((a, b) => {
-        if (b.wins !== a.wins) return b.wins - a.wins;
-        return b.winRate - a.winRate;
+        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+        return b.wins - a.wins;
     });
 
     return leaderboard;

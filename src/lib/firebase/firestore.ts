@@ -136,3 +136,65 @@ export async function recalculateVenueStats(): Promise<void> {
         });
     }
 }
+
+// Toggle venue favorite for a user
+export async function toggleVenueFavorite(userId: string, venueId: string): Promise<void> {
+    const db = getFirebaseDb();
+    const userRef = doc(db, 'users', userId);
+
+    const userDoc = await getDoc(userRef);
+    if (!userDoc.exists()) return;
+
+    const userData = userDoc.data();
+    const currentFavorites = userData.favoriteVenues || [];
+
+    const isFavorite = currentFavorites.includes(venueId);
+    const newFavorites = isFavorite
+        ? currentFavorites.filter((id: string) => id !== venueId)
+        : [...currentFavorites, venueId];
+
+    await updateDoc(userRef, {
+        favoriteVenues: newFavorites
+    });
+}
+
+// Get user's favorite venues
+export async function getUserFavoriteVenues(userId: string): Promise<string[]> {
+    const db = getFirebaseDb();
+    const userRef = doc(db, 'users', userId);
+
+    const userDoc = await getDoc(userRef);
+    if (!userDoc.exists()) return [];
+
+    const userData = userDoc.data();
+    return userData.favoriteVenues || [];
+}
+
+// Get user's recently used venues from their games
+export async function getUserRecentVenues(userId: string): Promise<string[]> {
+    const db = getFirebaseDb();
+
+    const q = query(
+        collection(db, 'games'),
+        where('status', '==', 'completed'),
+        orderBy('endedAt', 'desc'),
+        limit(20)
+    );
+
+    const snapshot = await getDocs(q);
+    const venueIds = new Set<string>();
+
+    snapshot.docs.forEach(doc => {
+        const game = doc.data();
+        // Check if user played in this game
+        const userPlayed = game.teams?.some((team: any) =>
+            team.players?.some((player: any) => player.userId === userId)
+        );
+
+        if (userPlayed && game.venueId && game.venueId !== 'none') {
+            venueIds.add(game.venueId);
+        }
+    });
+
+    return Array.from(venueIds);
+}
