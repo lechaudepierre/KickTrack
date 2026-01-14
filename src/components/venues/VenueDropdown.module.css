@@ -1,0 +1,196 @@
+/* VenueDropdown Component - Flat Design Style */
+
+.container {
+    position: relative;
+    width: 100%;
+}
+
+.button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--color-beige);
+    border: 3px solid #333333;
+    border-radius: var(--radius-md);
+    color: var(--color-text-dark);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.button:hover {
+    background: #f5e6c0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+}
+
+.icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--color-text-dark);
+}
+
+.label {
+    flex: 1;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chevron {
+    width: 1.25rem;
+    height: 1.25rem;
+    transition: transform 0.2s ease;
+    color: var(--color-text-dark);
+}
+
+.chevronOpen {
+    transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.dropdown {
+    position: absolute;
+    top: calc(100% + var(--spacing-xs));
+    left: 0;
+    right: 0;
+    background: var(--color-beige);
+    border: 3px solid #333333;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Search */
+.searchContainer {
+    position: relative;
+    padding: var(--spacing-sm);
+    border-bottom: 2px solid rgba(51, 51, 51, 0.2);
+}
+
+.searchIcon {
+    position: absolute;
+    left: calc(var(--spacing-sm) + 0.75rem);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    color: rgba(51, 51, 51, 0.4);
+}
+
+.searchInput {
+    width: 100%;
+    padding: 0.625rem 0.75rem 0.625rem 2.5rem;
+    border: 2px solid rgba(51, 51, 51, 0.2);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-dark);
+    background: rgba(255, 255, 255, 0.5);
+    transition: all 0.2s ease;
+}
+
+.searchInput::placeholder {
+    color: rgba(51, 51, 51, 0.4);
+}
+
+.searchInput:focus {
+    outline: none;
+    border-color: var(--color-field-green);
+    background: white;
+}
+
+/* Options List */
+.options {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(51, 51, 51, 0.1);
+    color: var(--color-text-dark);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.option:last-child {
+    border-bottom: none;
+}
+
+.option:hover {
+    background: rgba(51, 51, 51, 0.08);
+}
+
+.optionActive {
+    background: var(--color-green-medium);
+    color: white;
+    font-weight: 600;
+}
+
+.optionActive:hover {
+    background: var(--color-green-light);
+}
+
+.venueName {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Favorite Button */
+.favoriteButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.favoriteButton:hover {
+    transform: scale(1.2);
+}
+
+.starFilled {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #F1C40F;
+}
+
+.starEmpty {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: rgba(51, 51, 51, 0.3);
+}
+
+.optionActive .starEmpty {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Loading & Empty States */
+.loading,
+.empty {
+    padding: var(--spacing-lg);
+    text-align: center;
+    color: rgba(51, 51, 51, 0.5);
+    font-size: 0.875rem;
+}

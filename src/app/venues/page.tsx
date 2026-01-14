@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, Input } from '@/components/common/ui';
-import { getVenues, searchVenues } from '@/lib/firebase/firestore';
+import { getVenues, searchVenues, getUserFavoriteVenues, toggleVenueFavorite } from '@/lib/firebase/firestore';
+import { useAuthStore } from '@/lib/stores/authStore';
 import { Venue, VenueType } from '@/types';
 import AddVenueModal from '@/components/venues/AddVenueModal';
 import { FieldBackground } from '@/components/FieldDecorations';
@@ -17,6 +18,8 @@ import {
     UserGroupIcon,
     ArrowLeftIcon
 } from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
 
 const venueTypeIcons: Record<VenueType, React.ReactNode> = {
@@ -42,15 +45,23 @@ const venueTypeColors: Record<VenueType, string> = {
 
 export default function VenuesPage() {
     const router = useRouter();
+    const { user } = useAuthStore();
     const [venues, setVenues] = useState<Venue[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [filter, setFilter] = useState<VenueType | 'all'>('all');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [favoriteVenues, setFavoriteVenues] = useState<string[]>([]);
 
     useEffect(() => {
         loadVenues();
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            loadFavorites();
+        }
+    }, [user]);
 
     const loadVenues = async () => {
         setIsLoading(true);
@@ -61,6 +72,32 @@ export default function VenuesPage() {
             console.error('Error loading venues:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const loadFavorites = async () => {
+        if (!user) return;
+        try {
+            const favorites = await getUserFavoriteVenues(user.userId);
+            setFavoriteVenues(favorites);
+        } catch (error) {
+            console.error('Error loading favorites:', error);
+        }
+    };
+
+    const handleToggleFavorite = async (venueId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!user) return;
+
+        try {
+            await toggleVenueFavorite(user.userId, venueId);
+            setFavoriteVenues(prev =>
+                prev.includes(venueId)
+                    ? prev.filter(id => id !== venueId)
+                    : [...prev, venueId]
+            );
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
         }
     };
 
@@ -163,13 +200,32 @@ export default function VenuesPage() {
                                         {venue.address || venueTypeLabels[venue.type]}
                                     </p>
                                 </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <p style={{ fontSize: '1.125rem', fontWeight: 900, color: 'var(--color-text-dark)' }}>
-                                        {venue.stats.totalGames}
-                                    </p>
-                                    <p style={{ fontSize: '0.625rem', color: 'rgba(51, 51, 51, 0.4)', fontWeight: 800, textTransform: 'uppercase' }}>
-                                        parties
-                                    </p>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+                                    <button
+                                        onClick={(e) => handleToggleFavorite(venue.venueId, e)}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            padding: '0.25rem',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        {favoriteVenues.includes(venue.venueId) ? (
+                                            <StarIconSolid style={{ width: '1.5rem', height: '1.5rem', color: '#F1C40F' }} />
+                                        ) : (
+                                            <StarIconOutline style={{ width: '1.5rem', height: '1.5rem', color: 'rgba(51, 51, 51, 0.3)' }} />
+                                        )}
+                                    </button>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <p style={{ fontSize: '1.125rem', fontWeight: 900, color: 'var(--color-text-dark)' }}>
+                                            {venue.stats.totalGames}
+                                        </p>
+                                        <p style={{ fontSize: '0.625rem', color: 'rgba(51, 51, 51, 0.4)', fontWeight: 800, textTransform: 'uppercase' }}>
+                                            parties
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         ))}

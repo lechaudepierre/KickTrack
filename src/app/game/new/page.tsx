@@ -7,21 +7,16 @@ import { Button } from '@/components/common/ui';
 import PinCodeDisplay from '@/components/game/PinCodeDisplay';
 import PlayerList from '@/components/game/PlayerList';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { getVenues, getUserFavoriteVenues, getUserRecentVenues, toggleVenueFavorite } from '@/lib/firebase/firestore';
 import { createGameSession, subscribeToSession, cancelSession, startGame } from '@/lib/firebase/game-sessions';
 import TeamSetup from '@/components/game/TeamSetup';
+import VenueDropdown from '@/components/venues/VenueDropdown';
 import { Venue, GameFormat, GameSession, Player, Team } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import {
     ArrowLeftIcon,
     UserIcon,
-    UsersIcon,
-    MapPinIcon,
-    ChevronDownIcon,
-    MagnifyingGlassIcon,
-    StarIcon as StarIconSolid
-} from '@heroicons/react/24/solid';
-import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
+    UsersIcon
+} from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
 
 type Step = 'config' | 'waiting' | 'teams' | 'guest-teams';
@@ -34,15 +29,9 @@ export default function NewGamePage() {
     const [format, setFormat] = useState<GameFormat>('1v1');
     const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
     const [targetScore, setTargetScore] = useState<6 | 11>(6);
-    const [venues, setVenues] = useState<Venue[]>([]);
     const [session, setSession] = useState<GameSession | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [venueSearch, setVenueSearch] = useState('');
-    const [favoriteVenues, setFavoriteVenues] = useState<string[]>([]);
-    const [recentVenues, setRecentVenues] = useState<string[]>([]);
 
     useEffect(() => {
         const unsubscribe = initialize();
@@ -56,10 +45,6 @@ export default function NewGamePage() {
             router.push('/');
         }
     }, [authLoading, isAuthenticated, router]);
-
-    useEffect(() => {
-        loadVenues();
-    }, []);
 
     // Subscribe to session updates
     useEffect(() => {
@@ -77,24 +62,6 @@ export default function NewGamePage() {
 
         return () => unsubscribe();
     }, [session?.sessionId]);
-
-    const loadVenues = async () => {
-        try {
-            const data = await getVenues();
-            setVenues(data);
-            setSelectedVenue(null);
-
-            if (user) {
-                const favorites = await getUserFavoriteVenues(user.userId);
-                setFavoriteVenues(favorites);
-
-                const recent = await getUserRecentVenues(user.userId);
-                setRecentVenues(recent);
-            }
-        } catch (error) {
-            console.error('Error loading venues:', error);
-        }
-    };
 
     const handleCreateSession = async () => {
         console.log('handleCreateSession called', { user, selectedVenue });
@@ -167,45 +134,6 @@ export default function NewGamePage() {
         }
     };
 
-    const handleToggleFavorite = async (venueId: string, e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (!user) return;
-
-        try {
-            await toggleVenueFavorite(user.userId, venueId);
-            const newFavorites = favoriteVenues.includes(venueId)
-                ? favoriteVenues.filter(id => id !== venueId)
-                : [...favoriteVenues, venueId];
-            setFavoriteVenues(newFavorites);
-        } catch (error) {
-            console.error('Error toggling favorite:', error);
-        }
-    };
-
-    // Filter and sort venues
-    const filteredAndSortedVenues = venues
-        .filter(venue =>
-            venueSearch.trim() === '' ||
-            venue.name.toLowerCase().includes(venueSearch.toLowerCase())
-        )
-        .sort((a, b) => {
-            const aIsFavorite = favoriteVenues.includes(a.venueId);
-            const bIsFavorite = favoriteVenues.includes(b.venueId);
-            const aIsRecent = recentVenues.includes(a.venueId);
-            const bIsRecent = recentVenues.includes(b.venueId);
-
-            // Favorites first
-            if (aIsFavorite && !bIsFavorite) return -1;
-            if (!aIsFavorite && bIsFavorite) return 1;
-
-            // Then recently used
-            if (aIsRecent && !bIsRecent) return -1;
-            if (!aIsRecent && bIsRecent) return 1;
-
-            // Finally alphabetical
-            return a.name.localeCompare(b.name);
-        });
-
     const handleExpired = () => {
         setError('Le code a expiré. Veuillez en générer un nouveau.');
         setSession(null);
@@ -254,92 +182,16 @@ export default function NewGamePage() {
                 {/* Step 1: Configuration */}
                 {step === 'config' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-                        {/* Venue Selection - Custom Dropdown */}
+                        {/* Venue Selection */}
                         <div>
                             <label style={{ display: 'block', marginBottom: 'var(--spacing-md)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
                                 Stade
                             </label>
-                            <div className={styles.dropdownContainer}>
-                                <button
-                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className={styles.dropdownButton}
-                                >
-                                    <MapPinIcon className="w-5 h-5" />
-                                    <span>{selectedVenue?.name || 'Aucun'}</span>
-                                    <ChevronDownIcon className={`w-5 h-5 ${styles.chevron} ${isDropdownOpen ? styles.chevronOpen : ''}`} />
-                                </button>
-
-                                {isDropdownOpen && (
-                                    <div className={styles.dropdownMenu}>
-                                        {/* Search input */}
-                                        <div style={{ padding: '0.5rem', borderBottom: '1px solid rgba(51, 51, 51, 0.1)' }}>
-                                            <div style={{ position: 'relative' }}>
-                                                <MagnifyingGlassIcon style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', width: '1rem', height: '1rem', color: 'rgba(51, 51, 51, 0.4)' }} />
-                                                <input
-                                                    type="text"
-                                                    placeholder="Rechercher..."
-                                                    value={venueSearch}
-                                                    onChange={(e) => setVenueSearch(e.target.value)}
-                                                    style={{
-                                                        width: '100%',
-                                                        padding: '0.5rem 0.75rem 0.5rem 2.25rem',
-                                                        border: '1px solid rgba(51, 51, 51, 0.2)',
-                                                        borderRadius: '0.375rem',
-                                                        fontSize: '0.875rem'
-                                                    }}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Aucun option */}
-                                        <button
-                                            onClick={() => {
-                                                setSelectedVenue(null);
-                                                setIsDropdownOpen(false);
-                                            }}
-                                            className={`${styles.dropdownItem} ${selectedVenue === null ? styles.dropdownItemActive : ''}`}
-                                        >
-                                            Aucun
-                                        </button>
-
-                                        {/* Filtered venues with stars */}
-                                        {filteredAndSortedVenues.map(venue => {
-                                            const isFavorite = favoriteVenues.includes(venue.venueId);
-                                            return (
-                                                <button
-                                                    key={venue.venueId}
-                                                    onClick={() => {
-                                                        setSelectedVenue(venue);
-                                                        setIsDropdownOpen(false);
-                                                    }}
-                                                    className={`${styles.dropdownItem} ${selectedVenue?.venueId === venue.venueId ? styles.dropdownItemActive : ''}`}
-                                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-                                                >
-                                                    <span>{venue.name}</span>
-                                                    <button
-                                                        onClick={(e) => handleToggleFavorite(venue.venueId, e)}
-                                                        style={{
-                                                            background: 'none',
-                                                            border: 'none',
-                                                            padding: '0.25rem',
-                                                            cursor: 'pointer',
-                                                            display: 'flex',
-                                                            alignItems: 'center'
-                                                        }}
-                                                    >
-                                                        {isFavorite ? (
-                                                            <StarIconSolid style={{ width: '1.25rem', height: '1.25rem', color: '#F1C40F' }} />
-                                                        ) : (
-                                                            <StarIconOutline style={{ width: '1.25rem', height: '1.25rem', color: 'rgba(51, 51, 51, 0.3)' }} />
-                                                        )}
-                                                    </button>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
+                            <VenueDropdown
+                                selectedVenue={selectedVenue}
+                                onSelectVenue={setSelectedVenue}
+                                showNoneOption={true}
+                            />
                         </div>
 
                         {/* Format Selection */}
