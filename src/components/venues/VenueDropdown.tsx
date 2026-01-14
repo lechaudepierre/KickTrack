@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Venue } from '@/types';
 import { getVenues, getUserFavoriteVenues, getUserRecentVenues, toggleVenueFavorite } from '@/lib/firebase/firestore';
 import { useAuthStore } from '@/lib/stores/authStore';
@@ -18,13 +18,15 @@ interface VenueDropdownProps {
     onSelectVenue: (venue: Venue | null) => void;
     showNoneOption?: boolean;
     placeholder?: string;
+    noneLabel?: string;
 }
 
 export default function VenueDropdown({
     selectedVenue,
     onSelectVenue,
     showNoneOption = true,
-    placeholder = 'Sélectionner un stade'
+    placeholder = 'Sélectionner un stade',
+    noneLabel = 'Aucun'
 }: VenueDropdownProps) {
     const { user } = useAuthStore();
     const [isOpen, setIsOpen] = useState(false);
@@ -33,10 +35,23 @@ export default function VenueDropdown({
     const [favoriteVenues, setFavoriteVenues] = useState<string[]>([]);
     const [recentVenues, setRecentVenues] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         loadData();
     }, [user]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const loadData = async () => {
         setIsLoading(true);
@@ -59,6 +74,7 @@ export default function VenueDropdown({
     };
 
     const handleToggleFavorite = async (venueId: string, e: React.MouseEvent) => {
+        e.preventDefault();
         e.stopPropagation();
         if (!user) return;
 
@@ -78,7 +94,8 @@ export default function VenueDropdown({
     const filteredAndSortedVenues = venues
         .filter(venue =>
             searchQuery.trim() === '' ||
-            venue.name.toLowerCase().includes(searchQuery.toLowerCase())
+            venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (venue.address && venue.address.toLowerCase().includes(searchQuery.toLowerCase()))
         )
         .sort((a, b) => {
             const aIsFavorite = favoriteVenues.includes(a.venueId);
@@ -98,8 +115,14 @@ export default function VenueDropdown({
             return a.name.localeCompare(b.name);
         });
 
+    const handleSelectVenue = (venue: Venue | null) => {
+        onSelectVenue(venue);
+        setIsOpen(false);
+        setSearchQuery('');
+    };
+
     return (
-        <div className={styles.container}>
+        <div className={styles.container} ref={containerRef}>
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
@@ -107,7 +130,7 @@ export default function VenueDropdown({
             >
                 <MapPinIcon className={styles.icon} />
                 <span className={styles.label}>
-                    {selectedVenue?.name || (showNoneOption ? 'Aucun' : placeholder)}
+                    {selectedVenue?.name || (showNoneOption ? noneLabel : placeholder)}
                 </span>
                 <ChevronDownIcon className={`${styles.chevron} ${isOpen ? styles.chevronOpen : ''}`} />
             </button>
@@ -123,24 +146,19 @@ export default function VenueDropdown({
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className={styles.searchInput}
-                            onClick={(e) => e.stopPropagation()}
+                            autoFocus
                         />
                     </div>
 
                     {/* Options */}
                     <div className={styles.options}>
                         {showNoneOption && (
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    onSelectVenue(null);
-                                    setIsOpen(false);
-                                    setSearchQuery('');
-                                }}
+                            <div
+                                onClick={() => handleSelectVenue(null)}
                                 className={`${styles.option} ${selectedVenue === null ? styles.optionActive : ''}`}
                             >
-                                <span>Aucun</span>
-                            </button>
+                                <span>{noneLabel}</span>
+                            </div>
                         )}
 
                         {isLoading ? (
@@ -151,19 +169,13 @@ export default function VenueDropdown({
                             filteredAndSortedVenues.map(venue => {
                                 const isFavorite = favoriteVenues.includes(venue.venueId);
                                 return (
-                                    <button
+                                    <div
                                         key={venue.venueId}
-                                        type="button"
-                                        onClick={() => {
-                                            onSelectVenue(venue);
-                                            setIsOpen(false);
-                                            setSearchQuery('');
-                                        }}
+                                        onClick={() => handleSelectVenue(venue)}
                                         className={`${styles.option} ${selectedVenue?.venueId === venue.venueId ? styles.optionActive : ''}`}
                                     >
                                         <span className={styles.venueName}>{venue.name}</span>
-                                        <button
-                                            type="button"
+                                        <div
                                             onClick={(e) => handleToggleFavorite(venue.venueId, e)}
                                             className={styles.favoriteButton}
                                         >
@@ -172,8 +184,8 @@ export default function VenueDropdown({
                                             ) : (
                                                 <StarIconOutline className={styles.starEmpty} />
                                             )}
-                                        </button>
-                                    </button>
+                                        </div>
+                                    </div>
                                 );
                             })
                         )}

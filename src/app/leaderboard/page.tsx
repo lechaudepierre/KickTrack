@@ -3,17 +3,15 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { getVenues } from '@/lib/firebase/firestore';
 import { getVenueLeaderboard, getGlobalLeaderboard, getFriendsLeaderboard, LeaderboardEntry } from '@/lib/firebase/games';
 import { getFriends } from '@/lib/firebase/friends';
 import { Venue } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import BottomNav from '@/components/common/BottomNav';
+import VenueDropdown from '@/components/venues/VenueDropdown';
 import {
     ArrowLeftIcon,
     TrophyIcon,
-    ChevronDownIcon,
-    MapPinIcon,
     UsersIcon,
     GlobeAltIcon
 } from '@heroicons/react/24/outline';
@@ -25,9 +23,7 @@ export default function LeaderboardPage() {
     const router = useRouter();
     const { user: currentUser, initialize } = useAuthStore();
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-    const [venues, setVenues] = useState<Venue[]>([]);
-    const [selectedVenue, setSelectedVenue] = useState<string>('all');
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     // Filter type state
@@ -42,22 +38,12 @@ export default function LeaderboardPage() {
     }, [initialize]);
 
     useEffect(() => {
-        loadVenues();
         loadFriendIds();
     }, [currentUser]);
 
     useEffect(() => {
         loadLeaderboard();
     }, [selectedVenue, filterType, friendIds]);
-
-    const loadVenues = async () => {
-        try {
-            const data = await getVenues();
-            setVenues(data);
-        } catch (error) {
-            console.error('Error loading venues:', error);
-        }
-    };
 
     const loadFriendIds = async () => {
         if (!currentUser) return;
@@ -73,14 +59,15 @@ export default function LeaderboardPage() {
     const loadLeaderboard = async () => {
         setIsLoading(true);
         try {
+            const venueId = selectedVenue?.venueId || 'all';
             if (filterType === 'friends') {
-                const data = await getFriendsLeaderboard(friendIds, selectedVenue);
+                const data = await getFriendsLeaderboard(friendIds, venueId);
                 setLeaderboard(data);
-            } else if (selectedVenue === 'all') {
+            } else if (!selectedVenue) {
                 const data = await getGlobalLeaderboard();
                 setLeaderboard(data);
             } else {
-                const data = await getVenueLeaderboard(selectedVenue);
+                const data = await getVenueLeaderboard(selectedVenue.venueId);
                 setLeaderboard(data);
             }
         } catch (error) {
@@ -88,17 +75,6 @@ export default function LeaderboardPage() {
         } finally {
             setIsLoading(false);
         }
-    };
-
-    const getSelectedVenueName = () => {
-        if (selectedVenue === 'all') return 'Tous les stades';
-        const venue = venues.find(v => v.venueId === selectedVenue);
-        return venue?.name || 'Sélectionner';
-    };
-
-    const handleVenueSelect = (venueId: string) => {
-        setSelectedVenue(venueId);
-        setIsDropdownOpen(false);
     };
 
     const hasData = leaderboard.length > 0;
@@ -128,38 +104,14 @@ export default function LeaderboardPage() {
                     </button>
                 </div>
 
-                {/* Venue Filter Dropdown - Show for both filters */}
+                {/* Venue Filter Dropdown */}
                 <div className={styles.filterSection}>
-                    <div className={styles.dropdownContainer}>
-                        <button
-                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className={styles.dropdownButton}
-                        >
-                            <MapPinIcon className="w-5 h-5" />
-                            <span>{getSelectedVenueName()}</span>
-                            <ChevronDownIcon className={`w-5 h-5 ${styles.chevron} ${isDropdownOpen ? styles.chevronOpen : ''}`} />
-                        </button>
-
-                        {isDropdownOpen && (
-                            <div className={styles.dropdownMenu}>
-                                <button
-                                    onClick={() => handleVenueSelect('all')}
-                                    className={`${styles.dropdownItem} ${selectedVenue === 'all' ? styles.dropdownItemActive : ''}`}
-                                >
-                                    Tous les stades
-                                </button>
-                                {venues.map(venue => (
-                                    <button
-                                        key={venue.venueId}
-                                        onClick={() => handleVenueSelect(venue.venueId)}
-                                        className={`${styles.dropdownItem} ${selectedVenue === venue.venueId ? styles.dropdownItemActive : ''}`}
-                                    >
-                                        {venue.name}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    <VenueDropdown
+                        selectedVenue={selectedVenue}
+                        onSelectVenue={setSelectedVenue}
+                        showNoneOption={true}
+                        noneLabel="Tous les stades"
+                    />
                 </div>
 
                 {isLoading ? (
