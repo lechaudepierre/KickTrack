@@ -688,88 +688,214 @@
 
 /* Filter Section */
 .filterSection {
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
 }
 
-.dropdownContainer {
-    position: relative;
+.filterRow {
+    display: flex;
+    gap: var(--spacing-sm);
 }
 
-.dropdownButton {
+.segmentedControl {
+    flex: 1;
+    display: flex;
+    background: #e0d5b8;
+    padding: 3px;
+    border-radius: var(--radius-md);
+    border: 3px solid #333333;
+}
+
+.segment {
+    flex: 1;
+    padding: 6px 4px;
+    border: none;
+    background: transparent;
+    color: rgba(51, 51, 51, 0.6);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: calc(var(--radius-md) - 4px);
+    transition: all 0.2s ease;
+}
+
+.segmentActive {
+    background: var(--color-beige);
+    color: var(--color-text-dark);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Chart */
+.chartCard {
+    background: var(--color-beige);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 3px solid #333333;
+}
+
+.chartContainer {
     width: 100%;
+    margin-bottom: var(--spacing-xs);
+}
+
+.svgChart {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.chartLabels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: rgba(51, 51, 51, 0.4);
+    text-transform: uppercase;
+}
+
+.chartEmpty {
+    height: 100px;
     display: flex;
     align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: rgba(51, 51, 51, 0.4);
+    font-weight: 600;
+    font-style: italic;
+}
+
+/* Match Points */
+.matchPointsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.matchPointCard {
     background: var(--color-beige);
-    border: 3px solid #333333;
+    padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    color: var(--color-text-dark);
+    border: 3px solid #333333;
+    text-align: center;
+}
+
+.matchPointValue {
+    font-size: 1.75rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.matchPointLabel {
+    font-size: 0.7rem;
     font-weight: 800;
-    font-size: 0.9375rem;
-    cursor: pointer;
-    transition: all var(--transition-normal);
+    color: rgba(51, 51, 51, 0.6);
     text-transform: uppercase;
 }
 
-.dropdownButton:hover {
-    background: #f5e6c0;
+/* Roles */
+.rolesGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-sm);
 }
 
-.dropdownButton span {
-    flex: 1;
-    text-align: left;
+.roleCard {
+    background: var(--color-beige);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 3px solid #333333;
+    text-align: center;
 }
 
-.chevron {
-    transition: transform var(--transition-normal);
+.roleTitle {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: rgba(51, 51, 51, 0.6);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.roleValue {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--color-text-dark);
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.roleSub {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: rgba(51, 51, 51, 0.4);
+}
+
+/* Info Button */
+.infoBtn {
+    background: none;
+    border: none;
+    padding: 4px;
+    color: rgba(51, 51, 51, 0.3);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    transition: color 0.2s ease;
+}
+
+.infoBtn:hover {
     color: var(--color-text-dark);
 }
 
-.chevronOpen {
-    transform: rotate(180deg);
-}
-
-.dropdownMenu {
-    position: absolute;
-    top: calc(100% + var(--spacing-xs));
+/* Modal Enhancements */
+.modalOverlay {
+    position: fixed;
+    top: 0;
     left: 0;
     right: 0;
-    background: var(--color-beige);
-    border: 3px solid #333333;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    z-index: 100;
-    max-height: 250px;
-    overflow-y: auto;
-    box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2);
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: var(--spacing-lg);
 }
 
-.dropdownItem {
+.modalContent {
+    background: var(--color-beige);
+    border: 4px solid #333;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    max-width: 400px;
     width: 100%;
-    padding: var(--spacing-sm) var(--spacing-md);
-    background: transparent;
-    border: none;
+    box-shadow: 0 8px 0 #333;
+}
+
+.modalTitle {
+    font-size: 1.25rem;
+    font-weight: 800;
     color: var(--color-text-dark);
-    font-size: 0.875rem;
-    text-align: left;
-    cursor: pointer;
-    transition: background var(--transition-normal);
-    font-weight: 700;
+    margin-bottom: var(--spacing-md);
     text-transform: uppercase;
 }
 
-.dropdownItem:hover {
-    background: rgba(51, 51, 51, 0.1);
+.modalText {
+    color: var(--color-text-dark);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin-bottom: var(--spacing-md);
+    font-weight: 600;
 }
 
-.dropdownItemActive {
-    background: #4CAF50;
-    color: #333333;
-}
-
-.dropdownItem:not(:last-child) {
-    border-bottom: 2px solid #333333;
+.modalSubText {
+    color: rgba(51, 51, 51, 0.7);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    margin-bottom: var(--spacing-lg);
+    font-weight: 600;
 }
 
 /* H2H Search */
@@ -798,13 +924,16 @@
     color: var(--color-text-dark);
     font-size: 0.875rem;
     transition: all var(--transition-normal);
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .h2hSearchInput:focus {
     outline: none;
-    border-color: #4CAF50;
+    border-color: var(--color-green-medium);
 }
+
+
+
 
 .h2hSearchInput::placeholder {
     color: rgba(51, 51, 51, 0.4);

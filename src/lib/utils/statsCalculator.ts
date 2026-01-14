@@ -44,6 +44,21 @@ export interface AdvancedStats {
     cleanSheets: number; // Matchs sans encaisser de but
     comebacks: number;   // Victoires après avoir été mené
 
+    // Balles de match
+    matchPoints: {
+        saved: number;   // Adversaire avait balle de match et on a marqué
+        missed: number;  // On avait balle de match et l'adversaire a marqué
+    };
+
+    // Rôles (pour 2v2)
+    roleStats: {
+        attack: { games: number; wins: number; winRate: number };
+        defense: { games: number; wins: number; winRate: number };
+    };
+
+    // Historique du winrate
+    winRateHistory: Array<{ date: string; winRate: number }>;
+
     // Format préféré (6 ou 11 points)
     preferredFormat: '6' | '11' | null;
     formatStats: {
@@ -66,58 +81,65 @@ export interface AdvancedStats {
 
 export function calculateAdvancedStats(
     games: Game[],
-    userId: string
+    userId: string,
+    filters?: {
+        venueId?: string | null;
+        points?: '6' | '11' | 'all';
+        mode?: '1v1' | '2v2' | 'all';
+    }
 ): AdvancedStats {
-    // Filtrer les matchs complétés uniquement et exclure les parties avec invités
-    const completedGames = games.filter(g => {
+    // 1. Filtrer les matchs selon les critères de base
+    let filteredGames = games.filter(g => {
         if (g.status !== 'completed') return false;
-        if (g.isGuestGame) return false; // Exclude guest games with flag
+        if (g.isGuestGame) return false;
 
-        // For old games without the flag, check if it contains guest players
         const hasGuestPlayers = g.teams?.some(team =>
             team.players?.some(player => player.userId.startsWith('guest_'))
         );
         if (hasGuestPlayers) return false;
 
+        // Filtre par stade
+        if (filters?.venueId && g.venueId !== filters.venueId) return false;
+
+        // Filtre par points
+        if (filters?.points && filters.points !== 'all' && g.gameType !== filters.points) return false;
+
+        // Filtre par mode
+        if (filters?.mode && filters.mode !== 'all') {
+            const is2v2 = g.teams[0].players.length + g.teams[1].players.length === 4;
+            if (filters.mode === '1v1' && is2v2) return false;
+            if (filters.mode === '2v2' && !is2v2) return false;
+        }
+
         return true;
     });
 
-    if (completedGames.length === 0) {
+    if (filteredGames.length === 0) {
         return getEmptyStats();
     }
 
-    // Trier par date (plus récent en premier)
-    const sortedGames = [...completedGames].sort((a, b) => {
+    // Trier par date (plus ancien au plus récent pour le winrate history)
+    const chronologicalGames = [...filteredGames].sort((a, b) => {
         const dateA = a.startedAt instanceof Date ? a.startedAt : new Date((a.startedAt as any).seconds * 1000);
         const dateB = b.startedAt instanceof Date ? b.startedAt : new Date((b.startedAt as any).seconds * 1000);
-        return dateB.getTime() - dateA.getTime();
+        return dateA.getTime() - dateB.getTime();
     });
 
-    // Stats par stade
-    const venueMap = new Map<string, { name: string; games: number; wins: number }>();
+    const sortedGames = [...chronologicalGames].reverse();
 
-    // Stats par format
+    // Initialisation des compteurs
+    const venueMap = new Map<string, { name: string; games: number; wins: number }>();
     const formatStats = {
         '6': { games: 0, wins: 0, winRate: 0 },
         '11': { games: 0, wins: 0, winRate: 0 }
     };
-
-    // Stats par position
     const goalsByPosition: Record<GoalPosition, number> = {
-        defense: 0,
-        midfield: 0,
-        attack: 0,
-        goalkeeper: 0
+        defense: 0, midfield: 0, attack: 0, goalkeeper: 0
     };
-
-    // Head-to-head map
     const h2hMap = new Map<string, { name: string; wins: number; losses: number; draws: number }>();
 
-    // Perfect games
     let perfectGamesInflicted = 0;
     let perfectGamesConceded = 0;
-
-    // Autres stats
     let totalGoalsScored = 0;
     let totalGoalsConceded = 0;
     let cleanSheets = 0;
@@ -125,21 +147,22 @@ export function calculateAdvancedStats(
     let totalDuration = 0;
     let gamesWithDuration = 0;
     let maxWinStreak = 0;
-    let currentStreakCount = 0;
-    let currentStreakType: 'win' | 'loss' | 'none' = 'none';
     let tempStreak = 0;
 
-    // Forme récente (5 derniers matchs)
-    const recentForm: Array<'W' | 'L' | 'D'> = [];
+    // Nouvelles stats
+    let matchPointsSaved = 0;
+    let matchPointsMissed = 0;
+    const roleStats = {
+        attack: { games: 0, wins: 0, winRate: 0 },
+        defense: { games: 0, wins: 0, winRate: 0 }
+    };
+    const winRateHistory: Array<{ date: string; winRate: number }> = [];
+    let cumulativeWins = 0;
 
-    for (let i = 0; i < sortedGames.length; i++) {
-        const game = sortedGames[i];
-
-        // Trouver l'équipe du joueur
-        const userTeamIndex = game.teams.findIndex(t =>
-            t.players.some(p => p.userId === userId)
-        );
-
+    // Analyse des matchs
+    for (let i = 0; i < chronologicalGames.length; i++) {
+        const game = chronologicalGames[i];
+        const userTeamIndex = game.teams.findIndex(t => t.players.some(p => p.userId === userId));
         if (userTeamIndex === -1) continue;
 
         const opponentTeamIndex = userTeamIndex === 0 ? 1 : 0;
@@ -147,100 +170,93 @@ export function calculateAdvancedStats(
         const isDraw = game.winner === undefined;
         const userTeamScore = game.teams[userTeamIndex].score;
         const opponentScore = game.teams[opponentTeamIndex].score;
+        const targetScore = parseInt(game.gameType);
 
-        // Forme récente
-        if (recentForm.length < 5) {
-            recentForm.push(isDraw ? 'D' : isWin ? 'W' : 'L');
-        }
+        // Winrate history
+        if (isWin) cumulativeWins++;
+        const date = game.startedAt instanceof Date ? game.startedAt : new Date((game.startedAt as any).seconds * 1000);
+        winRateHistory.push({
+            date: date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
+            winRate: (cumulativeWins / (i + 1)) * 100
+        });
 
-
-        // Stats par stade - exclude 'Aucun' venue
+        // Stats par stade
         if (game.venueId && game.venueName && game.venueName.toLowerCase() !== 'aucun') {
-            const venueKey = game.venueId;
-            const venueData = venueMap.get(venueKey) || { name: game.venueName, games: 0, wins: 0 };
+            const venueData = venueMap.get(game.venueId) || { name: game.venueName, games: 0, wins: 0 };
             venueData.games++;
             if (isWin) venueData.wins++;
-            venueMap.set(venueKey, venueData);
+            venueMap.set(game.venueId, venueData);
         }
 
         // Stats par format
-        const format = game.gameType;
-        formatStats[format].games++;
-        if (isWin) formatStats[format].wins++;
+        formatStats[game.gameType].games++;
+        if (isWin) formatStats[game.gameType].wins++;
 
-        // Buts marqués par le joueur et position
+        // Buts et positions
         const userGoals = game.goals.filter(g => g.scoredBy === userId);
         totalGoalsScored += userGoals.length;
+        userGoals.forEach(g => g.position && goalsByPosition[g.position]++);
 
-        for (const goal of userGoals) {
-            if (goal.position) {
-                goalsByPosition[goal.position]++;
+        // Rôles (2v2 uniquement, 100% des buts à la même position)
+        const is2v2 = game.teams[0].players.length + game.teams[1].players.length === 4;
+        if (is2v2 && userGoals.length > 0) {
+            const firstPos = userGoals[0].position;
+            const allSamePos = userGoals.every(g => g.position === firstPos);
+            if (allSamePos) {
+                if (firstPos === 'attack') {
+                    roleStats.attack.games++;
+                    if (isWin) roleStats.attack.wins++;
+                } else if (firstPos === 'defense' || firstPos === 'goalkeeper') {
+                    roleStats.defense.games++;
+                    if (isWin) roleStats.defense.wins++;
+                }
             }
         }
 
-        // Buts encaissés
+        // Balles de match
+        let runningUserScore = 0;
+        let runningOpponentScore = 0;
+        for (const goal of game.goals) {
+            const isUserTeamGoal = goal.teamIndex === userTeamIndex;
+            const isOpponentTeamGoal = goal.teamIndex === opponentTeamIndex;
+
+            // Si l'adversaire avait balle de match et qu'on a marqué
+            if (runningOpponentScore === targetScore - 1 && isUserTeamGoal) {
+                matchPointsSaved++;
+            }
+            // Si on avait balle de match et que l'adversaire a marqué
+            if (runningUserScore === targetScore - 1 && isOpponentTeamGoal) {
+                matchPointsMissed++;
+            }
+
+            if (isUserTeamGoal) runningUserScore++;
+            else runningOpponentScore++;
+        }
+
+        // Autres stats classiques
         totalGoalsConceded += opponentScore;
+        if (opponentScore === 0 && isWin) cleanSheets++;
+        if (isWin && opponentScore === 0 && userTeamScore === targetScore) perfectGamesInflicted++;
+        if (!isWin && !isDraw && userTeamScore === 0 && opponentScore === targetScore) perfectGamesConceded++;
 
-        // Clean sheets
-        if (opponentScore === 0 && isWin) {
-            cleanSheets++;
-        }
-
-        // Perfect games (6-0 ou 11-0)
-        const targetScore = parseInt(game.gameType);
-        if (isWin && opponentScore === 0 && userTeamScore === targetScore) {
-            perfectGamesInflicted++;
-        }
-        if (!isWin && !isDraw && userTeamScore === 0 && opponentScore === targetScore) {
-            perfectGamesConceded++;
-        }
-
-        // Head-to-head stats
-        const opponents = game.teams[opponentTeamIndex].players;
-        for (const opponent of opponents) {
-            const h2hData = h2hMap.get(opponent.userId) || {
-                name: opponent.username,
-                wins: 0,
-                losses: 0,
-                draws: 0
-            };
-            if (isDraw) {
-                h2hData.draws++;
-            } else if (isWin) {
-                h2hData.wins++;
-            } else {
-                h2hData.losses++;
-            }
+        // Head-to-head
+        game.teams[opponentTeamIndex].players.forEach(opponent => {
+            const h2hData = h2hMap.get(opponent.userId) || { name: opponent.username, wins: 0, losses: 0, draws: 0 };
+            if (isDraw) h2hData.draws++;
+            else if (isWin) h2hData.wins++;
+            else h2hData.losses++;
             h2hMap.set(opponent.userId, h2hData);
-        }
+        });
 
-        // Comebacks (Remontada)
+        // Remontadas
         if (isWin) {
             let isRemontada = false;
-            let runningUserScore = 0;
-            let runningOpponentScore = 0;
-            const targetScore = parseInt(game.gameType);
-
+            let rUser = 0, rOpp = 0;
             for (const goal of game.goals) {
-                if (goal.teamIndex === userTeamIndex) {
-                    runningUserScore++;
-                } else {
-                    runningOpponentScore++;
-                }
-
-                const deficit = runningOpponentScore - runningUserScore;
-
-                if (targetScore === 6) {
-                    // 6-pt match: opponent has 4 or 5 AND deficit >= 3
-                    if ((runningOpponentScore === 4 || runningOpponentScore === 5) && deficit >= 3) {
-                        isRemontada = true;
-                    }
-                } else if (targetScore === 11) {
-                    // 11-pt match: opponent has 8, 9 or 10 AND deficit >= 5
-                    if ((runningOpponentScore >= 8 && runningOpponentScore <= 10) && deficit >= 5) {
-                        isRemontada = true;
-                    }
-                }
+                if (goal.teamIndex === userTeamIndex) rUser++; else rOpp++;
+                const deficit = rOpp - rUser;
+                if (targetScore === 6 && (rOpp === 4 || rOpp === 5) && deficit >= 3) isRemontada = true;
+                if (targetScore === 11 && (rOpp >= 8 && rOpp <= 10) && deficit >= 5) isRemontada = true;
             }
             if (isRemontada) comebacks++;
         }
@@ -249,141 +265,88 @@ export function calculateAdvancedStats(
             totalDuration += game.duration;
             gamesWithDuration++;
         }
+
+        // Séries
+        if (!isDraw) {
+            if (isWin) {
+                tempStreak++;
+                if (tempStreak > maxWinStreak) maxWinStreak = tempStreak;
+            } else {
+                tempStreak = 0;
+            }
+        }
     }
 
-    // Calcul des séries (On utilise l'ordre chronologique pour plus de simplicité)
-    const chronologicalGames = [...sortedGames].reverse();
-    tempStreak = 0;
-    currentStreakCount = 0;
-    currentStreakType = 'none';
-
-    for (const game of chronologicalGames) {
-        // Determine user's team index for this specific game
-        const userTeamIndex = game.teams.findIndex(t =>
-            t.players.some(p => p.userId === userId)
-        );
-        if (userTeamIndex === -1) continue; // Should not happen if game was in completedGames
-
+    // Série actuelle (basée sur sortedGames qui est du plus récent au plus ancien)
+    let currentStreakCount = 0;
+    let currentStreakType: 'win' | 'loss' | 'none' = 'none';
+    for (const game of sortedGames) {
+        const userTeamIndex = game.teams.findIndex(t => t.players.some(p => p.userId === userId));
         const isWin = game.winner === userTeamIndex;
         const isDraw = game.winner === undefined;
-        const currentResult = isDraw ? 'none' : (isWin ? 'win' : 'loss');
-
-        // Meilleure série de victoires (maxWinStreak)
-        if (currentResult === 'win') {
-            tempStreak++;
-            if (tempStreak > maxWinStreak) {
-                maxWinStreak = tempStreak;
-            }
-        } else {
-            tempStreak = 0;
-        }
-
-        // Série actuelle (currentStreak)
-        // This logic calculates the streak ending with the *last* game processed in chronological order.
-        // Since chronologicalGames is oldest to newest, the last game processed is the most recent.
-        if (currentResult === 'none') {
-            currentStreakType = 'none';
-            currentStreakCount = 0;
-        } else if (currentStreakType === 'none' || currentResult === currentStreakType) {
-            // If it's the first non-draw game, or same type as previous
-            currentStreakType = currentResult;
+        if (isDraw) break;
+        const type = isWin ? 'win' : 'loss';
+        if (currentStreakType === 'none') {
+            currentStreakType = type;
+            currentStreakCount = 1;
+        } else if (currentStreakType === type) {
             currentStreakCount++;
         } else {
-            // Streak type changed, reset count and set new type
-            currentStreakType = currentResult;
-            currentStreakCount = 1;
+            break;
         }
     }
 
-    // Calculer winRates des formats
-    formatStats['6'].winRate = formatStats['6'].games > 0
-        ? formatStats['6'].wins / formatStats['6'].games
-        : 0;
-    formatStats['11'].winRate = formatStats['11'].games > 0
-        ? formatStats['11'].wins / formatStats['11'].games
-        : 0;
+    // Finalisation des winrates
+    formatStats['6'].winRate = formatStats['6'].games > 0 ? formatStats['6'].wins / formatStats['6'].games : 0;
+    formatStats['11'].winRate = formatStats['11'].games > 0 ? formatStats['11'].wins / formatStats['11'].games : 0;
+    roleStats.attack.winRate = roleStats.attack.games > 0 ? roleStats.attack.wins / roleStats.attack.games : 0;
+    roleStats.defense.winRate = roleStats.defense.games > 0 ? roleStats.defense.wins / roleStats.defense.games : 0;
 
-    // Trouver le stade préféré
     const venueStats = Array.from(venueMap.values())
-        .map(v => ({
-            name: v.name,
-            gamesPlayed: v.games,
-            wins: v.wins,
-            winRate: v.games > 0 ? v.wins / v.games : 0
-        }))
+        .map(v => ({ name: v.name, gamesPlayed: v.games, wins: v.wins, winRate: v.games > 0 ? v.wins / v.games : 0 }))
         .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
 
-    const favoriteVenue = venueStats.length > 0
-        ? venueStats[0]
-        : null;
-
-    // Position favorite
     const positionEntries = Object.entries(goalsByPosition) as [GoalPosition, number][];
     const maxPositionGoals = Math.max(...positionEntries.map(([, count]) => count));
-    const favoritePosition = maxPositionGoals > 0
-        ? positionEntries.find(([, count]) => count === maxPositionGoals)?.[0] || null
-        : null;
+    const favoritePosition = maxPositionGoals > 0 ? positionEntries.find(([, count]) => count === maxPositionGoals)?.[0] || null : null;
 
-    // Format préféré
-    const preferredFormat = formatStats['6'].games > formatStats['11'].games
-        ? '6'
-        : formatStats['11'].games > formatStats['6'].games
-            ? '11'
-            : null;
-
-    // Moyennes de buts
-    const goalsIn6 = sortedGames
-        .filter(g => g.gameType === '6')
-        .reduce((sum, g) => sum + g.goals.filter(goal => goal.scoredBy === userId).length, 0);
-    const goalsIn11 = sortedGames
-        .filter(g => g.gameType === '11')
-        .reduce((sum, g) => sum + g.goals.filter(goal => goal.scoredBy === userId).length, 0);
-
-    // Head-to-head stats triés par nombre de parties
-    const headToHead: HeadToHeadStats[] = Array.from(h2hMap.entries())
+    const headToHead = Array.from(h2hMap.entries())
         .map(([opponentId, data]) => ({
-            opponentId,
-            opponentName: data.name,
+            opponentId, opponentName: data.name,
             gamesPlayed: data.wins + data.losses + data.draws,
-            wins: data.wins,
-            losses: data.losses,
-            draws: data.draws,
-            winRate: (data.wins + data.losses + data.draws) > 0
-                ? data.wins / (data.wins + data.losses + data.draws)
-                : 0
+            wins: data.wins, losses: data.losses, draws: data.draws,
+            winRate: (data.wins + data.losses + data.draws) > 0 ? data.wins / (data.wins + data.losses + data.draws) : 0
         }))
         .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
 
     return {
-        favoriteVenue,
+        favoriteVenue: venueStats[0] || null,
         venueStats,
         goalsPerGame: {
-            overall: completedGames.length > 0 ? totalGoalsScored / completedGames.length : 0,
-            match6: formatStats['6'].games > 0 ? goalsIn6 / formatStats['6'].games : 0,
-            match11: formatStats['11'].games > 0 ? goalsIn11 / formatStats['11'].games : 0
+            overall: filteredGames.length > 0 ? totalGoalsScored / filteredGames.length : 0,
+            match6: formatStats['6'].games > 0 ? (chronologicalGames.filter(g => g.gameType === '6').reduce((s, g) => s + g.goals.filter(goal => goal.scoredBy === userId).length, 0)) / formatStats['6'].games : 0,
+            match11: formatStats['11'].games > 0 ? (chronologicalGames.filter(g => g.gameType === '11').reduce((s, g) => s + g.goals.filter(goal => goal.scoredBy === userId).length, 0)) / formatStats['11'].games : 0
         },
         favoritePosition,
         goalsByPosition,
         winStreak: maxWinStreak,
-        currentStreak: {
-            type: currentStreakType,
-            count: currentStreakCount
-        },
-        averageGameDuration: gamesWithDuration > 0
-            ? (totalDuration / gamesWithDuration) / 60
-            : 0,
+        currentStreak: { type: currentStreakType, count: currentStreakCount },
+        averageGameDuration: gamesWithDuration > 0 ? (totalDuration / gamesWithDuration) / 60 : 0,
         totalGoalsScored,
         totalGoalsConceded,
         cleanSheets,
         comebacks,
-        preferredFormat,
+        matchPoints: { saved: matchPointsSaved, missed: matchPointsMissed },
+        roleStats,
+        winRateHistory: winRateHistory.slice(-20), // Garder les 20 derniers pour le graph
+        preferredFormat: formatStats['6'].games > formatStats['11'].games ? '6' : formatStats['11'].games > formatStats['6'].games ? '11' : null,
         formatStats,
-        recentForm: recentForm.reverse(), // Most recent on the right
+        recentForm: sortedGames.slice(0, 5).map(g => {
+            const idx = g.teams.findIndex(t => t.players.some(p => p.userId === userId));
+            return g.winner === undefined ? 'D' : g.winner === idx ? 'W' : 'L';
+        }).reverse(),
         headToHead,
-        perfectGames: {
-            inflicted: perfectGamesInflicted,
-            conceded: perfectGamesConceded
-        }
+        perfectGames: { inflicted: perfectGamesInflicted, conceded: perfectGamesConceded }
     };
 }
 
@@ -401,6 +364,12 @@ function getEmptyStats(): AdvancedStats {
         totalGoalsConceded: 0,
         cleanSheets: 0,
         comebacks: 0,
+        matchPoints: { saved: 0, missed: 0 },
+        roleStats: {
+            attack: { games: 0, wins: 0, winRate: 0 },
+            defense: { games: 0, wins: 0, winRate: 0 }
+        },
+        winRateHistory: [],
         preferredFormat: null,
         formatStats: {
             '6': { games: 0, wins: 0, winRate: 0 },
