@@ -37,6 +37,9 @@ export default function VenueDropdown({
     const [isLoading, setIsLoading] = useState(true);
     const containerRef = useRef<HTMLDivElement>(null);
 
+    // Store the order when dropdown opens - won't change while open
+    const [sortOrder, setSortOrder] = useState<string[]>([]);
+
     useEffect(() => {
         loadData();
     }, [user]);
@@ -52,6 +55,25 @@ export default function VenueDropdown({
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    // Calculate sort order when dropdown opens
+    useEffect(() => {
+        if (isOpen && venues.length > 0) {
+            const sorted = [...venues].sort((a, b) => {
+                const aIsFavorite = favoriteVenues.includes(a.venueId);
+                const bIsFavorite = favoriteVenues.includes(b.venueId);
+                const aIsRecent = recentVenues.includes(a.venueId);
+                const bIsRecent = recentVenues.includes(b.venueId);
+
+                if (aIsFavorite && !bIsFavorite) return -1;
+                if (!aIsFavorite && bIsFavorite) return 1;
+                if (aIsRecent && !bIsRecent) return -1;
+                if (!aIsRecent && bIsRecent) return 1;
+                return a.name.localeCompare(b.name);
+            });
+            setSortOrder(sorted.map(v => v.venueId));
+        }
+    }, [isOpen, venues, favoriteVenues, recentVenues]); // Only recalculate when dropdown opens or data changes
 
     const loadData = async () => {
         setIsLoading(true);
@@ -97,29 +119,21 @@ export default function VenueDropdown({
         }
     };
 
-    // Filter and sort venues
-    const filteredAndSortedVenues = venues
+    // Filter venues by search, keep sort order stable
+    const filteredVenues = venues
         .filter(venue =>
             searchQuery.trim() === '' ||
             venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (venue.address && venue.address.toLowerCase().includes(searchQuery.toLowerCase()))
         )
         .sort((a, b) => {
-            const aIsFavorite = favoriteVenues.includes(a.venueId);
-            const bIsFavorite = favoriteVenues.includes(b.venueId);
-            const aIsRecent = recentVenues.includes(a.venueId);
-            const bIsRecent = recentVenues.includes(b.venueId);
-
-            // Favorites first
-            if (aIsFavorite && !bIsFavorite) return -1;
-            if (!aIsFavorite && bIsFavorite) return 1;
-
-            // Then recently used
-            if (aIsRecent && !bIsRecent) return -1;
-            if (!aIsRecent && bIsRecent) return 1;
-
-            // Finally alphabetical
-            return a.name.localeCompare(b.name);
+            // Use the stored sort order
+            const aIndex = sortOrder.indexOf(a.venueId);
+            const bIndex = sortOrder.indexOf(b.venueId);
+            if (aIndex === -1 && bIndex === -1) return a.name.localeCompare(b.name); // Fallback if not in sortOrder (shouldn't happen if sortOrder is comprehensive)
+            if (aIndex === -1) return 1; // 'a' is not in sortOrder, push it to the end
+            if (bIndex === -1) return -1; // 'b' is not in sortOrder, push it to the end
+            return aIndex - bIndex;
         });
 
     const handleSelectVenue = (venue: Venue | null) => {
@@ -170,10 +184,10 @@ export default function VenueDropdown({
 
                         {isLoading ? (
                             <div className={styles.loading}>Chargement...</div>
-                        ) : filteredAndSortedVenues.length === 0 ? (
+                        ) : filteredVenues.length === 0 ? (
                             <div className={styles.empty}>Aucun stade trouvé</div>
                         ) : (
-                            filteredAndSortedVenues.map(venue => {
+                            filteredVenues.map(venue => {
                                 const isFavorite = favoriteVenues.includes(venue.venueId);
                                 return (
                                     <div
