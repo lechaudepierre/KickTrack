@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { registerComplete, checkUsernameAvailable } from '@/lib/firebase/auth';
+import { registerComplete } from '@/lib/firebase/auth';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { FieldBackground } from '@/components/FieldDecorations';
 import styles from './page.module.css';
@@ -41,14 +41,7 @@ export default function RegisterPage() {
         setError('');
 
         try {
-            // Check if username is available
-            const isAvailable = await checkUsernameAvailable(username);
-            if (!isAvailable) {
-                setError('Ce nom d\'utilisateur est déjà pris');
-                setIsLoading(false);
-                return;
-            }
-
+            // Username availability is now checked inside registerComplete (after auth)
             const user = await registerComplete(username, email, password);
             setUser(user);
             router.push('/');

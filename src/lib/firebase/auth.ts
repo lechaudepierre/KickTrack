@@ -72,6 +72,18 @@ export async function registerComplete(
     const auth = getFirebaseAuth();
     const result = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(result.user, { displayName: username });
+
+    // Wait for the auth token to be ready before writing to Firestore
+    await result.user.getIdToken(true);
+
+    // Check username availability after auth (when we have permission to read)
+    const isAvailable = await checkUsernameAvailable(username);
+    if (!isAvailable) {
+        // Delete the auth user since we can't complete registration
+        await result.user.delete();
+        throw new Error('Ce nom d\'utilisateur est déjà pris');
+    }
+
     return createUserDocument(result.user.uid, username, email);
 }
 
