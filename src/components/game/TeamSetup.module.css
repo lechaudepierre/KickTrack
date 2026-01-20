@@ -118,14 +118,13 @@
     border-radius: 0.75rem;
     border: 3px solid #333333;
     box-shadow: 0 4px 0 #333333;
-    cursor: grab;
-    transition: all 0.1s ease;
+    cursor: pointer;
+    transition: all 0.15s ease;
     user-select: none;
-    touch-action: none;
 }
 
 .playerItem:active {
-    cursor: grabbing;
+    transform: scale(0.98);
 }
 
 .playerItem:hover {
@@ -237,10 +236,33 @@
     transform: scale(0.95);
 }
 
+.selected {
+    background-color: #FFF3CD;
+    border-color: #F59E0B;
+    box-shadow: 0 4px 0 #D97706, 0 0 0 3px rgba(245, 158, 11, 0.3);
+    transform: translateY(-2px);
+}
+
+.selected .playerAvatar {
+    background-color: #FEF3C7;
+    border-color: #F59E0B;
+}
+
 .dropZoneActive {
     border-style: dashed !important;
-    background-color: rgba(51, 51, 51, 0.05) !important;
+    background-color: rgba(245, 158, 11, 0.1) !important;
     transform: scale(1.02);
+    cursor: pointer;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 4px 0 #333333;
+    }
+    50% {
+        box-shadow: 0 4px 0 #333333, 0 0 0 4px rgba(245, 158, 11, 0.3);
+    }
 }
 
 @media (min-width: 640px) {

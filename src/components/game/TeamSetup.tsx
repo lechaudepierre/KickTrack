@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { Player, Team, TeamColor } from '@/types';
-import { UserIcon } from '@heroicons/react/24/outline';
-import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import styles from './TeamSetup.module.css';
 
 interface TeamSetupProps {
@@ -27,8 +25,10 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
     const [team2Players, setTeam2Players] = useState<Player[]>([]);
     const [team1Color, setTeam1Color] = useState<TeamColor>('blue');
     const [team2Color, setTeam2Color] = useState<TeamColor>('red');
-    const [draggedPlayer, setDraggedPlayer] = useState<Player | null>(null);
-    const [dragSource, setDragSource] = useState<'waiting' | 'team1' | 'team2' | null>(null);
+
+    // Selected player for click-to-assign functionality
+    const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+    const [selectedSource, setSelectedSource] = useState<'waiting' | 'team1' | 'team2' | null>(null);
 
     // Initialize waiting list with all players
     useEffect(() => {
@@ -45,38 +45,50 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
         }
     }, [players, format]);
 
-    const handleDragStart = (player: Player, source: 'waiting' | 'team1' | 'team2') => {
-        setDraggedPlayer(player);
-        setDragSource(source);
+    // Handle player selection (click on player)
+    const handlePlayerClick = (player: Player, source: 'waiting' | 'team1' | 'team2') => {
+        if (selectedPlayer?.userId === player.userId) {
+            // Deselect if clicking the same player
+            setSelectedPlayer(null);
+            setSelectedSource(null);
+        } else {
+            // Select the player
+            setSelectedPlayer(player);
+            setSelectedSource(source);
+        }
     };
 
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-    };
+    // Handle team/zone click to assign selected player
+    const handleZoneClick = (target: 'waiting' | 'team1' | 'team2') => {
+        if (!selectedPlayer || !selectedSource || selectedSource === target) return;
 
-    const handleDrop = (target: 'waiting' | 'team1' | 'team2') => {
-        if (!draggedPlayer || !dragSource || dragSource === target) return;
+        const maxPlayers = format === '1v1' ? 1 : 2;
+
+        // Check if target team is full (except for waiting list)
+        if (target === 'team1' && team1Players.length >= maxPlayers) return;
+        if (target === 'team2' && team2Players.length >= maxPlayers) return;
 
         // Remove from source
-        if (dragSource === 'waiting') {
-            setWaitingPlayers(prev => prev.filter(p => p.userId !== draggedPlayer.userId));
-        } else if (dragSource === 'team1') {
-            setTeam1Players(prev => prev.filter(p => p.userId !== draggedPlayer.userId));
-        } else if (dragSource === 'team2') {
-            setTeam2Players(prev => prev.filter(p => p.userId !== draggedPlayer.userId));
+        if (selectedSource === 'waiting') {
+            setWaitingPlayers(prev => prev.filter(p => p.userId !== selectedPlayer.userId));
+        } else if (selectedSource === 'team1') {
+            setTeam1Players(prev => prev.filter(p => p.userId !== selectedPlayer.userId));
+        } else if (selectedSource === 'team2') {
+            setTeam2Players(prev => prev.filter(p => p.userId !== selectedPlayer.userId));
         }
 
         // Add to target
         if (target === 'waiting') {
-            setWaitingPlayers(prev => [...prev, draggedPlayer]);
+            setWaitingPlayers(prev => [...prev, selectedPlayer]);
         } else if (target === 'team1') {
-            setTeam1Players(prev => [...prev, draggedPlayer]);
+            setTeam1Players(prev => [...prev, selectedPlayer]);
         } else if (target === 'team2') {
-            setTeam2Players(prev => [...prev, draggedPlayer]);
+            setTeam2Players(prev => [...prev, selectedPlayer]);
         }
 
-        setDraggedPlayer(null);
-        setDragSource(null);
+        // Clear selection
+        setSelectedPlayer(null);
+        setSelectedSource(null);
     };
 
     const handleStart = () => {
@@ -103,12 +115,12 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
         const target = teamNum === 1 ? 'team1' : 'team2';
         const maxPlayers = format === '1v1' ? 1 : 2;
         const isFull = currentPlayers.length >= maxPlayers;
+        const canReceivePlayer = selectedPlayer && selectedSource !== target && !isFull;
 
         return (
             <div
-                className={`${styles.teamCard} ${styles[color]} ${draggedPlayer && !isFull ? styles.dropZoneActive : ''}`}
-                onDragOver={handleDragOver}
-                onDrop={() => !isFull && handleDrop(target)}
+                className={`${styles.teamCard} ${styles[color]} ${canReceivePlayer ? styles.dropZoneActive : ''}`}
+                onClick={() => handleZoneClick(target)}
             >
                 <div className={styles.cardHeader}>
                     <h3 className={styles.teamName}>{getTeamName(color)}</h3>
@@ -118,7 +130,10 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
                         {TEAM_COLORS.map((c) => (
                             <button
                                 key={c.id}
-                                onClick={() => setColor(c.id)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setColor(c.id);
+                                }}
                                 className={`${styles.colorButton} ${styles[c.id]} ${color === c.id ? styles.colorButtonActive : ''}`}
                                 title={c.label}
                             />
@@ -130,10 +145,11 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
                     {currentPlayers.map((player) => (
                         <div
                             key={player.userId}
-                            className={`${styles.playerItem} ${draggedPlayer?.userId === player.userId ? styles.dragging : ''}`}
-                            draggable
-                            onDragStart={() => handleDragStart(player, target)}
-                            style={{ touchAction: 'none' }}
+                            className={`${styles.playerItem} ${selectedPlayer?.userId === player.userId ? styles.selected : ''}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handlePlayerClick(player, target);
+                            }}
                         >
                             <div className={styles.playerAvatar}>
                                 {player.username.charAt(0).toUpperCase()}
@@ -143,7 +159,7 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
                     ))}
                     {currentPlayers.length === 0 && (
                         <div className={styles.emptyState}>
-                            Glissez un joueur ici
+                            {selectedPlayer ? 'Cliquez ici pour assigner' : 'Sélectionnez un joueur'}
                         </div>
                     )}
                 </div>
@@ -158,28 +174,34 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
             team1Color === team2Color;
     };
 
+    const canWaitingReceive = selectedPlayer && selectedSource !== 'waiting';
+
     return (
         <div className={styles.container}>
             <div className={styles.header}>
                 <h2 className={styles.title}>Préparation des équipes</h2>
-                <p className={styles.subtitle}>Glissez les joueurs dans leurs équipes</p>
+                <p className={styles.subtitle}>
+                    {selectedPlayer
+                        ? `${selectedPlayer.username} sélectionné - Cliquez sur une équipe`
+                        : 'Cliquez sur un joueur puis sur une équipe'}
+                </p>
             </div>
 
             {/* Waiting List */}
             <div
-                className={`${styles.waitingListContainer} ${draggedPlayer && dragSource !== 'waiting' ? styles.dropZoneActive : ''}`}
-                onDragOver={handleDragOver}
-                onDrop={() => handleDrop('waiting')}
+                className={`${styles.waitingListContainer} ${canWaitingReceive ? styles.dropZoneActive : ''}`}
+                onClick={() => handleZoneClick('waiting')}
             >
-                <h3 className={styles.waitingListTitle}>Liste d'attente</h3>
+                <h3 className={styles.waitingListTitle}>Joueurs à assigner</h3>
                 <div className={styles.waitingPlayerList}>
                     {waitingPlayers.map(player => (
                         <div
                             key={player.userId}
-                            className={`${styles.playerItem} ${draggedPlayer?.userId === player.userId ? styles.dragging : ''}`}
-                            draggable
-                            onDragStart={() => handleDragStart(player, 'waiting')}
-                            style={{ touchAction: 'none' }}
+                            className={`${styles.playerItem} ${selectedPlayer?.userId === player.userId ? styles.selected : ''}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handlePlayerClick(player, 'waiting');
+                            }}
                         >
                             <div className={styles.playerAvatar}>
                                 {player.username.charAt(0).toUpperCase()}
@@ -188,7 +210,7 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
                         </div>
                     ))}
                     {waitingPlayers.length === 0 && (
-                        <p className={styles.emptyWaitingList}>Tous les joueurs sont en place !</p>
+                        <p className={styles.emptyWaitingList}>Tous les joueurs sont assignés !</p>
                     )}
                 </div>
             </div>
