@@ -33,7 +33,8 @@ const initialStats: UserStats = {
     losses: 0,
     goalsScored: 0,
     goalsConceded: 0,
-    winRate: 0
+    winRate: 0,
+    elo: 1000
 };
 
 // Create user document in Firestore

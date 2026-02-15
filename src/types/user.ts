@@ -3,6 +3,7 @@ export interface DailyStats {
     gamesPlayed: number;
     wins: number;
     goalsScored: number;
+    elo?: number; // Elo at the end of the day
 }
 
 export interface UserStats {
@@ -12,6 +13,8 @@ export interface UserStats {
     goalsScored: number;
     goalsConceded: number;
     winRate: number;
+    elo?: number; // Current Elo rating
+    eloHistory?: { date: string, elo: number }[]; // Track progress
     history?: Record<string, DailyStats>; // Key is YYYY-MM-DD
 }
 

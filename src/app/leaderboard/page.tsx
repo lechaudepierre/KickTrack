@@ -139,7 +139,7 @@ export default function LeaderboardPage() {
                                             </div>
                                         </div>
                                         <div className={styles.podiumName}>{leaderboard[1].username}</div>
-                                        <div className={styles.podiumScore}>{Math.round(leaderboard[1].winRate * 100)}% winrate</div>
+                                        <div className={styles.podiumScore}>{leaderboard[1].elo || 1000} Elo</div>
                                     </div>
                                 )}
 
@@ -153,7 +153,7 @@ export default function LeaderboardPage() {
                                             </div>
                                         </div>
                                         <div className={styles.podiumName}>{leaderboard[0].username}</div>
-                                        <div className={styles.podiumScore}>{Math.round(leaderboard[0].winRate * 100)}% winrate</div>
+                                        <div className={styles.podiumScore}>{leaderboard[0].elo || 1000} Elo</div>
                                     </div>
                                 )}
 
@@ -166,7 +166,7 @@ export default function LeaderboardPage() {
                                             </div>
                                         </div>
                                         <div className={styles.podiumName}>{leaderboard[2].username}</div>
-                                        <div className={styles.podiumScore}>{Math.round(leaderboard[2].winRate * 100)}% winrate</div>
+                                        <div className={styles.podiumScore}>{leaderboard[2].elo || 1000} Elo</div>
                                     </div>
                                 )}
                             </div>
@@ -178,7 +178,7 @@ export default function LeaderboardPage() {
                                 <div className="text-center">#</div>
                                 <div>Joueur</div>
                                 <div className="text-center">V</div>
-                                <div className="text-center">%</div>
+                                <div className="text-center">Elo</div>
                             </div>
 
                             {leaderboard.map((player, index) => (
@@ -198,9 +198,7 @@ export default function LeaderboardPage() {
                                     </div>
                                     <div className={styles.statCol}>{player.wins}</div>
                                     <div className={`${styles.statCol} ${styles.winRate}`}>
-                                        {player.totalGames > 0
-                                            ? Math.round(player.winRate * 100)
-                                            : 0}%
+                                        {player.elo || 1000}
                                     </div>
                                 </div>
                             ))}

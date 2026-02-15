@@ -19,12 +19,64 @@ import { Firestore } from 'firebase/firestore';
 
 const GAMES_COLLECTION = 'games';
 
+// Elo calculation helpers
+
+// K-Factor: 64 for first 10 games (placement), 32 afterwards (standard)
+function getKFactor(gamesPlayed: number): number {
+    if (gamesPlayed < 10) return 64;
+    return 32;
+}
+
+// Calculate expected probability of winning based on Elo difference
+function calculateProbability(rating1: number, rating2: number): number {
+    return 1.0 / (1.0 + Math.pow(10, (rating2 - rating1) / 400.0));
+}
+
+interface EloUpdate {
+    newElo: number;
+    eloChange: number;
+}
+
+// Calculate new Elo for a player in a 2v2 match
+function calculateEloChange(
+    playerElo: number,
+    partnerElo: number,
+    opponentAvgElo: number,
+    result: number, // 1 for win, 0 for loss
+    gamesPlayed: number
+): EloUpdate {
+    // 1. Team Probability (50% weight)
+    // Based on the average of the team vs average of opponents
+    const teamAvgElo = (playerElo + partnerElo) / 2;
+    const teamProb = calculateProbability(teamAvgElo, opponentAvgElo);
+
+    // 2. Personal Probability (50% weight)
+    // Based on the player's own rating vs average of opponents
+    const personalProb = calculateProbability(playerElo, opponentAvgElo);
+
+    // 3. Combined Probability
+    // We average the two probabilities to account for both team strength and individual contribution
+    const finalProb = (teamProb + personalProb) / 2;
+
+    // 4. K-Factor
+    const kFactor = getKFactor(gamesPlayed);
+
+    // 5. Calculate Change
+    const change = Math.round(kFactor * (result - finalProb));
+
+    return {
+        newElo: playerElo + change,
+        eloChange: change
+    };
+}
+
 // Helper function to update player stats after a game ends
 async function updatePlayerStatsAfterGame(
     db: Firestore,
     teams: Team[],
     goals: Goal[],
-    winner: 0 | 1
+    winner: 0 | 1,
+    format?: string // '1v1' or '2v2'
 ): Promise<void> {
     // Check if any player is a guest (userId starts with 'guest_')
     const hasGuestPlayers = teams.some(team =>
@@ -42,12 +94,88 @@ async function updatePlayerStatsAfterGame(
         goalsByPlayer[goal.scoredBy] = (goalsByPlayer[goal.scoredBy] || 0) + 1;
     });
 
+    // Pre-fetch user data to get current Elo ratings
+    // We fetch for both 1v1 and 2v2 to handle Elo updates
+    const playerUserData: Record<string, any> = {};
+
+    for (const team of teams) {
+        for (const player of team.players) {
+            const userDoc = await getDoc(doc(db, 'users', player.userId));
+            if (userDoc.exists()) {
+                playerUserData[player.userId] = userDoc.data();
+            }
+        }
+    }
+
     const updatePromises = [];
 
     for (let teamIndex = 0; teamIndex < teams.length; teamIndex++) {
         const team = teams[teamIndex];
         const isWinner = teamIndex === winner;
         const goalsConceded = teams[1 - teamIndex].score;
+        const opponentTeam = teams[1 - teamIndex];
+
+        // Prepare Elo calculations for this team if 2v2
+        let eloUpdates: Record<string, EloUpdate> = {};
+
+        if (format === '2v2' && team.players.length === 2 && opponentTeam.players.length === 2) {
+            // Calculate opponent average Elo
+            let opponentEloSum = 0;
+            let opponentCount = 0;
+
+            for (const oppPlayer of opponentTeam.players) {
+                const oppData = playerUserData[oppPlayer.userId];
+                // Default to 1000 if no Elo found
+                opponentEloSum += (oppData?.stats?.elo || 1000);
+                opponentCount++;
+            }
+            const opponentAvgElo = opponentCount > 0 ? opponentEloSum / opponentCount : 1000;
+
+            // Calculate Elo update for each player in the current team
+            for (const player of team.players) {
+                const partner = team.players.find(p => p.userId !== player.userId);
+                if (partner) {
+                    const playerData = playerUserData[player.userId];
+                    const partnerData = playerUserData[partner.userId];
+
+                    const playerElo = playerData?.stats?.elo || 1000;
+                    const partnerElo = partnerData?.stats?.elo || 1000;
+                    // For games played, we use totals from stats (or 0 if new)
+                    // Note: This logic assumes 'totalGames' is accurate for 2v2 context mostly, 
+                    // or essentially captures experience level.
+                    const gamesPlayed = playerData?.stats?.totalGames || 0;
+
+                    eloUpdates[player.userId] = calculateEloChange(
+                        playerElo,
+                        partnerElo,
+                        opponentAvgElo,
+                        isWinner ? 1 : 0,
+                        gamesPlayed
+                    );
+                }
+            }
+        } else if (format === '1v1' && team.players.length === 1 && opponentTeam.players.length === 1) {
+            const player = team.players[0];
+            const opponent = opponentTeam.players[0];
+
+            const playerData = playerUserData[player.userId];
+            const opponentData = playerUserData[opponent.userId];
+
+            const playerElo = playerData?.stats?.elo || 1000;
+            const opponentElo = opponentData?.stats?.elo || 1000;
+            const gamesPlayed = playerData?.stats?.totalGames || 0;
+
+            // Standard Elo formula for 1v1
+            // We reuse calculateProbability helper
+            const prob = calculateProbability(playerElo, opponentElo);
+            const kFactor = getKFactor(gamesPlayed);
+            const change = Math.round(kFactor * ((isWinner ? 1 : 0) - prob));
+
+            eloUpdates[player.userId] = {
+                newElo: playerElo + change,
+                eloChange: change
+            };
+        }
 
         for (const player of team.players) {
             const playerRef = doc(db, 'users', player.userId);
@@ -63,7 +191,8 @@ async function updatePlayerStatsAfterGame(
                     losses: 0,
                     goalsScored: 0,
                     goalsConceded: 0,
-                    winRate: 0
+                    winRate: 0,
+                    elo: 1000
                 };
 
                 const today = new Date().toISOString().split('T')[0];
@@ -75,11 +204,27 @@ async function updatePlayerStatsAfterGame(
                     goalsScored: 0
                 };
 
+                // Determine new Elo
+                let newElo = currentStats.elo || 1000;
+                let eloHistory = currentStats.eloHistory || [];
+
+                // Only apply Elo update if calculated (meaning it was 2v2)
+                if (eloUpdates[player.userId]) {
+                    newElo = eloUpdates[player.userId].newElo;
+
+                    // Add to history
+                    eloHistory.push({
+                        date: new Date().toISOString(), // Full timestamp for precision
+                        elo: newElo
+                    });
+                }
+
                 const newDailyStats = {
                     date: today,
                     gamesPlayed: dailyStats.gamesPlayed + 1,
                     wins: dailyStats.wins + (isWinner ? 1 : 0),
-                    goalsScored: dailyStats.goalsScored + (goalsByPlayer[player.userId] || 0)
+                    goalsScored: dailyStats.goalsScored + (goalsByPlayer[player.userId] || 0),
+                    elo: newElo // Store end-of-day Elo
                 };
 
                 const newStats = {
@@ -89,6 +234,8 @@ async function updatePlayerStatsAfterGame(
                     goalsScored: currentStats.goalsScored + (goalsByPlayer[player.userId] || 0),
                     goalsConceded: currentStats.goalsConceded + goalsConceded,
                     winRate: 0,
+                    elo: newElo,
+                    eloHistory: eloHistory,
                     history: {
                         ...currentHistory,
                         [today]: newDailyStats
@@ -243,11 +390,16 @@ export async function addGoal(
 
     // If game is won, update player stats and venue stats
     if (isGameWon) {
+        // Determine format based on team size
+        const playerCount = updatedTeams[0].players.length;
+        const format = playerCount === 1 ? '1v1' : '2v2';
+
         await updatePlayerStatsAfterGame(
             db,
             updatedTeams,
             [...game.goals, goal],
-            teamIndex
+            teamIndex,
+            format
         );
 
         // Update venue stats
@@ -339,7 +491,11 @@ export async function endGame(gameId: string): Promise<GameResults> {
 
     // Update player stats if there's a winner
     if (winner !== undefined) {
-        await updatePlayerStatsAfterGame(db, game.teams, game.goals, winner);
+        // Determine format based on team size
+        const playerCount = game.teams[0].players.length;
+        const format = playerCount === 1 ? '1v1' : '2v2';
+
+        await updatePlayerStatsAfterGame(db, game.teams, game.goals, winner, format);
     }
 
     // Update venue stats
@@ -475,6 +631,7 @@ export interface LeaderboardEntry {
     totalGames: number;
     goalsScored: number;
     winRate: number;
+    elo?: number;
 }
 
 // Alias for backwards compatibility
@@ -558,12 +715,20 @@ export async function getVenueLeaderboard(venueId: string): Promise<VenueLeaderb
                 const entry = playerStats.get(doc.id);
                 if (entry) {
                     entry.username = userData.username;
+                    // Fetch current Elo from user profile
+                    // This is better than aggregating from games as games might be out of order or misses manual adjustments
+                    entry.elo = userData.stats?.elo || 1000;
                 }
             });
         }
     }
 
     leaderboard.sort((a, b) => {
+        // Sort by Elo if available, otherwise fallback to winRate
+        const eloA = a.elo || 1000;
+        const eloB = b.elo || 1000;
+
+        if (eloA !== eloB) return eloB - eloA;
         if (b.winRate !== a.winRate) return b.winRate - a.winRate;
         return b.wins - a.wins;
     });
@@ -656,12 +821,17 @@ export async function getFriendsLeaderboard(friendIds: string[], venueId?: strin
                 const entry = playerStats.get(doc.id);
                 if (entry) {
                     entry.username = userData.username;
+                    entry.elo = userData.stats?.elo || 1000;
                 }
             });
         }
     }
 
     leaderboard.sort((a, b) => {
+        const eloA = a.elo || 1000;
+        const eloB = b.elo || 1000;
+
+        if (eloA !== eloB) return eloB - eloA;
         if (b.winRate !== a.winRate) return b.winRate - a.winRate;
         return b.wins - a.wins;
     });
@@ -746,12 +916,17 @@ export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
                 const entry = playerStats.get(doc.id);
                 if (entry) {
                     entry.username = userData.username;
+                    entry.elo = userData.stats?.elo || 1000;
                 }
             });
         }
     }
 
     leaderboard.sort((a, b) => {
+        const eloA = a.elo || 1000;
+        const eloB = b.elo || 1000;
+
+        if (eloA !== eloB) return eloB - eloA;
         if (b.winRate !== a.winRate) return b.winRate - a.winRate;
         return b.wins - a.wins;
     });
