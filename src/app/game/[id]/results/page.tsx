@@ -8,7 +8,7 @@ import { subscribeToSession, startGame } from '@/lib/firebase/game-sessions';
 import { completeTournamentMatch, getTournament } from '@/lib/firebase/tournaments';
 import { Game, Player, GoalPosition, Team } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
-import { TrophyIcon, HomeIcon, ArrowPathIcon, StarIcon } from '@heroicons/react/24/solid';
+import { TrophyIcon, HomeIcon, ArrowPathIcon, StarIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/solid';
 import EloChangeDisplay from '@/components/game/EloChangeDisplay';
 import styles from '@/styles/content-page.module.css';
 import resultsStyles from './results-page.module.css';
@@ -167,6 +167,13 @@ export default function GameResultsPage() {
     const isDraw = winnerIndex === undefined;
     const winningTeam = winnerIndex !== undefined ? game.teams[winnerIndex] : null;
 
+    // Determine if current user won or lost
+    const currentUserTeamIndex = game.teams.findIndex(team =>
+        team.players.some(p => p.userId === user?.userId)
+    );
+    const currentUserIsWinner = currentUserTeamIndex !== -1 && currentUserTeamIndex === winnerIndex;
+    const hasEloChanges = game.eloChanges && Object.keys(game.eloChanges).length > 0;
+
     // Calculate detailed stats
     const stats: Record<string, PlayerStats> = {};
 
@@ -207,9 +214,21 @@ export default function GameResultsPage() {
         return resultsStyles[`${winningTeam?.color}Trophy`] || resultsStyles.drawTrophy;
     };
 
+    // Helper to get a player's team index
+    const getPlayerTeamIndex = (userId: string): number => {
+        if (game.teams[0].players.some(p => p.userId === userId)) return 0;
+        return 1;
+    };
+
     return (
         <div className={styles.pageContainer}>
             <FieldBackground />
+
+            {/* Full-screen Lottie animation overlay */}
+            {!isDraw && hasEloChanges && currentUserTeamIndex !== -1 && (
+                <EloChangeDisplay isWinner={currentUserIsWinner} />
+            )}
+
             <div className={styles.contentWrapper}>
                 <div className={resultsStyles.container}>
 
@@ -259,52 +278,66 @@ export default function GameResultsPage() {
                         </div>
                     )}
 
-                    {/* Elo Changes */}
-                    {!isDraw && game.eloChanges && Object.keys(game.eloChanges).length > 0 && (
-                        <EloChangeDisplay
-                            eloChanges={game.eloChanges}
-                            winnerTeamIndex={winnerIndex!}
-                            teams={game.teams}
-                        />
-                    )}
-
                     {/* Stats Grid */}
                     <div className={resultsStyles.statsGrid}>
-                        {sortedStats.map((stat) => (
-                            <div key={stat.player.userId} className={resultsStyles.statCard}>
-                                <div className={resultsStyles.statHeader}>
-                                    <div
-                                        className={resultsStyles.playerAvatar}
-                                        style={{ backgroundColor: `var(--team-${stat.teamColor})`, borderColor: '#333333' }}
-                                    >
-                                        {stat.player.username.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div className={resultsStyles.playerInfo}>
-                                        <div className="flex items-center gap-2">
-                                            <p className={resultsStyles.playerName}>{stat.player.username}</p>
-                                            {stat.player.userId === mvpId && stat.totalGoals > 0 && (
-                                                <span className={resultsStyles.mvpBadge}>
-                                                    <StarIcon className="w-2 h-2" /> MVP
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className={resultsStyles.playerGoals}>
-                                            {stat.totalGoals} {stat.totalGoals > 1 ? 'buts' : 'but'}
-                                        </p>
-                                    </div>
-                                </div>
+                        {sortedStats.map((stat) => {
+                            const playerElo = game.eloChanges?.[stat.player.userId];
+                            const isPlayerWinner = winnerIndex !== undefined && getPlayerTeamIndex(stat.player.userId) === winnerIndex;
 
-                                {stat.totalGoals > 0 && (
-                                    <div className={resultsStyles.positionBreakdown}>
-                                        {Object.entries(stat.byPosition).map(([pos, count]) => (
-                                            <span key={pos} className={resultsStyles.positionPill}>
-                                                {count} {positionLabels[pos as GoalPosition]}
-                                            </span>
-                                        ))}
+                            return (
+                                <div key={stat.player.userId} className={resultsStyles.statCard}>
+                                    <div className={resultsStyles.statHeader}>
+                                        <div
+                                            className={resultsStyles.playerAvatar}
+                                            style={{ backgroundColor: `var(--team-${stat.teamColor})`, borderColor: '#333333' }}
+                                        >
+                                            {stat.player.username.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className={resultsStyles.playerInfo}>
+                                            <div className="flex items-center gap-2">
+                                                <p className={resultsStyles.playerName}>{stat.player.username}</p>
+                                                {stat.player.userId === mvpId && stat.totalGoals > 0 && (
+                                                    <span className={resultsStyles.mvpBadge}>
+                                                        <StarIcon className="w-2 h-2" /> MVP
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className={resultsStyles.playerGoals}>
+                                                {stat.totalGoals} {stat.totalGoals > 1 ? 'buts' : 'but'}
+                                            </p>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                        ))}
+
+                                    {stat.totalGoals > 0 && (
+                                        <div className={resultsStyles.positionBreakdown}>
+                                            {Object.entries(stat.byPosition).map(([pos, count]) => (
+                                                <span key={pos} className={resultsStyles.positionPill}>
+                                                    {count} {positionLabels[pos as GoalPosition]}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Elo change inline */}
+                                    {playerElo && (
+                                        <div className={resultsStyles.eloRow}>
+                                            <span className={resultsStyles.eloLabel}>ELO</span>
+                                            <div className={resultsStyles.eloValues}>
+                                                <span className={resultsStyles.eloRating}>{playerElo.newElo}</span>
+                                                <span className={`${resultsStyles.eloBadge} ${isPlayerWinner ? resultsStyles.eloBadgeGain : resultsStyles.eloBadgeLoss}`}>
+                                                    {isPlayerWinner ? (
+                                                        <ArrowTrendingUpIcon className={resultsStyles.eloArrow} />
+                                                    ) : (
+                                                        <ArrowTrendingDownIcon className={resultsStyles.eloArrow} />
+                                                    )}
+                                                    {isPlayerWinner ? '+' : ''}{playerElo.eloChange}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
 
                     {/* Actions */}
@@ -342,7 +375,7 @@ export default function GameResultsPage() {
                         ) : (
                             <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10 w-full">
                                 <p className="text-sm font-bold opacity-60 uppercase tracking-widest">
-                                    En attente de l'hôte...
+                                    En attente de l&apos;hôte...
                                 </p>
                             </div>
                         )}

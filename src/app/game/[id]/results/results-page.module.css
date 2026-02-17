@@ -233,3 +233,74 @@
     height: 100%;
     transition: width 0.5s ease-out;
 }
+
+/* Elo row inside stat cards */
+.eloRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 2px dashed rgba(51, 51, 51, 0.15);
+}
+
+.eloLabel {
+    font-size: 0.625rem;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.4;
+    color: var(--color-text-dark);
+}
+
+.eloValues {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.eloRating {
+    font-weight: 900;
+    font-size: 1rem;
+    color: var(--color-text-dark);
+    font-variant-numeric: tabular-nums;
+}
+
+.eloBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.125rem;
+    font-weight: 800;
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s both;
+}
+
+.eloBadgeGain {
+    color: #1B8A2A;
+    background-color: rgba(46, 204, 113, 0.15);
+    border: 1.5px solid rgba(46, 204, 113, 0.3);
+}
+
+.eloBadgeLoss {
+    color: #C0392B;
+    background-color: rgba(231, 76, 60, 0.1);
+    border: 1.5px solid rgba(231, 76, 60, 0.2);
+}
+
+.eloArrow {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
