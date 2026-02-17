@@ -44,6 +44,12 @@ export interface Game {
     isGuestGame?: boolean; // True if game contains guest players (won't affect stats)
     tournamentId?: string; // If this game is part of a tournament
     tournamentMatchId?: string; // Reference to the match in the tournament
+    eloChanges?: Record<string, {
+        previousElo: number;
+        newElo: number;
+        eloChange: number;
+        username: string;
+    }>;
 }
 
 export type GameFormat = '1v1' | '2v2';

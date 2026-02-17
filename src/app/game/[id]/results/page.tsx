@@ -9,6 +9,7 @@ import { completeTournamentMatch, getTournament } from '@/lib/firebase/tournamen
 import { Game, Player, GoalPosition, Team } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import { TrophyIcon, HomeIcon, ArrowPathIcon, StarIcon } from '@heroicons/react/24/solid';
+import EloChangeDisplay from '@/components/game/EloChangeDisplay';
 import styles from '@/styles/content-page.module.css';
 import resultsStyles from './results-page.module.css';
 
@@ -255,6 +256,15 @@ export default function GameResultsPage() {
                                 />
                             </div>
                         </div>
+                    )}
+
+                    {/* Elo Changes */}
+                    {!isDraw && game.eloChanges && Object.keys(game.eloChanges).length > 0 && (
+                        <EloChangeDisplay
+                            eloChanges={game.eloChanges}
+                            winnerTeamIndex={winnerIndex!}
+                            teams={game.teams}
+                        />
                     )}
 
                     {/* Stats Grid */}

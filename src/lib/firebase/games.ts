@@ -71,13 +71,23 @@ function calculateEloChange(
 }
 
 // Helper function to update player stats after a game ends
+// Elo changes stored on the game document for display
+export interface GameEloChanges {
+    [userId: string]: {
+        previousElo: number;
+        newElo: number;
+        eloChange: number;
+        username: string;
+    };
+}
+
 async function updatePlayerStatsAfterGame(
     db: Firestore,
     teams: Team[],
     goals: Goal[],
     winner: 0 | 1,
     format?: string // '1v1' or '2v2'
-): Promise<void> {
+): Promise<GameEloChanges> {
     // Check if any player is a guest (userId starts with 'guest_')
     const hasGuestPlayers = teams.some(team =>
         team.players.some(player => player.userId.startsWith('guest_'))
@@ -86,7 +96,7 @@ async function updatePlayerStatsAfterGame(
     // Don't update stats if there are guest players
     if (hasGuestPlayers) {
         console.log('Skipping stats update - game contains guest players');
-        return;
+        return {};
     }
 
     const goalsByPlayer: Record<string, number> = {};
@@ -108,6 +118,7 @@ async function updatePlayerStatsAfterGame(
     }
 
     const updatePromises = [];
+    const allEloChanges: GameEloChanges = {};
 
     for (let teamIndex = 0; teamIndex < teams.length; teamIndex++) {
         const team = teams[teamIndex];
@@ -175,6 +186,20 @@ async function updatePlayerStatsAfterGame(
                 newElo: playerElo + change,
                 eloChange: change
             };
+        }
+
+        // Collect Elo changes for display on results page
+        for (const player of team.players) {
+            if (eloUpdates[player.userId]) {
+                const playerData = playerUserData[player.userId];
+                const previousElo = playerData?.stats?.elo || 1000;
+                allEloChanges[player.userId] = {
+                    previousElo,
+                    newElo: eloUpdates[player.userId].newElo,
+                    eloChange: eloUpdates[player.userId].eloChange,
+                    username: player.username
+                };
+            }
         }
 
         for (const player of team.players) {
@@ -250,6 +275,7 @@ async function updatePlayerStatsAfterGame(
     }
 
     await Promise.all(updatePromises);
+    return allEloChanges;
 }
 
 // Get game by ID
@@ -490,12 +516,18 @@ export async function endGame(gameId: string): Promise<GameResults> {
     });
 
     // Update player stats if there's a winner
+    let eloChanges: GameEloChanges = {};
     if (winner !== undefined) {
         // Determine format based on team size
         const playerCount = game.teams[0].players.length;
         const format = playerCount === 1 ? '1v1' : '2v2';
 
-        await updatePlayerStatsAfterGame(db, game.teams, game.goals, winner, format);
+        eloChanges = await updatePlayerStatsAfterGame(db, game.teams, game.goals, winner, format);
+
+        // Store Elo changes on the game document for the results page
+        if (Object.keys(eloChanges).length > 0) {
+            await updateDoc(gameRef, { eloChanges });
+        }
     }
 
     // Update venue stats
