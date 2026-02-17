@@ -7,6 +7,7 @@ import {
     linkWithCredential,
     EmailAuthProvider,
     onAuthStateChanged,
+    sendPasswordResetEmail,
     User as FirebaseUser
 } from 'firebase/auth';
 import {
@@ -105,6 +106,12 @@ export async function login(email: string, password: string): Promise<User | nul
 export async function logout(): Promise<void> {
     const auth = getFirebaseAuth();
     await signOut(auth);
+}
+
+// Send password reset email
+export async function resetPassword(email: string): Promise<void> {
+    const auth = getFirebaseAuth();
+    await sendPasswordResetEmail(auth, email);
 }
 
 // Upgrade anonymous account to email/password

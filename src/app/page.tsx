@@ -1,12 +1,9 @@
 'use client';
 
-
-
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { login } from '@/lib/firebase/auth';
+import { login, resetPassword } from '@/lib/firebase/auth';
 import { useAuthStore } from '@/lib/stores/authStore';
 import styles from './page.module.css';
 
@@ -18,11 +15,14 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [resetSent, setResetSent] = useState(false);
+    const [resetLoading, setResetLoading] = useState(false);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError('');
+        setResetSent(false);
 
         try {
             const user = await login(email, password);
@@ -35,6 +35,33 @@ export default function LoginPage() {
             setError(errorMessage);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleResetPassword = async () => {
+        if (!email.trim()) {
+            setError('Entrez votre email pour réinitialiser le mot de passe');
+            return;
+        }
+
+        setResetLoading(true);
+        setError('');
+        setResetSent(false);
+
+        try {
+            await resetPassword(email);
+            setResetSent(true);
+        } catch (err: unknown) {
+            const error = err as { code?: string };
+            if (error.code === 'auth/user-not-found') {
+                setError('Aucun compte trouvé avec cet email');
+            } else if (error.code === 'auth/invalid-email') {
+                setError('Format d\'email invalide');
+            } else {
+                setError('Erreur lors de l\'envoi. Vérifiez votre email.');
+            }
+        } finally {
+            setResetLoading(false);
         }
     };
 
@@ -54,6 +81,12 @@ export default function LoginPage() {
                     {error && (
                         <div className={styles.errorBox}>
                             {error}
+                        </div>
+                    )}
+
+                    {resetSent && (
+                        <div className={styles.successBox}>
+                            Un email de réinitialisation a été envoyé à <strong>{email}</strong>
                         </div>
                     )}
 
@@ -80,6 +113,14 @@ export default function LoginPage() {
                                 required
                                 className="input-field"
                             />
+                            <button
+                                type="button"
+                                onClick={handleResetPassword}
+                                disabled={resetLoading}
+                                className={styles.forgotPassword}
+                            >
+                                {resetLoading ? 'Envoi...' : 'Mot de passe oublié ?'}
+                            </button>
                         </div>
 
                         <button
@@ -95,7 +136,7 @@ export default function LoginPage() {
                         <span className={styles.dividerText}>
                             Pas de compte ?{' '}
                             <Link href="/register" className={styles.link}>
-                                S'inscrire
+                                S&apos;inscrire
                             </Link>
                         </span>
                     </div>
