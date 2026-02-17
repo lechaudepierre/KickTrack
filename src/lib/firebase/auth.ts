@@ -208,3 +208,5 @@ export async function getLeaderboard(limitCount: number = 20): Promise<User[]> {
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => doc.data() as User);
 }
+
+//klqsfklsdjflksdjflksdjf
