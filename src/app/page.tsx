@@ -31,8 +31,27 @@ export default function LoginPage() {
                 router.push('/dashboard');
             }
         } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : 'Erreur de connexion';
-            setError(errorMessage);
+            const error = err as { code?: string };
+            switch (error.code) {
+                case 'auth/invalid-credential':
+                case 'auth/wrong-password':
+                    setError('Mot de passe incorrect');
+                    break;
+                case 'auth/user-not-found':
+                    setError('Aucun compte trouvé avec cet email');
+                    break;
+                case 'auth/invalid-email':
+                    setError('Format d\'email invalide');
+                    break;
+                case 'auth/too-many-requests':
+                    setError('Trop de tentatives. Réessayez plus tard.');
+                    break;
+                case 'auth/user-disabled':
+                    setError('Ce compte a été désactivé');
+                    break;
+                default:
+                    setError('Erreur de connexion. Vérifiez vos identifiants.');
+            }
         } finally {
             setIsLoading(false);
         }
