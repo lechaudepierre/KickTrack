@@ -269,7 +269,12 @@ export default function ProfilePage() {
                     </div>
                     <div className={styles.userInfo}>
                         <div className={styles.usernameContainer}>
-                            <h2 className={styles.username}>{user.username}</h2>
+                            <h2 className={styles.username}>
+                                {user.username}
+                                <span className={styles.eloTag}>
+                                    ({user.stats.elo || 1000} Elo)
+                                </span>
+                            </h2>
                             <button onClick={openUpdateModal} className={styles.editBtn}>
                                 <PencilIcon className="w-4 h-4" />
                             </button>

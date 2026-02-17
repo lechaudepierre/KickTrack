@@ -143,8 +143,8 @@ export default function DashboardPage() {
                 {/* Quick Stats */}
                 <div className={styles.statsRow}>
                     <div className={styles.statBox}>
-                        <span className={styles.statValue}>{stats.wins}</span>
-                        <span className={styles.statLabel}>Victoires</span>
+                        <span className={styles.statValue}>{user?.stats.elo || 1000}</span>
+                        <span className={styles.statLabel}>Elo</span>
                     </div>
                     <div className={styles.statBox}>
                         <span className={styles.statValue}>{stats.totalGames}</span>
