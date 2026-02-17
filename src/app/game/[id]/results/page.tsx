@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { getGame, getUserGames } from '@/lib/firebase/games';
+import { getGame, getUserGames, subscribeToGame } from '@/lib/firebase/games';
 import { subscribeToSession, startGame } from '@/lib/firebase/game-sessions';
 import { completeTournamentMatch, getTournament } from '@/lib/firebase/tournaments';
 import { Game, Player, GoalPosition, Team } from '@/types';
@@ -33,46 +33,47 @@ export default function GameResultsPage() {
 
     useEffect(() => {
         initialize();
-        loadGame();
-    }, [gameId]);
+    }, []);
 
-    const loadGame = async () => {
-        try {
-            const gameData = await getGame(gameId);
+    // Real-time listener: picks up eloChanges even if written after initial load
+    useEffect(() => {
+        if (!gameId) return;
+
+        const unsubscribe = subscribeToGame(gameId, (gameData) => {
             if (gameData) {
                 setGame(gameData);
+                setIsLoading(false);
                 loadH2HStats(gameData);
+                handleTournamentUpdate(gameData);
+            } else {
+                setIsLoading(false);
+            }
+        });
 
-                // If this is a tournament match, update the tournament
-                if (gameData.tournamentId && gameData.tournamentMatchId && gameData.status === 'completed' && gameData.winner !== undefined && !tournamentUpdated) {
-                    setTournamentUpdated(true);
-                    try {
-                        // Get the tournament to find the teamId
-                        const tournament = await getTournament(gameData.tournamentId);
-                        if (tournament) {
-                            const match = tournament.matches.find(m => m.matchId === gameData.tournamentMatchId);
-                            if (match) {
-                                // Determine which tournament team won based on the game winner
-                                // Team 0 in game = team1 in tournament match
-                                const winnerTeamId = gameData.winner === 0 ? match.team1.teamId : match.team2.teamId;
-                                await completeTournamentMatch(
-                                    gameData.tournamentId,
-                                    gameData.tournamentMatchId,
-                                    gameData.gameId,
-                                    winnerTeamId,
-                                    [gameData.score[0], gameData.score[1]]
-                                );
-                            }
-                        }
-                    } catch (err) {
-                        console.error('Error updating tournament match:', err);
+        return () => unsubscribe();
+    }, [gameId]);
+
+    const handleTournamentUpdate = async (gameData: Game) => {
+        if (gameData.tournamentId && gameData.tournamentMatchId && gameData.status === 'completed' && gameData.winner !== undefined && !tournamentUpdated) {
+            setTournamentUpdated(true);
+            try {
+                const tournament = await getTournament(gameData.tournamentId);
+                if (tournament) {
+                    const match = tournament.matches.find(m => m.matchId === gameData.tournamentMatchId);
+                    if (match) {
+                        const winnerTeamId = gameData.winner === 0 ? match.team1.teamId : match.team2.teamId;
+                        await completeTournamentMatch(
+                            gameData.tournamentId,
+                            gameData.tournamentMatchId,
+                            gameData.gameId,
+                            winnerTeamId,
+                            [gameData.score[0], gameData.score[1]]
+                        );
                     }
                 }
+            } catch (err) {
+                console.error('Error updating tournament match:', err);
             }
-        } catch (error) {
-            console.error('Error loading game:', error);
-        } finally {
-            setIsLoading(false);
         }
     };
 

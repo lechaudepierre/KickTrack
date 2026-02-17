@@ -420,13 +420,18 @@ export async function addGoal(
         const playerCount = updatedTeams[0].players.length;
         const format = playerCount === 1 ? '1v1' : '2v2';
 
-        await updatePlayerStatsAfterGame(
+        const eloChanges = await updatePlayerStatsAfterGame(
             db,
             updatedTeams,
             [...game.goals, goal],
             teamIndex,
             format
         );
+
+        // Store Elo changes on the game document for the results page
+        if (Object.keys(eloChanges).length > 0) {
+            await updateDoc(gameRef, { eloChanges });
+        }
 
         // Update venue stats
         const totalPlayers = updatedTeams.reduce((sum, team) => sum + team.players.length, 0);
@@ -508,27 +513,23 @@ export async function endGame(gameId: string): Promise<GameResults> {
     const winner = game.teams[0].score > game.teams[1].score ? 0 :
         game.teams[1].score > game.teams[0].score ? 1 : undefined;
 
+    // Update player stats BEFORE marking as completed to avoid race condition
+    // (the game page listener redirects to results as soon as status is 'completed')
+    let eloChanges: GameEloChanges = {};
+    if (winner !== undefined) {
+        const playerCount = game.teams[0].players.length;
+        const format = playerCount === 1 ? '1v1' : '2v2';
+        eloChanges = await updatePlayerStatsAfterGame(db, game.teams, game.goals, winner, format);
+    }
+
+    // Write everything atomically: status + eloChanges in a single update
     await updateDoc(gameRef, {
         status: 'completed',
         endedAt,
         duration,
-        winner
+        winner,
+        ...(Object.keys(eloChanges).length > 0 ? { eloChanges } : {})
     });
-
-    // Update player stats if there's a winner
-    let eloChanges: GameEloChanges = {};
-    if (winner !== undefined) {
-        // Determine format based on team size
-        const playerCount = game.teams[0].players.length;
-        const format = playerCount === 1 ? '1v1' : '2v2';
-
-        eloChanges = await updatePlayerStatsAfterGame(db, game.teams, game.goals, winner, format);
-
-        // Store Elo changes on the game document for the results page
-        if (Object.keys(eloChanges).length > 0) {
-            await updateDoc(gameRef, { eloChanges });
-        }
-    }
 
     // Update venue stats
     const totalPlayers = game.teams.reduce((sum, team) => sum + team.players.length, 0);
