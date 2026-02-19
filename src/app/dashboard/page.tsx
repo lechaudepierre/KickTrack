@@ -12,7 +12,8 @@ import {
     QrCodeIcon,
     UserPlusIcon,
     MapPinIcon,
-    TrophyIcon
+    TrophyIcon,
+    ChatBubbleLeftEllipsisIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 
@@ -139,6 +140,17 @@ export default function DashboardPage() {
                         </Link>
                     </div>
                 </div>
+
+                {/* Feedback */}
+                <Link href="/feedback" className={styles.feedbackAction}>
+                    <div className={styles.feedbackIconWrapper}>
+                        <ChatBubbleLeftEllipsisIcon className={styles.feedbackIcon} />
+                    </div>
+                    <div className={styles.feedbackText}>
+                        <span className={styles.feedbackTitle}>Donner mon avis</span>
+                        <span className={styles.feedbackSubtitle}>Bug, idée, suggestion</span>
+                    </div>
+                </Link>
 
                 {/* Quick Stats */}
                 <div className={styles.statsRow}>
