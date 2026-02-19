@@ -289,7 +289,7 @@
     z-index: 9999 !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    padding: 0.15rem !important;
+    padding: 0.5rem !important;
     background-color: transparent !important;
     display: flex !important;
     flex-direction: column !important;
@@ -308,7 +308,7 @@
     height: 100dvh !important;
     max-width: none !important;
     margin: 0 !important;
-    padding: 0.15rem !important;
+    padding: 0.5rem !important;
     display: flex !important;
     flex-direction: column !important;
     overflow-y: auto !important;
