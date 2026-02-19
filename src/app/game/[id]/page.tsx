@@ -170,9 +170,9 @@ export default function GamePage() {
         <div className={styles.pageContainer}>
             <FieldBackground />
 
-            <div className={`${styles.contentWrapper} ${isPortrait ? gameStyles.forcedLandscape : ''}`}>
+            <div className={`${styles.contentWrapper} ${isPortrait ? gameStyles.forcedLandscape : gameStyles.nativeLandscape}`}>
                 {/* Header */}
-                <div className={`${styles.pageHeader} justify-between`}>
+                <div className={`${styles.pageHeader} ${!isPortrait || isPortrait ? gameStyles.landscapeHeader : ''} justify-between`}>
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => {

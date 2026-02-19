@@ -314,16 +314,13 @@
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;
-    width: 85vh !important;
-    /* AJUSTABLE: Contrôle la largeur du contenu en mode paysage */
+    width: 100vh !important;
     height: 100vw !important;
-    /* AJUSTABLE: Contrôle la hauteur du contenu en mode paysage */
     transform: translate(-50%, -50%) rotate(90deg) !important;
     transform-origin: center center !important;
     z-index: 9999 !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    padding: 0.5rem !important;
+    overflow: hidden !important;
+    padding: 0.15rem !important;
     background-color: transparent !important;
     display: flex !important;
     flex-direction: column !important;
@@ -331,22 +328,40 @@
     max-width: none !important;
 }
 
-/* Remove any margins/padding that might offset content */
-.forcedLandscape>* {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
+/* Native Landscape Mode (when user turns phone) */
+.nativeLandscape {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0.15rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    z-index: 9999 !important;
+}
+
+.landscapeHeader {
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    flex-shrink: 0 !important;
+    min-height: 25px !important;
 }
 
 /* Optimize layout for rotated view */
-.forcedLandscape .pageHeader {
+.forcedLandscape [class*="pageHeader"],
+.nativeLandscape [class*="pageHeader"] {
     flex-shrink: 0 !important;
-    padding: 0.1rem 0.25rem !important;
-    /* Réduit le padding vertical */
+    padding: 0 !important;
     margin-bottom: 0 !important;
-    /* Supprime la marge du bas */
     width: 100% !important;
     min-height: 25px !important;
-    /* Réduit légèrement la hauteur min */
 }
 
 .forcedLandscape .backButton {
