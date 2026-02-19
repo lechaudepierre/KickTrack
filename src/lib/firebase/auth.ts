@@ -71,6 +71,10 @@ export async function registerComplete(
     email: string,
     password: string
 ): Promise<User> {
+    if (username.length > 25) {
+        throw new Error('Le pseudo ne peut pas dépasser 25 caractères');
+    }
+
     const auth = getFirebaseAuth();
     const result = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(result.user, { displayName: username });
@@ -132,6 +136,10 @@ export async function upgradeAccount(email: string, password: string): Promise<v
 
 // Update username
 export async function updateUsername(userId: string, newUsername: string): Promise<void> {
+    if (newUsername.length > 25) {
+        throw new Error('Le pseudo ne peut pas dépasser 25 caractères');
+    }
+
     const auth = getFirebaseAuth();
     const db = getFirebaseDb();
     const currentUser = auth.currentUser;

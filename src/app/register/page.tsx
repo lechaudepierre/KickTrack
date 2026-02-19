@@ -37,6 +37,11 @@ export default function RegisterPage() {
             return;
         }
 
+        if (username.length > 25) {
+            setError('Le pseudo ne peut pas dépasser 25 caractères');
+            return;
+        }
+
         setIsLoading(true);
         setError('');
 
@@ -96,6 +101,7 @@ export default function RegisterPage() {
                                 onChange={(e) => setUsername(e.target.value)}
                                 required
                                 className="input-field"
+                                maxLength={25}
                             />
                         </div>
 

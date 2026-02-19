@@ -2,15 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '@/components/common/ui';
-import PinCodeDisplay from '@/components/game/PinCodeDisplay';
-import PlayerList from '@/components/game/PlayerList';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { createGameSession, subscribeToSession, cancelSession, startGame } from '@/lib/firebase/game-sessions';
 import TeamSetup from '@/components/game/TeamSetup';
 import VenueDropdown from '@/components/venues/VenueDropdown';
-import { Venue, GameFormat, GameSession, Player, Team } from '@/types';
+import PinCodeDisplay from '@/components/game/PinCodeDisplay';
+import PlayerList from '@/components/game/PlayerList';
+import { Venue, GameFormat, GameSession, Team } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import {
     ArrowLeftIcon,
@@ -28,7 +26,6 @@ export default function NewGamePage() {
     const [step, setStep] = useState<Step>('config');
     const [format, setFormat] = useState<GameFormat>('1v1');
     const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
-    const [targetScore, setTargetScore] = useState<6 | 11>(6);
     const [session, setSession] = useState<GameSession | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -64,17 +61,12 @@ export default function NewGamePage() {
     }, [session?.sessionId]);
 
     const handleCreateSession = async () => {
-        console.log('handleCreateSession called', { user, selectedVenue });
-        if (!user) {
-            console.error('Missing user');
-            return;
-        }
+        if (!user) return;
 
         setIsLoading(true);
         setError('');
 
         try {
-            console.log('Creating session...');
             const newSession = await createGameSession(
                 user.userId,
                 user.username,
@@ -82,7 +74,6 @@ export default function NewGamePage() {
                 selectedVenue?.name || 'Aucun',
                 format
             );
-            console.log('Session created:', newSession);
             setSession(newSession);
             setStep('waiting');
         } catch (err: unknown) {
@@ -103,7 +94,6 @@ export default function NewGamePage() {
     };
 
     const handleStartGame = async (teams: [Team, Team]) => {
-        // For guest mode, we might not have a session yet
         let sessionId = session?.sessionId;
 
         if (!sessionId && user) {
@@ -126,7 +116,7 @@ export default function NewGamePage() {
         if (!sessionId) return;
 
         try {
-            const game = await startGame(sessionId, teams, targetScore);
+            const game = await startGame(sessionId, teams);
             router.push(`/game/${game.gameId}`);
         } catch (err) {
             console.error('Error starting game:', err);
@@ -202,99 +192,35 @@ export default function NewGamePage() {
                             <div className={styles.grid2}>
                                 <button
                                     onClick={() => setFormat('1v1')}
-                                    className={`${styles.selectionCard} ${format === '1v1' ? styles.selectionCardActive : styles.selectionCardInactive}`}
+                                    className={`${styles.selectionCard} ${format === '1v1' ? styles.selectionCardActive : `${styles.selectionCardInactive} opacity-60`}`}
                                 >
-                                    <UserIcon className="h-8 w-8 mx-auto mb-2" style={{ color: format === '1v1' ? 'white' : 'var(--color-text-dark)' }} />
-                                    <p style={{ fontWeight: 600, color: format === '1v1' ? 'white' : 'var(--color-text-dark)' }}>1 vs 1</p>
+                                    <UserIcon className="h-8 w-8 mx-auto mb-2" />
+                                    <p style={{ fontWeight: 600 }}>1 vs 1</p>
                                 </button>
                                 <button
                                     onClick={() => setFormat('2v2')}
-                                    className={`${styles.selectionCard} ${format === '2v2' ? styles.selectionCardActive : styles.selectionCardInactive}`}
+                                    className={`${styles.selectionCard} ${format === '2v2' ? styles.selectionCardActive : `${styles.selectionCardInactive} opacity-60`}`}
                                 >
-                                    <UsersIcon className="h-8 w-8 mx-auto mb-2" style={{ color: format === '2v2' ? 'white' : 'var(--color-text-dark)' }} />
-                                    <p style={{ fontWeight: 600, color: format === '2v2' ? 'white' : 'var(--color-text-dark)' }}>2 vs 2</p>
+                                    <UsersIcon className="h-8 w-8 mx-auto mb-2" />
+                                    <p style={{ fontWeight: 600 }}>2 vs 2</p>
                                 </button>
-                            </div>
-                        </div>
-
-                        {/* Target Score */}
-                        <div>
-                            <label style={{ display: 'block', marginBottom: 'var(--spacing-md)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                                Score de victoire
-                            </label>
-                            <div className={styles.grid2}>
-                                {([6, 11] as const).map((score) => (
-                                    <button
-                                        key={score}
-                                        onClick={() => setTargetScore(score)}
-                                        className={`${styles.selectionCard} ${targetScore === score ? styles.selectionCardActive : styles.selectionCardInactive}`}
-                                    >
-                                        <p style={{ fontSize: '1.5rem', fontWeight: 700, color: targetScore === score ? 'white' : 'var(--color-text-dark)' }}>{score}</p>
-                                        <p style={{ fontSize: '0.75rem', color: targetScore === score ? 'rgba(255,255,255,0.8)' : 'rgba(51,51,51,0.6)' }}>buts</p>
-                                    </button>
-                                ))}
                             </div>
                         </div>
 
                         {/* Actions */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', marginTop: 'var(--spacing-lg)' }}>
                             <button
                                 onClick={handleCreateSession}
                                 disabled={isLoading}
-                                style={{
-                                    width: '100%',
-                                    padding: 'var(--spacing-md) var(--spacing-lg)',
-                                    background: 'var(--color-beige)',
-                                    border: '3px solid #333333',
-                                    borderRadius: 'var(--radius-md)',
-                                    color: 'var(--color-text-dark)',
-                                    fontWeight: 700,
-                                    fontSize: '1rem',
-                                    cursor: 'pointer',
-                                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                                    opacity: isLoading ? 0.5 : 1
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (!isLoading) {
-                                        e.currentTarget.style.transform = 'translateY(-4px)';
-                                        e.currentTarget.style.boxShadow = '0 6px 0 rgba(0, 0, 0, 0.3)';
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                }}
+                                className={styles.mainButton}
                             >
                                 {isLoading ? 'Création...' : 'Générer le code'}
                             </button>
 
-                            {/* Guest Mode Button */}
                             <button
                                 onClick={handleGuestMode}
                                 disabled={isLoading}
-                                style={{
-                                    width: '100%',
-                                    padding: 'var(--spacing-md) var(--spacing-lg)',
-                                    background: 'var(--color-green-medium)',
-                                    border: '3px solid #333333',
-                                    borderRadius: 'var(--radius-md)',
-                                    color: 'white',
-                                    fontWeight: 700,
-                                    fontSize: '1rem',
-                                    cursor: 'pointer',
-                                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                                    opacity: isLoading ? 0.5 : 1
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (!isLoading) {
-                                        e.currentTarget.style.transform = 'translateY(-4px)';
-                                        e.currentTarget.style.boxShadow = '0 6px 0 rgba(0, 0, 0, 0.3)';
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = 'none';
-                                }}
+                                className={styles.secondaryTextButton}
                             >
                                 Mode Invité
                             </button>
@@ -305,45 +231,32 @@ export default function NewGamePage() {
                 {/* Step 2: Waiting for Players */}
                 {step === 'waiting' && session && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2xl)' }}>
-                        {/* PIN Code Display */}
-                        <div style={{
-                            backgroundColor: 'var(--color-beige)',
-                            border: '3px solid #333333',
-                            borderRadius: 'var(--radius-lg)',
-                            padding: 'var(--spacing-xl)',
-                            boxShadow: '0 8px 0 rgba(0, 0, 0, 0.1)'
-                        }}>
-                            <PinCodeDisplay
-                                pinCode={session.pinCode}
-                                createdAt={
-                                    session.createdAt && typeof (session.createdAt as any).toDate === 'function'
-                                        ? (session.createdAt as any).toDate()
-                                        : session.createdAt instanceof Date
-                                            ? session.createdAt
-                                            : new Date(session.createdAt)
-                                }
-                                onExpired={handleExpired}
-                            />
-                        </div>
+                        <PinCodeDisplay
+                            pinCode={session.pinCode}
+                            createdAt={
+                                session.createdAt && typeof (session.createdAt as any).toDate === 'function'
+                                    ? (session.createdAt as any).toDate()
+                                    : session.createdAt instanceof Date
+                                        ? session.createdAt
+                                        : new Date(session.createdAt)
+                            }
+                            onExpired={handleExpired}
+                        />
 
-                        {/* Player List */}
                         <PlayerList
                             players={session.players}
                             maxPlayers={session.maxPlayers}
                             currentUserId={user?.userId}
                         />
 
-                        {/* Actions */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-                            <button onClick={handleCancel} style={{ width: '100%', border: 'none', background: 'none', padding: 0 }}>
-                                <div className="btn-primary">
-                                    <div className="btn-primary-shadow" />
-                                    <div className="btn-primary-content" style={{ color: 'var(--color-error)' }}>
-                                        Annuler la partie
-                                    </div>
+                        <button onClick={handleCancel} style={{ width: '100%', border: 'none', background: 'none', padding: 0 }}>
+                            <div className="btn-primary">
+                                <div className="btn-primary-shadow" />
+                                <div className="btn-primary-content" style={{ color: 'var(--color-error)' }}>
+                                    Annuler la partie
                                 </div>
-                            </button>
-                        </div>
+                            </div>
+                        </button>
                     </div>
                 )}
 

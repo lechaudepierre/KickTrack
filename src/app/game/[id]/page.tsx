@@ -27,6 +27,7 @@ export default function GamePage() {
     const [showMenu, setShowMenu] = useState(false);
     const [showTimeLimitModal, setShowTimeLimitModal] = useState(false);
     const [isPortrait, setIsPortrait] = useState(true);
+    const [error, setError] = useState('');
 
     useEffect(() => {
         const checkOrientation = () => {
@@ -84,9 +85,29 @@ export default function GamePage() {
         }
     };
 
-    const handleEndGame = async () => {
+    const handleEndGame = () => {
         if (!game) return;
         setShowEndModal(true);
+    };
+
+    const confirmEndGame = async () => {
+        if (!game) return;
+
+        // Prevent end on draw
+        if (game.score[0] === game.score[1]) {
+            setError('Impossible de terminer un match sur une égalité. Continuez de jouer !');
+            setShowEndModal(false);
+            return;
+        }
+
+        try {
+            await endGame(game.gameId);
+            router.push(`/game/${gameId}/results`);
+        } catch (error: any) {
+            console.error('Error ending game:', error);
+            setError(error.message || 'Erreur lors de la fin du match');
+            setShowEndModal(false);
+        }
     };
 
     const handleForfeit = async (teamIndex: 0 | 1) => {
@@ -209,6 +230,15 @@ export default function GamePage() {
                     )}
                 </div>
 
+                {error && (
+                    <div className="error-box" style={{ marginBottom: 'var(--spacing-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>{error}</span>
+                        <button onClick={() => setError('')} className="ml-4 opacity-50 hover:opacity-100">
+                            <XMarkIcon className="h-5 w-5" />
+                        </button>
+                    </div>
+                )}
+
                 {/* End Game Modal */}
                 {showEndModal && (
                     <div className={gameStyles.modalOverlay}>
@@ -222,11 +252,22 @@ export default function GamePage() {
 
                             <div className={gameStyles.modalBody}>
                                 <button
+                                    onClick={confirmEndGame}
+                                    className={`${gameStyles.optionButton} ${gameStyles.confirmButton}`}
+                                    style={{ border: '3px solid var(--color-green-dark)', backgroundColor: 'var(--color-green-medium)', color: 'white', marginBottom: 'var(--spacing-lg)' }}
+                                >
+                                    <span className={gameStyles.optionTitle}>Finir le match normalement</span>
+                                    <span className={gameStyles.optionDesc} style={{ color: 'rgba(255,255,255,0.8)' }}>Valider les scores actuels</span>
+                                </button>
+
+                                <div style={{ color: '#333333', opacity: 0.6, fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase', marginBottom: 'var(--spacing-sm)' }}>Autres options</div>
+
+                                <button
                                     onClick={() => handleForfeit(0)}
                                     className={`${gameStyles.optionButton} ${gameStyles.forfeitButton}`}
                                 >
                                     <span className={gameStyles.optionTitle}>{getTeamNames(0)} abandonne</span>
-                                    <span className={gameStyles.optionDesc}>Victoire par forfait ({game.gameType} pts) pour {getTeamNames(1)}</span>
+                                    <span className={gameStyles.optionDesc}>Défaite par forfait pour votre équipe</span>
                                 </button>
 
                                 <button
@@ -234,7 +275,7 @@ export default function GamePage() {
                                     className={`${gameStyles.optionButton} ${gameStyles.forfeitButton}`}
                                 >
                                     <span className={gameStyles.optionTitle}>{getTeamNames(1)} abandonne</span>
-                                    <span className={gameStyles.optionDesc}>Victoire par forfait ({game.gameType} pts) pour {getTeamNames(0)}</span>
+                                    <span className={gameStyles.optionDesc}>Victoire par forfait pour votre équipe</span>
                                 </button>
 
                                 <div className="pt-4">
@@ -317,6 +358,7 @@ export default function GamePage() {
                     game={game}
                     onAddGoal={handleAddGoal}
                     onTimeLimitReached={handleTimeLimitReached}
+                    onEndGame={handleEndGame}
                     isViewer={user?.userId !== game.hostId}
                 />
             </div>

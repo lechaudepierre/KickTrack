@@ -1514,3 +1514,34 @@
         font-size: 0.875rem;
     }
 }
+
+.finishMatchButton {
+    margin: 0.5rem 0 0.75rem 0;
+    padding: 0.75rem 1.5rem;
+    background-color: var(--color-beige);
+    border: 3px solid #333333;
+    border-radius: 0.75rem;
+    color: #333333;
+    font-weight: 900;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #333333;
+    transition: all 0.2s ease;
+    z-index: 20;
+}
+
+.finishMatchButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #333333;
+    background-color: #fcebeb;
+    /* Light red tint */
+    color: var(--color-error);
+    border-color: var(--color-error);
+}
+
+.finishMatchButton:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 0 #333333;
+}

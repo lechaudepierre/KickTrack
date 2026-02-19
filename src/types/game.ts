@@ -28,7 +28,6 @@ export interface Game {
     gameId: string;
     venueId: string;
     venueName: string;
-    gameType: '6' | '11'; // Points to win
     teams: [Team, Team];
     score: [number, number];
     multiplier: number; // 1, 2, or 3
@@ -81,7 +80,6 @@ export interface GameSetup {
     players: string[]; // 2-4 player IDs
     venueId: string;
     venueName: string;
-    gameType: '6' | '11';
 }
 
 export interface GameResults {

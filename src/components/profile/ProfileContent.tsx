@@ -47,7 +47,6 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
 
     // Filters state
     const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
-    const [pointsFilter, setPointsFilter] = useState<'6' | '11' | 'all'>('all');
     const [modeFilter, setModeFilter] = useState<'1v1' | '2v2' | 'all'>('all');
 
     // Head-to-head search state
@@ -110,7 +109,6 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
         if (profileUser && allGames.length > 0) {
             const stats = calculateAdvancedStats(allGames, profileUser.userId, {
                 venueId: selectedVenue?.venueId,
-                points: pointsFilter,
                 mode: modeFilter
             });
             setAdvancedStats(stats);
@@ -118,7 +116,6 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
             // Update recent games based on filters
             const filtered = allGames.filter(g => {
                 if (selectedVenue && g.venueId !== selectedVenue.venueId) return false;
-                if (pointsFilter !== 'all' && g.gameType !== pointsFilter) return false;
                 if (modeFilter !== 'all') {
                     const is2v2 = g.teams[0].players.length + g.teams[1].players.length === 4;
                     if (modeFilter === '1v1' && is2v2) return false;
@@ -132,7 +129,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
             setAdvancedStats(calculateAdvancedStats([], profileUser.userId));
             setRecentGames([]);
         }
-    }, [selectedVenue, pointsFilter, modeFilter, allGames, profileUser]);
+    }, [selectedVenue, modeFilter, allGames, profileUser]);
 
     // Filter head-to-head based on search
     const filteredH2H = useMemo(() => {
@@ -415,20 +412,6 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                     <div className={styles.filterRow}>
                         <div className={styles.segmentedControl}>
                             <button
-                                className={`${styles.segment} ${pointsFilter === 'all' ? styles.segmentActive : ''}`}
-                                onClick={() => setPointsFilter('all')}
-                            >Tous</button>
-                            <button
-                                className={`${styles.segment} ${pointsFilter === '6' ? styles.segmentActive : ''}`}
-                                onClick={() => setPointsFilter('6')}
-                            >6 pts</button>
-                            <button
-                                className={`${styles.segment} ${pointsFilter === '11' ? styles.segmentActive : ''}`}
-                                onClick={() => setPointsFilter('11')}
-                            >11 pts</button>
-                        </div>
-                        <div className={styles.segmentedControl}>
-                            <button
                                 className={`${styles.segment} ${modeFilter === 'all' ? styles.segmentActive : ''}`}
                                 onClick={() => setModeFilter('all')}
                             >Tous</button>
@@ -455,26 +438,22 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                     <>
                         <div className={styles.statsGrid}>
                             <div className={`${styles.statCard} ${styles.statCardHighlight}`}>
-                                <p className={styles.statValue}>{advancedStats.formatStats['6'].wins + advancedStats.formatStats['11'].wins}</p>
+                                <p className={styles.statValue}>{advancedStats.wins}</p>
                                 <p className={styles.statLabel}>Victoires</p>
                             </div>
                             <div className={styles.statCard}>
                                 <p className={styles.statValue} style={{ color: 'var(--color-accent-orange)' }}>
-                                    {(advancedStats.formatStats['6'].games + advancedStats.formatStats['11'].games) - (advancedStats.formatStats['6'].wins + advancedStats.formatStats['11'].wins)}
+                                    {advancedStats.losses}
                                 </p>
                                 <p className={styles.statLabel}>Défaites</p>
                             </div>
                             <div className={styles.statCard}>
-                                <p className={styles.statValue}>{advancedStats.formatStats['6'].games + advancedStats.formatStats['11'].games}</p>
+                                <p className={styles.statValue}>{advancedStats.totalGames}</p>
                                 <p className={styles.statLabel}>Parties</p>
                             </div>
                             <div className={styles.statCard}>
                                 <p className={styles.statValue}>
-                                    {(() => {
-                                        const total = advancedStats.formatStats['6'].games + advancedStats.formatStats['11'].games;
-                                        const wins = advancedStats.formatStats['6'].wins + advancedStats.formatStats['11'].wins;
-                                        return total > 0 ? `${Math.round((wins / total) * 100)}%` : '0%';
-                                    })()}
+                                    {Math.round(advancedStats.winRate)}%
                                 </p>
                                 <p className={styles.statLabel}>Winrate</p>
                             </div>

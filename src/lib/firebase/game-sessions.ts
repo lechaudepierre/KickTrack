@@ -148,8 +148,7 @@ export function subscribeToSession(
 // Start the game (create game document from session)
 export async function startGame(
     sessionId: string,
-    teams: [Team, Team],
-    targetScore: 6 | 11 = 6
+    teams: [Team, Team]
 ): Promise<Game> {
     const db = getFirebaseDb();
     const gameRef = doc(collection(db, GAMES_COLLECTION));
@@ -180,7 +179,6 @@ export async function startGame(
         gameId: gameRef.id,
         venueId: session.venueId || 'unknown',
         venueName: session.venueName || 'Unknown Venue',
-        gameType: targetScore === 6 ? '6' : '11',
         teams: sanitizedTeams,
         score: [0, 0],
         multiplier: 1,

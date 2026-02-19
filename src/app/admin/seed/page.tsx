@@ -33,7 +33,6 @@ function generateTestGames(userId: string, username: string, timestamp: number) 
         gameId: `test-game-${now}-1`,
         venueId: VENUES[0].venueId,
         venueName: VENUES[0].name,
-        gameType: '6',
         teams: [
             {
                 players: [{ userId, username, avatarUrl: null }],
@@ -69,7 +68,6 @@ function generateTestGames(userId: string, username: string, timestamp: number) 
         gameId: `test-game-${now}-2`,
         venueId: VENUES[1].venueId,
         venueName: VENUES[1].name,
-        gameType: '6',
         teams: [
             {
                 players: [{ userId, username, avatarUrl: null }],
@@ -105,7 +103,6 @@ function generateTestGames(userId: string, username: string, timestamp: number) 
         gameId: `test-game-${now}-3`,
         venueId: VENUES[0].venueId,
         venueName: VENUES[0].name,
-        gameType: '6',
         teams: [
             {
                 players: [{ userId, username, avatarUrl: null }],
@@ -145,7 +142,6 @@ function generateTestGames(userId: string, username: string, timestamp: number) 
         gameId: `test-game-${now}-4`,
         venueId: VENUES[2].venueId,
         venueName: VENUES[2].name,
-        gameType: '6',
         teams: [
             {
                 players: [{ userId, username, avatarUrl: null }],
@@ -186,7 +182,6 @@ function generateTestGames(userId: string, username: string, timestamp: number) 
         gameId: `test-game-${now}-5`,
         venueId: VENUES[0].venueId,
         venueName: VENUES[0].name,
-        gameType: '11',
         teams: [
             {
                 players: [{ userId, username, avatarUrl: null }],
@@ -237,7 +232,6 @@ function generateTestGames(userId: string, username: string, timestamp: number) 
         gameId: `test-game-${now}-6`,
         venueId: VENUES[0].venueId,
         venueName: VENUES[0].name,
-        gameType: '6',
         teams: [
             {
                 players: [{ userId, username, avatarUrl: null }],

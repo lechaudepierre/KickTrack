@@ -140,8 +140,7 @@ export default function GameResultsPage() {
 
             const newGame = await startGame(
                 game.sessionId,
-                newTeams,
-                parseInt(game.gameType) as 6 | 11
+                newTeams
             );
 
             router.push(`/game/${newGame.gameId}`);

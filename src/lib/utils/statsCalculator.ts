@@ -11,6 +11,13 @@ export interface HeadToHeadStats {
 }
 
 export interface AdvancedStats {
+    // Summary
+    totalGames: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    winRate: number;
+
     // Lieu préféré
     favoriteVenue: {
         name: string;
@@ -24,11 +31,9 @@ export interface AdvancedStats {
         winRate: number;
     }>;
 
-    // Moyenne de buts par type de match
+    // Moyenne de buts
     goalsPerGame: {
         overall: number;
-        match6: number;  // Matchs en 6 points
-        match11: number; // Matchs en 11 points
     };
 
     // Position la plus efficace
@@ -42,12 +47,12 @@ export interface AdvancedStats {
     totalGoalsScored: number;
     totalGoalsConceded: number;
     cleanSheets: number; // Matchs sans encaisser de but
-    comebacks: number;   // Victoires après avoir été mené
+    comebacks: number;   // Victoires après avoir été mené (déficit de 4+)
 
-    // Balles de match
+    // Balles de match - (Désactivées car mode libre)
     matchPoints: {
-        saved: number;   // Adversaire avait balle de match et on a marqué
-        missed: number;  // On avait balle de match et l'adversaire a marqué
+        saved: number;
+        missed: number;
     };
 
     // Rôles (pour 2v2)
@@ -59,23 +64,16 @@ export interface AdvancedStats {
     // Historique du winrate
     winRateHistory: Array<{ date: string; winRate: number }>;
 
-    // Format préféré (6 ou 11 points)
-    preferredFormat: '6' | '11' | null;
-    formatStats: {
-        '6': { games: number; wins: number; winRate: number };
-        '11': { games: number; wins: number; winRate: number };
-    };
-
     // Performance par période
     recentForm: Array<'W' | 'L' | 'D'>; // 5 derniers matchs
 
     // Head-to-head stats
     headToHead: HeadToHeadStats[];
 
-    // Perfect games (6-0 ou 11-0)
+    // Perfect games (adversaire à 0)
     perfectGames: {
-        inflicted: number;  // Nombre de 6-0 ou 11-0 infligés
-        conceded: number;   // Nombre de 6-0 ou 11-0 concédés
+        inflicted: number;
+        conceded: number;
     };
 
     // Gamelles
@@ -92,7 +90,6 @@ export function calculateAdvancedStats(
     userId: string,
     filters?: {
         venueId?: string | null;
-        points?: '6' | '11' | 'all';
         mode?: '1v1' | '2v2' | 'all';
     }
 ): AdvancedStats {
@@ -108,9 +105,6 @@ export function calculateAdvancedStats(
 
         // Filtre par stade
         if (filters?.venueId && g.venueId !== filters.venueId) return false;
-
-        // Filtre par points
-        if (filters?.points && filters.points !== 'all' && g.gameType !== filters.points) return false;
 
         // Filtre par mode
         if (filters?.mode && filters.mode !== 'all') {
@@ -137,10 +131,6 @@ export function calculateAdvancedStats(
 
     // Initialisation des compteurs
     const venueMap = new Map<string, { name: string; games: number; wins: number }>();
-    const formatStats = {
-        '6': { games: 0, wins: 0, winRate: 0 },
-        '11': { games: 0, wins: 0, winRate: 0 }
-    };
     const goalsByPosition: Record<GoalPosition, number> = {
         defense: 0, midfield: 0, attack: 0, goalkeeper: 0
     };
@@ -157,9 +147,6 @@ export function calculateAdvancedStats(
     let maxWinStreak = 0;
     let tempStreak = 0;
 
-    // Nouvelles stats
-    let matchPointsSaved = 0;
-    let matchPointsMissed = 0;
     const roleStats = {
         attack: { games: 0, wins: 0, winRate: 0 },
         defense: { games: 0, wins: 0, winRate: 0 }
@@ -180,7 +167,6 @@ export function calculateAdvancedStats(
         const isDraw = game.winner === undefined;
         const userTeamScore = game.teams[userTeamIndex].score;
         const opponentScore = game.teams[opponentTeamIndex].score;
-        const targetScore = parseInt(game.gameType);
 
         // Winrate history
         if (isWin) cumulativeWins++;
@@ -198,10 +184,6 @@ export function calculateAdvancedStats(
             venueMap.set(game.venueId, venueData);
         }
 
-        // Stats par format
-        formatStats[game.gameType].games++;
-        if (isWin) formatStats[game.gameType].wins++;
-
         // Buts et positions
         const userGoals = game.goals.filter(g => g.scoredBy === userId);
         totalGoalsScored += userGoals.length;
@@ -214,7 +196,7 @@ export function calculateAdvancedStats(
             }
         });
 
-        // Rôles (2v2 uniquement, 100% des buts à la même position)
+        // Rôles (2v2 uniquement)
         const is2v2 = game.teams[0].players.length + game.teams[1].players.length === 4;
         if (is2v2 && userGoals.length > 0) {
             const firstPos = userGoals[0].position;
@@ -230,31 +212,13 @@ export function calculateAdvancedStats(
             }
         }
 
-        // Balles de match
-        let runningUserScore = 0;
-        let runningOpponentScore = 0;
-        for (const goal of game.goals) {
-            const isUserTeamGoal = goal.teamIndex === userTeamIndex;
-            const isOpponentTeamGoal = goal.teamIndex === opponentTeamIndex;
-
-            // Si l'adversaire avait balle de match et qu'on a marqué
-            if (runningOpponentScore === targetScore - 1 && isUserTeamGoal) {
-                matchPointsSaved++;
-            }
-            // Si on avait balle de match et que l'adversaire a marqué
-            if (runningUserScore === targetScore - 1 && isOpponentTeamGoal) {
-                matchPointsMissed++;
-            }
-
-            if (isUserTeamGoal) runningUserScore++;
-            else runningOpponentScore++;
-        }
-
         // Autres stats classiques
         totalGoalsConceded += opponentScore;
         if (opponentScore === 0 && isWin) cleanSheets++;
-        if (isWin && opponentScore === 0 && userTeamScore === targetScore) perfectGamesInflicted++;
-        if (!isWin && !isDraw && userTeamScore === 0 && opponentScore === targetScore) perfectGamesConceded++;
+
+        // Perfect game (inflicted/conceded)
+        if (isWin && opponentScore === 0) perfectGamesInflicted++;
+        if (!isWin && !isDraw && userTeamScore === 0) perfectGamesConceded++;
 
         // Head-to-head
         game.teams[opponentTeamIndex].players.forEach(opponent => {
@@ -265,17 +229,16 @@ export function calculateAdvancedStats(
             h2hMap.set(opponent.userId, h2hData);
         });
 
-        // Remontadas
+        // Remontadas (Déficit de 4 buts ou plus)
         if (isWin) {
-            let isRemontada = false;
+            let maxDeficit = 0;
             let rUser = 0, rOpp = 0;
             for (const goal of game.goals) {
                 if (goal.teamIndex === userTeamIndex) rUser++; else rOpp++;
-                const deficit = rOpp - rUser;
-                if (targetScore === 6 && (rOpp === 4 || rOpp === 5) && deficit >= 3) isRemontada = true;
-                if (targetScore === 11 && (rOpp >= 8 && rOpp <= 10) && deficit >= 5) isRemontada = true;
+                const currentDeficit = rOpp - rUser;
+                if (currentDeficit > maxDeficit) maxDeficit = currentDeficit;
             }
-            if (isRemontada) comebacks++;
+            if (maxDeficit >= 4) comebacks++;
         }
 
         if (game.duration && game.duration > 0) {
@@ -294,7 +257,7 @@ export function calculateAdvancedStats(
         }
     }
 
-    // Série actuelle (basée sur sortedGames qui est du plus récent au plus ancien)
+    // Série actuelle
     let currentStreakCount = 0;
     let currentStreakType: 'win' | 'loss' | 'none' = 'none';
     for (const game of sortedGames) {
@@ -313,9 +276,7 @@ export function calculateAdvancedStats(
         }
     }
 
-    // Finalisation des winrates
-    formatStats['6'].winRate = formatStats['6'].games > 0 ? formatStats['6'].wins / formatStats['6'].games : 0;
-    formatStats['11'].winRate = formatStats['11'].games > 0 ? formatStats['11'].wins / formatStats['11'].games : 0;
+    // Finalisation
     roleStats.attack.winRate = roleStats.attack.games > 0 ? roleStats.attack.wins / roleStats.attack.games : 0;
     roleStats.defense.winRate = roleStats.defense.games > 0 ? roleStats.defense.wins / roleStats.defense.games : 0;
 
@@ -336,13 +297,25 @@ export function calculateAdvancedStats(
         }))
         .sort((a, b) => b.gamesPlayed - a.gamesPlayed);
 
+    const totalGames = filteredGames.length;
+    const wins = chronologicalGames.filter(g => {
+        const userTeamIndex = g.teams.findIndex(t => t.players.some(p => p.userId === userId));
+        return g.winner === userTeamIndex;
+    }).length;
+    const draws = chronologicalGames.filter(g => g.winner === undefined).length;
+    const losses = totalGames - wins - draws;
+    const winRate = totalGames > 0 ? (wins / totalGames) * 100 : 0;
+
     return {
+        totalGames,
+        wins,
+        losses,
+        draws,
+        winRate,
         favoriteVenue: venueStats[0] || null,
         venueStats,
         goalsPerGame: {
             overall: filteredGames.length > 0 ? totalGoalsScored / filteredGames.length : 0,
-            match6: formatStats['6'].games > 0 ? (chronologicalGames.filter(g => g.gameType === '6').reduce((s, g) => s + g.goals.filter(goal => goal.scoredBy === userId).length, 0)) / formatStats['6'].games : 0,
-            match11: formatStats['11'].games > 0 ? (chronologicalGames.filter(g => g.gameType === '11').reduce((s, g) => s + g.goals.filter(goal => goal.scoredBy === userId).length, 0)) / formatStats['11'].games : 0
         },
         favoritePosition,
         goalsByPosition,
@@ -353,11 +326,9 @@ export function calculateAdvancedStats(
         totalGoalsConceded,
         cleanSheets,
         comebacks,
-        matchPoints: { saved: matchPointsSaved, missed: matchPointsMissed },
+        matchPoints: { saved: 0, missed: 0 },
         roleStats,
-        winRateHistory: winRateHistory.slice(-20), // Garder les 20 derniers pour le graph
-        preferredFormat: formatStats['6'].games > formatStats['11'].games ? '6' : formatStats['11'].games > formatStats['6'].games ? '11' : null,
-        formatStats,
+        winRateHistory: winRateHistory.slice(-20),
         recentForm: sortedGames.slice(0, 5).map(g => {
             const idx = g.teams.findIndex(t => t.players.some(p => p.userId === userId));
             return g.winner === undefined ? 'D' : g.winner === idx ? 'W' : 'L';
@@ -367,17 +338,22 @@ export function calculateAdvancedStats(
         gamelleStats: {
             total: totalGamelles,
             rentrantes: totalGamellesRentrantes,
-            totalPercentage: chronologicalGames.length > 0 ? (totalGamelles / chronologicalGames.length) * 100 : 0,
-            rentrantesPercentage: chronologicalGames.length > 0 ? (totalGamellesRentrantes / chronologicalGames.length) * 100 : 0
+            totalPercentage: filteredGames.length > 0 ? (totalGamelles / filteredGames.length) * 100 : 0,
+            rentrantesPercentage: filteredGames.length > 0 ? (totalGamellesRentrantes / filteredGames.length) * 100 : 0
         }
     };
 }
 
 function getEmptyStats(): AdvancedStats {
     return {
+        totalGames: 0,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        winRate: 0,
         favoriteVenue: null,
         venueStats: [],
-        goalsPerGame: { overall: 0, match6: 0, match11: 0 },
+        goalsPerGame: { overall: 0 },
         favoritePosition: null,
         goalsByPosition: { defense: 0, midfield: 0, attack: 0, goalkeeper: 0 },
         winStreak: 0,
@@ -393,11 +369,6 @@ function getEmptyStats(): AdvancedStats {
             defense: { games: 0, wins: 0, winRate: 0 }
         },
         winRateHistory: [],
-        preferredFormat: null,
-        formatStats: {
-            '6': { games: 0, wins: 0, winRate: 0 },
-            '11': { games: 0, wins: 0, winRate: 0 }
-        },
         recentForm: [],
         headToHead: [],
         perfectGames: { inflicted: 0, conceded: 0 },

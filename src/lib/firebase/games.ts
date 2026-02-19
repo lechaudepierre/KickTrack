@@ -374,9 +374,7 @@ export async function addGoal(
     const opponentIndex = 1 - teamIndex;
     const newScore = game.teams[teamIndex].score + points;
     const newOpponentScore = game.teams[opponentIndex].score + opponentPointsChange;
-    const targetScore = parseInt(game.gameType);
-
-    // Update local teams array
+    // Updated teams with new scores
     const updatedTeams = [...game.teams];
     updatedTeams[teamIndex] = {
         ...updatedTeams[teamIndex],
@@ -387,17 +385,7 @@ export async function addGoal(
         score: newOpponentScore
     };
 
-    // Check if game is won
-    const isGameWon = newScore >= targetScore;
-
-    // Calculate duration if game is won
-    let duration: number | undefined;
-    if (isGameWon) {
-        const startedAt = game.startedAt instanceof Date
-            ? game.startedAt
-            : new Date((game.startedAt as any).seconds * 1000);
-        duration = Math.floor((Date.now() - startedAt.getTime()) / 1000);
-    }
+    // Note: Automatic win logic removed here. Game must be ended manually by host.
 
     await updateDoc(gameRef, {
         goals: arrayUnion(goal),
@@ -406,38 +394,10 @@ export async function addGoal(
             teamIndex === 0 ? newScore : newOpponentScore,
             teamIndex === 1 ? newScore : newOpponentScore
         ],
-        multiplier: nextMultiplier,
-        ...(isGameWon ? {
-            status: 'completed',
-            endedAt: new Date(),
-            duration,
-            winner: teamIndex
-        } : {})
+        multiplier: nextMultiplier
     });
 
-    // If game is won, update player stats and venue stats
-    if (isGameWon) {
-        // Determine format based on team size
-        const playerCount = updatedTeams[0].players.length;
-        const format = playerCount === 1 ? '1v1' : '2v2';
-
-        const eloChanges = await updatePlayerStatsAfterGame(
-            db,
-            updatedTeams,
-            [...game.goals, goal],
-            teamIndex,
-            format
-        );
-
-        // Store Elo changes on the game document for the results page
-        if (Object.keys(eloChanges).length > 0) {
-            await updateDoc(gameRef, { eloChanges });
-        }
-
-        // Update venue stats
-        const totalPlayers = updatedTeams.reduce((sum, team) => sum + team.players.length, 0);
-        await updateVenueStats(game.venueId, { playersCount: totalPlayers });
-    }
+    // Note: Stats update removed here. It's now handled by endGame when called manually.
 }
 
 // Remove last goal (undo)
@@ -510,9 +470,12 @@ export async function endGame(gameId: string): Promise<GameResults> {
     const startedAt = game.startedAt instanceof Date ? game.startedAt : new Date(game.startedAt);
     const duration = Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000);
 
-    // Determine winner
     const winner = game.teams[0].score > game.teams[1].score ? 0 :
         game.teams[1].score > game.teams[0].score ? 1 : undefined;
+
+    if (winner === undefined) {
+        throw new Error('Impossible de terminer un match sur une égalité. Continuez de jouer !');
+    }
 
     // Update player stats BEFORE marking as completed to avoid race condition
     // (the game page listener redirects to results as soon as status is 'completed')
@@ -556,20 +519,20 @@ export async function forfeitGame(gameId: string, forfeitingTeamIndex: 0 | 1): P
 
     if (!gameSnap.exists()) throw new Error('Game not found');
     const game = gameSnap.data() as Game;
-    const targetScore = parseInt(game.gameType);
     const winningTeamIndex = 1 - forfeitingTeamIndex;
+    const symbolicWinScore = Math.max(game.teams[winningTeamIndex].score, 6);
 
     const updatedTeams = [...game.teams];
     updatedTeams[winningTeamIndex] = {
         ...updatedTeams[winningTeamIndex],
-        score: targetScore
+        score: symbolicWinScore
     };
 
     await updateDoc(gameRef, {
         teams: updatedTeams,
         score: [
-            winningTeamIndex === 0 ? targetScore : game.score[0],
-            winningTeamIndex === 1 ? targetScore : game.score[1]
+            winningTeamIndex === 0 ? symbolicWinScore : game.score[0],
+            winningTeamIndex === 1 ? symbolicWinScore : game.score[1]
         ]
     });
 

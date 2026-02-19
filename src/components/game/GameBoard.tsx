@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Game, Team, Player, GoalPosition, GoalType } from '@/types';
 import { PlusIcon, XMarkIcon, StarIcon } from '@heroicons/react/24/solid';
 import GameTimer from './GameTimer';
-import MatchPointFlames from './MatchPointFlames';
 import { useSound } from '@/hooks/useSound';
 import styles from './GameBoard.module.css';
 
@@ -11,6 +10,7 @@ interface GameBoardProps {
     onAddGoal: (teamIndex: 0 | 1, scorerId: string, scorerName: string, position: GoalPosition, type: GoalType) => void;
     onPauseResume?: () => void;
     onTimeLimitReached?: () => void;
+    onEndGame?: () => void;
     isViewer?: boolean;
 }
 
@@ -27,7 +27,7 @@ const goalTypes: { value: GoalType; label: string; description: string }[] = [
     { value: 'gamelle_rentrante', label: 'Gamelle Rentrante', description: 'Ressort et rentre' }
 ];
 
-export default function GameBoard({ game, onAddGoal, onTimeLimitReached, isViewer = false }: GameBoardProps) {
+export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGame, isViewer = false }: GameBoardProps) {
     const [isPortrait, setIsPortrait] = useState(true);
     const { play: playSound } = useSound({ volume: 0.7 });
 
@@ -159,20 +159,7 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, isViewe
     };
 
     const playGoalSound = (goalType: GoalType) => {
-        // Check if this goal wins the game
-        const targetScore = parseInt(game.gameType);
-        const currentScore = game.score[activeTeamIndex!];
-        const newScore = currentScore + 1;
-
-        const willWin = newScore >= targetScore;
-        const isMatchPoint = newScore === targetScore - 1;
-
-        if (willWin) {
-            playSound('victory');
-        } else if (isMatchPoint) {
-            // Match point - play intense sound
-            playSound('match-point');
-        } else if (goalType === 'gamelle' || goalType === 'gamelle_rentrante') {
+        if (goalType === 'gamelle' || goalType === 'gamelle_rentrante') {
             playSound('goal-gamelle');
         } else {
             playSound('goal-normal');
@@ -280,15 +267,8 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, isViewe
         return team.players.map(p => p.username).join(' & ');
     };
 
-    // Check if it's match point (either team is one goal away from winning)
-    const targetScore = parseInt(game.gameType);
-    const isMatchPoint = game.score[0] === targetScore - 1 || game.score[1] === targetScore - 1;
-
     return (
         <div className={styles.hostLandscapeMode}>
-            {/* Match Point Flames */}
-            {isMatchPoint && <MatchPointFlames />}
-
             {isViewer && (
                 <div className={styles.viewerBadge}>
                     MODE SPECTATEUR
@@ -328,6 +308,15 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, isViewe
                             <div className={styles.multiplierBadge}>
                                 PROCHAIN BUT: {game.multiplier} PTS
                             </div>
+                        )}
+
+                        {!isViewer && (
+                            <button
+                                onClick={onEndGame}
+                                className={styles.finishMatchButton}
+                            >
+                                FINIR LE MATCH
+                            </button>
                         )}
                     </div>
 
