@@ -601,10 +601,37 @@
     color: var(--color-text-dark);
 }
 
+.gameRight {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
 .gameScore {
     font-size: 1.125rem;
     font-weight: 900;
     color: var(--color-text-dark);
+}
+
+.gameElo {
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+
+.eloPositive {
+    color: #4CAF50;
+}
+
+.eloNegative {
+    color: #FF9800;
+}
+
+.gameTeammate {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: rgba(51, 51, 51, 0.5);
+    font-style: italic;
 }
 
 .emptyState {

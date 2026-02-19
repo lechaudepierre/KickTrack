@@ -166,6 +166,18 @@ export default function ProfilePage() {
         return game.teams[opponentTeamIndex].players.map(p => p.username).join(' & ');
     };
 
+    const getTeammateName = (game: Game) => {
+        const userTeam = game.teams.find(t => t.players.some(p => p.userId === user.userId));
+        if (!userTeam || userTeam.players.length < 2) return null;
+        const teammate = userTeam.players.find(p => p.userId !== user.userId);
+        return teammate?.username || null;
+    };
+
+    const getEloChange = (game: Game) => {
+        if (!game.eloChanges || !game.eloChanges[user.userId]) return null;
+        return game.eloChanges[user.userId].eloChange;
+    };
+
     const handleLogout = async () => {
         await logout();
         router.push('/');
@@ -518,14 +530,26 @@ export default function ProfilePage() {
                             {recentGames.map((game) => {
                                 const result = getGameResult(game);
                                 const isWin = result === 'Victoire';
+                                const teammate = getTeammateName(game);
+                                const eloChange = getEloChange(game);
                                 return (
                                     <div key={game.gameId} className={styles.gameCard}>
                                         <div className={styles.gameInfo}>
                                             <span className={`${styles.gameResult} ${isWin ? styles.resultWin : styles.resultLoss}`}>{result}</span>
                                             <span className={styles.gameOpponent}>vs {getOpponentNames(game)}</span>
+                                            {teammate && (
+                                                <span className={styles.gameTeammate}>avec {teammate}</span>
+                                            )}
                                             <span className={styles.gameDate}>{formatDate(game.startedAt)}</span>
                                         </div>
-                                        <div className={styles.gameScore}>{game.score[0]} - {game.score[1]}</div>
+                                        <div className={styles.gameRight}>
+                                            <div className={styles.gameScore}>{game.score[0]} - {game.score[1]}</div>
+                                            {eloChange !== null && (
+                                                <span className={`${styles.gameElo} ${eloChange >= 0 ? styles.eloPositive : styles.eloNegative}`}>
+                                                    {eloChange >= 0 ? '+' : ''}{eloChange}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 );
                             })}
