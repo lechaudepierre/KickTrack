@@ -21,7 +21,8 @@ import {
     InformationCircleIcon,
     PencilIcon,
     XMarkIcon,
-    UserPlusIcon
+    UserPlusIcon,
+    ChatBubbleLeftEllipsisIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 
@@ -256,6 +257,9 @@ export default function ProfilePage() {
                             {friendRequestsCount > 0 && (
                                 <span className={styles.friendRequestsBadge}>{friendRequestsCount}</span>
                             )}
+                        </button>
+                        <button onClick={() => router.push('/feedback')} className={styles.feedbackBtn}>
+                            <ChatBubbleLeftEllipsisIcon className={styles.logoutIcon} />
                         </button>
                         <button onClick={handleLogout} className={styles.logoutBtn}>
                             <ArrowRightOnRectangleIcon className={styles.logoutIcon} />
