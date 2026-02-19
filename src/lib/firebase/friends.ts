@@ -22,22 +22,19 @@ export async function searchUsersByUsername(searchQuery: string, currentUserId: 
 
     if (!q) return [];
 
-    // Get all users and filter client-side (Firestore doesn't support native contains search)
-    const usersQuery = query(collection(db, USERS_COLLECTION));
+    // Utilisation d'une requête indexée sur le préfixe
+    const usersQuery = query(
+        collection(db, USERS_COLLECTION),
+        where('usernameLowercase', '>=', q),
+        where('usernameLowercase', '<=', q + '\uf8ff'),
+        limit(limitCount)
+    );
+
     const snapshot = await getDocs(usersQuery);
 
-    const users = snapshot.docs
+    return snapshot.docs
         .map(doc => doc.data() as User)
-        .filter(user => {
-            if (user.userId === currentUserId) return false;
-            // Check usernameLowercase first, fallback to username.toLowerCase()
-            const searchableUsername = user.usernameLowercase || user.username?.toLowerCase() || '';
-            // Search by prefix (starts with) instead of contains
-            return searchableUsername.startsWith(q);
-        })
-        .slice(0, limitCount);
-
-    return users;
+        .filter(user => user.userId !== currentUserId);
 }
 
 // Send friend request

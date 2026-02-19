@@ -164,6 +164,16 @@ export async function getCurrentUser(): Promise<User | null> {
     return null;
 }
 
+// Get any user data by ID
+export async function getUserById(userId: string): Promise<User | null> {
+    const db = getFirebaseDb();
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (userDoc.exists()) {
+        return userDoc.data() as User;
+    }
+    return null;
+}
+
 // Subscribe to user data
 export function subscribeToUser(userId: string, callback: (user: User | null) => void): Unsubscribe {
     const db = getFirebaseDb();

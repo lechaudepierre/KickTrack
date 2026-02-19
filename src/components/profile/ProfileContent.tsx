@@ -1,0 +1,788 @@
+'use client';
+
+import { useEffect, useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/lib/stores/authStore';
+import { getUserById, checkUsernameAvailable, updateUsername } from '@/lib/firebase/auth';
+import { getUserGames } from '@/lib/firebase/games';
+import { getFriendRequestCount } from '@/lib/firebase/friends';
+import { Game, Venue, User } from '@/types';
+import VenueDropdown from '@/components/venues/VenueDropdown';
+import BottomNav from '@/components/common/BottomNav';
+import { calculateAdvancedStats, getPositionLabel, AdvancedStats } from '@/lib/utils/statsCalculator';
+import {
+    ClockIcon,
+    MapPinIcon,
+    FireIcon,
+    TrophyIcon,
+    ChartBarIcon,
+    MagnifyingGlassIcon,
+    ArrowRightOnRectangleIcon,
+    InformationCircleIcon,
+    PencilIcon,
+    XMarkIcon,
+    UserPlusIcon,
+    ChatBubbleLeftEllipsisIcon,
+    UsersIcon,
+    ArrowLeftIcon,
+    CheckIcon,
+    PlusIcon
+} from '@heroicons/react/24/outline';
+import styles from './ProfileContent.module.css';
+
+interface ProfileContentProps {
+    targetUserId: string;
+    isMe?: boolean;
+}
+
+export default function ProfileContent({ targetUserId, isMe = false }: ProfileContentProps) {
+    const router = useRouter();
+    const { user: currentUser, logout } = useAuthStore();
+
+    const [profileUser, setProfileUser] = useState<User | null>(null);
+    const [recentGames, setRecentGames] = useState<Game[]>([]);
+    const [allGames, setAllGames] = useState<Game[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [advancedStats, setAdvancedStats] = useState<AdvancedStats | null>(null);
+
+    // Filters state
+    const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
+    const [pointsFilter, setPointsFilter] = useState<'6' | '11' | 'all'>('all');
+    const [modeFilter, setModeFilter] = useState<'1v1' | '2v2' | 'all'>('all');
+
+    // Head-to-head search state
+    const [h2hSearchQuery, setH2hSearchQuery] = useState('');
+
+    // Info modal state
+    const [showRemontadaInfo, setShowRemontadaInfo] = useState(false);
+    const [showMatchPointInfo, setShowMatchPointInfo] = useState(false);
+
+    // Username update state (only for Me)
+    const [showUpdateModal, setShowUpdateModal] = useState(false);
+    const [newUsername, setNewUsername] = useState('');
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [updateError, setUpdateError] = useState('');
+
+    // Friend requests count (only for Me)
+    const [friendRequestsCount, setFriendRequestsCount] = useState(0);
+
+    // Relationship status (only for !isMe)
+    const [relationshipStatus, setRelationshipStatus] = useState<'none' | 'pending' | 'friend'>('none');
+    const [isActionPending, setIsActionPending] = useState(false);
+
+    useEffect(() => {
+        loadProfileData();
+    }, [targetUserId]);
+
+    const loadProfileData = async () => {
+        setIsLoading(true);
+        try {
+            const [userData, gamesData] = await Promise.all([
+                getUserById(targetUserId),
+                getUserGames(targetUserId, 200)
+            ]);
+
+            setProfileUser(userData);
+            setAllGames(gamesData);
+
+            if (isMe) {
+                const count = await getFriendRequestCount(targetUserId);
+                setFriendRequestsCount(count);
+            } else if (currentUser) {
+                // Check relationship status
+                if (currentUser.friends?.includes(targetUserId)) {
+                    setRelationshipStatus('friend');
+                } else if (currentUser.friendRequestsSent?.includes(targetUserId)) {
+                    setRelationshipStatus('pending');
+                } else {
+                    setRelationshipStatus('none');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading profile data:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Recalculate stats when filters change
+    useEffect(() => {
+        if (profileUser && allGames.length > 0) {
+            const stats = calculateAdvancedStats(allGames, profileUser.userId, {
+                venueId: selectedVenue?.venueId,
+                points: pointsFilter,
+                mode: modeFilter
+            });
+            setAdvancedStats(stats);
+
+            // Update recent games based on filters
+            const filtered = allGames.filter(g => {
+                if (selectedVenue && g.venueId !== selectedVenue.venueId) return false;
+                if (pointsFilter !== 'all' && g.gameType !== pointsFilter) return false;
+                if (modeFilter !== 'all') {
+                    const is2v2 = g.teams[0].players.length + g.teams[1].players.length === 4;
+                    if (modeFilter === '1v1' && is2v2) return false;
+                    if (modeFilter === '2v2' && !is2v2) return false;
+                }
+                return true;
+            });
+            setRecentGames(filtered.slice(0, 5));
+        } else if (profileUser && allGames.length === 0) {
+            // Still need basic empty stats if no games
+            setAdvancedStats(calculateAdvancedStats([], profileUser.userId));
+            setRecentGames([]);
+        }
+    }, [selectedVenue, pointsFilter, modeFilter, allGames, profileUser]);
+
+    // Filter head-to-head based on search
+    const filteredH2H = useMemo(() => {
+        if (!advancedStats) return [];
+        const list = h2hSearchQuery.trim()
+            ? advancedStats.headToHead.filter(h2h => h2h.opponentName.toLowerCase().includes(h2hSearchQuery.toLowerCase()))
+            : advancedStats.headToHead;
+        return list.slice(0, 5);
+    }, [advancedStats, h2hSearchQuery]);
+
+    // Top 3 teammates by wins in 2v2
+    const topTeammates = useMemo(() => {
+        if (!profileUser || allGames.length === 0) return [];
+
+        const teammateMap = new Map<string, { username: string; wins: number; games: number }>();
+
+        for (const game of allGames) {
+            if (game.status !== 'completed') continue;
+
+            const userTeam = game.teams.find(t => t.players.some(p => p.userId === profileUser.userId));
+            if (!userTeam || userTeam.players.length < 2) continue;
+
+            const teammate = userTeam.players.find(p => p.userId !== profileUser.userId);
+            if (!teammate) continue;
+
+            const existing = teammateMap.get(teammate.userId) || { username: teammate.username, wins: 0, games: 0 };
+            existing.games++;
+
+            const userTeamIndex = game.teams.indexOf(userTeam);
+            if (game.winner === userTeamIndex) {
+                existing.wins++;
+            }
+
+            teammateMap.set(teammate.userId, existing);
+        }
+
+        return Array.from(teammateMap.entries())
+            .map(([userId, data]) => ({ userId, ...data }))
+            .sort((a, b) => b.wins - a.wins || b.games - a.games)
+            .slice(0, 3);
+    }, [allGames, profileUser]);
+
+    if (isLoading) {
+        return (
+            <div className="container-center">
+                <div className="w-16 h-16 border-4 border-[var(--color-field-green)] border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    if (!profileUser) {
+        return (
+            <div className={styles.container}>
+                <div className={styles.contentWrapper}>
+                    <p className={styles.emptyState}>Joueur non trouvé</p>
+                    <button onClick={() => router.back()} className="btn-primary mt-4">
+                        <div className="btn-primary-content">Retour</div>
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const formatDate = (date: Date | any) => {
+        if (!date) return '';
+        const d = date instanceof Date ? date : new Date(date.seconds * 1000);
+        return new Intl.DateTimeFormat('fr-FR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        }).format(d);
+    };
+
+    const getGameResult = (game: Game) => {
+        if (game.winner === undefined) return 'Nul';
+        const userTeamIndex = game.teams.findIndex(t => t.players.some(p => p.userId === profileUser.userId));
+        if (userTeamIndex === -1) return '?';
+        return game.winner === userTeamIndex ? 'Victoire' : 'Défaite';
+    };
+
+    const getOpponentNames = (game: Game) => {
+        const userTeamIndex = game.teams.findIndex(t => t.players.some(p => p.userId === profileUser.userId));
+        if (userTeamIndex === -1) return '';
+        const opponentTeamIndex = userTeamIndex === 0 ? 1 : 0;
+        return game.teams[opponentTeamIndex].players.map(p => p.username).join(' & ');
+    };
+
+    const getTeammateName = (game: Game) => {
+        const userTeam = game.teams.find(t => t.players.some(p => p.userId === profileUser.userId));
+        if (!userTeam || userTeam.players.length < 2) return null;
+        const teammate = userTeam.players.find(p => p.userId !== profileUser.userId);
+        return teammate?.username || null;
+    };
+
+    const getEloChange = (game: Game) => {
+        if (!game.eloChanges || !game.eloChanges[profileUser.userId]) return null;
+        return game.eloChanges[profileUser.userId].eloChange;
+    };
+
+    const handleLogout = async () => {
+        await logout();
+        router.push('/');
+    };
+
+    const handleAddFriend = async () => {
+        if (!currentUser || isActionPending) return;
+        setIsActionPending(true);
+        try {
+            const { sendFriendRequest } = await import('@/lib/firebase/friends');
+            await sendFriendRequest(currentUser.userId, targetUserId);
+            setRelationshipStatus('pending');
+        } catch (error) {
+            console.error('Error sending friend request:', error);
+        } finally {
+            setIsActionPending(false);
+        }
+    };
+
+    const handleUpdateUsername = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!isMe || !profileUser || !newUsername.trim() || newUsername.trim() === profileUser.username) {
+            setShowUpdateModal(false);
+            return;
+        }
+        setIsUpdating(true);
+        setUpdateError('');
+        try {
+            const isAvailable = await checkUsernameAvailable(newUsername.trim(), profileUser.userId);
+            if (!isAvailable) {
+                setUpdateError('Ce pseudo est déjà pris');
+                setIsUpdating(false);
+                return;
+            }
+            await updateUsername(profileUser.userId, newUsername.trim());
+            setProfileUser({ ...profileUser, username: newUsername.trim() });
+            setShowUpdateModal(false);
+        } catch (error) {
+            console.error('Error updating username:', error);
+            setUpdateError('Erreur lors de la mise à jour');
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const openUpdateModal = () => {
+        if (!isMe) return;
+        setNewUsername(profileUser.username);
+        setUpdateError('');
+        setShowUpdateModal(true);
+    };
+
+    // WinRate Chart Component
+    const WinRateChart = ({ data }: { data: Array<{ date: string, winRate: number }> }) => {
+        if (data.length < 2) return <div className={styles.chartEmpty}>Pas assez de données pour le graphique</div>;
+
+        const width = 300;
+        const height = 100;
+        const padding = 10;
+
+        const points = data.map((d, i) => {
+            const x = (i / (data.length - 1)) * (width - 2 * padding) + padding;
+            const y = height - ((d.winRate / 100) * (height - 2 * padding) + padding);
+            return `${x},${y}`;
+        }).join(' ');
+
+        return (
+            <div className={styles.chartContainer}>
+                <svg viewBox={`0 0 ${width} ${height}`} className={styles.svgChart}>
+                    {/* Grid lines */}
+                    <line x1={padding} y1={height / 2} x2={width - padding} y2={height / 2} stroke="rgba(51,51,51,0.1)" strokeDasharray="4" />
+                    {/* The line */}
+                    <polyline
+                        fill="none"
+                        stroke="var(--color-green-medium)"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        points={points}
+                    />
+                    {/* Dots */}
+                    {data.map((d, i) => {
+                        const x = (i / (data.length - 1)) * (width - 2 * padding) + padding;
+                        const y = height - ((d.winRate / 100) * (height - 2 * padding) + padding);
+                        return <circle key={i} cx={x} cy={y} r="3" fill="#333" />;
+                    })}
+                </svg>
+                <div className={styles.chartLabels}>
+                    <span>{data[0].date}</span>
+                    <span>Progression Winrate (%)</span>
+                    <span>{data[data.length - 1].date}</span>
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className={styles.container}>
+            <div className={styles.contentWrapper}>
+                <div className={styles.header}>
+                    <div className={styles.headerLeft}>
+                        {!isMe && (
+                            <button onClick={() => router.back()} className={styles.backButton}>
+                                <ArrowLeftIcon className="w-5 h-5" />
+                            </button>
+                        )}
+                        <h1 className={styles.title}>{isMe ? 'Tableau de Bord' : 'Profil'}</h1>
+                    </div>
+
+                    <div className={styles.headerActions}>
+                        {isMe ? (
+                            <>
+                                <button onClick={() => router.push('/friends')} className={styles.friendRequestsBtn}>
+                                    <UsersIcon className={styles.logoutIcon} />
+                                    {friendRequestsCount > 0 && (
+                                        <span className={styles.friendRequestsBadge}>{friendRequestsCount}</span>
+                                    )}
+                                </button>
+                                <button onClick={() => router.push('/feedback')} className={styles.feedbackBtn}>
+                                    <ChatBubbleLeftEllipsisIcon className={styles.logoutIcon} />
+                                </button>
+                                <button onClick={handleLogout} className={styles.logoutBtn}>
+                                    <ArrowRightOnRectangleIcon className={styles.logoutIcon} />
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                {relationshipStatus === 'none' && (
+                                    <button
+                                        onClick={handleAddFriend}
+                                        className={styles.addFriendBtn}
+                                        disabled={isActionPending}
+                                    >
+                                        <UserPlusIcon className="w-5 h-5 mr-2" />
+                                        <span>Ajouter</span>
+                                    </button>
+                                )}
+                                {relationshipStatus === 'pending' && (
+                                    <button className={styles.pendingBtn} disabled>
+                                        <ClockIcon className="w-5 h-5 mr-2" />
+                                        <span>En attente</span>
+                                    </button>
+                                )}
+                                {relationshipStatus === 'friend' && (
+                                    <div className={styles.friendBadge}>
+                                        <CheckIcon className="w-5 h-5 mr-2" />
+                                        <span>Ami</span>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                <div className={styles.profileHeader}>
+                    <div className={styles.avatar}>
+                        {profileUser.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div className={styles.userInfo}>
+                        <div className={styles.usernameContainer}>
+                            <h2 className={styles.username}>
+                                {profileUser.username}
+                                <span className={styles.eloTag}>
+                                    ({profileUser.stats.elo || 1000} Elo)
+                                </span>
+                            </h2>
+                            {isMe && (
+                                <button onClick={openUpdateModal} className={styles.editBtn}>
+                                    <PencilIcon className="w-4 h-4" />
+                                </button>
+                            )}
+                        </div>
+                        <p className={styles.joinDate}>
+                            Membre depuis {formatDate(profileUser.createdAt)}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Filters Section */}
+                <div className={styles.filterSection}>
+                    <div className={styles.filterRow}>
+                        <div className={styles.segmentedControl}>
+                            <button
+                                className={`${styles.segment} ${pointsFilter === 'all' ? styles.segmentActive : ''}`}
+                                onClick={() => setPointsFilter('all')}
+                            >Tous</button>
+                            <button
+                                className={`${styles.segment} ${pointsFilter === '6' ? styles.segmentActive : ''}`}
+                                onClick={() => setPointsFilter('6')}
+                            >6 pts</button>
+                            <button
+                                className={`${styles.segment} ${pointsFilter === '11' ? styles.segmentActive : ''}`}
+                                onClick={() => setPointsFilter('11')}
+                            >11 pts</button>
+                        </div>
+                        <div className={styles.segmentedControl}>
+                            <button
+                                className={`${styles.segment} ${modeFilter === 'all' ? styles.segmentActive : ''}`}
+                                onClick={() => setModeFilter('all')}
+                            >Tous</button>
+                            <button
+                                className={`${styles.segment} ${modeFilter === '1v1' ? styles.segmentActive : ''}`}
+                                onClick={() => setModeFilter('1v1')}
+                            >1v1</button>
+                            <button
+                                className={`${styles.segment} ${modeFilter === '2v2' ? styles.segmentActive : ''}`}
+                                onClick={() => setModeFilter('2v2')}
+                            >2v2</button>
+                        </div>
+                    </div>
+                    <VenueDropdown
+                        selectedVenue={selectedVenue}
+                        onSelectVenue={setSelectedVenue}
+                        showNoneOption={true}
+                        noneLabel="Tous les stades"
+                    />
+                </div>
+
+                {/* Main Stats Dashboard */}
+                {advancedStats && (
+                    <>
+                        <div className={styles.statsGrid}>
+                            <div className={`${styles.statCard} ${styles.statCardHighlight}`}>
+                                <p className={styles.statValue}>{advancedStats.formatStats['6'].wins + advancedStats.formatStats['11'].wins}</p>
+                                <p className={styles.statLabel}>Victoires</p>
+                            </div>
+                            <div className={styles.statCard}>
+                                <p className={styles.statValue} style={{ color: 'var(--color-accent-orange)' }}>
+                                    {(advancedStats.formatStats['6'].games + advancedStats.formatStats['11'].games) - (advancedStats.formatStats['6'].wins + advancedStats.formatStats['11'].wins)}
+                                </p>
+                                <p className={styles.statLabel}>Défaites</p>
+                            </div>
+                            <div className={styles.statCard}>
+                                <p className={styles.statValue}>{advancedStats.formatStats['6'].games + advancedStats.formatStats['11'].games}</p>
+                                <p className={styles.statLabel}>Parties</p>
+                            </div>
+                            <div className={styles.statCard}>
+                                <p className={styles.statValue}>
+                                    {(() => {
+                                        const total = advancedStats.formatStats['6'].games + advancedStats.formatStats['11'].games;
+                                        const wins = advancedStats.formatStats['6'].wins + advancedStats.formatStats['11'].wins;
+                                        return total > 0 ? `${Math.round((wins / total) * 100)}%` : '0%';
+                                    })()}
+                                </p>
+                                <p className={styles.statLabel}>Winrate</p>
+                            </div>
+                        </div>
+
+                        {/* Winrate History Chart */}
+                        <div className={styles.section}>
+                            <h3 className={styles.sectionTitle}>
+                                <ChartBarIcon className="w-5 h-5" />
+                                Évolution du Winrate
+                            </h3>
+                            <div className={styles.chartCard}>
+                                <WinRateChart data={advancedStats.winRateHistory} />
+                            </div>
+                        </div>
+
+                        {/* Match Points Section */}
+                        <div className={styles.section}>
+                            <h3 className={styles.sectionTitle}>
+                                <FireIcon className="w-5 h-5" />
+                                Balles de Match
+                                <button onClick={() => setShowMatchPointInfo(true)} className={styles.infoBtn}>
+                                    <InformationCircleIcon className="w-4 h-4" />
+                                </button>
+                            </h3>
+                            <div className={styles.matchPointsGrid}>
+                                <div className={styles.matchPointCard}>
+                                    <p className={styles.matchPointValue} style={{ color: '#4CAF50' }}>{advancedStats.matchPoints.saved}</p>
+                                    <p className={styles.matchPointLabel}>Sauvées</p>
+                                </div>
+                                <div className={styles.matchPointCard}>
+                                    <p className={styles.matchPointValue} style={{ color: '#FF9800' }}>{advancedStats.matchPoints.missed}</p>
+                                    <p className={styles.matchPointLabel}>Ratées</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Gamelles Section */}
+                        <div className={styles.section}>
+                            <h3 className={styles.sectionTitle}>
+                                <FireIcon className="w-5 h-5" />
+                                Gamelles
+                            </h3>
+                            <div className={styles.gamellesGrid}>
+                                <div className={styles.gamelleCard}>
+                                    <p className={styles.gamelleValue}>{advancedStats.gamelleStats.total}</p>
+                                    <p className={styles.gamelleLabel}>Total</p>
+                                    <p className={styles.gamelleSub}>{Math.round(advancedStats.gamelleStats.totalPercentage)}% des matchs</p>
+                                </div>
+                                <div className={styles.gamelleCard}>
+                                    <p className={styles.gamelleValue}>{advancedStats.gamelleStats.rentrantes}</p>
+                                    <p className={styles.gamelleLabel}>Rentrantes</p>
+                                    <p className={styles.gamelleSub}>{Math.round(advancedStats.gamelleStats.rentrantesPercentage)}% des matchs</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Roles Section (Only if 2v2 is possible) */}
+                        {modeFilter !== '1v1' && (advancedStats.roleStats.attack.games > 0 || advancedStats.roleStats.defense.games > 0) && (
+                            <div className={styles.section}>
+                                <h3 className={styles.sectionTitle}>
+                                    <TrophyIcon className="w-5 h-5" />
+                                    Performance par Rôle (2v2)
+                                </h3>
+                                <div className={styles.rolesGrid}>
+                                    <div className={styles.roleCard}>
+                                        <p className={styles.roleTitle}>Attaque</p>
+                                        <p className={styles.roleValue}>{Math.round(advancedStats.roleStats.attack.winRate * 100)}%</p>
+                                        <p className={styles.roleSub}>{advancedStats.roleStats.attack.games} matchs</p>
+                                    </div>
+                                    <div className={styles.roleCard}>
+                                        <p className={styles.roleTitle}>Défense</p>
+                                        <p className={styles.roleValue}>{Math.round(advancedStats.roleStats.defense.winRate * 100)}%</p>
+                                        <p className={styles.roleSub}>{advancedStats.roleStats.defense.games} matchs</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Detailed Metrics */}
+                        <div className={styles.section}>
+                            <h3 className={styles.sectionTitle}>
+                                <ChartBarIcon className="w-5 h-5" />
+                                Métriques Détaillées
+                            </h3>
+                            <div className={styles.detailsGrid}>
+                                <div className={styles.detailItem}>
+                                    <span className={styles.detailLabel}>Buts / Match</span>
+                                    <span className={styles.detailValue}>{advancedStats.goalsPerGame.overall.toFixed(1)}</span>
+                                </div>
+                                <div className={styles.detailItem}>
+                                    <span className={styles.detailLabel}>Clean Sheets</span>
+                                    <span className={styles.detailValue}>{advancedStats.cleanSheets}</span>
+                                </div>
+                                <div className={styles.detailItem}>
+                                    <span className={styles.detailLabel}>
+                                        Remontadas
+                                        <button onClick={() => setShowRemontadaInfo(true)} className={styles.infoBtn}>
+                                            <InformationCircleIcon className="w-4 h-4" />
+                                        </button>
+                                    </span>
+                                    <span className={styles.detailValue}>{advancedStats.comebacks}</span>
+                                </div>
+                                <div className={styles.detailItem}>
+                                    <span className={styles.detailLabel}>Meilleure Série</span>
+                                    <span className={styles.detailValue}>{advancedStats.winStreak} V</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Top Teammates Podium */}
+                        {topTeammates.length > 0 && (
+                            <div className={styles.section}>
+                                <h3 className={styles.sectionTitle}>
+                                    <UserPlusIcon className="w-5 h-5" />
+                                    Duo de Choc (2v2)
+                                </h3>
+                                <div className={styles.podiumCard}>
+                                    <div className={styles.podium}>
+                                        {/* 2nd place - left */}
+                                        {topTeammates[1] ? (
+                                            <div className={`${styles.podiumSpot} cursor-pointer`} onClick={() => router.push(`/profile/${topTeammates[1].userId}`)}>
+                                                <div className={styles.podiumAvatar}>
+                                                    {topTeammates[1].username.charAt(0).toUpperCase()}
+                                                </div>
+                                                <span className={styles.podiumName}>{topTeammates[1].username}</span>
+                                                <span className={styles.podiumWins}>{topTeammates[1].wins}V</span>
+                                                <span className={styles.podiumGames}>{topTeammates[1].games} matchs</span>
+                                                <div className={`${styles.podiumBar} ${styles.podiumBar2}`}>2</div>
+                                            </div>
+                                        ) : (
+                                            <div className={styles.podiumSpot} />
+                                        )}
+
+                                        {/* 1st place - center */}
+                                        <div className={`${styles.podiumSpot} cursor-pointer`} onClick={() => router.push(`/profile/${topTeammates[0].userId}`)}>
+                                            <div className={`${styles.podiumAvatar} ${styles.podiumAvatarFirst}`}>
+                                                {topTeammates[0].username.charAt(0).toUpperCase()}
+                                            </div>
+                                            <span className={styles.podiumName}>{topTeammates[0].username}</span>
+                                            <span className={styles.podiumWins}>{topTeammates[0].wins}V</span>
+                                            <span className={styles.podiumGames}>{topTeammates[0].games} matchs</span>
+                                            <div className={`${styles.podiumBar} ${styles.podiumBar1}`}>1</div>
+                                        </div>
+
+                                        {/* 3rd place - right */}
+                                        {topTeammates[2] ? (
+                                            <div className={`${styles.podiumSpot} cursor-pointer`} onClick={() => router.push(`/profile/${topTeammates[2].userId}`)}>
+                                                <div className={styles.podiumAvatar}>
+                                                    {topTeammates[2].username.charAt(0).toUpperCase()}
+                                                </div>
+                                                <span className={styles.podiumName}>{topTeammates[2].username}</span>
+                                                <span className={styles.podiumWins}>{topTeammates[2].wins}V</span>
+                                                <span className={styles.podiumGames}>{topTeammates[2].games} matchs</span>
+                                                <div className={`${styles.podiumBar} ${styles.podiumBar3}`}>3</div>
+                                            </div>
+                                        ) : (
+                                            <div className={styles.podiumSpot} />
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Head-to-Head */}
+                        {advancedStats.headToHead.length > 0 && (
+                            <div className={styles.section}>
+                                <h3 className={styles.sectionTitle}>
+                                    <UsersIcon className="w-5 h-5" />
+                                    Face à Face
+                                </h3>
+                                <div className={styles.h2hSearch}>
+                                    <MagnifyingGlassIcon className={styles.h2hSearchIcon} />
+                                    <input
+                                        type="text"
+                                        placeholder="Rechercher un adversaire..."
+                                        value={h2hSearchQuery}
+                                        onChange={(e) => setH2hSearchQuery(e.target.value)}
+                                        className={styles.h2hSearchInput}
+                                    />
+                                </div>
+                                <div className={styles.h2hList}>
+                                    {filteredH2H.map((h2h) => (
+                                        <div key={h2h.opponentId} className={`${styles.h2hCard} cursor-pointer`} onClick={() => router.push(`/profile/${h2h.opponentId}`)}>
+                                            <div className={styles.h2hInfo}>
+                                                <span className={styles.h2hName}>{h2h.opponentName}</span>
+                                                <span className={styles.h2hGames}>{h2h.gamesPlayed} parties</span>
+                                            </div>
+                                            <div className={styles.h2hStats}>
+                                                <span className={styles.h2hWins}>{h2h.wins}V</span>
+                                                <span className={styles.h2hSeparator}>-</span>
+                                                <span className={styles.h2hLosses}>{h2h.losses}D</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* Dernières parties */}
+                <div className={styles.section}>
+                    <h3 className={styles.sectionTitle}>
+                        <ClockIcon className="w-5 h-5" />
+                        Dernières Parties
+                    </h3>
+                    {recentGames.length === 0 ? (
+                        <div className={styles.emptyState}>Aucune partie trouvée avec ces filtres</div>
+                    ) : (
+                        <div className={styles.gamesList}>
+                            {recentGames.map((game) => {
+                                const result = getGameResult(game);
+                                const isWin = result === 'Victoire';
+                                const teammate = getTeammateName(game);
+                                const eloChange = getEloChange(game);
+                                return (
+                                    <div key={game.gameId} className={styles.gameCard}>
+                                        <div className={styles.gameInfo}>
+                                            <span className={`${styles.gameResult} ${isWin ? styles.resultWin : styles.resultLoss}`}>{result}</span>
+                                            <span className={styles.gameOpponent}>vs {getOpponentNames(game)}</span>
+                                            {teammate && (
+                                                <span className={styles.gameTeammate}>avec {teammate}</span>
+                                            )}
+                                            <span className={styles.gameDate}>{formatDate(game.startedAt)}</span>
+                                        </div>
+                                        <div className={styles.gameRight}>
+                                            <div className={styles.gameScore}>{game.score[0]} - {game.score[1]}</div>
+                                            {eloChange !== null && (
+                                                <span className={`${styles.gameElo} ${eloChange >= 0 ? styles.eloPositive : styles.eloNegative}`}>
+                                                    {eloChange >= 0 ? '+' : ''}{eloChange}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Modals */}
+            {showRemontadaInfo && (
+                <div className={styles.modalOverlay} onClick={() => setShowRemontadaInfo(false)}>
+                    <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                        <h3 className={styles.modalTitle}>Remontadas</h3>
+                        <p className={styles.modalText}>Victoire épique après avoir été largement mené en fin de partie.</p>
+                        <p className={styles.modalSubText}>
+                            • En 6 pts: Mené de 3+ buts quand l'adversaire a 4 ou 5.<br />
+                            • En 11 pts: Mené de 5+ buts quand l'adversaire a 8, 9 ou 10.
+                        </p>
+                        <button onClick={() => setShowRemontadaInfo(false)} className="btn-primary">
+                            <div className="btn-primary-shadow" />
+                            <div className="btn-primary-content">Compris !</div>
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {showMatchPointInfo && (
+                <div className={styles.modalOverlay} onClick={() => setShowMatchPointInfo(false)}>
+                    <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                        <h3 className={styles.modalTitle}>Balles de Match</h3>
+                        <p className={styles.modalText}>
+                            <strong>Sauvées :</strong> L'adversaire était à 1 point de gagner, mais vous avez marqué ce point.
+                        </p>
+                        <p className={styles.modalText}>
+                            <strong>Ratées :</strong> Vous étiez à 1 point de gagner, mais l'adversaire a marqué ce point.
+                        </p>
+                        <button onClick={() => setShowMatchPointInfo(false)} className="btn-primary">
+                            <div className="btn-primary-shadow" />
+                            <div className="btn-primary-content">Compris !</div>
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {showUpdateModal && (
+                <div className={styles.modalOverlay} onClick={() => !isUpdating && setShowUpdateModal(false)}>
+                    <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className={styles.modalTitle}>Pseudo</h3>
+                            <button onClick={() => setShowUpdateModal(false)} disabled={isUpdating}><XMarkIcon className="w-6 h-6" /></button>
+                        </div>
+                        <form onSubmit={handleUpdateUsername}>
+                            {updateError && <div className="error-box mb-4">{updateError}</div>}
+                            <input
+                                type="text"
+                                value={newUsername}
+                                onChange={(e) => setNewUsername(e.target.value)}
+                                className="input-field mb-4"
+                                autoFocus
+                                disabled={isUpdating}
+                                required
+                            />
+                            <button type="submit" disabled={isUpdating || !newUsername.trim() || newUsername.trim() === profileUser.username} className="w-full">
+                                <div className="btn-primary">
+                                    <div className="btn-primary-shadow" />
+                                    <div className="btn-primary-content">{isUpdating ? 'Mise à jour...' : 'Enregistrer'}</div>
+                                </div>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            <BottomNav />
+        </div>
+    );
+}

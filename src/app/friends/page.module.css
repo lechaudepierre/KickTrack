@@ -168,6 +168,15 @@
     gap: var(--spacing-md);
 }
 
+.userMainInfo {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    cursor: pointer;
+    min-width: 0;
+}
+
 .userAvatar {
     width: 3rem;
     height: 3rem;

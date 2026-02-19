@@ -10,7 +10,8 @@ import {
     runTransaction,
     query,
     where,
-    getDocs
+    getDocs,
+    limit
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
 import { updateVenueStats } from './firestore';
@@ -775,194 +776,107 @@ export async function getFriendsLeaderboard(friendIds: string[], venueId?: strin
 
     const db = getFirebaseDb();
 
-    // Get all completed games (optionally filtered by venue)
-    let q;
+    // Si on filtre par stade, on garde la logique d'agrégation car on n'a pas de stats par stade sur l'User
     if (venueId && venueId !== 'all') {
-        q = query(
+        const q = query(
             collection(db, GAMES_COLLECTION),
             where('status', '==', 'completed'),
             where('venueId', '==', venueId)
         );
-    } else {
-        q = query(
-            collection(db, GAMES_COLLECTION),
-            where('status', '==', 'completed')
-        );
-    }
 
-    const snapshot = await getDocs(q);
-    const games = snapshot.docs.map(doc => doc.data() as Game);
+        const snapshot = await getDocs(q);
+        const games = snapshot.docs.map(doc => doc.data() as Game);
+        const playerStats = new Map<string, LeaderboardEntry>();
 
-    // Calculate stats per player (only for friends)
-    const playerStats = new Map<string, LeaderboardEntry>();
-
-    for (const game of games) {
-        if (game.winner === undefined) continue;
-        if (game.isGuestGame) continue;
-
-        const hasGuestPlayers = game.teams?.some(team =>
-            team.players?.some(player => player.userId.startsWith('guest_'))
-        );
-        if (hasGuestPlayers) continue;
-
-        for (let teamIndex = 0; teamIndex < game.teams.length; teamIndex++) {
-            const team = game.teams[teamIndex];
-            const isWinner = teamIndex === game.winner;
-
-            for (const player of team.players) {
-                // Only include friends
-                if (!friendIds.includes(player.userId)) continue;
-                if (player.userId.startsWith('guest_')) continue;
-
-                const existing = playerStats.get(player.userId) || {
-                    userId: player.userId,
-                    username: player.username,
-                    wins: 0,
-                    losses: 0,
-                    totalGames: 0,
-                    goalsScored: 0,
-                    winRate: 0
-                };
-
-                existing.totalGames++;
-                if (isWinner) {
-                    existing.wins++;
-                } else {
-                    existing.losses++;
+        for (const game of games) {
+            if (game.winner === undefined || game.isGuestGame) continue;
+            for (let teamIndex = 0; teamIndex < game.teams.length; teamIndex++) {
+                const team = game.teams[teamIndex];
+                const isWinner = teamIndex === game.winner;
+                for (const player of team.players) {
+                    if (!friendIds.includes(player.userId) || player.userId.startsWith('guest_')) continue;
+                    const existing = playerStats.get(player.userId) || {
+                        userId: player.userId, username: player.username,
+                        wins: 0, losses: 0, totalGames: 0, goalsScored: 0, winRate: 0
+                    };
+                    existing.totalGames++;
+                    if (isWinner) existing.wins++; else existing.losses++;
+                    existing.goalsScored += game.goals.filter(g => g.scoredBy === player.userId).length;
+                    existing.winRate = existing.totalGames > 0 ? existing.wins / existing.totalGames : 0;
+                    playerStats.set(player.userId, existing);
                 }
-
-                const playerGoals = game.goals.filter(g => g.scoredBy === player.userId).length;
-                existing.goalsScored += playerGoals;
-                existing.winRate = existing.totalGames > 0 ? existing.wins / existing.totalGames : 0;
-
-                playerStats.set(player.userId, existing);
             }
         }
-    }
 
-    const leaderboard = Array.from(playerStats.values());
-
-    // Fetch current usernames
-    if (leaderboard.length > 0) {
-        const userIds = leaderboard.map(e => e.userId);
-        for (let i = 0; i < userIds.length; i += 30) {
-            const batch = userIds.slice(i, i + 30);
-            const usersQ = query(collection(db, 'users'), where('userId', 'in', batch));
-            const usersSnapshot = await getDocs(usersQ);
-            usersSnapshot.forEach(doc => {
-                const userData = doc.data();
-                const entry = playerStats.get(doc.id);
-                if (entry) {
-                    entry.username = userData.username;
-                    entry.elo = userData.stats?.elo || 1000;
-                }
-            });
+        const leaderboard = Array.from(playerStats.values());
+        if (leaderboard.length > 0) {
+            const userIds = leaderboard.map(e => e.userId);
+            for (let i = 0; i < userIds.length; i += 30) {
+                const batch = userIds.slice(i, i + 30);
+                const usersQ = query(collection(db, 'users'), where('userId', 'in', batch));
+                const usersSnap = await getDocs(usersQ);
+                usersSnap.forEach(d => {
+                    const u = d.data();
+                    const entry = playerStats.get(d.id);
+                    if (entry) entry.elo = u.stats?.elo || 1000;
+                });
+            }
         }
+        return leaderboard.sort((a, b) => (b.elo || 1000) - (a.elo || 1000));
     }
 
-    leaderboard.sort((a, b) => {
-        const eloA = a.elo || 1000;
-        const eloB = b.elo || 1000;
+    // SINON (Pas de filtre stade) : On query directement les profils des amis
+    const users: LeaderboardEntry[] = [];
+    for (let i = 0; i < friendIds.length; i += 30) {
+        const batch = friendIds.slice(i, i + 30);
+        const q = query(collection(db, 'users'), where('userId', 'in', batch));
+        const snapshot = await getDocs(q);
+        snapshot.forEach(doc => {
+            const u = doc.data();
+            users.push({
+                userId: u.userId,
+                username: u.username,
+                wins: u.stats?.wins || 0,
+                losses: u.stats?.losses || 0,
+                totalGames: u.stats?.totalGames || 0,
+                goalsScored: u.stats?.goalsScored || 0,
+                winRate: u.stats?.winRate || 0,
+                elo: u.stats?.elo || 1000
+            });
+        });
+    }
 
-        if (eloA !== eloB) return eloB - eloA;
-        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-        return b.wins - a.wins;
-    });
-
-    return leaderboard;
+    return users.sort((a, b) => (b.elo || 1000) - (a.elo || 1000));
 }
 
 // Get global leaderboard from all completed games
 export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
     const db = getFirebaseDb();
 
-    // Get all completed games
+    // On récupère directement les utilisateurs triés par Elo
+    // On limite aux 50 premiers pour la performance, à ajuster si besoin
     const q = query(
-        collection(db, GAMES_COLLECTION),
-        where('status', '==', 'completed')
+        collection(db, 'users'),
+        where('stats.totalGames', '>', 0),
+        limit(50)
     );
 
     const snapshot = await getDocs(q);
-    const games = snapshot.docs.map(doc => doc.data() as Game);
 
-    // Calculate stats per player
-    const playerStats = new Map<string, LeaderboardEntry>();
-
-    for (const game of games) {
-        if (game.winner === undefined) continue; // Skip draws
-        if (game.isGuestGame) continue; // Skip guest games
-
-        // For old games without flag, check for guest players
-        const hasGuestPlayers = game.teams?.some(team =>
-            team.players?.some(player => player.userId.startsWith('guest_'))
-        );
-        if (hasGuestPlayers) continue;
-
-        for (let teamIndex = 0; teamIndex < game.teams.length; teamIndex++) {
-            const team = game.teams[teamIndex];
-            const isWinner = teamIndex === game.winner;
-
-            for (const player of team.players) {
-                // Skip guest players
-                if (player.userId.startsWith('guest_')) continue;
-
-                const existing = playerStats.get(player.userId) || {
-                    userId: player.userId,
-                    username: player.username,
-                    wins: 0,
-                    losses: 0,
-                    totalGames: 0,
-                    goalsScored: 0,
-                    winRate: 0
-                };
-
-                existing.totalGames++;
-                if (isWinner) {
-                    existing.wins++;
-                } else {
-                    existing.losses++;
-                }
-
-                // Count goals scored by this player in this game
-                const playerGoals = game.goals.filter(g => g.scoredBy === player.userId).length;
-                existing.goalsScored += playerGoals;
-
-                existing.winRate = existing.totalGames > 0 ? existing.wins / existing.totalGames : 0;
-
-                playerStats.set(player.userId, existing);
-            }
-        }
-    }
-
-    // Convert to array and sort by winrate
-    const leaderboard = Array.from(playerStats.values());
-
-    // Fetch current usernames to ensure they are up to date
-    if (leaderboard.length > 0) {
-        const userIds = leaderboard.map(e => e.userId);
-        for (let i = 0; i < userIds.length; i += 30) {
-            const batch = userIds.slice(i, i + 30);
-            const usersQ = query(collection(db, 'users'), where('userId', 'in', batch));
-            const usersSnapshot = await getDocs(usersQ);
-            usersSnapshot.forEach(doc => {
-                const userData = doc.data();
-                const entry = playerStats.get(doc.id);
-                if (entry) {
-                    entry.username = userData.username;
-                    entry.elo = userData.stats?.elo || 1000;
-                }
-            });
-        }
-    }
-
-    leaderboard.sort((a, b) => {
-        const eloA = a.elo || 1000;
-        const eloB = b.elo || 1000;
-
-        if (eloA !== eloB) return eloB - eloA;
-        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-        return b.wins - a.wins;
+    const leaderboard: LeaderboardEntry[] = snapshot.docs.map(doc => {
+        const userData = doc.data();
+        return {
+            userId: userData.userId,
+            username: userData.username,
+            wins: userData.stats?.wins || 0,
+            losses: userData.stats?.losses || 0,
+            totalGames: userData.stats?.totalGames || 0,
+            goalsScored: userData.stats?.goalsScored || 0,
+            winRate: userData.stats?.winRate || 0,
+            elo: userData.stats?.elo || 1000
+        };
     });
 
-    return leaderboard;
+    // On trie côté client (car Firestore demande un index composite pour le WHERE > 0 + ORDER BY)
+    return leaderboard.sort((a, b) => (b.elo || 1000) - (a.elo || 1000));
 }

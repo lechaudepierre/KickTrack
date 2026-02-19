@@ -2,10 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { submitFeedback } from '@/lib/firebase/feedback';
-import { FieldBackground } from '@/components/FieldDecorations';
 import { FeedbackType } from '@/types';
 import {
     ArrowLeftIcon,
@@ -71,7 +69,6 @@ export default function FeedbackPage() {
     if (submitted) {
         return (
             <div className={styles.container}>
-                <FieldBackground />
                 <div className={styles.contentWrapper}>
                     <div className={styles.successCard}>
                         <CheckCircleIcon className={styles.successIcon} />
@@ -80,9 +77,9 @@ export default function FeedbackPage() {
                             Ton retour a bien été envoyé.<br />
                             On prend en compte chaque message pour améliorer KickTracker.
                         </p>
-                        <Link href="/dashboard" className={styles.successButton}>
-                            Retour au tableau de bord
-                        </Link>
+                        <button onClick={() => router.push('/profile')} className={styles.successButton}>
+                            Retour au profil
+                        </button>
                     </div>
                 </div>
             </div>
@@ -91,19 +88,14 @@ export default function FeedbackPage() {
 
     return (
         <div className={styles.container}>
-            <FieldBackground />
-
             <div className={styles.contentWrapper}>
                 <div className={styles.header}>
-                    <Link href="/dashboard" className={styles.backLink}>
-                        <ArrowLeftIcon className={styles.backIcon} />
-                        Tableau de bord
-                    </Link>
-
+                    <button onClick={() => router.push('/profile')} className={styles.backButton}>
+                        <ArrowLeftIcon className="w-5 h-5" />
+                    </button>
                     <h1 className={styles.title}>
-                        Ton <span className={styles.titleAccent}>Avis</span>
+                        Ton Avis
                     </h1>
-                    <p className={styles.subtitle}>Aide-nous à améliorer KickTracker</p>
                 </div>
 
                 <div className={styles.formCard}>

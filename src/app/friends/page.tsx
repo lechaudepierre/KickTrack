@@ -26,14 +26,15 @@ import {
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 
-type Tab = 'search' | 'requests' | 'friends';
+type Tab = 'friends' | 'requests';
 
 export default function FriendsPage() {
     const router = useRouter();
     const { user, isAuthenticated, isLoading: authLoading, initialize } = useAuthStore();
 
-    const [activeTab, setActiveTab] = useState<Tab>('search');
+    const [activeTab, setActiveTab] = useState<Tab>('friends');
     const [searchQuery, setSearchQuery] = useState('');
+    const [friendFilter, setFriendFilter] = useState('');
     const [searchResults, setSearchResults] = useState<User[]>([]);
     const [friendRequests, setFriendRequests] = useState<User[]>([]);
     const [friends, setFriends] = useState<User[]>([]);
@@ -234,138 +235,224 @@ export default function FriendsPage() {
                 {/* Tabs */}
                 <div className={styles.tabs}>
                     <button
-                        onClick={() => setActiveTab('search')}
-                        className={`${styles.tab} ${activeTab === 'search' ? styles.tabActive : ''}`}
-                    >
-                        Rechercher
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('requests')}
-                        className={`${styles.tab} ${activeTab === 'requests' ? styles.tabActive : ''}`}
-                    >
-                        Demandes
-                        {friendRequests.length > 0 && (
-                            <span className={styles.tabBadge}>{friendRequests.length}</span>
-                        )}
-                    </button>
-                    <button
                         onClick={() => setActiveTab('friends')}
                         className={`${styles.tab} ${activeTab === 'friends' ? styles.tabActive : ''}`}
                     >
                         Amis
                     </button>
+                    <button
+                        onClick={() => setActiveTab('requests')}
+                        className={`${styles.tab} ${activeTab === 'requests' ? styles.tabActive : ''}`}
+                    >
+                        Ajouts & Demandes
+                        {friendRequests.length > 0 && (
+                            <span className={styles.tabBadge}>{friendRequests.length}</span>
+                        )}
+                    </button>
                 </div>
 
-                {/* Search Tab */}
-                {activeTab === 'search' && (
+                {/* Friends Tab (Local Filter) */}
+                {activeTab === 'friends' && (
                     <>
                         <div className={styles.searchSection}>
                             <div className={styles.searchInputWrapper}>
                                 <MagnifyingGlassIcon className={styles.searchIcon} />
                                 <input
                                     type="text"
-                                    placeholder="Rechercher un joueur..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Chercher parmi mes amis..."
+                                    value={friendFilter}
+                                    onChange={(e) => setFriendFilter(e.target.value)}
                                     className={styles.searchInput}
-                                    autoFocus
                                 />
                             </div>
                         </div>
 
-                        {isSearching ? (
+                        {isLoading ? (
                             <div className={styles.loadingSpinner}>
                                 <div className={styles.spinner} />
                             </div>
-                        ) : searchResults.length > 0 ? (
-                            <div className={styles.section}>
-                                <p className={styles.sectionTitle}>Resultats</p>
-                                <div className={styles.userList}>
-                                    {searchResults.map((searchUser) => {
-                                        const status = getRelationshipStatus(searchUser.userId);
-                                        return (
-                                            <div key={searchUser.userId} className={styles.userCard}>
-                                                <div className={styles.userAvatar}>
-                                                    {searchUser.username.charAt(0).toUpperCase()}
+                        ) : (() => {
+                            const filteredFriends = friends.filter(f =>
+                                f.username.toLowerCase().includes(friendFilter.toLowerCase())
+                            );
+
+                            if (filteredFriends.length > 0) {
+                                return (
+                                    <div className={styles.section}>
+                                        <p className={styles.sectionTitle}>
+                                            {friendFilter.trim() === '' ? `${friends.length} ami${friends.length > 1 ? 's' : ''}` : 'Amis trouvés'}
+                                        </p>
+                                        <div className={styles.userList}>
+                                            {filteredFriends.map((friend) => (
+                                                <div key={friend.userId} className={styles.userCard}>
+                                                    <div
+                                                        className={styles.userMainInfo}
+                                                        onClick={() => router.push(`/profile/${friend.userId}`)}
+                                                    >
+                                                        <div className={styles.userAvatar}>
+                                                            {friend.username.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <div className={styles.userInfo}>
+                                                            <p className={styles.userName}>{friend.username}</p>
+                                                            <p className={styles.userStats}>
+                                                                {friend.stats.wins} victoires - {friend.stats.totalGames} parties
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className={styles.userActions}>
+                                                        <button
+                                                            onClick={() => handleRemoveFriend(friend.userId)}
+                                                            className={`${styles.actionBtn} ${styles.removeBtn}`}
+                                                            disabled={pendingActions.has(friend.userId)}
+                                                        >
+                                                            <UserMinusIcon className={styles.actionIcon} />
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <div className={styles.userInfo}>
-                                                    <p className={styles.userName}>{searchUser.username}</p>
-                                                    <p className={styles.userStats}>
-                                                        {searchUser.stats.wins} victoires
-                                                    </p>
-                                                </div>
-                                                <div className={styles.userActions}>
-                                                    {status === 'none' && (
-                                                        <button
-                                                            onClick={() => handleSendRequest(searchUser.userId)}
-                                                            className={`${styles.actionBtn} ${styles.addBtn}`}
-                                                            disabled={pendingActions.has(searchUser.userId)}
-                                                        >
-                                                            <UserPlusIcon className={styles.actionIcon} />
-                                                        </button>
-                                                    )}
-                                                    {status === 'pending_sent' && (
-                                                        <button
-                                                            className={`${styles.actionBtn} ${styles.pendingBtn}`}
-                                                            disabled
-                                                        >
-                                                            <ClockIcon className={styles.actionIcon} />
-                                                        </button>
-                                                    )}
-                                                    {status === 'pending_received' && (
-                                                        <button
-                                                            onClick={() => handleAcceptRequest(searchUser.userId)}
-                                                            className={`${styles.actionBtn} ${styles.acceptBtn}`}
-                                                            disabled={pendingActions.has(searchUser.userId)}
-                                                        >
-                                                            <CheckIcon className={styles.actionIcon} />
-                                                        </button>
-                                                    )}
-                                                    {status === 'friend' && (
-                                                        <button
-                                                            className={`${styles.actionBtn} ${styles.pendingBtn}`}
-                                                            disabled
-                                                        >
-                                                            <CheckIcon className={styles.actionIcon} />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        ) : searchQuery.trim() ? (
-                            <div className={styles.emptyState}>
-                                <MagnifyingGlassIcon className={styles.emptyIcon} />
-                                <p>Aucun joueur trouve</p>
-                            </div>
-                        ) : (
-                            <div className={styles.emptyState}>
-                                <UsersIcon className={styles.emptyIcon} />
-                                <p>Tape un pseudo pour rechercher</p>
-                            </div>
-                        )}
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            } else if (friendFilter.trim() === '') {
+                                return (
+                                    <div className={styles.emptyState}>
+                                        <UsersIcon className={styles.emptyIcon} />
+                                        <p>Tu n'as pas encore d'amis</p>
+                                    </div>
+                                );
+                            } else {
+                                return (
+                                    <div className={styles.emptyState}>
+                                        <MagnifyingGlassIcon className={styles.emptyIcon} />
+                                        <p>Aucun ami ne correspond à cette recherche</p>
+                                    </div>
+                                );
+                            }
+                        })()}
                     </>
                 )}
 
-                {/* Requests Tab */}
+                {/* Ajouts & Demandes Tab (Global Search + Incoming Requests) */}
                 {activeTab === 'requests' && (
                     <>
-                        {friendRequests.length > 0 ? (
-                            <div className={styles.section}>
-                                <p className={styles.sectionTitle}>Demandes en attente</p>
+                        <div className={styles.searchSection}>
+                            <div className={styles.searchInputWrapper}>
+                                <MagnifyingGlassIcon className={styles.searchIcon} />
+                                <input
+                                    type="text"
+                                    placeholder="Rechercher un pseudo à ajouter..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className={styles.searchInput}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Global Search Results */}
+                        {searchQuery.trim() !== '' && (
+                            isSearching ? (
+                                <div className={styles.loadingSpinner}>
+                                    <div className={styles.spinner} />
+                                </div>
+                            ) : (() => {
+                                const potentialNewFriends = searchResults.filter(
+                                    su => !friends.some(f => f.userId === su.userId)
+                                );
+
+                                if (potentialNewFriends.length === 0) return (
+                                    <div className={styles.emptyState}>
+                                        <MagnifyingGlassIcon className={styles.emptyIcon} />
+                                        <p>Aucun joueur trouvé</p>
+                                    </div>
+                                );
+
+                                return (
+                                    <div className={styles.section}>
+                                        <p className={styles.sectionTitle}>Trouver de nouveaux joueurs</p>
+                                        <div className={styles.userList}>
+                                            {potentialNewFriends.map((searchUser) => {
+                                                const status = getRelationshipStatus(searchUser.userId);
+                                                return (
+                                                    <div key={searchUser.userId} className={styles.userCard}>
+                                                        <div
+                                                            className={styles.userMainInfo}
+                                                            onClick={() => router.push(`/profile/${searchUser.userId}`)}
+                                                        >
+                                                            <div className={styles.userAvatar}>
+                                                                {searchUser.username.charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <div className={styles.userInfo}>
+                                                                <p className={styles.userName}>{searchUser.username}</p>
+                                                                <p className={styles.userStats}>
+                                                                    {searchUser.stats.wins} victoires
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div className={styles.userActions}>
+                                                            {status === 'none' && (
+                                                                <button
+                                                                    onClick={() => handleSendRequest(searchUser.userId)}
+                                                                    className={`${styles.actionBtn} ${styles.addBtn}`}
+                                                                    disabled={pendingActions.has(searchUser.userId)}
+                                                                >
+                                                                    <UserPlusIcon className={styles.actionIcon} />
+                                                                </button>
+                                                            )}
+                                                            {status === 'pending_sent' && (
+                                                                <button
+                                                                    className={`${styles.actionBtn} ${styles.pendingBtn}`}
+                                                                    disabled
+                                                                >
+                                                                    <ClockIcon className={styles.actionIcon} />
+                                                                </button>
+                                                            )}
+                                                            {status === 'pending_received' && (
+                                                                <button
+                                                                    onClick={() => handleAcceptRequest(searchUser.userId)}
+                                                                    className={`${styles.actionBtn} ${styles.acceptBtn}`}
+                                                                    disabled={pendingActions.has(searchUser.userId)}
+                                                                >
+                                                                    <CheckIcon className={styles.actionIcon} />
+                                                                </button>
+                                                            )}
+                                                            {status === 'friend' && (
+                                                                <button
+                                                                    className={`${styles.actionBtn} ${styles.pendingBtn}`}
+                                                                    disabled
+                                                                >
+                                                                    <CheckIcon className={styles.actionIcon} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })()
+                        )}
+
+                        {/* Incoming Requests */}
+                        <div className={styles.section}>
+                            <p className={styles.sectionTitle}>Demandes reçues</p>
+                            {friendRequests.length > 0 ? (
                                 <div className={styles.userList}>
                                     {friendRequests.map((request) => (
                                         <div key={request.userId} className={styles.userCard}>
-                                            <div className={styles.userAvatar}>
-                                                {request.username.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className={styles.userInfo}>
-                                                <p className={styles.userName}>{request.username}</p>
-                                                <p className={styles.userStats}>
-                                                    {request.stats.wins} victoires
-                                                </p>
+                                            <div
+                                                className={styles.userMainInfo}
+                                                onClick={() => router.push(`/profile/${request.userId}`)}
+                                            >
+                                                <div className={styles.userAvatar}>
+                                                    {request.username.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div className={styles.userInfo}>
+                                                    <p className={styles.userName}>{request.username}</p>
+                                                    <p className={styles.userStats}>
+                                                        {request.stats.wins} victoires
+                                                    </p>
+                                                </div>
                                             </div>
                                             <div className={styles.userActions}>
                                                 <button
@@ -386,57 +473,13 @@ export default function FriendsPage() {
                                         </div>
                                     ))}
                                 </div>
-                            </div>
-                        ) : (
-                            <div className={styles.emptyState}>
-                                <UserPlusIcon className={styles.emptyIcon} />
-                                <p>Aucune demande en attente</p>
-                            </div>
-                        )}
-                    </>
-                )}
-
-                {/* Friends Tab */}
-                {activeTab === 'friends' && (
-                    <>
-                        {isLoading ? (
-                            <div className={styles.loadingSpinner}>
-                                <div className={styles.spinner} />
-                            </div>
-                        ) : friends.length > 0 ? (
-                            <div className={styles.section}>
-                                <p className={styles.sectionTitle}>{friends.length} ami{friends.length > 1 ? 's' : ''}</p>
-                                <div className={styles.userList}>
-                                    {friends.map((friend) => (
-                                        <div key={friend.userId} className={styles.userCard}>
-                                            <div className={styles.userAvatar}>
-                                                {friend.username.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className={styles.userInfo}>
-                                                <p className={styles.userName}>{friend.username}</p>
-                                                <p className={styles.userStats}>
-                                                    {friend.stats.wins} victoires - {friend.stats.totalGames} parties
-                                                </p>
-                                            </div>
-                                            <div className={styles.userActions}>
-                                                <button
-                                                    onClick={() => handleRemoveFriend(friend.userId)}
-                                                    className={`${styles.actionBtn} ${styles.removeBtn}`}
-                                                    disabled={pendingActions.has(friend.userId)}
-                                                >
-                                                    <UserMinusIcon className={styles.actionIcon} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
+                            ) : searchQuery.trim() === '' && (
+                                <div className={styles.emptyState}>
+                                    <UserPlusIcon className={styles.emptyIcon} />
+                                    <p>Aucune demande en attente</p>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className={styles.emptyState}>
-                                <UsersIcon className={styles.emptyIcon} />
-                                <p>Tu n'as pas encore d'amis</p>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </>
                 )}
             </div>
