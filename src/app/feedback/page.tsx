@@ -10,13 +10,17 @@ import { FeedbackType } from '@/types';
 import {
     ArrowLeftIcon,
     ExclamationTriangleIcon,
+    BugAntIcon,
+    LightBulbIcon,
+    ChatBubbleLeftIcon,
+    CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 
-const feedbackTypes: { type: FeedbackType; label: string; emoji: string }[] = [
-    { type: 'bug', label: 'Bug', emoji: '🐛' },
-    { type: 'improvement', label: 'Idée', emoji: '💡' },
-    { type: 'other', label: 'Autre', emoji: '💬' },
+const feedbackTypes: { type: FeedbackType; label: string; icon: React.ElementType }[] = [
+    { type: 'bug', label: 'Bug', icon: BugAntIcon },
+    { type: 'improvement', label: 'Idée', icon: LightBulbIcon },
+    { type: 'other', label: 'Autre', icon: ChatBubbleLeftIcon },
 ];
 
 const MAX_MESSAGE_LENGTH = 500;
@@ -70,7 +74,7 @@ export default function FeedbackPage() {
                 <FieldBackground />
                 <div className={styles.contentWrapper}>
                     <div className={styles.successCard}>
-                        <span className={styles.successEmoji}>🎉</span>
+                        <CheckCircleIcon className={styles.successIcon} />
                         <h2 className={styles.successTitle}>Merci !</h2>
                         <p className={styles.successText}>
                             Ton retour a bien été envoyé.<br />
@@ -123,7 +127,7 @@ export default function FeedbackPage() {
                                         onClick={() => setType(ft.type)}
                                         className={`${styles.typeButton} ${type === ft.type ? styles.typeButtonActive : styles.typeButtonInactive}`}
                                     >
-                                        <span className={styles.typeEmoji}>{ft.emoji}</span>
+                                        <ft.icon className={styles.typeIcon} />
                                         <span className={styles.typeLabel}>{ft.label}</span>
                                     </button>
                                 ))}

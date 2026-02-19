@@ -27,7 +27,7 @@
 .backLink {
     display: inline-flex;
     align-items: center;
-    color: var(--color-text-dark);
+    color: var(--color-white);
     opacity: 0.6;
     font-size: 0.875rem;
     font-weight: 600;
@@ -49,18 +49,18 @@
 .title {
     font-size: 2rem;
     font-weight: 900;
-    color: var(--color-text-dark);
+    color: var(--color-white);
     margin-bottom: var(--spacing-xs);
     line-height: 1.1;
     text-transform: uppercase;
 }
 
 .titleAccent {
-    color: var(--color-green-medium);
+    color: var(--color-beige);
 }
 
 .subtitle {
-    color: var(--color-text-dark);
+    color: var(--color-white);
     opacity: 0.6;
     font-size: 1rem;
     font-weight: 600;
@@ -134,9 +134,10 @@
     box-shadow: 0 3px 0 #333333;
 }
 
-.typeEmoji {
-    font-size: 1.25rem;
-    line-height: 1;
+.typeIcon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--color-text-dark);
 }
 
 .typeLabel {
@@ -246,9 +247,10 @@
     gap: var(--spacing-md);
 }
 
-.successEmoji {
-    font-size: 3rem;
-    line-height: 1;
+.successIcon {
+    width: 3rem;
+    height: 3rem;
+    color: var(--color-green-medium);
 }
 
 .successTitle {
