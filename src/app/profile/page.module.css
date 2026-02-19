@@ -688,6 +688,103 @@
     font-weight: 600;
 }
 
+/* Podium - Top Teammates */
+.podiumCard {
+    background: var(--color-beige);
+    border: 3px solid #333333;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg) var(--spacing-md);
+}
+
+.podium {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: var(--spacing-sm);
+}
+
+.podiumSpot {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.podiumAvatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--color-green-medium);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 800;
+    color: white;
+    border: 3px solid #333333;
+}
+
+.podiumAvatarFirst {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.25rem;
+    background: var(--color-green-light);
+}
+
+.podiumName {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--color-text-dark);
+    text-transform: uppercase;
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.podiumWins {
+    font-size: 0.875rem;
+    font-weight: 900;
+    color: #4CAF50;
+}
+
+.podiumGames {
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: rgba(51, 51, 51, 0.5);
+}
+
+.podiumBar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 900;
+    color: white;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    border: 3px solid #333333;
+    border-bottom: none;
+    margin-top: 4px;
+}
+
+.podiumBar1 {
+    height: 4rem;
+    background: var(--color-green-light);
+}
+
+.podiumBar2 {
+    height: 2.75rem;
+    background: var(--color-green-medium);
+}
+
+.podiumBar3 {
+    height: 2rem;
+    background: var(--color-green-primary);
+}
+
 /* Head-to-Head */
 .h2hList {
     display: flex;

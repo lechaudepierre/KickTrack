@@ -131,6 +131,38 @@ export default function ProfilePage() {
         return list.slice(0, 5);
     }, [advancedStats, h2hSearchQuery]);
 
+    // Top 3 teammates by wins in 2v2
+    const topTeammates = useMemo(() => {
+        if (!user || allGames.length === 0) return [];
+
+        const teammateMap = new Map<string, { username: string; wins: number; games: number }>();
+
+        for (const game of allGames) {
+            if (game.status !== 'completed') continue;
+
+            const userTeam = game.teams.find(t => t.players.some(p => p.userId === user.userId));
+            if (!userTeam || userTeam.players.length < 2) continue;
+
+            const teammate = userTeam.players.find(p => p.userId !== user.userId);
+            if (!teammate) continue;
+
+            const existing = teammateMap.get(teammate.userId) || { username: teammate.username, wins: 0, games: 0 };
+            existing.games++;
+
+            const userTeamIndex = game.teams.indexOf(userTeam);
+            if (game.winner === userTeamIndex) {
+                existing.wins++;
+            }
+
+            teammateMap.set(teammate.userId, existing);
+        }
+
+        return Array.from(teammateMap.entries())
+            .map(([userId, data]) => ({ userId, ...data }))
+            .sort((a, b) => b.wins - a.wins || b.games - a.games)
+            .slice(0, 3);
+    }, [allGames, user]);
+
     if (authLoading) {
         return (
             <div className="container-center">
@@ -475,6 +507,60 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Top Teammates Podium */}
+                        {topTeammates.length > 0 && (
+                            <div className={styles.section}>
+                                <h3 className={styles.sectionTitle}>
+                                    <UserPlusIcon className="w-5 h-5" />
+                                    Duo de Choc (2v2)
+                                </h3>
+                                <div className={styles.podiumCard}>
+                                    <div className={styles.podium}>
+                                        {/* 2nd place - left */}
+                                        {topTeammates[1] ? (
+                                            <div className={styles.podiumSpot}>
+                                                <div className={styles.podiumAvatar}>
+                                                    {topTeammates[1].username.charAt(0).toUpperCase()}
+                                                </div>
+                                                <span className={styles.podiumName}>{topTeammates[1].username}</span>
+                                                <span className={styles.podiumWins}>{topTeammates[1].wins}V</span>
+                                                <span className={styles.podiumGames}>{topTeammates[1].games} matchs</span>
+                                                <div className={`${styles.podiumBar} ${styles.podiumBar2}`}>2</div>
+                                            </div>
+                                        ) : (
+                                            <div className={styles.podiumSpot} />
+                                        )}
+
+                                        {/* 1st place - center */}
+                                        <div className={styles.podiumSpot}>
+                                            <div className={`${styles.podiumAvatar} ${styles.podiumAvatarFirst}`}>
+                                                {topTeammates[0].username.charAt(0).toUpperCase()}
+                                            </div>
+                                            <span className={styles.podiumName}>{topTeammates[0].username}</span>
+                                            <span className={styles.podiumWins}>{topTeammates[0].wins}V</span>
+                                            <span className={styles.podiumGames}>{topTeammates[0].games} matchs</span>
+                                            <div className={`${styles.podiumBar} ${styles.podiumBar1}`}>1</div>
+                                        </div>
+
+                                        {/* 3rd place - right */}
+                                        {topTeammates[2] ? (
+                                            <div className={styles.podiumSpot}>
+                                                <div className={styles.podiumAvatar}>
+                                                    {topTeammates[2].username.charAt(0).toUpperCase()}
+                                                </div>
+                                                <span className={styles.podiumName}>{topTeammates[2].username}</span>
+                                                <span className={styles.podiumWins}>{topTeammates[2].wins}V</span>
+                                                <span className={styles.podiumGames}>{topTeammates[2].games} matchs</span>
+                                                <div className={`${styles.podiumBar} ${styles.podiumBar3}`}>3</div>
+                                            </div>
+                                        ) : (
+                                            <div className={styles.podiumSpot} />
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Head-to-Head */}
                         {advancedStats.headToHead.length > 0 && (
