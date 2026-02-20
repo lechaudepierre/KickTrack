@@ -49,11 +49,6 @@ export interface AdvancedStats {
     cleanSheets: number; // Matchs sans encaisser de but
     comebacks: number;   // Victoires après avoir été mené (déficit de 4+)
 
-    // Balles de match - (Désactivées car mode libre)
-    matchPoints: {
-        saved: number;
-        missed: number;
-    };
 
     // Rôles (pour 2v2)
     roleStats: {
@@ -61,8 +56,9 @@ export interface AdvancedStats {
         defense: { games: number; wins: number; winRate: number };
     };
 
-    // Historique du winrate
+    // Historique du winrate et elo
     winRateHistory: Array<{ date: string; winRate: number }>;
+    eloHistory: Array<{ date: string; elo: number }>;
 
     // Performance par période
     recentForm: Array<'W' | 'L' | 'D'>; // 5 derniers matchs
@@ -154,6 +150,7 @@ export function calculateAdvancedStats(
     let totalGamelles = 0;
     let totalGamellesRentrantes = 0;
     const winRateHistory: Array<{ date: string; winRate: number }> = [];
+    const eloHistory: Array<{ date: string; elo: number }> = [];
     let cumulativeWins = 0;
 
     // Analyse des matchs
@@ -175,6 +172,14 @@ export function calculateAdvancedStats(
             date: date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
             winRate: (cumulativeWins / (i + 1)) * 100
         });
+
+        // Elo history
+        if (game.eloChanges && game.eloChanges[userId]) {
+            eloHistory.push({
+                date: date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
+                elo: game.eloChanges[userId].newElo
+            });
+        }
 
         // Stats par stade
         if (game.venueId && game.venueName && game.venueName.toLowerCase() !== 'aucun') {
@@ -326,9 +331,9 @@ export function calculateAdvancedStats(
         totalGoalsConceded,
         cleanSheets,
         comebacks,
-        matchPoints: { saved: 0, missed: 0 },
         roleStats,
         winRateHistory: winRateHistory.slice(-20),
+        eloHistory: eloHistory.slice(-20),
         recentForm: sortedGames.slice(0, 5).map(g => {
             const idx = g.teams.findIndex(t => t.players.some(p => p.userId === userId));
             return g.winner === undefined ? 'D' : g.winner === idx ? 'W' : 'L';
@@ -363,12 +368,12 @@ function getEmptyStats(): AdvancedStats {
         totalGoalsConceded: 0,
         cleanSheets: 0,
         comebacks: 0,
-        matchPoints: { saved: 0, missed: 0 },
         roleStats: {
             attack: { games: 0, wins: 0, winRate: 0 },
             defense: { games: 0, wins: 0, winRate: 0 }
         },
         winRateHistory: [],
+        eloHistory: [],
         recentForm: [],
         headToHead: [],
         perfectGames: { inflicted: 0, conceded: 0 },

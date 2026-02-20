@@ -86,6 +86,33 @@ export default function GamePage() {
         }
     };
 
+    // Prevent accidental back navigation (swipe back)
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        // Push a larger number of dummy states to create a stronger buffer
+        // This makes it harder for rapid swipe gestures to escape.
+        for (let i = 0; i < 10; i++) {
+            window.history.pushState({ noBack: i }, '', window.location.href);
+        }
+
+        const handlePopState = (e: PopStateEvent) => {
+            // Re-push multiple states immediately to keep the "trap" very deep
+            for (let i = 0; i < 5; i++) {
+                window.history.pushState({ noBack: Date.now() + i }, '', window.location.href);
+            }
+
+            // Show the custom confirmation modal
+            setShowBackModal(true);
+        };
+
+        window.addEventListener('popstate', handlePopState);
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, []);
+
     const handleEndGame = () => {
         if (!game) return;
         setShowEndModal(true);
@@ -295,7 +322,7 @@ export default function GamePage() {
                 {/* Back Confirmation Modal */}
                 {showBackModal && (
                     <div className={gameStyles.modalOverlay}>
-                        <div className={`${gameStyles.modalContent} max-w-sm`}>
+                        <div className={gameStyles.modalContent}>
                             <div className={gameStyles.modalHeader}>
                                 <h3 className={gameStyles.modalTitle}>Quitter la partie ?</h3>
                                 <button onClick={() => setShowBackModal(false)} className={gameStyles.closeButton}>
@@ -331,7 +358,7 @@ export default function GamePage() {
                 {/* Time Limit Modal */}
                 {showTimeLimitModal && (
                     <div className={gameStyles.modalOverlay}>
-                        <div className={`${gameStyles.modalContent} max-w-sm`}>
+                        <div className={gameStyles.modalContent}>
                             <div className={gameStyles.modalHeader}>
                                 <h3 className={gameStyles.modalTitle}>Temps écoulé !</h3>
                             </div>

@@ -377,7 +377,21 @@
     top: 3rem !important;
 }
 
-.forcedLandscape .modalOverlay,
+.forcedLandscape .modalOverlay {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 100vh !important;
+    height: 100vw !important;
+    transform: translate(-50%, -50%) !important;
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10000 !important;
+    padding: 0 !important;
+}
+
 .nativeLandscape .modalOverlay {
     position: fixed !important;
     inset: 0 !important;
@@ -393,8 +407,8 @@
 
 .forcedLandscape .modalContent,
 .nativeLandscape .modalContent {
-    max-width: 90vw !important;
-    width: 95% !important;
+    max-width: 95vw !important;
+    width: 800px !important;
     max-height: 85vh !important;
     border-radius: 1.5rem !important;
     display: flex !important;

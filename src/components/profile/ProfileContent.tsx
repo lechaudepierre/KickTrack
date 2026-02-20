@@ -54,7 +54,6 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
 
     // Info modal state
     const [showRemontadaInfo, setShowRemontadaInfo] = useState(false);
-    const [showMatchPointInfo, setShowMatchPointInfo] = useState(false);
 
     // Username update state (only for Me)
     const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -281,45 +280,73 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
         setShowUpdateModal(true);
     };
 
-    // WinRate Chart Component
-    const WinRateChart = ({ data }: { data: Array<{ date: string, winRate: number }> }) => {
+    // Elo Chart Component
+    const EloChart = ({ data }: { data: Array<{ date: string, elo: number }> }) => {
         if (data.length < 2) return <div className={styles.chartEmpty}>Pas assez de données pour le graphique</div>;
 
         const width = 300;
-        const height = 100;
-        const padding = 10;
+        const height = 120;
+        const padX = 20;
+        const padY = 25;
 
-        const points = data.map((d, i) => {
-            const x = (i / (data.length - 1)) * (width - 2 * padding) + padding;
-            const y = height - ((d.winRate / 100) * (height - 2 * padding) + padding);
-            return `${x},${y}`;
-        }).join(' ');
+        const values = data.map(d => d.elo);
+        const minElo = Math.min(...values);
+        const maxElo = Math.max(...values);
+
+        const range = maxElo - minElo;
+        const displayRange = range === 0 ? 40 : range;
+        const displayMin = range === 0 ? minElo - 20 : minElo;
+
+        const getX = (i: number) => (i / (data.length - 1)) * (width - 2 * padX) + padX;
+        const getY = (val: number) => height - (((val - displayMin) / displayRange) * (height - 2 * padY) + padY);
+
+        const points = data.map((d, i) => `${getX(i)},${getY(d.elo)}`).join(' ');
 
         return (
             <div className={styles.chartContainer}>
+                <div className={styles.chartEloLegend}>
+                    <span className="text-[0.6rem] font-black">{Math.round(maxElo)}</span>
+                    <span className="text-[0.6rem] font-black">{Math.round(minElo)}</span>
+                </div>
                 <svg viewBox={`0 0 ${width} ${height}`} className={styles.svgChart}>
-                    {/* Grid lines */}
-                    <line x1={padding} y1={height / 2} x2={width - padding} y2={height / 2} stroke="rgba(51,51,51,0.1)" strokeDasharray="4" />
+                    {/* Grid lines (min/max) */}
+                    <line x1={padX} y1={padY} x2={width - padX} y2={padY} stroke="rgba(51,51,51,0.05)" strokeDasharray="2" />
+                    <line x1={padX} y1={height - padY} x2={width - padX} y2={height - padY} stroke="rgba(51,51,51,0.05)" strokeDasharray="2" />
+
                     {/* The line */}
                     <polyline
                         fill="none"
                         stroke="var(--color-green-medium)"
-                        strokeWidth="4"
+                        strokeWidth="3.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         points={points}
                     />
-                    {/* Dots */}
+
+                    {/* Dots and Labels */}
                     {data.map((d, i) => {
-                        const x = (i / (data.length - 1)) * (width - 2 * padding) + padding;
-                        const y = height - ((d.winRate / 100) * (height - 2 * padding) + padding);
-                        return <circle key={i} cx={x} cy={y} r="3" fill="#333" />;
+                        const x = getX(i);
+                        const y = getY(d.elo);
+                        const isLast = i === data.length - 1;
+                        return (
+                            <g key={i}>
+                                <circle cx={x} cy={y} r="3" fill="#333" />
+                                {isLast && (
+                                    <g>
+                                        <rect x={x - 15} y={y - 20} width="30" height="14" rx="4" fill="#333" />
+                                        <text x={x} y={y - 10} fontSize="9" fontWeight="900" textAnchor="middle" fill="white">
+                                            {Math.round(d.elo)}
+                                        </text>
+                                    </g>
+                                )}
+                            </g>
+                        );
                     })}
                 </svg>
                 <div className={styles.chartLabels}>
-                    <span>{data[0].date}</span>
-                    <span>Progression Winrate (%)</span>
-                    <span>{data[data.length - 1].date}</span>
+                    <span className="text-[0.65rem] opacity-40 font-black uppercase">{data[0].date}</span>
+                    <span className="text-[0.7rem] font-black uppercase tracking-tight text-green-700">Progression Elo (20p)</span>
+                    <span className="text-[0.65rem] opacity-40 font-black uppercase">{data[data.length - 1].date}</span>
                 </div>
             </div>
         );
@@ -459,37 +486,17 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                             </div>
                         </div>
 
-                        {/* Winrate History Chart */}
+                        {/* Elo History Chart */}
                         <div className={styles.section}>
                             <h3 className={styles.sectionTitle}>
                                 <ChartBarIcon className="w-5 h-5" />
-                                Évolution du Winrate
+                                Évolution de l&apos;Elo
                             </h3>
                             <div className={styles.chartCard}>
-                                <WinRateChart data={advancedStats.winRateHistory} />
+                                <EloChart data={advancedStats.eloHistory} />
                             </div>
                         </div>
 
-                        {/* Match Points Section */}
-                        <div className={styles.section}>
-                            <h3 className={styles.sectionTitle}>
-                                <FireIcon className="w-5 h-5" />
-                                Balles de Match
-                                <button onClick={() => setShowMatchPointInfo(true)} className={styles.infoBtn}>
-                                    <InformationCircleIcon className="w-4 h-4" />
-                                </button>
-                            </h3>
-                            <div className={styles.matchPointsGrid}>
-                                <div className={styles.matchPointCard}>
-                                    <p className={styles.matchPointValue} style={{ color: '#4CAF50' }}>{advancedStats.matchPoints.saved}</p>
-                                    <p className={styles.matchPointLabel}>Sauvées</p>
-                                </div>
-                                <div className={styles.matchPointCard}>
-                                    <p className={styles.matchPointValue} style={{ color: '#FF9800' }}>{advancedStats.matchPoints.missed}</p>
-                                    <p className={styles.matchPointLabel}>Ratées</p>
-                                </div>
-                            </div>
-                        </div>
 
                         {/* Gamelles Section */}
                         <div className={styles.section}>
@@ -549,13 +556,11 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                                     <span className={styles.detailValue}>{advancedStats.cleanSheets}</span>
                                 </div>
                                 <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>
-                                        Remontadas
-                                        <button onClick={() => setShowRemontadaInfo(true)} className={styles.infoBtn}>
-                                            <InformationCircleIcon className="w-4 h-4" />
-                                        </button>
-                                    </span>
+                                    <span className={styles.detailLabel}>Remontadas</span>
                                     <span className={styles.detailValue}>{advancedStats.comebacks}</span>
+                                    <button onClick={() => setShowRemontadaInfo(true)} className={styles.infoBtn}>
+                                        <InformationCircleIcon className="w-4 h-4" />
+                                    </button>
                                 </div>
                                 <div className={styles.detailItem}>
                                     <span className={styles.detailLabel}>Meilleure Série</span>
@@ -565,7 +570,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                         </div>
 
                         {/* Top Teammates Podium */}
-                        {topTeammates.length > 0 && (
+                        {modeFilter !== '1v1' && topTeammates.length > 0 && (
                             <div className={styles.section}>
                                 <h3 className={styles.sectionTitle}>
                                     <UserPlusIcon className="w-5 h-5" />
@@ -681,7 +686,14 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                                             <span className={styles.gameDate}>{formatDate(game.startedAt)}</span>
                                         </div>
                                         <div className={styles.gameRight}>
-                                            <div className={styles.gameScore}>{game.score[0]} - {game.score[1]}</div>
+                                            <div className={styles.gameScore}>
+                                                {(() => {
+                                                    const userTeamIndex = game.teams.findIndex(t => t.players.some(p => p.userId === profileUser.userId));
+                                                    if (userTeamIndex === -1) return `${game.score[0]} - ${game.score[1]}`;
+                                                    const opponentTeamIndex = userTeamIndex === 0 ? 1 : 0;
+                                                    return `${game.score[userTeamIndex]} - ${game.score[opponentTeamIndex]}`;
+                                                })()}
+                                            </div>
                                             {eloChange !== null && (
                                                 <span className={`${styles.gameElo} ${eloChange >= 0 ? styles.eloPositive : styles.eloNegative}`}>
                                                     {eloChange >= 0 ? '+' : ''}{eloChange}
@@ -701,11 +713,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                 <div className={styles.modalOverlay} onClick={() => setShowRemontadaInfo(false)}>
                     <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
                         <h3 className={styles.modalTitle}>Remontadas</h3>
-                        <p className={styles.modalText}>Victoire épique après avoir été largement mené en fin de partie.</p>
-                        <p className={styles.modalSubText}>
-                            • En 6 pts: Mené de 3+ buts quand l'adversaire a 4 ou 5.<br />
-                            • En 11 pts: Mené de 5+ buts quand l'adversaire a 8, 9 ou 10.
-                        </p>
+                        <p className={styles.modalText}>Victoire épique après avoir eu au moins 4 buts de retard à n&apos;importe quel moment du match.</p>
                         <button onClick={() => setShowRemontadaInfo(false)} className="btn-primary">
                             <div className="btn-primary-shadow" />
                             <div className="btn-primary-content">Compris !</div>
@@ -714,23 +722,6 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                 </div>
             )}
 
-            {showMatchPointInfo && (
-                <div className={styles.modalOverlay} onClick={() => setShowMatchPointInfo(false)}>
-                    <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-                        <h3 className={styles.modalTitle}>Balles de Match</h3>
-                        <p className={styles.modalText}>
-                            <strong>Sauvées :</strong> L'adversaire était à 1 point de gagner, mais vous avez marqué ce point.
-                        </p>
-                        <p className={styles.modalText}>
-                            <strong>Ratées :</strong> Vous étiez à 1 point de gagner, mais l'adversaire a marqué ce point.
-                        </p>
-                        <button onClick={() => setShowMatchPointInfo(false)} className="btn-primary">
-                            <div className="btn-primary-shadow" />
-                            <div className="btn-primary-content">Compris !</div>
-                        </button>
-                    </div>
-                </div>
-            )}
 
             {showUpdateModal && (
                 <div className={styles.modalOverlay} onClick={() => !isUpdating && setShowUpdateModal(false)}>

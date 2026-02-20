@@ -246,7 +246,14 @@ export default function GameResultsPage() {
                                                 winningTeam?.color === 'purple' ? 'Violette' : 'Équipe'} !`}
                         </h1>
                         <p className={resultsStyles.finalScore}>
-                            {game.score[0]} — {game.score[1]}
+                            {(() => {
+                                const userTeamIndex = game.teams.findIndex(team =>
+                                    team.players.some(p => p.userId === user?.userId)
+                                );
+                                if (userTeamIndex === -1) return `${game.score[0]} — ${game.score[1]}`;
+                                const opponentTeamIndex = userTeamIndex === 0 ? 1 : 0;
+                                return `${game.score[userTeamIndex]} — ${game.score[opponentTeamIndex]}`;
+                            })()}
                         </p>
                     </div>
 

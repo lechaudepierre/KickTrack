@@ -19,6 +19,8 @@ html,
 body {
     height: 100%;
     overflow: hidden;
+    overscroll-behavior-x: none;
+    touch-action: pan-y;
 }
 
 body {
@@ -32,6 +34,7 @@ body {
     color: var(--color-text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-x: none;
 }
 
 /* Phone container - centers content and handles scroll */
