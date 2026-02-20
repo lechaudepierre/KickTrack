@@ -62,13 +62,21 @@ export default function VenueDropdown({
             const sorted = [...venues].sort((a, b) => {
                 const aIsFavorite = favoriteVenues.includes(a.venueId);
                 const bIsFavorite = favoriteVenues.includes(b.venueId);
-                const aIsRecent = recentVenues.includes(a.venueId);
-                const bIsRecent = recentVenues.includes(b.venueId);
 
+                // 1. Favorites first
                 if (aIsFavorite && !bIsFavorite) return -1;
                 if (!aIsFavorite && bIsFavorite) return 1;
-                if (aIsRecent && !bIsRecent) return -1;
-                if (!aIsRecent && bIsRecent) return 1;
+
+                // 2. Popularity (number of people who played there)
+                // Fallback to total games if activePlayersCount is 0
+                const aPopularity = (a.stats?.activePlayersCount || 0) || (a.stats?.totalGames || 0);
+                const bPopularity = (b.stats?.activePlayersCount || 0) || (b.stats?.totalGames || 0);
+
+                if (aPopularity !== bPopularity) {
+                    return bPopularity - aPopularity;
+                }
+
+                // 3. Alphabetical fallback
                 return a.name.localeCompare(b.name);
             });
             setSortOrder(sorted.map(v => v.venueId));

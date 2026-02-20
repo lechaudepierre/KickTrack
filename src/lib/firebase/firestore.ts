@@ -117,22 +117,40 @@ export async function recalculateVenueStats(): Promise<void> {
     );
     const gamesSnapshot = await getDocs(gamesQuery);
 
-    // Count games per venue
+    // Count games and unique players per venue
     const gameCountByVenue = new Map<string, number>();
+    const playersByVenue = new Map<string, Set<string>>();
+
     for (const gameDoc of gamesSnapshot.docs) {
         const game = gameDoc.data();
         const venueId = game.venueId;
-        if (venueId) {
+        if (venueId && venueId !== 'none') {
             gameCountByVenue.set(venueId, (gameCountByVenue.get(venueId) || 0) + 1);
+
+            if (!playersByVenue.has(venueId)) {
+                playersByVenue.set(venueId, new Set());
+            }
+
+            // Gather all player IDs from both teams
+            game.teams?.forEach((team: any) => {
+                team.players?.forEach((player: any) => {
+                    if (player.userId) {
+                        playersByVenue.get(venueId)?.add(player.userId);
+                    }
+                });
+            });
         }
     }
 
     // Update each venue's stats
     for (const venueId of venueIds) {
-        const count = gameCountByVenue.get(venueId) || 0;
+        const gameCount = gameCountByVenue.get(venueId) || 0;
+        const playerCount = playersByVenue.get(venueId)?.size || 0;
         const venueRef = doc(db, VENUES_COLLECTION, venueId);
+
         await updateDoc(venueRef, {
-            'stats.totalGames': count
+            'stats.totalGames': gameCount,
+            'stats.activePlayersCount': playerCount
         });
     }
 }
