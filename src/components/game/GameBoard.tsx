@@ -12,6 +12,7 @@ interface GameBoardProps {
     onTimeLimitReached?: () => void;
     onEndGame?: () => void;
     isViewer?: boolean;
+    isPortrait: boolean;
 }
 
 const positions: { value: GoalPosition; label: string; color: string; isNarrow?: boolean }[] = [
@@ -27,19 +28,8 @@ const goalTypes: { value: GoalType; label: string; description: string }[] = [
     { value: 'gamelle_rentrante', label: 'Gamelle Rentrante', description: 'Ressort et rentre' }
 ];
 
-export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGame, isViewer = false }: GameBoardProps) {
-    const [isPortrait, setIsPortrait] = useState(true);
+export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGame, isViewer = false, isPortrait }: GameBoardProps) {
     const { play: playSound } = useSound({ volume: 0.7 });
-
-    useEffect(() => {
-        const checkOrientation = () => {
-            setIsPortrait(window.innerHeight > window.innerWidth);
-        };
-
-        checkOrientation();
-        window.addEventListener('resize', checkOrientation);
-        return () => window.removeEventListener('resize', checkOrientation);
-    }, []);
 
     // Time limit check (1 hour)
     useEffect(() => {

@@ -217,9 +217,17 @@
     letter-spacing: 0.025em;
 }
 
-.hostLandscapeMode .avatar {
-    width: 1.25rem;
-    height: 1.25rem;
+.hostLandscapeMode .typeButton {
+    padding: 0.25rem 0.5rem;
+    max-height: 180px;
+    height: auto;
+}
+
+.hostLandscapeMode .typeLabel {
+    font-size: 0.875rem;
+}
+
+.hostLandscapeMode .typeDesc {
     font-size: 0.625rem;
 }
 
@@ -277,46 +285,59 @@
     }
 }
 
-/* Forced Landscape Mode - Rotate entire page */
+/* Forced Landscape Mode */
 .forcedLandscape {
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;
     width: 86vh !important;
-    /* Slightly less than 100vh to avoid ultra-wide effect */
     height: 100vw !important;
     transform: translate(-50%, -50%) rotate(90deg) !important;
     transform-origin: center center !important;
     z-index: 9999 !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    /* Prevent scroll */
-    padding: 0.15rem !important;
-    background-color: transparent !important;
+    overflow: hidden !important;
+    padding: 0.5rem !important;
+    background: repeating-linear-gradient(-45deg, #1B5E20, #1B5E20 200px, #2E7D32 200px, #2E7D32 400px) !important;
+    background-attachment: scroll !important;
+    background-color: #2E7D32 !important;
     display: flex !important;
     flex-direction: column !important;
     margin: 0 !important;
     max-width: none !important;
 }
 
-/* Native Landscape Mode (when user turns phone) */
+/* Ensure the whole screen is green in match mode to cover gaps */
+:global(.page-match) {
+    background-color: #2E7D32 !important;
+    background-image: repeating-linear-gradient(-45deg, #1B5E20, #1B5E20 200px, #2E7D32 200px, #2E7D32 400px) !important;
+    min-height: 100vh !important;
+}
+
+:global(.page-match) .pageContainer {
+    max-width: none !important;
+    background: transparent !important;
+}
+
+/* Native Landscape Mode */
 .nativeLandscape {
     position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
+    top: 0 !important;
+    left: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
     height: 100dvh !important;
     max-width: none !important;
     margin: 0 !important;
-    padding: 0.15rem !important;
+    padding: 0.5rem !important;
+    padding-top: env(safe-area-inset-top) !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
     display: flex !important;
     flex-direction: column !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    /* Prevent scroll */
+    overflow: hidden !important;
     z-index: 9999 !important;
+    background: repeating-linear-gradient(-45deg, #1B5E20, #1B5E20 200px, #2E7D32 200px, #2E7D32 400px) !important;
+    background-attachment: scroll !important;
+    background-color: #2E7D32 !important;
 }
 
 .landscapeHeader {
@@ -356,54 +377,70 @@
     top: 3rem !important;
 }
 
-/* Landscape Modal Overrides */
-.forcedLandscape .modalOverlay {
-    padding: 0.5rem !important;
+.forcedLandscape .modalOverlay,
+.nativeLandscape .modalOverlay {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10000 !important;
+    padding: 0 !important;
 }
 
-.forcedLandscape .modalContent {
-    max-width: 85vh !important;
-    /* Limite la largeur pour tenir dans la hauteur du paysage */
+.forcedLandscape .modalContent,
+.nativeLandscape .modalContent {
+    max-width: 90vw !important;
     width: 95% !important;
-    max-height: 95% !important;
+    max-height: 85vh !important;
     border-radius: 1.5rem !important;
     display: flex !important;
     flex-direction: column !important;
 }
 
-.forcedLandscape .modalHeader {
-    padding: 0.75rem 1.5rem !important;
+.forcedLandscape .modalHeader,
+.nativeLandscape .modalHeader {
+    padding: 0.5rem 1rem !important;
 }
 
-.forcedLandscape .modalTitle {
-    font-size: 1.125rem !important;
-    line-height: 1.5rem !important;
+.forcedLandscape .modalTitle,
+.nativeLandscape .modalTitle {
+    font-size: 1rem !important;
+    line-height: 1.25rem !important;
 }
 
-.forcedLandscape .modalBody {
-    padding: 1rem !important;
+.forcedLandscape .modalBody,
+.nativeLandscape .modalBody {
+    padding: 0.5rem !important;
     overflow-y: auto !important;
-    /* Permet le scroll si trop de boutons */
     flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
+    justify-content: flex-start !important;
     gap: 0.5rem !important;
 }
 
-.forcedLandscape .modalBody>*+* {
+.forcedLandscape .modalBody>*+*,
+.nativeLandscape .modalBody>*+* {
     margin-top: 0 !important;
 }
 
-.forcedLandscape .optionButton {
+.forcedLandscape .optionButton,
+.nativeLandscape .optionButton {
     padding: 0.75rem 1rem !important;
     border-radius: 0.75rem !important;
 }
 
-.forcedLandscape .optionTitle {
+.forcedLandscape .optionTitle,
+.nativeLandscape .optionTitle {
     font-size: 0.875rem !important;
     line-height: 1.25rem !important;
 }
 
-.forcedLandscape .optionDesc {
+.forcedLandscape .optionDesc,
+.nativeLandscape .optionDesc {
     font-size: 0.625rem !important;
 }

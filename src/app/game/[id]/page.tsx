@@ -30,13 +30,14 @@ export default function GamePage() {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        const checkOrientation = () => {
-            setIsPortrait(window.innerHeight > window.innerWidth);
+        const mediaQuery = window.matchMedia('(orientation: portrait)');
+        const checkOrientation = (e: MediaQueryListEvent | MediaQueryList) => {
+            setIsPortrait(e.matches);
         };
 
-        checkOrientation();
-        window.addEventListener('resize', checkOrientation);
-        return () => window.removeEventListener('resize', checkOrientation);
+        checkOrientation(mediaQuery);
+        mediaQuery.addEventListener('change', checkOrientation);
+        return () => mediaQuery.removeEventListener('change', checkOrientation);
     }, []);
 
     useEffect(() => {
@@ -167,10 +168,9 @@ export default function GamePage() {
     }
 
     return (
-        <div className={styles.pageContainer}>
-            <FieldBackground />
-
+        <div className={`${styles.pageContainer} page-match`}>
             <div className={`${styles.contentWrapper} ${isPortrait ? gameStyles.forcedLandscape : gameStyles.nativeLandscape}`}>
+                <FieldBackground />
                 {/* Header */}
                 <div className={`${styles.pageHeader} ${!isPortrait || isPortrait ? gameStyles.landscapeHeader : ''} justify-between`}>
                     <div className="flex items-center gap-4">
@@ -360,6 +360,7 @@ export default function GamePage() {
                     onTimeLimitReached={handleTimeLimitReached}
                     onEndGame={handleEndGame}
                     isViewer={user?.userId !== game.hostId}
+                    isPortrait={isPortrait}
                 />
             </div>
         </div>
