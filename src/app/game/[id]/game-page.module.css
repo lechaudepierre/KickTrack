@@ -282,14 +282,15 @@
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;
-    width: 100vh !important;
+    width: 92vh !important;
+    /* Slightly less than 100vh to avoid ultra-wide effect */
     height: 100vw !important;
     transform: translate(-50%, -50%) rotate(90deg) !important;
     transform-origin: center center !important;
     z-index: 9999 !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    padding: 0.5rem !important;
+    overflow: hidden !important;
+    /* Prevent scroll */
+    padding: 0.15rem !important;
     background-color: transparent !important;
     display: flex !important;
     flex-direction: column !important;
@@ -308,11 +309,11 @@
     height: 100dvh !important;
     max-width: none !important;
     margin: 0 !important;
-    padding: 0.5rem !important;
+    padding: 0.15rem !important;
     display: flex !important;
     flex-direction: column !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow: hidden !important;
+    /* Prevent scroll */
     z-index: 9999 !important;
 }
 
@@ -334,18 +335,21 @@
     min-height: 25px !important;
 }
 
-.forcedLandscape .backButton {
+.forcedLandscape .backButton,
+.nativeLandscape .backButton {
     padding: 0.25rem !important;
     width: 30px !important;
     height: 30px !important;
 }
 
 /* Menu positioning in landscape */
-.forcedLandscape .menuButton {
+.forcedLandscape .menuButton,
+.nativeLandscape .menuButton {
     padding: 0.5rem !important;
 }
 
-.forcedLandscape .dropdownMenu {
+.forcedLandscape .dropdownMenu,
+.nativeLandscape .dropdownMenu {
     right: 0.5rem !important;
     top: 3rem !important;
 }
