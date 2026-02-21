@@ -29,6 +29,7 @@ export default function LeaderboardPage() {
     // Filter type state
     const [filterType, setFilterType] = useState<FilterType>('general');
     const [friendIds, setFriendIds] = useState<string[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         const unsubscribe = initialize();
@@ -77,7 +78,20 @@ export default function LeaderboardPage() {
         }
     };
 
+    // Prepare leaderboard data with original rank
+    const leaderboardWithRank = leaderboard.map((player, index) => ({
+        ...player,
+        originalRank: index + 1
+    }));
+
+    // Filter results based on search query
+    const filteredLeaderboard = leaderboardWithRank.filter(player =>
+        player.username.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const isSearching = searchQuery.length > 0;
     const hasData = leaderboard.length > 0;
+    const hasFilteredData = filteredLeaderboard.length > 0;
 
     return (
         <div className={styles.container}>
@@ -104,6 +118,20 @@ export default function LeaderboardPage() {
                     </button>
                 </div>
 
+                {/* Search Bar */}
+                <div className={styles.searchContainer}>
+                    <div className={styles.searchBar}>
+                        <span className={styles.searchIcon}>🔍</span>
+                        <input
+                            type="text"
+                            placeholder="Rechercher"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className={styles.searchInput}
+                        />
+                    </div>
+                </div>
+
                 {/* Venue Filter Dropdown */}
                 <div className={styles.filterSection}>
                     <VenueDropdown
@@ -125,57 +153,61 @@ export default function LeaderboardPage() {
                             : 'Aucun classement disponible pour ce stade'
                         }
                     </div>
+                ) : !hasFilteredData ? (
+                    <div className={styles.emptyState}>
+                        Aucun joueur trouvé pour "{searchQuery}"
+                    </div>
                 ) : (
                     <>
-                        {/* Podium */}
-                        {leaderboard.length > 0 && (
+                        {/* Podium - Only show when not searching */}
+                        {!isSearching && filteredLeaderboard.length >= 3 && (
                             <div className={styles.podium}>
                                 {/* 2nd Place */}
-                                {leaderboard[1] && (
+                                {filteredLeaderboard[1] && (
                                     <div
                                         className={`${styles.podiumSpot} ${styles.secondPlace} cursor-pointer`}
-                                        onClick={() => router.push(`/profile/${leaderboard[1].userId}`)}
+                                        onClick={() => router.push(`/profile/${filteredLeaderboard[1].userId}`)}
                                     >
                                         <div className={styles.avatarContainer}>
                                             <div className={styles.podiumAvatar}>
-                                                {leaderboard[1].username.charAt(0).toUpperCase()}
+                                                {filteredLeaderboard[1].username.charAt(0).toUpperCase()}
                                             </div>
                                         </div>
-                                        <div className={styles.podiumName}>{leaderboard[1].username}</div>
-                                        <div className={styles.podiumScore}>{leaderboard[1].elo || 1000} Elo</div>
+                                        <div className={styles.podiumName}>{filteredLeaderboard[1].username}</div>
+                                        <div className={styles.podiumScore}>{filteredLeaderboard[1].elo || 1000} Elo</div>
                                     </div>
                                 )}
 
                                 {/* 1st Place */}
-                                {leaderboard[0] && (
+                                {filteredLeaderboard[0] && (
                                     <div
                                         className={`${styles.podiumSpot} ${styles.firstPlace} cursor-pointer`}
-                                        onClick={() => router.push(`/profile/${leaderboard[0].userId}`)}
+                                        onClick={() => router.push(`/profile/${filteredLeaderboard[0].userId}`)}
                                     >
                                         <div className={styles.avatarContainer}>
                                             <TrophyIcon className={styles.crownIcon} />
                                             <div className={styles.podiumAvatar}>
-                                                {leaderboard[0].username.charAt(0).toUpperCase()}
+                                                {filteredLeaderboard[0].username.charAt(0).toUpperCase()}
                                             </div>
                                         </div>
-                                        <div className={styles.podiumName}>{leaderboard[0].username}</div>
-                                        <div className={styles.podiumScore}>{leaderboard[0].elo || 1000} Elo</div>
+                                        <div className={styles.podiumName}>{filteredLeaderboard[0].username}</div>
+                                        <div className={styles.podiumScore}>{filteredLeaderboard[0].elo || 1000} Elo</div>
                                     </div>
                                 )}
 
                                 {/* 3rd Place */}
-                                {leaderboard[2] && (
+                                {filteredLeaderboard[2] && (
                                     <div
                                         className={`${styles.podiumSpot} ${styles.thirdPlace} cursor-pointer`}
-                                        onClick={() => router.push(`/profile/${leaderboard[2].userId}`)}
+                                        onClick={() => router.push(`/profile/${filteredLeaderboard[2].userId}`)}
                                     >
                                         <div className={styles.avatarContainer}>
                                             <div className={styles.podiumAvatar}>
-                                                {leaderboard[2].username.charAt(0).toUpperCase()}
+                                                {filteredLeaderboard[2].username.charAt(0).toUpperCase()}
                                             </div>
                                         </div>
-                                        <div className={styles.podiumName}>{leaderboard[2].username}</div>
-                                        <div className={styles.podiumScore}>{leaderboard[2].elo || 1000} Elo</div>
+                                        <div className={styles.podiumName}>{filteredLeaderboard[2].username}</div>
+                                        <div className={styles.podiumScore}>{filteredLeaderboard[2].elo || 1000} Elo</div>
                                     </div>
                                 )}
                             </div>
@@ -190,13 +222,13 @@ export default function LeaderboardPage() {
                                 <div className="text-center">Elo</div>
                             </div>
 
-                            {leaderboard.map((player, index) => (
+                            {filteredLeaderboard.map((player) => (
                                 <div
                                     key={player.userId}
                                     className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.currentUserItem : ''} cursor-pointer`}
                                     onClick={() => router.push(`/profile/${player.userId}`)}
                                 >
-                                    <div className={styles.rank}>{index + 1}</div>
+                                    <div className={styles.rank}>{player.originalRank}</div>
                                     <div className={styles.playerInfo}>
                                         <div className={styles.listAvatar}>
                                             {player.username.charAt(0).toUpperCase()}

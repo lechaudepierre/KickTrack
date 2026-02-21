@@ -64,10 +64,11 @@ function calculateEloChange(
 
     // 5. Calculate Change
     const change = Math.round(kFactor * (result - finalProb));
+    const newElo = Math.max(0, playerElo + change);
 
     return {
-        newElo: playerElo + change,
-        eloChange: change
+        newElo: newElo,
+        eloChange: newElo - playerElo
     };
 }
 
@@ -182,10 +183,11 @@ async function updatePlayerStatsAfterGame(
             const prob = calculateProbability(playerElo, opponentElo);
             const kFactor = getKFactor(gamesPlayed);
             const change = Math.round(kFactor * ((isWinner ? 1 : 0) - prob));
+            const newElo = Math.max(0, playerElo + change);
 
             eloUpdates[player.userId] = {
-                newElo: playerElo + change,
-                eloChange: change
+                newElo: newElo,
+                eloChange: newElo - playerElo
             };
         }
 
