@@ -13,7 +13,8 @@ import {
     ArrowLeftIcon,
     TrophyIcon,
     UsersIcon,
-    GlobeAltIcon
+    GlobeAltIcon,
+    MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 
@@ -121,7 +122,7 @@ export default function LeaderboardPage() {
                 {/* Search Bar */}
                 <div className={styles.searchContainer}>
                     <div className={styles.searchBar}>
-                        <span className={styles.searchIcon}>🔍</span>
+                        <MagnifyingGlassIcon className={styles.searchIcon} />
                         <input
                             type="text"
                             placeholder="Rechercher"
