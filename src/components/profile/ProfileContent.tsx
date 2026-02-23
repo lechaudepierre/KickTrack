@@ -518,6 +518,23 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                             </div>
                         </div>
 
+                        {/* Flash Goals Section */}
+                        {advancedStats.flashStats.total > 0 && (
+                            <div className={styles.section}>
+                                <h3 className={styles.sectionTitle}>
+                                    <FireIcon className="w-5 h-5" />
+                                    Buts Flash
+                                </h3>
+                                <div className={styles.gamellesGrid}>
+                                    <div className={styles.gamelleCard}>
+                                        <p className={styles.gamelleValue}>{advancedStats.flashStats.total}</p>
+                                        <p className={styles.gamelleLabel}>Total</p>
+                                        <p className={styles.gamelleSub}>{Math.round(advancedStats.flashStats.totalPercentage)}% des matchs</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Roles Section (Only if 2v2 is possible) */}
                         {modeFilter !== '1v1' && (advancedStats.roleStats.attack.games > 0 || advancedStats.roleStats.defense.games > 0) && (
                             <div className={styles.section}>

@@ -79,6 +79,12 @@ export interface AdvancedStats {
         totalPercentage: number;
         rentrantesPercentage: number;
     };
+
+    // Flash goals
+    flashStats: {
+        total: number;
+        totalPercentage: number;
+    };
 }
 
 export function calculateAdvancedStats(
@@ -149,6 +155,7 @@ export function calculateAdvancedStats(
     };
     let totalGamelles = 0;
     let totalGamellesRentrantes = 0;
+    let totalFlash = 0;
     const winRateHistory: Array<{ date: string; winRate: number }> = [];
     const eloHistory: Array<{ date: string; elo: number }> = [];
     let cumulativeWins = 0;
@@ -199,6 +206,7 @@ export function calculateAdvancedStats(
                 totalGamelles++;
                 totalGamellesRentrantes++;
             }
+            if (g.type === 'flash') totalFlash++;
         });
 
         // Rôles (2v2 uniquement)
@@ -345,6 +353,10 @@ export function calculateAdvancedStats(
             rentrantes: totalGamellesRentrantes,
             totalPercentage: filteredGames.length > 0 ? (totalGamelles / filteredGames.length) * 100 : 0,
             rentrantesPercentage: filteredGames.length > 0 ? (totalGamellesRentrantes / filteredGames.length) * 100 : 0
+        },
+        flashStats: {
+            total: totalFlash,
+            totalPercentage: filteredGames.length > 0 ? (totalFlash / filteredGames.length) * 100 : 0
         }
     };
 }
@@ -382,6 +394,10 @@ function getEmptyStats(): AdvancedStats {
             rentrantes: 0,
             totalPercentage: 0,
             rentrantesPercentage: 0
+        },
+        flashStats: {
+            total: 0,
+            totalPercentage: 0
         }
     };
 }

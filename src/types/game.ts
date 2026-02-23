@@ -2,7 +2,7 @@
 
 export type TeamColor = 'red' | 'blue' | 'green' | 'yellow' | 'orange' | 'purple';
 
-export type GoalType = 'normal' | 'gamelle' | 'gamelle_rentrante' | 'ownGoal';
+export type GoalType = 'normal' | 'gamelle' | 'gamelle_rentrante' | 'ownGoal' | 'flash';
 
 export type GoalPosition = 'attack' | 'defense' | 'goalkeeper' | 'midfield';
 

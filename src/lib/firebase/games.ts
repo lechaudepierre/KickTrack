@@ -334,7 +334,7 @@ export async function addGoal(
     const game = gameSnap.data() as Game;
     const currentMultiplier = game.multiplier || 1;
     const isMidfield = position === 'midfield';
-    const isNormal = type === 'normal';
+    const isNormal = type === 'normal' || type === 'flash';
     const isGamelle = type === 'gamelle';
     const isGamelleRentrante = type === 'gamelle_rentrante';
 

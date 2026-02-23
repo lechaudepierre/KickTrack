@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { Game, Team, Player, GoalPosition, GoalType } from '@/types';
 import { PlusIcon, XMarkIcon, StarIcon } from '@heroicons/react/24/solid';
 import GameTimer from './GameTimer';
 import { useSound } from '@/hooks/useSound';
 import styles from './GameBoard.module.css';
+
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 interface GameBoardProps {
     game: Game;
@@ -24,6 +27,7 @@ const positions: { value: GoalPosition; label: string; color: string; isNarrow?:
 
 const goalTypes: { value: GoalType; label: string; description: string }[] = [
     { value: 'normal', label: 'Normal', description: 'But classique' },
+    { value: 'flash', label: 'Flash', description: 'But éclair' },
     { value: 'gamelle', label: 'Gamelle', description: 'Le ballon ressort' },
     { value: 'gamelle_rentrante', label: 'Gamelle Rentrante', description: 'Ressort et rentre' }
 ];
@@ -66,6 +70,16 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
 
     // Animation states for scores
     const [animatingScore, setAnimatingScore] = useState<0 | 1 | null>(null);
+
+    // Flash animation state
+    const [showFlashAnimation, setShowFlashAnimation] = useState(false);
+    const [flashAnimationData, setFlashAnimationData] = useState<object | null>(null);
+
+    useEffect(() => {
+        fetch('/animations/LIGHTNING.json')
+            .then(r => r.json())
+            .then(setFlashAnimationData);
+    }, []);
 
     const team1 = game.teams[0];
     const team2 = game.teams[1];
@@ -144,6 +158,10 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
         if (activeTeamIndex !== null && selectedPlayer && selectedPosition) {
             onAddGoal(activeTeamIndex, selectedPlayer.userId, selectedPlayer.username, selectedPosition, type);
             playGoalSound(type);
+            if (type === 'flash') {
+                setShowFlashAnimation(true);
+                setTimeout(() => setShowFlashAnimation(false), 2000);
+            }
             handleCancel();
         }
     };
@@ -235,9 +253,11 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                                     <button
                                         key={type.value}
                                         onClick={() => handleSelectGoalType(type.value)}
-                                        className={`${styles.typeButton} ${type.value === 'normal' ? `${styles.bgNormal} ${styles.fullWidth}` :
-                                            type.value === 'gamelle' ? styles.bgGamelle :
-                                                styles.bgGamelleRentrante
+                                        className={`${styles.typeButton} ${type.value === 'normal' ? styles.bgNormal :
+                                            type.value === 'flash' ? styles.bgFlash :
+                                                type.value === 'gamelle' ? styles.bgGamelle :
+                                                    type.value === 'gamelle_rentrante' ? styles.bgGamelleRentrante :
+                                                        ''
                                             }`}
                                     >
                                         <span className={styles.typeLabel}>{type.label}</span>
@@ -328,6 +348,17 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                     </div>
                 </div>
             </div>
+
+            {/* Flash Animation Overlay */}
+            {showFlashAnimation && flashAnimationData && (
+                <div className={styles.flashOverlay}>
+                    <Lottie
+                        animationData={flashAnimationData}
+                        loop={false}
+                        className={styles.flashLottie}
+                    />
+                </div>
+            )}
 
             {/* Goal Controls - Only for Host */}
             {!isViewer && (
