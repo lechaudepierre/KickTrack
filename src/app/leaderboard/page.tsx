@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getVenueLeaderboard, getGlobalLeaderboard, getFriendsLeaderboard, LeaderboardEntry } from '@/lib/firebase/games';
@@ -30,6 +30,9 @@ export default function LeaderboardPage() {
     const [filterType, setFilterType] = useState<FilterType>('general');
     const [friendIds, setFriendIds] = useState<string[]>([]);
 
+    // Race condition protection: only the latest loadLeaderboard call can update state
+    const loadCallIdRef = useRef(0);
+
     useEffect(() => {
         const unsubscribe = initialize();
         return () => {
@@ -57,23 +60,52 @@ export default function LeaderboardPage() {
     };
 
     const loadLeaderboard = async () => {
+        const callId = ++loadCallIdRef.current;
         setIsLoading(true);
         try {
             const venueId = selectedVenue?.venueId || 'all';
+            let data: LeaderboardEntry[];
+
             if (filterType === 'friends') {
-                const data = await getFriendsLeaderboard(friendIds, venueId);
-                setLeaderboard(data);
+                data = await getFriendsLeaderboard(friendIds, venueId);
             } else if (!selectedVenue) {
-                const data = await getGlobalLeaderboard();
-                setLeaderboard(data);
+                data = await getGlobalLeaderboard();
             } else {
-                const data = await getVenueLeaderboard(selectedVenue.venueId);
-                setLeaderboard(data);
+                data = await getVenueLeaderboard(selectedVenue.venueId);
             }
+
+            // Race condition guard: ignore result if a newer call was made
+            if (callId !== loadCallIdRef.current) return;
+
+            // Diagnostic + self-healing: if current user is missing from global leaderboard
+            if (filterType === 'general' && !selectedVenue && currentUser) {
+                const userInList = data.some(p => p.userId === currentUser.userId);
+                if (!userInList && data.length > 0) {
+                    // Cross-check: does the user exist in friends leaderboard (same games, different filter)?
+                    const crossCheck = await getFriendsLeaderboard([currentUser.userId], 'all');
+                    if (crossCheck.length > 0) {
+                        console.warn(
+                            `[Leaderboard Diagnostic] User "${currentUser.username}" (${currentUser.userId}) is MISSING from global leaderboard (${data.length} players) but EXISTS in friends cross-check with ${crossCheck[0].totalGames} games, Elo: ${crossCheck[0].elo}. Injecting user into global list.`
+                        );
+                        data.push(crossCheck[0]);
+                        data.sort((a, b) => {
+                            const eloA = a.elo || 1000;
+                            const eloB = b.elo || 1000;
+                            if (eloA !== eloB) return eloB - eloA;
+                            if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+                            return b.wins - a.wins;
+                        });
+                    }
+                }
+            }
+
+            setLeaderboard(data);
         } catch (error) {
             console.error('Error loading leaderboard:', error);
         } finally {
-            setIsLoading(false);
+            if (callId === loadCallIdRef.current) {
+                setIsLoading(false);
+            }
         }
     };
 
