@@ -1,0 +1,30 @@
+.rankAvatar {
+    object-fit: contain;
+    flex-shrink: 0;
+    display: block;
+}
+
+.xs {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.sm {
+    width: 2rem;
+    height: 2rem;
+}
+
+.md {
+    width: 2.75rem;
+    height: 2.75rem;
+}
+
+.lg {
+    width: 3.5rem;
+    height: 3.5rem;
+}
+
+.xl {
+    width: 4.5rem;
+    height: 4.5rem;
+}

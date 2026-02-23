@@ -2,48 +2,46 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { TrophyIcon, PlusIcon, UserIcon } from '@heroicons/react/24/solid';
+import { TrophyIcon, PlusIcon } from '@heroicons/react/24/solid';
+import { useAuthStore } from '@/lib/stores/authStore';
+import RankAvatar from './RankAvatar';
 import styles from './BottomNav.module.css';
-
-const navItems = [
-    { href: '/leaderboard', icon: TrophyIcon, label: 'Classement' },
-    { href: '/dashboard', icon: PlusIcon, label: 'Jouer', isMain: true },
-    { href: '/profile', icon: UserIcon, label: 'Profil' },
-];
 
 export default function BottomNav() {
     const pathname = usePathname();
+    const { user } = useAuthStore();
+
+    const isLeaderboardActive = pathname === '/leaderboard';
+    const isDashboardActive = pathname === '/dashboard' || pathname === '/game/new';
+    const isProfileActive = pathname === '/profile';
 
     return (
         <div className={styles.navWrapper}>
             <nav className={styles.nav}>
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href ||
-                        (item.href === '/dashboard' && pathname === '/game/new');
-                    const Icon = item.icon;
+                {/* Leaderboard */}
+                <Link
+                    href="/leaderboard"
+                    className={`${styles.navItem} ${isLeaderboardActive ? styles.active : ''}`}
+                >
+                    <TrophyIcon className={styles.icon} />
+                    <span className={styles.label}>Classement</span>
+                </Link>
 
-                    if (item.isMain) {
-                        const isMainActive = pathname === '/dashboard';
-                        return (
-                            <Link key={item.href} href="/dashboard" className={styles.mainButton}>
-                                <div className={`${styles.mainButtonInner} ${isMainActive ? styles.mainButtonActive : ''}`}>
-                                    <Icon className={styles.mainIcon} />
-                                </div>
-                            </Link>
-                        );
-                    }
+                {/* Main Play Button */}
+                <Link href="/dashboard" className={styles.mainButton}>
+                    <div className={`${styles.mainButtonInner} ${isDashboardActive ? styles.mainButtonActive : ''}`}>
+                        <PlusIcon className={styles.mainIcon} />
+                    </div>
+                </Link>
 
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`${styles.navItem} ${isActive ? styles.active : ''}`}
-                        >
-                            <Icon className={styles.icon} />
-                            <span className={styles.label}>{item.label}</span>
-                        </Link>
-                    );
-                })}
+                {/* Profile — shows user rank icon */}
+                <Link
+                    href="/profile"
+                    className={`${styles.navItem} ${isProfileActive ? styles.active : ''}`}
+                >
+                    <RankAvatar elo={user?.stats?.elo} size="xs" />
+                    <span className={styles.label}>Profil</span>
+                </Link>
             </nav>
         </div>
     );

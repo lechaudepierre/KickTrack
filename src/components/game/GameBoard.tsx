@@ -4,6 +4,7 @@ import { PlusIcon, XMarkIcon, StarIcon } from '@heroicons/react/24/solid';
 import GameTimer from './GameTimer';
 import { useSound } from '@/hooks/useSound';
 import styles from './GameBoard.module.css';
+import RankAvatar from '@/components/common/RankAvatar';
 
 interface GameBoardProps {
     game: Game;
@@ -190,7 +191,7 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                                         className={styles.playerButton}
                                     >
                                         <div className={styles.playerAvatar}>
-                                            {player.username?.charAt(0).toUpperCase() || '?'}
+                                            <RankAvatar size="md" />
                                         </div>
                                         <span className={styles.playerName}>{player.username}</span>
                                     </button>
@@ -279,9 +280,7 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                         <div className={styles.teamInfo}>
                             <div className={styles.playerAvatars}>
                                 {team1.players.map((player) => (
-                                    <div key={player.userId} className={styles.avatar}>
-                                        {player.username?.charAt(0).toUpperCase() || '?'}
-                                    </div>
+                                    <RankAvatar key={player.userId} size="xs" />
                                 ))}
                             </div>
                             <span className={styles.teamLabel}>{getTeamPlayerNames(0)}</span>
@@ -318,9 +317,7 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                         <div className={styles.teamInfo}>
                             <div className={styles.playerAvatars}>
                                 {team2.players.map((player) => (
-                                    <div key={player.userId} className={styles.avatar}>
-                                        {player.username?.charAt(0).toUpperCase() || '?'}
-                                    </div>
+                                    <RankAvatar key={player.userId} size="xs" />
                                 ))}
                             </div>
                             <span className={styles.teamLabel}>{getTeamPlayerNames(1)}</span>

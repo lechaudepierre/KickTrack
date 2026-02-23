@@ -25,6 +25,7 @@ import {
     UsersIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
+import RankAvatar from '@/components/common/RankAvatar';
 
 type Tab = 'friends' | 'requests';
 
@@ -289,9 +290,7 @@ export default function FriendsPage() {
                                                         className={styles.userMainInfo}
                                                         onClick={() => router.push(`/profile/${friend.userId}`)}
                                                     >
-                                                        <div className={styles.userAvatar}>
-                                                            {friend.username.charAt(0).toUpperCase()}
-                                                        </div>
+                                                        <RankAvatar elo={friend.stats.elo} size="md" />
                                                         <div className={styles.userInfo}>
                                                             <p className={styles.userName}>{friend.username}</p>
                                                             <p className={styles.userStats}>
@@ -378,9 +377,7 @@ export default function FriendsPage() {
                                                             className={styles.userMainInfo}
                                                             onClick={() => router.push(`/profile/${searchUser.userId}`)}
                                                         >
-                                                            <div className={styles.userAvatar}>
-                                                                {searchUser.username.charAt(0).toUpperCase()}
-                                                            </div>
+                                                            <RankAvatar elo={searchUser.stats.elo} size="md" />
                                                             <div className={styles.userInfo}>
                                                                 <p className={styles.userName}>{searchUser.username}</p>
                                                                 <p className={styles.userStats}>
@@ -444,9 +441,7 @@ export default function FriendsPage() {
                                                 className={styles.userMainInfo}
                                                 onClick={() => router.push(`/profile/${request.userId}`)}
                                             >
-                                                <div className={styles.userAvatar}>
-                                                    {request.username.charAt(0).toUpperCase()}
-                                                </div>
+                                                <RankAvatar elo={request.stats.elo} size="md" />
                                                 <div className={styles.userInfo}>
                                                     <p className={styles.userName}>{request.username}</p>
                                                     <p className={styles.userStats}>

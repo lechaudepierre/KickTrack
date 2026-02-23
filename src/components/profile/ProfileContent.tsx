@@ -29,6 +29,8 @@ import {
     PlusIcon
 } from '@heroicons/react/24/outline';
 import styles from './ProfileContent.module.css';
+import RankAvatar from '@/components/common/RankAvatar';
+import { getRankInfo } from '@/lib/utils/rankUtils';
 
 interface ProfileContentProps {
     targetUserId: string;
@@ -411,16 +413,11 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                 </div>
 
                 <div className={styles.profileHeader}>
-                    <div className={styles.avatar}>
-                        {profileUser.username.charAt(0).toUpperCase()}
-                    </div>
+                    <RankAvatar elo={profileUser.stats.elo} size="lg" />
                     <div className={styles.userInfo}>
                         <div className={styles.usernameContainer}>
                             <h2 className={styles.username}>
                                 {profileUser.username}
-                                <span className={styles.eloTag}>
-                                    ({profileUser.stats.elo || 1000} Elo)
-                                </span>
                             </h2>
                             {isMe && (
                                 <button onClick={openUpdateModal} className={styles.editBtn}>
@@ -428,6 +425,11 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                                 </button>
                             )}
                         </div>
+                        <p className={styles.eloRankLine}>
+                            {profileUser.stats.elo || 1000} Elo
+                            {' – '}
+                            {(() => { const r = getRankInfo(profileUser.stats.elo); return `${r.label} ${r.romanLevel}`; })()}
+                        </p>
                         <p className={styles.joinDate}>
                             Membre depuis {formatDate(profileUser.createdAt)}
                         </p>
@@ -581,9 +583,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                                         {/* 2nd place - left */}
                                         {topTeammates[1] ? (
                                             <div className={`${styles.podiumSpot} cursor-pointer`} onClick={() => router.push(`/profile/${topTeammates[1].userId}`)}>
-                                                <div className={styles.podiumAvatar}>
-                                                    {topTeammates[1].username.charAt(0).toUpperCase()}
-                                                </div>
+                                                <RankAvatar size="md" />
                                                 <span className={styles.podiumName}>{topTeammates[1].username}</span>
                                                 <span className={styles.podiumWins}>{topTeammates[1].wins}V</span>
                                                 <span className={styles.podiumGames}>{topTeammates[1].games} matchs</span>
@@ -595,9 +595,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
 
                                         {/* 1st place - center */}
                                         <div className={`${styles.podiumSpot} cursor-pointer`} onClick={() => router.push(`/profile/${topTeammates[0].userId}`)}>
-                                            <div className={`${styles.podiumAvatar} ${styles.podiumAvatarFirst}`}>
-                                                {topTeammates[0].username.charAt(0).toUpperCase()}
-                                            </div>
+                                            <RankAvatar size="lg" />
                                             <span className={styles.podiumName}>{topTeammates[0].username}</span>
                                             <span className={styles.podiumWins}>{topTeammates[0].wins}V</span>
                                             <span className={styles.podiumGames}>{topTeammates[0].games} matchs</span>
@@ -607,9 +605,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                                         {/* 3rd place - right */}
                                         {topTeammates[2] ? (
                                             <div className={`${styles.podiumSpot} cursor-pointer`} onClick={() => router.push(`/profile/${topTeammates[2].userId}`)}>
-                                                <div className={styles.podiumAvatar}>
-                                                    {topTeammates[2].username.charAt(0).toUpperCase()}
-                                                </div>
+                                                <RankAvatar size="md" />
                                                 <span className={styles.podiumName}>{topTeammates[2].username}</span>
                                                 <span className={styles.podiumWins}>{topTeammates[2].wins}V</span>
                                                 <span className={styles.podiumGames}>{topTeammates[2].games} matchs</span>
@@ -726,9 +722,15 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
             {showUpdateModal && (
                 <div className={styles.modalOverlay} onClick={() => !isUpdating && setShowUpdateModal(false)}>
                     <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-                        <div className="flex justify-between items-center mb-4">
+                        <div className={styles.modalHeader}>
                             <h3 className={styles.modalTitle}>Pseudo</h3>
-                            <button onClick={() => setShowUpdateModal(false)} disabled={isUpdating}><XMarkIcon className="w-6 h-6" /></button>
+                            <button
+                                onClick={() => setShowUpdateModal(false)}
+                                disabled={isUpdating}
+                                className={styles.modalCloseBtn}
+                            >
+                                <XMarkIcon className="w-6 h-6" />
+                            </button>
                         </div>
                         <form onSubmit={handleUpdateUsername}>
                             {updateError && <div className="error-box mb-4">{updateError}</div>}
@@ -736,7 +738,8 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                                 type="text"
                                 value={newUsername}
                                 onChange={(e) => setNewUsername(e.target.value)}
-                                className="input-field mb-4"
+                                className="input-field"
+                                style={{ marginBottom: '1.25rem' }}
                                 autoFocus
                                 disabled={isUpdating}
                                 required

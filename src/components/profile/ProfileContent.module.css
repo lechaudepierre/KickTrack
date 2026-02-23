@@ -236,6 +236,13 @@
     margin-left: var(--spacing-xs);
 }
 
+.eloRankLine {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: rgba(51, 51, 51, 0.65);
+    margin-bottom: 2px;
+}
+
 .editBtn {
     display: flex;
     align-items: center;
@@ -1182,8 +1189,31 @@
     font-size: 1.25rem;
     font-weight: 800;
     color: var(--color-text-dark);
-    margin-bottom: var(--spacing-md);
     text-transform: uppercase;
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+}
+
+.modalCloseBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 4px;
+    color: var(--color-text-dark);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: opacity 0.2s ease;
+}
+
+.modalCloseBtn:hover {
+    opacity: 0.6;
 }
 
 .modalText {

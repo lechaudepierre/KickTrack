@@ -16,6 +16,7 @@ import {
     GlobeAltIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
+import RankAvatar from '@/components/common/RankAvatar';
 
 type FilterType = 'general' | 'friends';
 
@@ -137,9 +138,7 @@ export default function LeaderboardPage() {
                                         onClick={() => router.push(`/profile/${leaderboard[1].userId}`)}
                                     >
                                         <div className={styles.avatarContainer}>
-                                            <div className={styles.podiumAvatar}>
-                                                {leaderboard[1].username.charAt(0).toUpperCase()}
-                                            </div>
+                                            <RankAvatar elo={leaderboard[1].elo} size="lg" />
                                         </div>
                                         <div className={styles.podiumName}>{leaderboard[1].username}</div>
                                         <div className={styles.podiumScore}>{leaderboard[1].elo || 1000} Elo</div>
@@ -154,9 +153,7 @@ export default function LeaderboardPage() {
                                     >
                                         <div className={styles.avatarContainer}>
                                             <TrophyIcon className={styles.crownIcon} />
-                                            <div className={styles.podiumAvatar}>
-                                                {leaderboard[0].username.charAt(0).toUpperCase()}
-                                            </div>
+                                            <RankAvatar elo={leaderboard[0].elo} size="xl" />
                                         </div>
                                         <div className={styles.podiumName}>{leaderboard[0].username}</div>
                                         <div className={styles.podiumScore}>{leaderboard[0].elo || 1000} Elo</div>
@@ -170,9 +167,7 @@ export default function LeaderboardPage() {
                                         onClick={() => router.push(`/profile/${leaderboard[2].userId}`)}
                                     >
                                         <div className={styles.avatarContainer}>
-                                            <div className={styles.podiumAvatar}>
-                                                {leaderboard[2].username.charAt(0).toUpperCase()}
-                                            </div>
+                                            <RankAvatar elo={leaderboard[2].elo} size="lg" />
                                         </div>
                                         <div className={styles.podiumName}>{leaderboard[2].username}</div>
                                         <div className={styles.podiumScore}>{leaderboard[2].elo || 1000} Elo</div>
@@ -198,9 +193,7 @@ export default function LeaderboardPage() {
                                 >
                                     <div className={styles.rank}>{index + 1}</div>
                                     <div className={styles.playerInfo}>
-                                        <div className={styles.listAvatar}>
-                                            {player.username.charAt(0).toUpperCase()}
-                                        </div>
+                                        <RankAvatar elo={player.elo} size="sm" />
                                         <span className={styles.playerName}>
                                             {player.username}
                                             {currentUser?.userId === player.userId && ' (Moi)'}

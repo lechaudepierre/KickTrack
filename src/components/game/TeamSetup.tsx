@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Player, Team, TeamColor } from '@/types';
 import styles from './TeamSetup.module.css';
+import RankAvatar from '@/components/common/RankAvatar';
 
 interface TeamSetupProps {
     players: Player[];
@@ -152,7 +153,7 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
                             }}
                         >
                             <div className={styles.playerAvatar}>
-                                {player.username.charAt(0).toUpperCase()}
+                                <RankAvatar size="sm" />
                             </div>
                             <span className={styles.playerName}>{player.username}</span>
                         </div>
@@ -204,7 +205,7 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
                             }}
                         >
                             <div className={styles.playerAvatar}>
-                                {player.username.charAt(0).toUpperCase()}
+                                <RankAvatar size="sm" />
                             </div>
                             <span className={styles.playerName}>{player.username}</span>
                         </div>

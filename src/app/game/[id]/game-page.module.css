@@ -405,7 +405,15 @@
     padding: 0 !important;
 }
 
-.forcedLandscape .modalContent,
+.forcedLandscape .modalContent {
+    max-width: 95vw !important;
+    width: 800px !important;
+    max-height: 85vw !important;
+    border-radius: 1.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
 .nativeLandscape .modalContent {
     max-width: 95vw !important;
     width: 800px !important;

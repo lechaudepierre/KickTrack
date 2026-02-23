@@ -3,6 +3,7 @@
 import { Player } from '@/types';
 import { CheckCircleIcon, ClockIcon } from '@heroicons/react/24/solid';
 import styles from './PlayerList.module.css';
+import RankAvatar from '@/components/common/RankAvatar';
 
 interface PlayerListProps {
     players: Player[];
@@ -29,9 +30,7 @@ export default function PlayerList({ players, maxPlayers, currentUserId }: Playe
                         key={player.userId}
                         className={`${styles.playerItem} ${player.userId === currentUserId ? styles.playerItemActive : styles.playerItemInactive}`}
                     >
-                        <div className={styles.avatar}>
-                            {player.username.charAt(0).toUpperCase()}
-                        </div>
+                        <RankAvatar size="md" />
                         <div className={styles.playerInfo}>
                             <p className={styles.username}>
                                 {player.username}
