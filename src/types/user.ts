@@ -31,6 +31,7 @@ export interface User {
         notifications?: boolean;
     };
     favoriteVenues?: string[]; // Array of venue IDs
+    bannerId?: string; // ID of the equipped banner skin
     friends?: string[]; // Array of userId
     friendRequestsReceived?: string[]; // Array of userId who sent requests
     friendRequestsSent?: string[]; // Array of userId to whom requests were sent

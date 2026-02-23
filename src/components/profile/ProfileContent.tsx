@@ -30,7 +30,9 @@ import {
 } from '@heroicons/react/24/outline';
 import styles from './ProfileContent.module.css';
 import RankAvatar from '@/components/common/RankAvatar';
+import PlayerBanner from '@/components/common/PlayerBanner';
 import { getRankInfo } from '@/lib/utils/rankUtils';
+import { CREATOR_USERNAMES } from '@/lib/utils/bannerUtils';
 
 interface ProfileContentProps {
     targetUserId: string;
@@ -65,6 +67,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
 
     // Friend requests count (only for Me)
     const [friendRequestsCount, setFriendRequestsCount] = useState(0);
+    const [teammateElos, setTeammateElos] = useState<Map<string, number>>(new Map());
 
     // Relationship status (only for !isMe)
     const [relationshipStatus, setRelationshipStatus] = useState<'none' | 'pending' | 'friend'>('none');
@@ -172,6 +175,22 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
             .sort((a, b) => b.wins - a.wins || b.games - a.games)
             .slice(0, 3);
     }, [allGames, profileUser]);
+
+    // Fetch ELO for each top teammate
+    useEffect(() => {
+        if (topTeammates.length === 0) return;
+        const fetchElos = async () => {
+            const map = new Map<string, number>();
+            await Promise.all(topTeammates.map(async (t) => {
+                try {
+                    const u = await getUserById(t.userId);
+                    if (u) map.set(t.userId, u.stats?.elo ?? 1000);
+                } catch { /* ignore */ }
+            }));
+            setTeammateElos(map);
+        };
+        fetchElos();
+    }, [topTeammates]);
 
     if (isLoading) {
         return (
@@ -412,8 +431,12 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                     </div>
                 </div>
 
-                <div className={styles.profileHeader}>
-                    <RankAvatar elo={profileUser.stats.elo} size="lg" />
+                <PlayerBanner
+                    username={profileUser.username}
+                    bannerId={profileUser.bannerId}
+                    className={`${styles.profileHeader} ${styles.profileBannerBlock}`}
+                >
+                    <RankAvatar elo={profileUser.stats.elo} size="md" />
                     <div className={styles.userInfo}>
                         <div className={styles.usernameContainer}>
                             <h2 className={styles.username}>
@@ -430,11 +453,11 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                             {' – '}
                             {(() => { const r = getRankInfo(profileUser.stats.elo); return `${r.label} ${r.romanLevel}`; })()}
                         </p>
-                        <p className={styles.joinDate}>
-                            Membre depuis {formatDate(profileUser.createdAt)}
-                        </p>
                     </div>
-                </div>
+                </PlayerBanner>
+                <p className={styles.joinDate}>
+                    {CREATOR_USERNAMES.includes(profileUser.username) ? 'CREATOR' : `Membre depuis ${formatDate(profileUser.createdAt)}`}
+                </p>
 
                 {/* Filters Section */}
                 <div className={styles.filterSection}>
@@ -583,7 +606,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                                         {/* 2nd place - left */}
                                         {topTeammates[1] ? (
                                             <div className={`${styles.podiumSpot} cursor-pointer`} onClick={() => router.push(`/profile/${topTeammates[1].userId}`)}>
-                                                <RankAvatar size="md" />
+                                                <RankAvatar size="md" elo={teammateElos.get(topTeammates[1].userId)} />
                                                 <span className={styles.podiumName}>{topTeammates[1].username}</span>
                                                 <span className={styles.podiumWins}>{topTeammates[1].wins}V</span>
                                                 <span className={styles.podiumGames}>{topTeammates[1].games} matchs</span>
@@ -595,7 +618,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
 
                                         {/* 1st place - center */}
                                         <div className={`${styles.podiumSpot} cursor-pointer`} onClick={() => router.push(`/profile/${topTeammates[0].userId}`)}>
-                                            <RankAvatar size="lg" />
+                                            <RankAvatar size="lg" elo={teammateElos.get(topTeammates[0].userId)} />
                                             <span className={styles.podiumName}>{topTeammates[0].username}</span>
                                             <span className={styles.podiumWins}>{topTeammates[0].wins}V</span>
                                             <span className={styles.podiumGames}>{topTeammates[0].games} matchs</span>
@@ -605,7 +628,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                                         {/* 3rd place - right */}
                                         {topTeammates[2] ? (
                                             <div className={`${styles.podiumSpot} cursor-pointer`} onClick={() => router.push(`/profile/${topTeammates[2].userId}`)}>
-                                                <RankAvatar size="md" />
+                                                <RankAvatar size="md" elo={teammateElos.get(topTeammates[2].userId)} />
                                                 <span className={styles.podiumName}>{topTeammates[2].username}</span>
                                                 <span className={styles.podiumWins}>{topTeammates[2].wins}V</span>
                                                 <span className={styles.podiumGames}>{topTeammates[2].games} matchs</span>

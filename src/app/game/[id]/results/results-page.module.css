@@ -294,6 +294,86 @@
     height: 0.75rem;
 }
 
+/* ─── Rank Banner ─────────────────────────────────────────────────────────── */
+
+.rankBanner {
+    width: 100%;
+    background: var(--color-beige);
+    border: 3px solid #333333;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    animation: zoomIn 0.4s ease-out;
+}
+
+.rankChangeBadge {
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.75rem;
+    border-radius: 999px;
+    border: 2px solid;
+}
+
+.rankPromoted {
+    background: rgba(46, 204, 113, 0.15);
+    color: #1a8a4a;
+    border-color: #2ECC71;
+}
+
+.rankDemoted {
+    background: rgba(255, 75, 75, 0.12);
+    color: #c0392b;
+    border-color: #FF4B4B;
+}
+
+.rankBannerContent {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.rankBannerInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+.rankBannerLabel {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(51, 51, 51, 0.5);
+}
+
+.rankBannerName {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--color-text-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.rankBannerElo {
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.eloGain {
+    color: #1a8a4a;
+}
+
+.eloLoss {
+    color: #c0392b;
+}
+
 @keyframes popIn {
     from {
         opacity: 0;

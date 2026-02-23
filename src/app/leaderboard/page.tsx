@@ -11,14 +11,16 @@ import BottomNav from '@/components/common/BottomNav';
 import VenueDropdown from '@/components/venues/VenueDropdown';
 import {
     ArrowLeftIcon,
-    TrophyIcon,
     UsersIcon,
     GlobeAltIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 import RankAvatar from '@/components/common/RankAvatar';
+import PlayerBanner from '@/components/common/PlayerBanner';
 
 type FilterType = 'general' | 'friends';
+
+const CREATORS = ['Astroboy', 'PIGEON ou BAGARRE', 'lechauvepierre'];
 
 export default function LeaderboardPage() {
     const router = useRouter();
@@ -152,7 +154,6 @@ export default function LeaderboardPage() {
                                         onClick={() => router.push(`/profile/${leaderboard[0].userId}`)}
                                     >
                                         <div className={styles.avatarContainer}>
-                                            <TrophyIcon className={styles.crownIcon} />
                                             <RankAvatar elo={leaderboard[0].elo} size="xl" />
                                         </div>
                                         <div className={styles.podiumName}>{leaderboard[0].username}</div>
@@ -185,26 +186,38 @@ export default function LeaderboardPage() {
                                 <div className="text-center">Elo</div>
                             </div>
 
-                            {leaderboard.map((player, index) => (
-                                <div
-                                    key={player.userId}
-                                    className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.currentUserItem : ''} cursor-pointer`}
-                                    onClick={() => router.push(`/profile/${player.userId}`)}
-                                >
-                                    <div className={styles.rank}>{index + 1}</div>
-                                    <div className={styles.playerInfo}>
-                                        <RankAvatar elo={player.elo} size="sm" />
-                                        <span className={styles.playerName}>
-                                            {player.username}
-                                            {currentUser?.userId === player.userId && ' (Moi)'}
-                                        </span>
-                                    </div>
-                                    <div className={styles.statCol}>{player.wins}</div>
-                                    <div className={`${styles.statCol} ${styles.winRate}`}>
-                                        {player.elo || 1000}
-                                    </div>
-                                </div>
-                            ))}
+                            {leaderboard.map((player, index) => {
+                                const isCreator = CREATORS.includes(player.username);
+                                return (
+                                    <PlayerBanner
+                                        key={player.userId}
+                                        username={player.username}
+                                        className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.currentUserItem : ''} cursor-pointer`}
+                                        onClick={() => router.push(`/profile/${player.userId}`)}
+                                    >
+                                        <div className={`${styles.rank} ${isCreator ? styles.textOnBanner : ''}`}>{index + 1}</div>
+                                        <div className={styles.playerInfo}>
+                                            <RankAvatar elo={player.elo} size="md" />
+                                            <span className={`${styles.playerName} ${isCreator ? styles.textOnBanner : ''}`}>
+                                                {player.username}
+                                                {currentUser?.userId === player.userId && ' (Moi)'}
+                                            </span>
+                                        </div>
+                                        <div className={`${styles.statCol} ${isCreator ? styles.textOnBanner : ''}`}>{player.wins}</div>
+                                        <div className={`${styles.statCol} ${styles.winRate} ${isCreator ? styles.textOnBanner : ''}`}>
+                                            {player.elo || 1000}
+                                        </div>
+                                    </PlayerBanner>
+                                );
+                            })}
+                        </div>
+
+                        {/* Created by section */}
+                        <div className={styles.createdBySection}>
+                            <span className={styles.createdByLabel}>Créateurs</span>
+                            <span className={styles.createdByNames}>
+                                Romain Brantegem · Pierre Léchaudé · Sacha Theben
+                            </span>
                         </div>
                     </>
                 )}

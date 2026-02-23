@@ -121,6 +121,33 @@
     cursor: pointer;
     transition: all 0.15s ease;
     user-select: none;
+    overflow: hidden;
+}
+
+/* Banner active: transparent bg so image shows through */
+.playerItemBanner {
+    background-color: transparent;
+    position: relative;
+}
+
+/* Same dark scrim as PlayerBanner component */
+.playerItemBanner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--banner-scrim-color, rgba(0, 0, 0, 0.30));
+    pointer-events: none;
+    z-index: 0;
+    border-radius: inherit;
+}
+
+.playerItemBanner > * {
+    position: relative;
+    z-index: 1;
+}
+
+.playerNameOnBanner {
+    color: var(--banner-text-color, inherit) !important;
 }
 
 .playerItem:active {

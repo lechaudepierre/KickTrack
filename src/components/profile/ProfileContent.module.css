@@ -186,12 +186,30 @@
     font-weight: 800;
 }
 
-/* Profile Header */
+/* Profile Banner Block — wraps the PlayerBanner */
+.profileBannerBlock {
+    margin-bottom: var(--spacing-xs);
+}
+
+/* Text inside the banner card — color driven by --banner-text-color set per banner */
+.profileBannerBlock .username,
+.profileBannerBlock .eloRankLine {
+    color: var(--banner-text-color, #333333) !important;
+    text-shadow: none;
+}
+
+.profileBannerBlock .editBtn {
+    color: var(--banner-text-color, #333333) !important;
+    background: transparent !important;
+    border-color: transparent !important;
+}
+
+/* Profile Header (no banner fallback) */
 .profileHeader {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-xs);
     background: var(--color-beige);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -261,7 +279,10 @@
 
 .joinDate {
     font-size: 0.7rem;
-    color: rgba(51, 51, 51, 0.6);
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: var(--spacing-lg);
+    margin-top: var(--spacing-xs);
+    padding-left: var(--spacing-xs);
 }
 
 /* Stats Grid */

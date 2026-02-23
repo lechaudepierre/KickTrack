@@ -10,6 +10,8 @@ import { Game, Player, GoalPosition, Team } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import { TrophyIcon, HomeIcon, ArrowPathIcon, StarIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/solid';
 import EloChangeDisplay from '@/components/game/EloChangeDisplay';
+import RankAvatar from '@/components/common/RankAvatar';
+import { getRankInfo } from '@/lib/utils/rankUtils';
 import styles from '@/styles/content-page.module.css';
 import resultsStyles from './results-page.module.css';
 
@@ -173,6 +175,18 @@ export default function GameResultsPage() {
     const currentUserIsWinner = currentUserTeamIndex !== -1 && currentUserTeamIndex === winnerIndex;
     const hasEloChanges = game.eloChanges && Object.keys(game.eloChanges).length > 0;
 
+    // Rank change for current user
+    const userEloChange = user?.userId ? game.eloChanges?.[user.userId] : null;
+    const previousRank = userEloChange ? getRankInfo(userEloChange.previousElo) : null;
+    const displayElo = userEloChange?.newElo ?? user?.stats?.elo ?? 1000;
+    const newRank = getRankInfo(displayElo);
+    const RANK_ORDER: Record<string, number> = { argent: 0, or: 1, diamant: 2, master: 3, grandmaster: 4 };
+    const rankScore = (r: ReturnType<typeof getRankInfo>) => RANK_ORDER[r.rank] * 10 + (4 - r.level);
+    const rankChanged = previousRank && rankScore(previousRank) !== rankScore(newRank);
+    const rankPromoted = rankChanged && previousRank && rankScore(newRank) > rankScore(previousRank);
+    // Show rank banner if user is a participant
+    const showRankBanner = currentUserTeamIndex !== -1;
+
     // Calculate detailed stats
     const stats: Record<string, PlayerStats> = {};
 
@@ -256,6 +270,36 @@ export default function GameResultsPage() {
                             })()}
                         </p>
                     </div>
+
+                    {/* Rank banner for current user */}
+                    {showRankBanner && (
+                        <div className={resultsStyles.rankBanner}>
+                            {rankChanged && (
+                                <div className={`${resultsStyles.rankChangeBadge} ${rankPromoted ? resultsStyles.rankPromoted : resultsStyles.rankDemoted}`}>
+                                    {rankPromoted ? '⬆ PROMOTION' : '⬇ RÉGRESSION'}
+                                </div>
+                            )}
+                            <div className={resultsStyles.rankBannerContent}>
+                                <RankAvatar elo={displayElo} size="lg" />
+                                <div className={resultsStyles.rankBannerInfo}>
+                                    <span className={resultsStyles.rankBannerLabel}>Votre rang</span>
+                                    <span className={resultsStyles.rankBannerName}>
+                                        {newRank.label} {newRank.romanLevel}
+                                    </span>
+                                    {userEloChange ? (
+                                        <span className={`${resultsStyles.rankBannerElo} ${currentUserIsWinner ? resultsStyles.eloGain : resultsStyles.eloLoss}`}>
+                                            {displayElo} Elo&nbsp;
+                                            ({currentUserIsWinner ? '+' : ''}{userEloChange.eloChange})
+                                        </span>
+                                    ) : (
+                                        <span className={resultsStyles.rankBannerElo} style={{ color: 'rgba(51,51,51,0.5)' }}>
+                                            {displayElo} Elo
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* H2H Stats */}
                     {h2hStats && (h2hStats.team0Wins > 0 || h2hStats.team1Wins > 0) && (

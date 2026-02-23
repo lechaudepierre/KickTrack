@@ -10,8 +10,7 @@ import {
     runTransaction,
     query,
     where,
-    getDocs,
-    limit
+    getDocs
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
 import { updateVenueStats } from './firestore';
@@ -816,12 +815,10 @@ export async function getFriendsLeaderboard(friendIds: string[], venueId?: strin
 export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
     const db = getFirebaseDb();
 
-    // On récupère directement les utilisateurs triés par Elo
-    // On limite aux 50 premiers pour la performance, à ajuster si besoin
+    // On récupère tous les utilisateurs ayant joué au moins une partie
     const q = query(
         collection(db, 'users'),
-        where('stats.totalGames', '>', 0),
-        limit(50)
+        where('stats.totalGames', '>', 0)
     );
 
     const snapshot = await getDocs(q);

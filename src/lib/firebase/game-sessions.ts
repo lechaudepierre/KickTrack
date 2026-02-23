@@ -9,7 +9,8 @@ import {
     onSnapshot,
     updateDoc,
     deleteDoc,
-    Unsubscribe
+    Unsubscribe,
+    Timestamp
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
 import { GameSession, Game, Player, Team, GameFormat } from '@/types';
@@ -219,4 +220,64 @@ export async function updateSessionStatus(
     const db = getFirebaseDb();
     const sessionRef = doc(db, SESSIONS_COLLECTION, sessionId);
     await updateDoc(sessionRef, { status });
+}
+
+// Get all active sessions (waiting or ready, not expired)
+export async function getActiveSessions(): Promise<GameSession[]> {
+    const db = getFirebaseDb();
+    const now = Timestamp.now();
+    const q = query(
+        collection(db, SESSIONS_COLLECTION),
+        where('status', 'in', ['waiting', 'ready'])
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs
+        .map(d => d.data() as GameSession)
+        .filter(s => {
+            // Filter out expired sessions client-side (expiresAt may be Date or Firestore Timestamp)
+            const exp = (s.expiresAt as any)?.toDate ? (s.expiresAt as any).toDate() : new Date(s.expiresAt as any);
+            return exp > now.toDate();
+        });
+}
+
+// Subscribe to active sessions in real-time
+export function subscribeToActiveSessions(
+    callback: (sessions: GameSession[]) => void
+): Unsubscribe {
+    const db = getFirebaseDb();
+    const q = query(
+        collection(db, SESSIONS_COLLECTION),
+        where('status', '==', 'waiting')
+    );
+    return onSnapshot(q, (snapshot) => {
+        const now = new Date();
+        const sessions = snapshot.docs
+            .map(d => d.data() as GameSession)
+            .filter(s => {
+                const exp = (s.expiresAt as any)?.toDate ? (s.expiresAt as any).toDate() : new Date(s.expiresAt as any);
+                // Only sessions not expired and with available slots
+                return exp > now && s.players.length < s.maxPlayers;
+            });
+        callback(sessions);
+    });
+}
+
+// Kick a player from a session (host only)
+export async function kickPlayerFromSession(
+    sessionId: string,
+    targetUserId: string
+): Promise<void> {
+    const db = getFirebaseDb();
+    const sessionRef = doc(db, SESSIONS_COLLECTION, sessionId);
+    const sessionSnap = await getDoc(sessionRef);
+    if (!sessionSnap.exists()) return;
+
+    const session = sessionSnap.data() as GameSession;
+    const updatedPlayers = session.players.filter(p => p.userId !== targetUserId);
+    const newStatus = updatedPlayers.length < session.maxPlayers ? 'waiting' : session.status;
+
+    await updateDoc(sessionRef, {
+        players: updatedPlayers,
+        status: newStatus
+    });
 }

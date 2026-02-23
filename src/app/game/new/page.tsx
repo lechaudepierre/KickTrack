@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { createGameSession, subscribeToSession, cancelSession, startGame } from '@/lib/firebase/game-sessions';
+import { createGameSession, subscribeToSession, cancelSession, startGame, kickPlayerFromSession } from '@/lib/firebase/game-sessions';
 import TeamSetup from '@/components/game/TeamSetup';
 import VenueDropdown from '@/components/venues/VenueDropdown';
 import PinCodeDisplay from '@/components/game/PinCodeDisplay';
@@ -130,6 +130,15 @@ export default function NewGamePage() {
         setStep('config');
     };
 
+    const handleKickPlayer = async (targetUserId: string) => {
+        if (!session) return;
+        try {
+            await kickPlayerFromSession(session.sessionId, targetUserId);
+        } catch (err) {
+            console.error('Error kicking player:', err);
+        }
+    };
+
     const handleGuestMode = () => {
         if (!user) return;
         setStep('guest-teams');
@@ -247,6 +256,8 @@ export default function NewGamePage() {
                             players={session.players}
                             maxPlayers={session.maxPlayers}
                             currentUserId={user?.userId}
+                            hostId={user?.userId}
+                            onKick={handleKickPlayer}
                         />
 
                         <button onClick={handleCancel} style={{ width: '100%', border: 'none', background: 'none', padding: 0 }}>

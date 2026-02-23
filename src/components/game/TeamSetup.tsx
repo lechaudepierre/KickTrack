@@ -4,6 +4,24 @@ import { useState, useEffect } from 'react';
 import { Player, Team, TeamColor } from '@/types';
 import styles from './TeamSetup.module.css';
 import RankAvatar from '@/components/common/RankAvatar';
+import { resolveBannerId, getBannerConfig, getBannerScrimColor } from '@/lib/utils/bannerUtils';
+
+/** Returns inline style + extra className for a player card when a banner is active */
+function bannerStyle(username: string): { style?: React.CSSProperties; hasBanner: boolean } {
+    const config = getBannerConfig(resolveBannerId(username));
+    if (!config) return { hasBanner: false };
+    const scrimColor = getBannerScrimColor(config.textColor);
+    return {
+        hasBanner: true,
+        style: {
+            backgroundImage: `url('${config.path}')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            ['--banner-text-color' as string]: config.textColor,
+            ['--banner-scrim-color' as string]: scrimColor,
+        },
+    };
+}
 
 interface TeamSetupProps {
     players: Player[];
@@ -143,10 +161,13 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
                 </div>
 
                 <div className={styles.playerList}>
-                    {currentPlayers.map((player) => (
+                    {currentPlayers.map((player) => {
+                        const { style, hasBanner } = bannerStyle(player.username);
+                        return (
                         <div
                             key={player.userId}
-                            className={`${styles.playerItem} ${selectedPlayer?.userId === player.userId ? styles.selected : ''}`}
+                            className={`${styles.playerItem} ${hasBanner ? styles.playerItemBanner : ''} ${selectedPlayer?.userId === player.userId ? styles.selected : ''}`}
+                            style={style}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handlePlayerClick(player, target);
@@ -155,9 +176,10 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
                             <div className={styles.playerAvatar}>
                                 <RankAvatar size="sm" />
                             </div>
-                            <span className={styles.playerName}>{player.username}</span>
+                            <span className={`${styles.playerName} ${hasBanner ? styles.playerNameOnBanner : ''}`}>{player.username}</span>
                         </div>
-                    ))}
+                        );
+                    })}
                     {currentPlayers.length === 0 && (
                         <div className={styles.emptyState}>
                             {selectedPlayer ? 'Cliquez ici pour assigner' : 'Sélectionnez un joueur'}
@@ -195,10 +217,13 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
             >
                 <h3 className={styles.waitingListTitle}>Joueurs à assigner</h3>
                 <div className={styles.waitingPlayerList}>
-                    {waitingPlayers.map(player => (
+                    {waitingPlayers.map(player => {
+                        const { style, hasBanner } = bannerStyle(player.username);
+                        return (
                         <div
                             key={player.userId}
-                            className={`${styles.playerItem} ${selectedPlayer?.userId === player.userId ? styles.selected : ''}`}
+                            className={`${styles.playerItem} ${hasBanner ? styles.playerItemBanner : ''} ${selectedPlayer?.userId === player.userId ? styles.selected : ''}`}
+                            style={style}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handlePlayerClick(player, 'waiting');
@@ -207,9 +232,10 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
                             <div className={styles.playerAvatar}>
                                 <RankAvatar size="sm" />
                             </div>
-                            <span className={styles.playerName}>{player.username}</span>
+                            <span className={`${styles.playerName} ${hasBanner ? styles.playerNameOnBanner : ''}`}>{player.username}</span>
                         </div>
-                    ))}
+                        );
+                    })}
                     {waitingPlayers.length === 0 && (
                         <p className={styles.emptyWaitingList}>Tous les joueurs sont assignés !</p>
                     )}

@@ -1,0 +1,36 @@
+/* ─── PlayerBanner ───────────────────────────────────────────────────────────
+   Background-only skin.
+
+   No banner   → plain wrapper, zero layout change.
+   Banner active →
+     • background image fills the container (cover / crop — no forced ratio)
+     • overflow: hidden clips the image to the card's border-radius
+     • golden border
+     • ::before pseudo-element: very subtle white overlay to soften the image
+     • children render in normal flow — their grid/flex layout is unaffected
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.wrap {
+    position: relative;
+}
+
+.hasBanner {
+    overflow: hidden;
+}
+
+/* Dark scrim so text pops against the banner image */
+.hasBanner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--banner-scrim-color, rgba(0, 0, 0, 0.30));
+    pointer-events: none;
+    z-index: 0;
+    border-radius: inherit;
+}
+
+/* Lift children above the pseudo overlay */
+.hasBanner > * {
+    position: relative;
+    z-index: 1;
+}

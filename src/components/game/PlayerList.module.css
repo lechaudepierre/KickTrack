@@ -53,6 +53,21 @@
     background-color: var(--color-beige);
 }
 
+/* Banner active: transparent background so the image shows */
+/* (the dark scrim ::before is handled by PlayerBanner.module.css via .hasBanner) */
+.playerItemBanner {
+    background-color: transparent;
+}
+
+.usernameOnBanner {
+    color: var(--banner-text-color, inherit) !important;
+}
+
+.checkIconOnBanner {
+    color: var(--banner-text-color, #2ECC71) !important;
+    opacity: 0.85;
+}
+
 .avatar {
     width: 2.5rem;
     height: 2.5rem;
@@ -83,10 +98,44 @@
     margin-left: 0.5rem;
 }
 
+.hostLabel {
+    color: rgba(51, 51, 51, 0.75);
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-left: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
 .checkIcon {
     height: 1.5rem;
     width: 1.5rem;
     color: #2ECC71;
+}
+
+.kickButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: rgba(255, 75, 75, 0.1);
+    border: 2px solid rgba(255, 75, 75, 0.3);
+    color: #FF4B4B;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.kickButton:hover {
+    background: rgba(255, 75, 75, 0.2);
+    border-color: #FF4B4B;
+}
+
+.kickIcon {
+    width: 0.9rem;
+    height: 0.9rem;
 }
 
 .emptySlot {
