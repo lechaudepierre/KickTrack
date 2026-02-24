@@ -1,4 +1,5 @@
 import {
+    arrayUnion,
     collection,
     deleteDoc,
     doc,
@@ -36,16 +37,20 @@ export async function getAnnouncements(): Promise<Announcement[]> {
 
 export function countUnread(
     announcements: Announcement[],
-    lastReadAt: Date | null | undefined
+    readIds: string[]
 ): number {
-    if (!lastReadAt) return announcements.length;
-    return announcements.filter(a => a.createdAt > lastReadAt).length;
+    const readSet = new Set(readIds);
+    return announcements.filter(a => !readSet.has(a.announcementId)).length;
 }
 
-export async function markNotificationsRead(userId: string): Promise<void> {
+/**
+ * Marque une annonce individuelle comme lue.
+ * Utilise arrayUnion pour éviter les doublons et rester atomique.
+ */
+export async function markAnnouncementRead(userId: string, announcementId: string): Promise<void> {
     const db = getFirebaseDb();
     await updateDoc(doc(db, 'users', userId), {
-        lastReadNotificationsAt: new Date()
+        readAnnouncementIds: arrayUnion(announcementId)
     });
 }
 

@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { getAnnouncementById } from '@/lib/firebase/announcements';
+import { getAnnouncementById, markAnnouncementRead } from '@/lib/firebase/announcements';
 import { Announcement } from '@/types';
+import { useAuthStore } from '@/lib/stores/authStore';
 import ReactMarkdown from 'react-markdown';
 import {
     ArrowLeftIcon,
@@ -15,6 +16,7 @@ import styles from './page.module.css';
 export default function AnnouncementDetailPage() {
     const router = useRouter();
     const { id } = useParams<{ id: string }>();
+    const { user } = useAuthStore();
 
     const [announcement, setAnnouncement] = useState<Announcement | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -24,6 +26,10 @@ export default function AnnouncementDetailPage() {
             try {
                 const data = await getAnnouncementById(id);
                 setAnnouncement(data);
+                // Marquer comme lu dès l'ouverture — atomique via arrayUnion
+                if (user?.userId) {
+                    await markAnnouncementRead(user.userId, id);
+                }
             } catch (err) {
                 console.error('Error loading announcement:', err);
             } finally {
@@ -31,7 +37,7 @@ export default function AnnouncementDetailPage() {
             }
         };
         load();
-    }, [id]);
+    }, [id, user?.userId]);
 
     const formatDate = (date: Date) =>
         new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);

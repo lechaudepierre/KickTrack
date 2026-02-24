@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { getAnnouncements, markNotificationsRead } from '@/lib/firebase/announcements';
+import { getAnnouncements } from '@/lib/firebase/announcements';
 import { Announcement } from '@/types';
 import {
     ArrowLeftIcon,
@@ -26,9 +26,6 @@ export default function NotificationsPage() {
             try {
                 const data = await getAnnouncements();
                 setAnnouncements(data);
-                if (user?.userId) {
-                    await markNotificationsRead(user.userId);
-                }
             } catch (err) {
                 console.error('Error loading announcements:', err);
             } finally {
@@ -36,7 +33,9 @@ export default function NotificationsPage() {
             }
         };
         load();
-    }, [user?.userId]);
+    }, []);
+
+    const readIds = new Set(user?.readAnnouncementIds || []);
 
     const formatDate = (date: Date) =>
         new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
@@ -66,31 +65,37 @@ export default function NotificationsPage() {
                     </div>
                 ) : (
                     <div className={styles.list}>
-                        {announcements.map((item) => (
-                            <button
-                                key={item.announcementId}
-                                className={styles.card}
-                                onClick={() => router.push(`/notifications/${item.announcementId}`)}
-                            >
-                                <div className={styles.cardLeft}>
-                                    <div className={styles.cardMeta}>
-                                        <div className={`${styles.typeBadge} ${item.type === 'patch' ? styles.typePatch : styles.typeNews}`}>
-                                            {item.type === 'patch'
-                                                ? <WrenchScrewdriverIcon className={styles.badgeIcon} />
-                                                : <MegaphoneIcon className={styles.badgeIcon} />
-                                            }
-                                            <span>{item.type === 'patch' ? 'Mise à jour' : 'Annonce'}</span>
+                        {announcements.map((item) => {
+                            const isUnread = !readIds.has(item.announcementId);
+                            return (
+                                <button
+                                    key={item.announcementId}
+                                    className={`${styles.card} ${isUnread ? styles.cardUnread : ''}`}
+                                    onClick={() => router.push(`/notifications/${item.announcementId}`)}
+                                >
+                                    <div className={styles.cardLeft}>
+                                        <div className={styles.cardMeta}>
+                                            <div className={`${styles.typeBadge} ${item.type === 'patch' ? styles.typePatch : styles.typeNews}`}>
+                                                {item.type === 'patch'
+                                                    ? <WrenchScrewdriverIcon className={styles.badgeIcon} />
+                                                    : <MegaphoneIcon className={styles.badgeIcon} />
+                                                }
+                                                <span>{item.type === 'patch' ? 'Mise à jour' : 'Annonce'}</span>
+                                            </div>
+                                            {item.version && (
+                                                <span className={styles.version}>{item.version}</span>
+                                            )}
+                                            {isUnread && (
+                                                <span className={styles.newBadge}>NEW</span>
+                                            )}
                                         </div>
-                                        {item.version && (
-                                            <span className={styles.version}>{item.version}</span>
-                                        )}
+                                        <p className={styles.cardTitle}>{item.title}</p>
+                                        <p className={styles.date}>{formatDate(item.createdAt)}</p>
                                     </div>
-                                    <p className={styles.cardTitle}>{item.title}</p>
-                                    <p className={styles.date}>{formatDate(item.createdAt)}</p>
-                                </div>
-                                <ChevronRightIcon className={styles.chevron} />
-                            </button>
-                        ))}
+                                    <ChevronRightIcon className={styles.chevron} />
+                                </button>
+                            );
+                        })}
                     </div>
                 )}
 
