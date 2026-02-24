@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { subscribeToGame, addGoal, removeLastGoal, endGame, abandonGame, forfeitGame } from '@/lib/firebase/games';
+import { doc, getDoc } from 'firebase/firestore';
+import { getFirebaseDb } from '@/lib/firebase/config';
 import { Game, GoalPosition, GoalType } from '@/types';
 import { Button } from '@/components/common/ui';
 import GameBoard from '@/components/game/GameBoard';
@@ -24,6 +26,8 @@ export default function GamePage() {
 
     const [game, setGame] = useState<Game | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [playerEloMap, setPlayerEloMap] = useState<Record<string, number>>({});
+    const hasFetchedElos = useRef(false);;
     const [showMenu, setShowMenu] = useState(false);
     const [showTimeLimitModal, setShowTimeLimitModal] = useState(false);
     const [isPortrait, setIsPortrait] = useState(true);
@@ -53,6 +57,18 @@ export default function GamePage() {
         const unsubscribe = subscribeToGame(gameId, (updatedGame) => {
             setGame(updatedGame);
             setIsLoading(false);
+
+            // Fetch player elos once when game first loads
+            if (updatedGame && !hasFetchedElos.current) {
+                hasFetchedElos.current = true;
+                const db = getFirebaseDb();
+                const playerIds = updatedGame.teams.flatMap(t => t.players.map(p => p.userId)).filter(id => !id.startsWith('guest_'));
+                Promise.all(playerIds.map(id => getDoc(doc(db, 'users', id)))).then(docs => {
+                    const map: Record<string, number> = {};
+                    docs.forEach(d => { if (d.exists()) map[d.id] = d.data()?.stats?.elo ?? 1000; });
+                    setPlayerEloMap(map);
+                });
+            }
 
             // Check if game is completed
             if (updatedGame?.status === 'completed') {
@@ -388,6 +404,7 @@ export default function GamePage() {
                     onEndGame={handleEndGame}
                     isViewer={user?.userId !== game.hostId}
                     isPortrait={isPortrait}
+                    playerEloMap={playerEloMap}
                 />
             </div>
         </div>

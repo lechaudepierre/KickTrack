@@ -17,6 +17,7 @@ interface GameBoardProps {
     onEndGame?: () => void;
     isViewer?: boolean;
     isPortrait: boolean;
+    playerEloMap?: Record<string, number>;
 }
 
 const positions: { value: GoalPosition; label: string; color: string; isNarrow?: boolean }[] = [
@@ -33,7 +34,7 @@ const goalTypes: { value: GoalType; label: string; description: string }[] = [
     { value: 'gamelle_rentrante', label: 'Gamelle Rentrante', description: 'Ressort et rentre' }
 ];
 
-export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGame, isViewer = false, isPortrait }: GameBoardProps) {
+export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGame, isViewer = false, isPortrait, playerEloMap = {} }: GameBoardProps) {
     const { play: playSound } = useSound({ volume: 0.7 });
 
     // Time limit check (1 hour)
@@ -209,7 +210,7 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                                         className={styles.playerButton}
                                     >
                                         <div className={styles.playerAvatar}>
-                                            <RankAvatar size="md" />
+                                            <RankAvatar size="md" elo={playerEloMap[player.userId]} />
                                         </div>
                                         <span className={styles.playerName}>{player.username}</span>
                                     </button>
@@ -300,7 +301,7 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                         <div className={styles.teamInfo}>
                             <div className={styles.playerAvatars}>
                                 {team1.players.map((player) => (
-                                    <RankAvatar key={player.userId} size="xs" />
+                                    <RankAvatar key={player.userId} size="xs" elo={playerEloMap[player.userId]} />
                                 ))}
                             </div>
                             <span className={styles.teamLabel}>{getTeamPlayerNames(0)}</span>
@@ -337,7 +338,7 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                         <div className={styles.teamInfo}>
                             <div className={styles.playerAvatars}>
                                 {team2.players.map((player) => (
-                                    <RankAvatar key={player.userId} size="xs" />
+                                    <RankAvatar key={player.userId} size="xs" elo={playerEloMap[player.userId]} />
                                 ))}
                             </div>
                             <span className={styles.teamLabel}>{getTeamPlayerNames(1)}</span>
