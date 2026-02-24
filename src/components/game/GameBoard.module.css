@@ -852,6 +852,42 @@
     color: white !important;
 }
 
+.bgFlash {
+    background-color: #F1C40F !important;
+    color: #333333 !important;
+}
+
+/* Flash Animation Overlay */
+.flashOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 200;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: flashFadeOut 0.5s ease-out 1.5s forwards;
+}
+
+.flashLottie {
+    width: 80%;
+    height: 80%;
+    max-width: 500px;
+    max-height: 500px;
+}
+
+@keyframes flashFadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
 .typeLabel {
     font-size: 1.25rem;
     line-height: 1.75rem;
