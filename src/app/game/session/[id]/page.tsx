@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { subscribeToSession, kickPlayerFromSession } from '@/lib/firebase/game-sessions';
+import { subscribeToSession, kickPlayerFromSession, cancelSession } from '@/lib/firebase/game-sessions';
 import { GameSession } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import PlayerList from '@/components/game/PlayerList';
@@ -14,9 +14,32 @@ export default function SessionWaitingPage() {
     const router = useRouter();
     const params = useParams();
     const sessionId = params.id as string;
-    const { user, initialize } = useAuthStore();
+    const { user, isLoading: authLoading, initialize } = useAuthStore();
     const [session, setSession] = useState<GameSession | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [sessionLoading, setSessionLoading] = useState(true);
+    // Keep a ref to always have latest session/user in the cleanup function
+    const sessionRef = useRef<GameSession | null>(null);
+    const userRef = useRef(user);
+    useEffect(() => { userRef.current = user; }, [user]);
+    useEffect(() => { sessionRef.current = session; }, [session]);
+
+    const handleLeave = async () => {
+        const s = sessionRef.current;
+        const u = userRef.current;
+        if (!s || !u) { router.push('/dashboard'); return; }
+        try {
+            if (u.userId === s.hostId) {
+                // Host leaves → cancel session for everyone
+                await cancelSession(s.sessionId);
+            } else {
+                // Player leaves → remove from session
+                await kickPlayerFromSession(s.sessionId, u.userId);
+            }
+        } catch (err) {
+            console.error('Erreur en quittant:', err);
+        }
+        router.push('/dashboard');
+    };
 
     const handleKick = async (userId: string) => {
         if (!session) return;
@@ -28,7 +51,8 @@ export default function SessionWaitingPage() {
     };
 
     useEffect(() => {
-        initialize();
+        const unsubscribe = initialize();
+        return () => { if (unsubscribe) unsubscribe(); };
     }, [initialize]);
 
     useEffect(() => {
@@ -41,7 +65,7 @@ export default function SessionWaitingPage() {
             }
 
             setSession(updatedSession);
-            setIsLoading(false);
+            setSessionLoading(false);
 
             // If session becomes active, it means the game has started
             if (updatedSession.status === 'active' && updatedSession.gameId) {
@@ -52,7 +76,7 @@ export default function SessionWaitingPage() {
         return () => unsubscribe();
     }, [sessionId, router]);
 
-    if (isLoading || !session) {
+    if (authLoading || sessionLoading || !session) {
         return (
             <div className="container-center">
                 <div className={styles.spinner} />
@@ -60,12 +84,14 @@ export default function SessionWaitingPage() {
         );
     }
 
+    const isHost = user?.userId === session.hostId;
+
     return (
         <div className={styles.pageContainer}>
             <FieldBackground />
             <div className={styles.contentWrapper}>
                 <div className={styles.pageHeader}>
-                    <button onClick={() => router.push('/dashboard')} className={styles.backButton}>
+                    <button onClick={handleLeave} className={styles.backButton}>
                         <ArrowLeftIcon className="h-6 w-6" />
                     </button>
                     <h1 className={styles.pageTitle}>Salle d'attente</h1>
@@ -73,7 +99,9 @@ export default function SessionWaitingPage() {
 
                 <div className="text-center mb-8">
                     <p className="text-secondary mb-2">Partie de {session.hostName}</p>
-                    <p className="text-sm opacity-60">En attente du lancement par l'hôte...</p>
+                    <p className="text-sm opacity-60">
+                        {isHost ? 'Attendez que les joueurs rejoignent...' : "En attente du lancement par l'hôte..."}
+                    </p>
                 </div>
 
                 <PlayerList
@@ -81,15 +109,15 @@ export default function SessionWaitingPage() {
                     maxPlayers={session.maxPlayers}
                     currentUserId={user?.userId}
                     hostId={session.hostId}
-                    onKick={user?.userId === session.hostId ? handleKick : undefined}
+                    onKick={isHost ? handleKick : undefined}
                 />
 
                 <div className="mt-12 text-center">
                     <button
-                        onClick={() => router.push('/dashboard')}
+                        onClick={handleLeave}
                         className="text-secondary text-sm"
                     >
-                        Quitter la salle
+                        {isHost ? 'Annuler la partie' : 'Quitter la salle'}
                     </button>
                 </div>
             </div>
