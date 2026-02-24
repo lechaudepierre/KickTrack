@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { subscribeToSession } from '@/lib/firebase/game-sessions';
+import { subscribeToSession, kickPlayerFromSession } from '@/lib/firebase/game-sessions';
 import { GameSession } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import PlayerList from '@/components/game/PlayerList';
@@ -17,6 +17,15 @@ export default function SessionWaitingPage() {
     const { user, initialize } = useAuthStore();
     const [session, setSession] = useState<GameSession | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    const handleKick = async (userId: string) => {
+        if (!session) return;
+        try {
+            await kickPlayerFromSession(session.sessionId, userId);
+        } catch (err) {
+            console.error('Erreur kick:', err);
+        }
+    };
 
     useEffect(() => {
         initialize();
@@ -71,6 +80,8 @@ export default function SessionWaitingPage() {
                     players={session.players}
                     maxPlayers={session.maxPlayers}
                     currentUserId={user?.userId}
+                    hostId={session.hostId}
+                    onKick={user?.userId === session.hostId ? handleKick : undefined}
                 />
 
                 <div className="mt-12 text-center">
