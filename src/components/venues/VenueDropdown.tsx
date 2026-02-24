@@ -175,7 +175,6 @@ export default function VenueDropdown({
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className={styles.searchInput}
-                            autoFocus
                         />
                     </div>
 

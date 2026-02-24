@@ -49,8 +49,8 @@ export default function PlayerList({ players, maxPlayers, currentUserId, hostId,
                                 )}
                             </p>
                         </div>
-                        {/* Kick button: visible only to host, not on themselves */}
-                        {hostId && currentUserId === hostId && player.userId !== hostId && onKick ? (
+                        {/* Kick button: shown if onKick is provided and it's not the current user */}
+                        {onKick && player.userId !== currentUserId ? (
                             <button
                                 onClick={() => onKick(player.userId)}
                                 className={styles.kickButton}
