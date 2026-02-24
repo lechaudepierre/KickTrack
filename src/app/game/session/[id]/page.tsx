@@ -60,6 +60,14 @@ export default function SessionWaitingPage() {
 
         const unsubscribe = subscribeToSession(sessionId, (updatedSession) => {
             if (!updatedSession) {
+                // Session deleted (host cancelled)
+                router.push('/dashboard');
+                return;
+            }
+
+            // Detect if current user was kicked
+            const currentUser = userRef.current;
+            if (currentUser && !updatedSession.players.some(p => p.userId === currentUser.userId)) {
                 router.push('/dashboard');
                 return;
             }

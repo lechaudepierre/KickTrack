@@ -33,29 +33,24 @@ export default function PlayerList({ players, maxPlayers, currentUserId, hostId,
                     const hasBanner = !!getBannerConfig(resolveBannerId(player.username));
                     const canKick = !!onKick && player.userId !== currentUserId;
                     return (
-                    <div key={player.userId} className={styles.playerRow}>
-                        <PlayerBanner
-                            username={player.username}
-                            className={`${styles.playerItem} ${hasBanner ? styles.playerItemBanner : player.userId === currentUserId ? styles.playerItemActive : styles.playerItemInactive}`}
-                        >
-                            <RankAvatar size="md" />
-                            <div className={styles.playerInfo}>
-                                <p className={`${styles.username} ${hasBanner ? styles.usernameOnBanner : ''}`}>
-                                    {player.username}
-                                    {player.userId === currentUserId && (
-                                        <span className={styles.youLabel}>(vous)</span>
-                                    )}
-                                    {player.userId === hostId && (
-                                        <span className={styles.hostLabel}>hôte</span>
-                                    )}
-                                </p>
-                            </div>
-                            {!canKick && (
-                                <CheckCircleIcon className={`${styles.checkIcon} ${hasBanner ? styles.checkIconOnBanner : ''}`} />
-                            )}
-                        </PlayerBanner>
-                        {/* Kick button is OUTSIDE PlayerBanner to avoid z-index issues */}
-                        {canKick && (
+                    <PlayerBanner
+                        key={player.userId}
+                        username={player.username}
+                        className={`${styles.playerItem} ${hasBanner ? styles.playerItemBanner : player.userId === currentUserId ? styles.playerItemActive : styles.playerItemInactive}`}
+                    >
+                        <RankAvatar size="md" />
+                        <div className={styles.playerInfo}>
+                            <p className={`${styles.username} ${hasBanner ? styles.usernameOnBanner : ''}`}>
+                                {player.username}
+                                {player.userId === currentUserId && (
+                                    <span className={styles.youLabel}>(vous)</span>
+                                )}
+                                {player.userId === hostId && (
+                                    <span className={styles.hostLabel}>hôte</span>
+                                )}
+                            </p>
+                        </div>
+                        {canKick ? (
                             <button
                                 onClick={() => onKick(player.userId)}
                                 className={styles.kickButton}
@@ -63,8 +58,10 @@ export default function PlayerList({ players, maxPlayers, currentUserId, hostId,
                             >
                                 <XMarkIcon className={styles.kickIcon} />
                             </button>
+                        ) : (
+                            <CheckCircleIcon className={`${styles.checkIcon} ${hasBanner ? styles.checkIconOnBanner : ''}`} />
                         )}
-                    </div>
+                    </PlayerBanner>
                     );
                 })}
 
