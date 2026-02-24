@@ -31,6 +31,17 @@
     gap: 0.5rem;
 }
 
+.playerRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.playerRow .playerItem {
+    flex: 1;
+    min-width: 0;
+}
+
 .playerItem {
     display: flex;
     align-items: center;

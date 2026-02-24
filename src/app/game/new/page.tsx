@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { createGameSession, subscribeToSession, cancelSession, startGame, kickPlayerFromSession } from '@/lib/firebase/game-sessions';
@@ -30,6 +30,21 @@ export default function NewGamePage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
+    // Refs to track current values in cleanup (avoid stale closures)
+    const sessionRef = useRef<GameSession | null>(null);
+    const stepRef = useRef<Step>('config');
+    useEffect(() => { sessionRef.current = session; }, [session]);
+    useEffect(() => { stepRef.current = step; }, [step]);
+
+    // Cancel session if host navigates away without clicking the cancel button
+    useEffect(() => {
+        return () => {
+            if (stepRef.current === 'waiting' && sessionRef.current) {
+                cancelSession(sessionRef.current.sessionId);
+            }
+        };
+    }, []);
+
     useEffect(() => {
         const unsubscribe = initialize();
         return () => {
@@ -50,10 +65,7 @@ export default function NewGamePage() {
         const unsubscribe = subscribeToSession(session.sessionId, (updatedSession) => {
             if (updatedSession) {
                 setSession(updatedSession);
-                // Auto-advance when all players have joined
-                if (updatedSession.status === 'ready') {
-                    setStep('teams');
-                }
+                // No auto-advance: host manually clicks "Lancer" when ready
             }
         });
 
@@ -259,6 +271,18 @@ export default function NewGamePage() {
                             hostId={user?.userId}
                             onKick={handleKickPlayer}
                         />
+
+                        {/* Launch button — only when lobby is full */}
+                        {session.players.length >= session.maxPlayers && (
+                            <button onClick={() => setStep('teams')} style={{ width: '100%', border: 'none', background: 'none', padding: 0 }}>
+                                <div className="btn-primary">
+                                    <div className="btn-primary-shadow" />
+                                    <div className="btn-primary-content">
+                                        Lancer la partie
+                                    </div>
+                                </div>
+                            </button>
+                        )}
 
                         <button onClick={handleCancel} style={{ width: '100%', border: 'none', background: 'none', padding: 0 }}>
                             <div className="btn-primary">
