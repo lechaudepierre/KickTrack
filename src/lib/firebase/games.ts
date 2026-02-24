@@ -465,6 +465,12 @@ export async function endGame(gameId: string): Promise<GameResults> {
     }
 
     const game = gameSnap.data() as Game;
+
+    // Idempotency guard: prevent double processing (double-tap, network retry, etc.)
+    if (game.status !== 'in_progress') {
+        throw new Error('La partie n\'est pas en cours');
+    }
+
     const endedAt = new Date();
     const startedAt = game.startedAt instanceof Date ? game.startedAt : new Date(game.startedAt);
     const duration = Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000);
