@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { createGameSession, subscribeToSession, cancelSession, startGame, kickPlayerFromSession } from '@/lib/firebase/game-sessions';
+import { createGameSession, subscribeToSession, cancelSession, startGame, kickPlayerFromSession, updateSessionExpiry } from '@/lib/firebase/game-sessions';
 import TeamSetup from '@/components/game/TeamSetup';
 import VenueDropdown from '@/components/venues/VenueDropdown';
 import PinCodeDisplay from '@/components/game/PinCodeDisplay';
@@ -38,12 +38,34 @@ export default function NewGamePage() {
 
     // Cancel session if host navigates away without clicking the cancel button
     useEffect(() => {
-        return () => {
+        const cleanup = () => {
             if (stepRef.current === 'waiting' && sessionRef.current) {
                 cancelSession(sessionRef.current.sessionId);
             }
         };
+
+        // Handle browser tab close / page refresh
+        window.addEventListener('beforeunload', cleanup);
+
+        return () => {
+            window.removeEventListener('beforeunload', cleanup);
+            // Also clean up on in-app navigation (component unmount)
+            cleanup();
+        };
     }, []);
+
+    // Heartbeat: keep session alive every 30s so it expires if host disconnects
+    useEffect(() => {
+        if (step !== 'waiting' || !session) return;
+
+        const interval = setInterval(() => {
+            if (sessionRef.current) {
+                updateSessionExpiry(sessionRef.current.sessionId).catch(() => {});
+            }
+        }, 30_000);
+
+        return () => clearInterval(interval);
+    }, [step, session?.sessionId]);
 
     useEffect(() => {
         const unsubscribe = initialize();

@@ -31,7 +31,7 @@ export async function createGameSession(
     const sessionRef = doc(collection(db, SESSIONS_COLLECTION));
     const pinCode = generatePinCode();
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes
+    const expiresAt = new Date(now.getTime() + 90 * 1000); // 90 seconds (kept alive by heartbeat)
 
     const session: GameSession = {
         sessionId: sessionRef.id,
@@ -114,7 +114,13 @@ export async function getSessionByPinCode(pinCode: string): Promise<GameSession 
     const snapshot = await getDocs(q);
     if (snapshot.empty) return null;
 
-    return snapshot.docs[0].data() as GameSession;
+    const session = snapshot.docs[0].data() as GameSession;
+
+    // Reject expired sessions (host may have left without proper cleanup)
+    const exp = (session.expiresAt as any)?.toDate ? (session.expiresAt as any).toDate() : new Date(session.expiresAt as any);
+    if (exp <= new Date()) return null;
+
+    return session;
 }
 
 // Get session by ID
@@ -203,6 +209,14 @@ export async function startGame(
     });
 
     return game;
+}
+
+// Extend session expiry (heartbeat from host to prove they're still present)
+export async function updateSessionExpiry(sessionId: string): Promise<void> {
+    const db = getFirebaseDb();
+    const sessionRef = doc(db, SESSIONS_COLLECTION, sessionId);
+    const newExpiry = new Date(Date.now() + 90 * 1000); // extend 90 more seconds
+    await updateDoc(sessionRef, { expiresAt: newExpiry });
 }
 
 // Cancel/delete a session
