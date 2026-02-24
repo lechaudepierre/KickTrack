@@ -23,12 +23,16 @@ export default function NotificationsPage() {
 
     useEffect(() => {
         const load = async () => {
-            const data = await getAnnouncements();
-            setAnnouncements(data);
-            setIsLoading(false);
-
-            if (user?.userId) {
-                await markNotificationsRead(user.userId);
+            try {
+                const data = await getAnnouncements();
+                setAnnouncements(data);
+                if (user?.userId) {
+                    await markNotificationsRead(user.userId);
+                }
+            } catch (err) {
+                console.error('Error loading announcements:', err);
+            } finally {
+                setIsLoading(false);
             }
         };
         load();
