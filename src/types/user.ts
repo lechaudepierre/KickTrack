@@ -35,6 +35,7 @@ export interface User {
     friends?: string[]; // Array of userId
     friendRequestsReceived?: string[]; // Array of userId who sent requests
     friendRequestsSent?: string[]; // Array of userId to whom requests were sent
+    lastReadNotificationsAt?: Date; // Last time user opened the notifications page
 }
 
 export interface FriendRequest {

@@ -6,6 +6,7 @@ import { useAuthStore } from '@/lib/stores/authStore';
 import { getUserById, checkUsernameAvailable, updateUsername } from '@/lib/firebase/auth';
 import { getUserGames } from '@/lib/firebase/games';
 import { getFriendRequestCount } from '@/lib/firebase/friends';
+import { getAnnouncements, countUnread } from '@/lib/firebase/announcements';
 import { Game, Venue, User } from '@/types';
 import VenueDropdown from '@/components/venues/VenueDropdown';
 import BottomNav from '@/components/common/BottomNav';
@@ -22,7 +23,7 @@ import {
     PencilIcon,
     XMarkIcon,
     UserPlusIcon,
-    ChatBubbleLeftEllipsisIcon,
+    BellIcon,
     UsersIcon,
     ArrowLeftIcon,
     CheckIcon,
@@ -67,6 +68,8 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
 
     // Friend requests count (only for Me)
     const [friendRequestsCount, setFriendRequestsCount] = useState(0);
+    // Unread notifications count (only for Me)
+    const [unreadNotifCount, setUnreadNotifCount] = useState(0);
     const [teammateElos, setTeammateElos] = useState<Map<string, number>>(new Map());
 
     // Relationship status (only for !isMe)
@@ -91,6 +94,9 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
             if (isMe) {
                 const count = await getFriendRequestCount(targetUserId);
                 setFriendRequestsCount(count);
+
+                const announcements = await getAnnouncements();
+                setUnreadNotifCount(countUnread(announcements, userData?.lastReadNotificationsAt ?? null));
             } else if (currentUser) {
                 // Check relationship status
                 if (currentUser.friends?.includes(targetUserId)) {
@@ -395,8 +401,13 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                                         <span className={styles.friendRequestsBadge}>{friendRequestsCount}</span>
                                     )}
                                 </button>
-                                <button onClick={() => router.push('/feedback')} className={styles.feedbackBtn}>
-                                    <ChatBubbleLeftEllipsisIcon className={styles.logoutIcon} />
+                                <button onClick={() => router.push('/notifications')} className={styles.notifBtn}>
+                                    <BellIcon className={styles.logoutIcon} />
+                                    {unreadNotifCount > 0 && (
+                                        <span className={styles.notifBadge}>
+                                            {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
+                                        </span>
+                                    )}
                                 </button>
                                 <button onClick={handleLogout} className={styles.logoutBtn}>
                                     <ArrowRightOnRectangleIcon className={styles.logoutIcon} />
