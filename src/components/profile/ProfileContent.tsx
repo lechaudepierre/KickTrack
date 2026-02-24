@@ -6,7 +6,8 @@ import { useAuthStore } from '@/lib/stores/authStore';
 import { getUserById, checkUsernameAvailable, updateUsername } from '@/lib/firebase/auth';
 import { getUserGames } from '@/lib/firebase/games';
 import { getFriendRequestCount } from '@/lib/firebase/friends';
-import { Game, Venue, User } from '@/types';
+import { getAnnouncements, countUnread } from '@/lib/firebase/announcements';
+import { Game, Venue, User, Announcement } from '@/types';
 import VenueDropdown from '@/components/venues/VenueDropdown';
 import BottomNav from '@/components/common/BottomNav';
 import { calculateAdvancedStats, getPositionLabel, AdvancedStats } from '@/lib/utils/statsCalculator';
@@ -22,7 +23,7 @@ import {
     PencilIcon,
     XMarkIcon,
     UserPlusIcon,
-    ChatBubbleLeftEllipsisIcon,
+    BellIcon,
     UsersIcon,
     ArrowLeftIcon,
     CheckIcon,
@@ -67,7 +68,15 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
 
     // Friend requests count (only for Me)
     const [friendRequestsCount, setFriendRequestsCount] = useState(0);
+    // Announcements list for reactive unread count
+    const [allAnnouncements, setAllAnnouncements] = useState<Announcement[]>([]);
     const [teammateElos, setTeammateElos] = useState<Map<string, number>>(new Map());
+
+    // Reactive unread count — recalculates automatically when user.readAnnouncementIds changes
+    const unreadNotifCount = useMemo(() => {
+        const readIds = currentUser?.readAnnouncementIds || [];
+        return countUnread(allAnnouncements, readIds);
+    }, [allAnnouncements, currentUser?.readAnnouncementIds]);
 
     // Relationship status (only for !isMe)
     const [relationshipStatus, setRelationshipStatus] = useState<'none' | 'pending' | 'friend'>('none');
@@ -91,6 +100,9 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
             if (isMe) {
                 const count = await getFriendRequestCount(targetUserId);
                 setFriendRequestsCount(count);
+
+                const announcements = await getAnnouncements();
+                setAllAnnouncements(announcements);
             } else if (currentUser) {
                 // Check relationship status
                 if (currentUser.friends?.includes(targetUserId)) {
@@ -395,8 +407,13 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                                         <span className={styles.friendRequestsBadge}>{friendRequestsCount}</span>
                                     )}
                                 </button>
-                                <button onClick={() => router.push('/feedback')} className={styles.feedbackBtn}>
-                                    <ChatBubbleLeftEllipsisIcon className={styles.logoutIcon} />
+                                <button onClick={() => router.push('/notifications')} className={styles.notifBtn}>
+                                    <BellIcon className={styles.logoutIcon} />
+                                    {unreadNotifCount > 0 && (
+                                        <span className={styles.notifBadge}>
+                                            {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
+                                        </span>
+                                    )}
                                 </button>
                                 <button onClick={handleLogout} className={styles.logoutBtn}>
                                     <ArrowRightOnRectangleIcon className={styles.logoutIcon} />

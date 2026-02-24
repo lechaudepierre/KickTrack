@@ -81,6 +81,7 @@ export default function GamePage() {
 
     const [showEndModal, setShowEndModal] = useState(false);
     const [showBackModal, setShowBackModal] = useState(false);
+    const [isEndingGame, setIsEndingGame] = useState(false);
 
     const handleAddGoal = async (teamIndex: 0 | 1, scorerId: string, scorerName: string, position: GoalPosition, type: GoalType) => {
         if (!game) return;
@@ -135,7 +136,7 @@ export default function GamePage() {
     };
 
     const confirmEndGame = async () => {
-        if (!game) return;
+        if (!game || isEndingGame) return;
 
         // Prevent end on draw
         if (game.score[0] === game.score[1]) {
@@ -144,6 +145,7 @@ export default function GamePage() {
             return;
         }
 
+        setIsEndingGame(true);
         try {
             await endGame(game.gameId);
             router.push(`/game/${gameId}/results`);
@@ -151,6 +153,7 @@ export default function GamePage() {
             console.error('Error ending game:', error);
             setError(error.message || 'Erreur lors de la fin du match');
             setShowEndModal(false);
+            setIsEndingGame(false);
         }
     };
 
@@ -296,10 +299,11 @@ export default function GamePage() {
                             <div className={gameStyles.modalBody}>
                                 <button
                                     onClick={confirmEndGame}
+                                    disabled={isEndingGame}
                                     className={`${gameStyles.optionButton} ${gameStyles.confirmButton}`}
-                                    style={{ border: '3px solid var(--color-green-dark)', backgroundColor: 'var(--color-green-medium)', color: 'white', marginBottom: 'var(--spacing-lg)' }}
+                                    style={{ border: '3px solid var(--color-green-dark)', backgroundColor: 'var(--color-green-medium)', color: 'white', marginBottom: 'var(--spacing-lg)', opacity: isEndingGame ? 0.6 : 1 }}
                                 >
-                                    <span className={gameStyles.optionTitle}>Finir le match normalement</span>
+                                    <span className={gameStyles.optionTitle}>{isEndingGame ? 'Enregistrement...' : 'Finir le match normalement'}</span>
                                     <span className={gameStyles.optionDesc} style={{ color: 'rgba(255,255,255,0.8)' }}>Valider les scores actuels</span>
                                 </button>
 

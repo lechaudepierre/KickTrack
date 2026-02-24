@@ -104,7 +104,7 @@
     box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
 }
 
-.feedbackBtn {
+.notifBtn {
     width: 40px;
     height: 40px;
     display: flex;
@@ -116,11 +116,30 @@
     color: var(--color-text-dark);
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
 }
 
-.feedbackBtn:hover {
+.notifBtn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+}
+
+.notifBadge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 4px;
+    background: #FF5722;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 800;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #333333;
 }
 
 .friendRequestsBadge {
