@@ -16,7 +16,7 @@ import styles from './page.module.css';
 export default function AnnouncementDetailPage() {
     const router = useRouter();
     const { id } = useParams<{ id: string }>();
-    const { user } = useAuthStore();
+    const { user, setUser } = useAuthStore();
 
     const [announcement, setAnnouncement] = useState<Announcement | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -29,6 +29,11 @@ export default function AnnouncementDetailPage() {
                 // Marquer comme lu dès l'ouverture — atomique via arrayUnion
                 if (user?.userId) {
                     await markAnnouncementRead(user.userId, id);
+                    // Mise à jour optimiste du store pour que la liste reflète l'état immédiatement
+                    const alreadyRead = user.readAnnouncementIds || [];
+                    if (!alreadyRead.includes(id)) {
+                        setUser({ ...user, readAnnouncementIds: [...alreadyRead, id] });
+                    }
                 }
             } catch (err) {
                 console.error('Error loading announcement:', err);
