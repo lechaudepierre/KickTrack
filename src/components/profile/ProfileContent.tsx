@@ -401,7 +401,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                                         <span className={styles.friendRequestsBadge}>{friendRequestsCount}</span>
                                     )}
                                 </button>
-                                <button onClick={() => router.push('/notifications')} className={styles.notifBtn}>
+                                <button onClick={() => { setUnreadNotifCount(0); router.push('/notifications'); }} className={styles.notifBtn}>
                                     <BellIcon className={styles.logoutIcon} />
                                     {unreadNotifCount > 0 && (
                                         <span className={styles.notifBadge}>

@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getAnnouncements, markNotificationsRead } from '@/lib/firebase/announcements';
 import { Announcement } from '@/types';
-import ReactMarkdown from 'react-markdown';
 import {
     ArrowLeftIcon,
     ChatBubbleLeftEllipsisIcon,
     WrenchScrewdriverIcon,
     MegaphoneIcon,
+    ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 
@@ -38,13 +38,8 @@ export default function NotificationsPage() {
         load();
     }, [user?.userId]);
 
-    const formatDate = (date: Date) => {
-        return new Intl.DateTimeFormat('fr-FR', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-        }).format(date);
-    };
+    const formatDate = (date: Date) =>
+        new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
 
     return (
         <div className={styles.container}>
@@ -72,29 +67,29 @@ export default function NotificationsPage() {
                 ) : (
                     <div className={styles.list}>
                         {announcements.map((item) => (
-                            <div key={item.announcementId} className={styles.card}>
-                                <div className={styles.cardMeta}>
-                                    <div className={`${styles.typeBadge} ${item.type === 'patch' ? styles.typePatch : styles.typeNews}`}>
-                                        {item.type === 'patch'
-                                            ? <WrenchScrewdriverIcon className={styles.badgeIcon} />
-                                            : <MegaphoneIcon className={styles.badgeIcon} />
-                                        }
-                                        <span>{item.type === 'patch' ? 'Mise à jour' : 'Annonce'}</span>
+                            <button
+                                key={item.announcementId}
+                                className={styles.card}
+                                onClick={() => router.push(`/notifications/${item.announcementId}`)}
+                            >
+                                <div className={styles.cardLeft}>
+                                    <div className={styles.cardMeta}>
+                                        <div className={`${styles.typeBadge} ${item.type === 'patch' ? styles.typePatch : styles.typeNews}`}>
+                                            {item.type === 'patch'
+                                                ? <WrenchScrewdriverIcon className={styles.badgeIcon} />
+                                                : <MegaphoneIcon className={styles.badgeIcon} />
+                                            }
+                                            <span>{item.type === 'patch' ? 'Mise à jour' : 'Annonce'}</span>
+                                        </div>
+                                        {item.version && (
+                                            <span className={styles.version}>{item.version}</span>
+                                        )}
                                     </div>
-
-                                    {item.version && (
-                                        <span className={styles.version}>{item.version}</span>
-                                    )}
-
-                                    <span className={styles.date}>{formatDate(item.createdAt)}</span>
+                                    <p className={styles.cardTitle}>{item.title}</p>
+                                    <p className={styles.date}>{formatDate(item.createdAt)}</p>
                                 </div>
-
-                                <h2 className={styles.cardTitle}>{item.title}</h2>
-
-                                <div className={styles.markdownContent}>
-                                    <ReactMarkdown>{item.content}</ReactMarkdown>
-                                </div>
-                            </div>
+                                <ChevronRightIcon className={styles.chevron} />
+                            </button>
                         ))}
                     </div>
                 )}

@@ -68,6 +68,21 @@ export async function publishAnnouncement(params: {
     await setDoc(ref, announcement);
 }
 
+export async function getAnnouncementById(id: string): Promise<Announcement | null> {
+    const db = getFirebaseDb();
+    const { getDoc } = await import('firebase/firestore');
+    const snap = await getDoc(doc(db, ANNOUNCEMENTS_COLLECTION, id));
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    return {
+        ...data,
+        announcementId: snap.id,
+        createdAt: data.createdAt instanceof Timestamp
+            ? data.createdAt.toDate()
+            : new Date(data.createdAt),
+    } as Announcement;
+}
+
 export async function deleteAnnouncement(announcementId: string): Promise<void> {
     const db = getFirebaseDb();
     await deleteDoc(doc(db, ANNOUNCEMENTS_COLLECTION, announcementId));
