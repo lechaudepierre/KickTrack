@@ -12,7 +12,9 @@ import VenueDropdown from '@/components/venues/VenueDropdown';
 import {
     ArrowLeftIcon,
     UsersIcon,
-    GlobeAltIcon
+    GlobeAltIcon,
+    MagnifyingGlassIcon,
+    XMarkIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 import RankAvatar from '@/components/common/RankAvatar';
@@ -98,6 +100,7 @@ export default function LeaderboardPage() {
     // Filter type state
     const [filterType, setFilterType] = useState<FilterType>('general');
     const [friendIds, setFriendIds] = useState<string[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Race condition protection: only the latest loadLeaderboard call can update state
     const loadCallIdRef = useRef(0);
@@ -180,6 +183,13 @@ export default function LeaderboardPage() {
 
     const hasData = leaderboard.length > 0;
 
+    const isSearching = searchQuery.trim().length > 0;
+    const searchFiltered = isSearching
+        ? leaderboard
+            .map((entry, i) => ({ entry, rank: i + 1 }))
+            .filter(({ entry }) => entry.username.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+        : null;
+
     return (
         <div className={styles.container}>
             <div className={styles.contentWrapper}>
@@ -205,6 +215,23 @@ export default function LeaderboardPage() {
                     </button>
                 </div>
 
+                {/* Search bar */}
+                <div className={styles.searchContainer}>
+                    <MagnifyingGlassIcon className={styles.searchIcon} />
+                    <input
+                        type="text"
+                        placeholder="Rechercher un joueur…"
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        className={styles.searchInput}
+                    />
+                    {isSearching && (
+                        <button className={styles.searchClear} onClick={() => setSearchQuery('')}>
+                            <XMarkIcon className="w-4 h-4" />
+                        </button>
+                    )}
+                </div>
+
                 {/* Venue Filter Dropdown */}
                 <div className={styles.filterSection}>
                     <VenueDropdown
@@ -228,8 +255,8 @@ export default function LeaderboardPage() {
                     </div>
                 ) : (
                     <>
-                        {/* Podium */}
-                        {leaderboard.length > 0 && (
+                        {/* Podium — masqué pendant la recherche */}
+                        {!isSearching && leaderboard.length > 0 && (
                             <div className={styles.podium}>
                                 {/* 2nd Place */}
                                 {leaderboard[1] && (
@@ -276,51 +303,81 @@ export default function LeaderboardPage() {
                         )}
 
                         {/* List */}
-                        <div className={styles.listContainer}>
-                            <div className={styles.listHeader}>
-                                <div className="text-center">#</div>
-                                <div>Joueur</div>
-                                <div className="text-center">V</div>
-                                <div className="text-center">Elo</div>
-                            </div>
+                        {isSearching && searchFiltered!.length === 0 ? (
+                            <div className={styles.emptyState}>Aucun joueur trouvé pour &quot;{searchQuery}&quot;</div>
+                        ) : (
+                            <div className={styles.listContainer}>
+                                <div className={styles.listHeader}>
+                                    <div className="text-center">#</div>
+                                    <div>Joueur</div>
+                                    <div className="text-center">V</div>
+                                    <div className="text-center">Elo</div>
+                                </div>
 
-                            {buildDisplayEntries(
-                                leaderboard,
-                                currentUser?.userId,
-                                filterType === 'general'
-                            ).map((item, idx) => {
-                                if (item.type === 'separator') {
-                                    return (
-                                        <div key={`sep-${idx}`} className={styles.listSeparator}>
-                                            <span className={styles.listSeparatorDots}>⋮</span>
-                                        </div>
-                                    );
+                                {isSearching
+                                    ? searchFiltered!.map(({ entry: player, rank }) => {
+                                        const isCreator = CREATORS.includes(player.username);
+                                        return (
+                                            <PlayerBanner
+                                                key={player.userId}
+                                                username={player.username}
+                                                className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.currentUserItem : ''} cursor-pointer`}
+                                                onClick={() => router.push(`/profile/${player.userId}`)}
+                                            >
+                                                <div className={`${styles.rank} ${isCreator ? styles.textOnBanner : ''}`}>{rank}</div>
+                                                <div className={styles.playerInfo}>
+                                                    <RankAvatar elo={player.elo} size="md" />
+                                                    <span className={`${styles.playerName} ${isCreator ? styles.textOnBanner : ''}`}>
+                                                        {player.username}
+                                                        {currentUser?.userId === player.userId && ' (Moi)'}
+                                                    </span>
+                                                </div>
+                                                <div className={`${styles.statCol} ${isCreator ? styles.textOnBanner : ''}`}>{player.wins}</div>
+                                                <div className={`${styles.statCol} ${styles.winRate} ${isCreator ? styles.textOnBanner : ''}`}>
+                                                    {player.elo || 1000}
+                                                </div>
+                                            </PlayerBanner>
+                                        );
+                                    })
+                                    : buildDisplayEntries(
+                                        leaderboard,
+                                        currentUser?.userId,
+                                        filterType === 'general'
+                                    ).map((item, idx) => {
+                                        if (item.type === 'separator') {
+                                            return (
+                                                <div key={`sep-${idx}`} className={styles.listSeparator}>
+                                                    <span className={styles.listSeparatorDots}>⋮</span>
+                                                </div>
+                                            );
+                                        }
+                                        const { entry: player, rank } = item;
+                                        const isCreator = CREATORS.includes(player.username);
+                                        return (
+                                            <PlayerBanner
+                                                key={player.userId}
+                                                username={player.username}
+                                                className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.currentUserItem : ''} cursor-pointer`}
+                                                onClick={() => router.push(`/profile/${player.userId}`)}
+                                            >
+                                                <div className={`${styles.rank} ${isCreator ? styles.textOnBanner : ''}`}>{rank}</div>
+                                                <div className={styles.playerInfo}>
+                                                    <RankAvatar elo={player.elo} size="md" />
+                                                    <span className={`${styles.playerName} ${isCreator ? styles.textOnBanner : ''}`}>
+                                                        {player.username}
+                                                        {currentUser?.userId === player.userId && ' (Moi)'}
+                                                    </span>
+                                                </div>
+                                                <div className={`${styles.statCol} ${isCreator ? styles.textOnBanner : ''}`}>{player.wins}</div>
+                                                <div className={`${styles.statCol} ${styles.winRate} ${isCreator ? styles.textOnBanner : ''}`}>
+                                                    {player.elo || 1000}
+                                                </div>
+                                            </PlayerBanner>
+                                        );
+                                    })
                                 }
-                                const { entry: player, rank } = item;
-                                const isCreator = CREATORS.includes(player.username);
-                                return (
-                                    <PlayerBanner
-                                        key={player.userId}
-                                        username={player.username}
-                                        className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.currentUserItem : ''} cursor-pointer`}
-                                        onClick={() => router.push(`/profile/${player.userId}`)}
-                                    >
-                                        <div className={`${styles.rank} ${isCreator ? styles.textOnBanner : ''}`}>{rank}</div>
-                                        <div className={styles.playerInfo}>
-                                            <RankAvatar elo={player.elo} size="md" />
-                                            <span className={`${styles.playerName} ${isCreator ? styles.textOnBanner : ''}`}>
-                                                {player.username}
-                                                {currentUser?.userId === player.userId && ' (Moi)'}
-                                            </span>
-                                        </div>
-                                        <div className={`${styles.statCol} ${isCreator ? styles.textOnBanner : ''}`}>{player.wins}</div>
-                                        <div className={`${styles.statCol} ${styles.winRate} ${isCreator ? styles.textOnBanner : ''}`}>
-                                            {player.elo || 1000}
-                                        </div>
-                                    </PlayerBanner>
-                                );
-                            })}
-                        </div>
+                            </div>
+                        )}
 
                         {/* Created by section */}
                         <div className={styles.createdBySection}>
