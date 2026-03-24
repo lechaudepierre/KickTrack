@@ -78,7 +78,59 @@ export interface GameEloChanges {
         newElo: number;
         eloChange: number;
         username: string;
+        isMVP?: boolean;
     };
+}
+
+// ─── MVP Calculation ──────────────────────────────────────────────────────────
+// Rôle : attaquant si a marqué depuis 'attack', défenseur sinon (par défaut).
+// Score attaquant : (ses_buts / buts_équipe) × 90
+// Score défenseur : clean_sheet → 95, sinon max(0, (1 - buts_concédés/target) × 100)
+// En cas d'égalité : joueur de l'équipe gagnante l'emporte.
+function computeMVP(
+    teams: Team[],
+    goals: Goal[],
+    winner: 0 | 1
+): string | null {
+    const target = Math.max(teams[0].score, teams[1].score);
+    if (target === 0) return null;
+
+    const scores: { userId: string; score: number; isWinner: boolean }[] = [];
+
+    for (let teamIndex = 0; teamIndex < teams.length; teamIndex++) {
+        const team = teams[teamIndex];
+        const isWinner = teamIndex === winner;
+        const goalsConceded = teams[1 - teamIndex].score;
+        const teamGoals = team.score; // total buts de l'équipe
+
+        for (const player of team.players) {
+            if (player.userId.startsWith('guest_')) continue;
+
+            const playerGoals = goals.filter(g => g.scoredBy === player.userId);
+            const attackGoals = playerGoals.filter(g => g.position === 'attack').length;
+            const isAttacker = attackGoals > 0;
+
+            let score: number;
+            if (isAttacker) {
+                score = teamGoals > 0 ? (attackGoals / teamGoals) * 90 : 0;
+            } else {
+                // défenseur par défaut
+                score = goalsConceded === 0 ? 95 : Math.max(0, (1 - goalsConceded / target) * 100);
+            }
+
+            scores.push({ userId: player.userId, score, isWinner });
+        }
+    }
+
+    if (scores.length === 0) return null;
+
+    scores.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        // égalité → gagnant prioritaire
+        return (b.isWinner ? 1 : 0) - (a.isWinner ? 1 : 0);
+    });
+
+    return scores[0].userId;
 }
 
 async function updatePlayerStatsAfterGame(
@@ -116,6 +168,9 @@ async function updatePlayerStatsAfterGame(
             }
         }
     }
+
+    // Compute MVP before transaction loop
+    const mvpUserId = computeMVP(teams, goals, winner);
 
     const updatePromises = [];
     const allEloChanges: GameEloChanges = {};
@@ -193,11 +248,13 @@ async function updatePlayerStatsAfterGame(
             if (eloUpdates[player.userId]) {
                 const playerData = playerUserData[player.userId];
                 const previousElo = playerData?.stats?.elo || 1000;
+                const isMVP = player.userId === mvpUserId;
                 allEloChanges[player.userId] = {
                     previousElo,
-                    newElo: eloUpdates[player.userId].newElo,
-                    eloChange: eloUpdates[player.userId].eloChange,
-                    username: player.username
+                    newElo: eloUpdates[player.userId].newElo + (isMVP ? 3 : 0),
+                    eloChange: eloUpdates[player.userId].eloChange + (isMVP ? 3 : 0),
+                    username: player.username,
+                    isMVP,
                 };
             }
         }
@@ -236,6 +293,10 @@ async function updatePlayerStatsAfterGame(
                 // Only apply Elo update if calculated (meaning it was 2v2)
                 if (eloUpdates[player.userId]) {
                     newElo = eloUpdates[player.userId].newElo;
+                    // MVP bonus +3 applied in-transaction
+                    if (player.userId === mvpUserId) {
+                        newElo += 3;
+                    }
 
                     // Add to history
                     eloHistory.push({
@@ -261,6 +322,7 @@ async function updatePlayerStatsAfterGame(
                     winRate: 0,
                     elo: newElo,
                     eloHistory: eloHistory,
+                    mvpCount: (currentStats.mvpCount || 0) + (player.userId === mvpUserId ? 1 : 0),
                     history: {
                         ...currentHistory,
                         [today]: newDailyStats
@@ -492,12 +554,14 @@ export async function endGame(gameId: string): Promise<GameResults> {
     }
 
     // Write everything atomically: status + eloChanges in a single update
+    const mvpId = Object.entries(eloChanges).find(([, v]) => v.isMVP)?.[0];
     await updateDoc(gameRef, {
         status: 'completed',
         endedAt,
         duration,
         winner,
-        ...(Object.keys(eloChanges).length > 0 ? { eloChanges } : {})
+        ...(Object.keys(eloChanges).length > 0 ? { eloChanges } : {}),
+        ...(mvpId ? { mvpId } : {})
     });
 
     // Update venue stats

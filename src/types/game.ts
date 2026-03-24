@@ -48,7 +48,9 @@ export interface Game {
         newElo: number;
         eloChange: number;
         username: string;
+        isMVP?: boolean;
     }>;
+    mvpId?: string;
 }
 
 export type GameFormat = '1v1' | '2v2';

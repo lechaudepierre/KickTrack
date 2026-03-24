@@ -22,6 +22,72 @@ type FilterType = 'general' | 'friends';
 
 const CREATORS = ['Astroboy', 'PIGEON ou BAGARRE', 'lechauvepierre'];
 
+type DisplayEntry =
+    | { type: 'player'; entry: LeaderboardEntry; rank: number }
+    | { type: 'separator' };
+
+function buildDisplayEntries(
+    leaderboard: LeaderboardEntry[],
+    currentUserId: string | undefined,
+    applySlicing: boolean
+): DisplayEntry[] {
+    const n = leaderboard.length;
+    if (n === 0) return [];
+
+    if (!applySlicing) {
+        return leaderboard.map((entry, i) => ({ type: 'player', entry, rank: i + 1 }));
+    }
+
+    const myIndex = currentUserId
+        ? leaderboard.findIndex(p => p.userId === currentUserId)
+        : -1;
+
+    const TOP = 20;
+    const CONTEXT = 5;
+    const BOTTOM = 10;
+
+    // Build index segments [start, end] inclusive
+    const segments: [number, number][] = [];
+
+    // Top 20
+    segments.push([0, Math.min(TOP - 1, n - 1)]);
+
+    // Context around user (only if outside top 20)
+    if (myIndex >= TOP) {
+        const cStart = Math.max(TOP, myIndex - CONTEXT);
+        const cEnd = Math.min(n - 1, myIndex + CONTEXT);
+        segments.push([cStart, cEnd]);
+    }
+
+    // Bottom 10
+    const bottomStart = Math.max(0, n - BOTTOM);
+    if (bottomStart > Math.min(TOP - 1, n - 1)) {
+        segments.push([bottomStart, n - 1]);
+    }
+
+    // Sort and merge overlapping/adjacent segments
+    segments.sort((a, b) => a[0] - b[0]);
+    const merged: [number, number][] = [];
+    for (const seg of segments) {
+        if (merged.length === 0 || seg[0] > merged[merged.length - 1][1] + 1) {
+            merged.push([seg[0], seg[1]]);
+        } else {
+            merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], seg[1]);
+        }
+    }
+
+    // Convert to display entries with separators between segments
+    const result: DisplayEntry[] = [];
+    for (let s = 0; s < merged.length; s++) {
+        if (s > 0) result.push({ type: 'separator' });
+        const [start, end] = merged[s];
+        for (let i = start; i <= end; i++) {
+            result.push({ type: 'player', entry: leaderboard[i], rank: i + 1 });
+        }
+    }
+    return result;
+}
+
 export default function LeaderboardPage() {
     const router = useRouter();
     const { user: currentUser, initialize } = useAuthStore();
@@ -218,7 +284,19 @@ export default function LeaderboardPage() {
                                 <div className="text-center">Elo</div>
                             </div>
 
-                            {leaderboard.map((player, index) => {
+                            {buildDisplayEntries(
+                                leaderboard,
+                                currentUser?.userId,
+                                filterType === 'general'
+                            ).map((item, idx) => {
+                                if (item.type === 'separator') {
+                                    return (
+                                        <div key={`sep-${idx}`} className={styles.listSeparator}>
+                                            <span className={styles.listSeparatorDots}>⋮</span>
+                                        </div>
+                                    );
+                                }
+                                const { entry: player, rank } = item;
                                 const isCreator = CREATORS.includes(player.username);
                                 return (
                                     <PlayerBanner
@@ -227,7 +305,7 @@ export default function LeaderboardPage() {
                                         className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.currentUserItem : ''} cursor-pointer`}
                                         onClick={() => router.push(`/profile/${player.userId}`)}
                                     >
-                                        <div className={`${styles.rank} ${isCreator ? styles.textOnBanner : ''}`}>{index + 1}</div>
+                                        <div className={`${styles.rank} ${isCreator ? styles.textOnBanner : ''}`}>{rank}</div>
                                         <div className={styles.playerInfo}>
                                             <RankAvatar elo={player.elo} size="md" />
                                             <span className={`${styles.playerName} ${isCreator ? styles.textOnBanner : ''}`}>

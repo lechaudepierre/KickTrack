@@ -304,6 +304,109 @@
     padding-left: var(--spacing-xs);
 }
 
+/* Badges Row */
+.badgesRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-xs) 0;
+    margin-bottom: var(--spacing-sm);
+}
+
+.badgePill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 2px solid #333333;
+    background: var(--color-beige);
+    color: var(--color-text-dark);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+}
+
+.badgePill:hover {
+    opacity: 0.8;
+}
+
+.badgePillIcon {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+}
+
+/* Badge modal */
+.badgeModalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: var(--spacing-lg);
+}
+
+.badgeModal {
+    position: relative;
+    background: var(--color-beige);
+    color: var(--color-text-dark);
+    border: 3px solid #333333;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-xl) var(--spacing-lg) var(--spacing-lg);
+    max-width: 320px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--spacing-sm);
+}
+
+.badgeModalClose {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-dark);
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    opacity: 0.6;
+    transition: opacity 0.15s;
+}
+
+.badgeModalClose:hover {
+    opacity: 1;
+}
+
+.badgeModalIcon {
+    width: 36px;
+    height: 36px;
+    color: var(--color-text-dark);
+}
+
+.badgeModalTitle {
+    font-size: 1rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.badgeModalRule {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    margin: 0;
+    opacity: 0.85;
+}
+
 /* Stats Grid */
 .statsGrid {
     display: grid;

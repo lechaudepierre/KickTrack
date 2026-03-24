@@ -51,6 +51,7 @@ export default function PlayerBanner({
                 backgroundImage: `url('${config.path}')`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
                 ['--banner-text-color' as string]: config.textColor,
                 ['--banner-scrim-color' as string]: getBannerScrimColor(config.textColor),
             }}

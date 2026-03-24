@@ -1,11 +1,9 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { getUserGames } from '@/lib/firebase/games';
-import { Game } from '@/types';
 import BottomNav from '@/components/common/BottomNav';
 import {
     PlusCircleIcon,
@@ -19,7 +17,6 @@ import styles from './page.module.css';
 export default function DashboardPage() {
     const router = useRouter();
     const { user, isAuthenticated, isLoading, initialize } = useAuthStore();
-    const [games, setGames] = useState<Game[]>([]);
 
     useEffect(() => {
         const unsubscribe = initialize();
@@ -34,33 +31,12 @@ export default function DashboardPage() {
         }
     }, [isLoading, isAuthenticated, router]);
 
-    useEffect(() => {
-        if (user) {
-            getUserGames(user.userId, 100).then(setGames);
-        }
-    }, [user]);
-
-    // Calculate stats from games (same logic as profile page)
-    const stats = useMemo(() => {
-        if (!user) return { wins: 0, totalGames: 0, winRate: 0 };
-
-        const completedGames = games.filter(g => g.status === 'completed');
-
-        let wins = 0;
-        for (const game of completedGames) {
-            const userTeamIndex = game.teams.findIndex(t =>
-                t.players.some(p => p.userId === user.userId)
-            );
-            if (userTeamIndex !== -1 && game.winner === userTeamIndex) {
-                wins++;
-            }
-        }
-
-        const totalGames = completedGames.length;
-        const winRate = totalGames > 0 ? wins / totalGames : 0;
-
-        return { wins, totalGames, winRate };
-    }, [games, user]);
+    // Use pre-computed stats from user profile (accurate, no limit)
+    const stats = {
+        wins: user?.stats?.wins ?? 0,
+        totalGames: user?.stats?.totalGames ?? 0,
+        winRate: user?.stats?.winRate ?? 0,
+    };
 
     if (isLoading) {
         return (

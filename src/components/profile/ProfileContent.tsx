@@ -10,7 +10,8 @@ import { getAnnouncements, countUnread } from '@/lib/firebase/announcements';
 import { Game, Venue, User, Announcement } from '@/types';
 import VenueDropdown from '@/components/venues/VenueDropdown';
 import BottomNav from '@/components/common/BottomNav';
-import { calculateAdvancedStats, getPositionLabel, AdvancedStats } from '@/lib/utils/statsCalculator';
+import { calculateAdvancedStats, getPositionLabel, AdvancedStats, BadgeId } from '@/lib/utils/statsCalculator';
+import { BADGE_CONFIG } from '@/lib/utils/badgeConfig';
 import {
     ClockIcon,
     MapPinIcon,
@@ -27,8 +28,23 @@ import {
     UsersIcon,
     ArrowLeftIcon,
     CheckIcon,
-    PlusIcon
+    PlusIcon,
+    BoltIcon,
+    ShieldCheckIcon,
+    StarIcon,
+    XCircleIcon,
+    SparklesIcon
 } from '@heroicons/react/24/outline';
+
+const BADGE_ICONS: Record<BadgeId, React.ComponentType<{ className?: string }>> = {
+    eclair: BoltIcon,
+    muraille: ShieldCheckIcon,
+    buteur: StarIcon,
+    gamelleur: XCircleIcon,
+    patron: TrophyIcon,
+    en_feu: FireIcon,
+    mvp: SparklesIcon,
+};
 import styles from './ProfileContent.module.css';
 import RankAvatar from '@/components/common/RankAvatar';
 import PlayerBanner from '@/components/common/PlayerBanner';
@@ -49,6 +65,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
     const [allGames, setAllGames] = useState<Game[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [advancedStats, setAdvancedStats] = useState<AdvancedStats | null>(null);
+    const [selectedBadge, setSelectedBadge] = useState<BadgeId | null>(null);
 
     // Filters state
     const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
@@ -472,6 +489,27 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                         </p>
                     </div>
                 </PlayerBanner>
+
+                {/* Badges */}
+                {advancedStats && advancedStats.badges.length > 0 && (
+                    <div className={styles.badgesRow}>
+                        {advancedStats.badges.map(badgeId => {
+                            const badge = BADGE_CONFIG[badgeId];
+                            const Icon = BADGE_ICONS[badgeId];
+                            return (
+                                <button
+                                    key={badgeId}
+                                    className={styles.badgePill}
+                                    onClick={() => setSelectedBadge(badgeId)}
+                                >
+                                    <Icon className={styles.badgePillIcon} />
+                                    {badge.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+
                 <p className={styles.joinDate}>
                     {CREATOR_USERNAMES.includes(profileUser.username) ? 'CREATOR' : `Membre depuis ${formatDate(profileUser.createdAt)}`}
                 </p>
@@ -813,6 +851,24 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
             )}
 
             <BottomNav />
+
+            {/* Badge detail modal */}
+            {selectedBadge && (() => {
+                const badge = BADGE_CONFIG[selectedBadge];
+                const Icon = BADGE_ICONS[selectedBadge];
+                return (
+                    <div className={styles.badgeModalOverlay} onClick={() => setSelectedBadge(null)}>
+                        <div className={styles.badgeModal} onClick={e => e.stopPropagation()}>
+                            <button className={styles.badgeModalClose} onClick={() => setSelectedBadge(null)}>
+                                <XMarkIcon className="w-5 h-5" />
+                            </button>
+                            <Icon className={styles.badgeModalIcon} />
+                            <h3 className={styles.badgeModalTitle}>{badge.label}</h3>
+                            <p className={styles.badgeModalRule}>{badge.rule}</p>
+                        </div>
+                    </div>
+                );
+            })()}
         </div>
     );
 }

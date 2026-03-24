@@ -1,5 +1,7 @@
 import { Game, GoalPosition } from '@/types';
 
+export type BadgeId = 'eclair' | 'muraille' | 'buteur' | 'gamelleur' | 'patron' | 'en_feu' | 'mvp';
+
 export interface HeadToHeadStats {
     opponentId: string;
     opponentName: string;
@@ -85,6 +87,9 @@ export interface AdvancedStats {
         total: number;
         totalPercentage: number;
     };
+
+    // Badges earned
+    badges: BadgeId[];
 }
 
 export function calculateAdvancedStats(
@@ -160,6 +165,14 @@ export function calculateAdvancedStats(
     const eloHistory: Array<{ date: string; elo: number }> = [];
     let cumulativeWins = 0;
 
+    // Badge-specific counters
+    let gamesWithGamelle = 0;
+    let buteurRatioSum = 0;
+    let buteurGamesCount = 0;
+    let murailleRatioSum = 0;
+    let murailleGamesCount = 0;
+    let mvpGames = 0;
+
     // Analyse des matchs
     for (let i = 0; i < chronologicalGames.length; i++) {
         const game = chronologicalGames[i];
@@ -224,6 +237,33 @@ export function calculateAdvancedStats(
                 }
             }
         }
+
+        // Badge: Gamelleur — jeux avec au moins une gamelle
+        if (userGoals.some(g => g.type === 'gamelle' || g.type === 'gamelle_rentrante')) {
+            gamesWithGamelle++;
+        }
+
+        // Badge: Buteur — ratio buts du joueur / buts de l'équipe
+        const teamGoals = game.teams[userTeamIndex].score;
+        if (teamGoals > 0) {
+            buteurRatioSum += userGoals.length / teamGoals;
+            buteurGamesCount++;
+        }
+
+        // Badge: Muraille — défenseur en 2v2 (pas de but depuis 'attack')
+        if (is2v2) {
+            const hasAttackGoal = userGoals.some(g => g.position === 'attack');
+            if (!hasAttackGoal) {
+                const target = Math.max(game.teams[0].score, game.teams[1].score);
+                if (target > 0) {
+                    murailleRatioSum += opponentScore / target;
+                    murailleGamesCount++;
+                }
+            }
+        }
+
+        // Badge: MVP
+        if ((game as any).mvpId === userId) mvpGames++;
 
         // Autres stats classiques
         totalGoalsConceded += opponentScore;
@@ -357,8 +397,76 @@ export function calculateAdvancedStats(
         flashStats: {
             total: totalFlash,
             totalPercentage: filteredGames.length > 0 ? (totalFlash / filteredGames.length) * 100 : 0
-        }
+        },
+        badges: computeBadges({
+            totalGames,
+            winRate,
+            totalGoalsScored,
+            totalFlash,
+            gamesWithGamelle,
+            buteurRatioSum,
+            buteurGamesCount,
+            murailleRatioSum,
+            murailleGamesCount,
+            currentStreakType,
+            currentStreakCount,
+            mvpGames,
+        }),
     };
+}
+
+function computeBadges(data: {
+    totalGames: number;
+    winRate: number;
+    totalGoalsScored: number;
+    totalFlash: number;
+    gamesWithGamelle: number;
+    buteurRatioSum: number;
+    buteurGamesCount: number;
+    murailleRatioSum: number;
+    murailleGamesCount: number;
+    currentStreakType: 'win' | 'loss' | 'none';
+    currentStreakCount: number;
+    mvpGames: number;
+}): BadgeId[] {
+    const badges: BadgeId[] = [];
+
+    // ⚡ Éclair : >5% des buts marqués sont des flashs, min 20 parties
+    if (data.totalGames >= 20 && data.totalGoalsScored > 0 && data.totalFlash / data.totalGoalsScored > 0.05) {
+        badges.push('eclair');
+    }
+
+    // 🧱 Muraille : en 2v2 en tant que défenseur, ratio concédé/target moyen < 30%, min 25 matchs défenseur
+    if (data.murailleGamesCount >= 25 && data.murailleRatioSum / data.murailleGamesCount < 0.30) {
+        badges.push('muraille');
+    }
+
+    // 🎯 Buteur : moyenne (tes buts / buts équipe) > 50%, min 20 parties
+    if (data.totalGames >= 20 && data.buteurGamesCount >= 20 && data.buteurRatioSum / data.buteurGamesCount > 0.50) {
+        badges.push('buteur');
+    }
+
+    // 💀 Gamelleur : >10% des parties avec au moins une gamelle, min 20 parties
+    if (data.totalGames >= 20 && data.gamesWithGamelle / data.totalGames > 0.10) {
+        badges.push('gamelleur');
+    }
+
+    // 🏆 Patron : winRate > 65%, min 30 parties
+    if (data.totalGames >= 30 && data.winRate > 65) {
+        badges.push('patron');
+    }
+
+    // 🔥 En feu : série de victoires actuelle ≥ 5
+    if (data.currentStreakType === 'win' && data.currentStreakCount >= 5) {
+        badges.push('en_feu');
+    }
+
+    // 👑 MVP : désigné MVP dans ≥20% des parties, min 20 parties
+    if (data.totalGames >= 20 && data.mvpGames / data.totalGames >= 0.20) {
+        badges.push('mvp');
+    }
+
+    return badges;
 }
 
 function getEmptyStats(): AdvancedStats {
@@ -398,7 +506,8 @@ function getEmptyStats(): AdvancedStats {
         flashStats: {
             total: 0,
             totalPercentage: 0
-        }
+        },
+        badges: []
     };
 }
 

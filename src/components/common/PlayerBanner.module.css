@@ -16,6 +16,7 @@
 
 .hasBanner {
     overflow: hidden;
+    aspect-ratio: 5 / 1;
 }
 
 /* Dark scrim so text pops against the banner image */
@@ -30,7 +31,7 @@
 }
 
 /* Lift children above the pseudo overlay */
-.hasBanner > * {
+.hasBanner>* {
     position: relative;
     z-index: 1;
 }

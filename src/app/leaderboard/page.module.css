@@ -206,6 +206,24 @@
     background: rgba(255, 255, 255, 0.05);
 }
 
+/* Separator row between leaderboard segments */
+.listSeparator {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem 3rem;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-bottom: 1px solid rgba(51, 51, 51, 0.2);
+    background: rgba(51, 51, 51, 0.04);
+}
+
+.listSeparatorDots {
+    font-size: 1rem;
+    font-weight: 700;
+    color: rgba(51, 51, 51, 0.4);
+    text-align: center;
+    line-height: 1;
+}
+
 .currentUserItem {
     background: rgba(76, 175, 80, 0.1);
     border-left: 3px solid var(--color-field-green);
@@ -214,7 +232,7 @@
 .rank {
     font-weight: 700;
     font-size: 0.75rem;
-    color: var(--color-text-dark);
+    color: var(--banner-text-color, var(--color-text-dark));
     text-align: center;
     min-width: 2.5rem;
     flex-shrink: 0;
@@ -276,7 +294,7 @@
 .playerName {
     font-weight: 600;
     font-size: 0.75rem;
-    color: var(--color-text-dark);
+    color: var(--banner-text-color, var(--color-text-dark));
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -292,7 +310,7 @@
     text-align: center;
     font-weight: 600;
     font-size: 0.75rem;
-    color: var(--color-text-dark);
+    color: var(--banner-text-color, var(--color-text-dark));
     min-width: 2.5rem;
     flex-shrink: 0;
 }
@@ -304,9 +322,7 @@
 }
 
 .winRate {
-    color: var(--color-field-green);
-    color: var(--color-text-dark);
-
+    color: var(--banner-text-color, var(--color-text-dark));
 }
 
 /* Filter Tabs */

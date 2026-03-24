@@ -20,10 +20,16 @@ interface BannerConfig {
 /** Map of bannerId → config */
 const BANNERS: Record<string, BannerConfig> = {
     creator: { path: '/banners/CreatorV3.png', aspectRatio: 2578 / 1209, textColor: '#ffffff' },
+    veloTDF: { path: '/banners/VéloTDF.png', aspectRatio: 5 / 1, textColor: '#ffffff' },
 };
 
 /** Usernames of the app creators — they automatically receive the creator banner */
 export const CREATOR_USERNAMES = ['Astroboy', 'PIGEON ou BAGARRE', 'lechauvepierre'];
+
+/** Special banner assignments: username → bannerId */
+const SPECIAL_BANNERS: Record<string, string> = {
+    'Matricule13': 'veloTDF',
+};
 
 /**
  * Returns the full banner config (path + aspectRatio) for a given bannerId, or null.
@@ -49,6 +55,7 @@ export function resolveBannerId(
     profileBannerId?: string | null
 ): string | null {
     if (CREATOR_USERNAMES.includes(username)) return 'creator';
+    if (SPECIAL_BANNERS[username]) return SPECIAL_BANNERS[username];
     return profileBannerId ?? null;
 }
 
