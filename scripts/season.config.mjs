@@ -26,9 +26,9 @@
  *
  *       npm run season:close
  *
- *    Le script affiche : le classement final, qui reçoit quoi, et l'ELO de
- *    chaque joueur avant et après. LIRE CE RAPPORT EN ENTIER. C'est le seul
- *    moment où une erreur ne coûte rien.
+ *    Le script affiche : le classement final, qui reçoit quoi, les packs
+ *    d'ouverture, et l'ELO de chaque joueur avant et après. LIRE CE RAPPORT EN
+ *    ENTIER. C'est le seul moment où une erreur ne coûte rien.
  *
  *    S'il manque un item au catalogue, le script REFUSE de démarrer. C'est
  *    voulu : une clôture qui s'arrête au milieu laisse la moitié des joueurs
@@ -42,6 +42,11 @@
  *    phrase définie plus bas (`confirmation`). Toute autre saisie annule, sans
  *    rien écrire.
  *
+ *    ⚠️ La commande EXIGE un vrai terminal interactif. Lancée par un script,
+ *    un agent, un cron ou une intégration continue, elle refuse de démarrer.
+ *    C'est une protection volontaire : la clôture se déclenche à la main, par
+ *    une personne, ou pas du tout.
+ *
  * 4. APRÈS
  *    Publier les annonces depuis /admin/announcements :
  *      • « la saison est terminée » — le podium, où voir ses récompenses ;
@@ -54,14 +59,26 @@
  * EN CAS D'ERREUR
  * ───────────────────────────────────────────────────────────────────────────
  *
- * Toute la distribution porte un même `sourceRef`. Une commande l'annule :
+ * DEUX commandes, et il faut choisir la bonne.
+ *
+ * ANNULER TOUT, ELO COMPRIS — c'est celle qu'on veut presque toujours :
+ *
+ *       npm run season:rollback season_0 -- --apply
+ *
+ *    Elle défait la clôture entière : récompenses, packs d'ouverture, ELO,
+ *    compteurs, archives, instantané du classement, et rouvre la saison.
+ *
+ *    ⚠️ Elle REFUSE de s'exécuter si une partie a été jouée depuis la clôture.
+ *    C'est voulu : restaurer les anciens ELO effacerait des résultats
+ *    légitimes. Passé ce point, le retour arrière n'est plus la bonne
+ *    opération — il faut d'abord décider quoi faire de ces parties.
+ *
+ * N'ANNULER QUE LES RÉCOMPENSES, en gardant l'ELO comprimé :
  *
  *       npm run season:revoke season_0_close -- --apply
  *
- * ⚠️ La COMPRESSION D'ELO n'est pas annulée par cette commande : elle écrase
- * l'ancienne valeur. Celle-ci reste consultable dans `seasons/{id}/standings`,
- * mais la restaurer serait manuel. C'est pour ça que le contrôle à blanc
- * affiche l'avant et l'après de chaque joueur : c'est là qu'il faut regarder.
+ *    Utile seulement si on s'est trompé de table de récompenses et qu'on veut
+ *    redistribuer sans tout rejouer.
  *
  *
  * ───────────────────────────────────────────────────────────────────────────
