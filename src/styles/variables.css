@@ -83,6 +83,14 @@
     --color-warning: var(--orange-500);
     --color-error: var(--red-500);
 
+    /* Teinte de danger : fond des boutons d'action destructrice (supprimer,
+       retirer un joueur). Assez pale pour rester lisible sur du creme. */
+    --color-danger-tint: rgba(231, 76, 60, 0.1);
+
+    /* Voile posé derrière une modale. Un seul token pour que toutes les
+       modales de l'app assombrissent le fond de la même façon. */
+    --color-scrim: rgba(0, 0, 0, 0.5);
+
     --color-text-primary: var(--white);
     --color-text-secondary: rgba(255, 255, 255, 0.72);
     --color-text-muted: rgba(255, 255, 255, 0.5);

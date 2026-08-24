@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import {
@@ -28,6 +28,7 @@ import {
 } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
 import { PageHeader } from '@/components/common/ui';
+import s from './page.module.css';
 
 /**
  * Dégradés d'avatar d'équipe.
@@ -239,236 +240,112 @@ export default function TournamentLobbyPage() {
             <FieldBackground />
 
             <div className={styles.contentWrapper}>
-                {/* Header */}
                 <PageHeader title={tournament.status === 'waiting' ? 'Lobby' : 'Equipes'} back={'/dashboard'} />
 
                 {error && (
-                    <div className="error-box" style={{ marginBottom: 'var(--spacing-md)' }}>
+                    <div className={`error-box ${s.errorBox}`}>
                         {error}
-                        <button onClick={() => setError('')} style={{ marginLeft: '8px' }}>
+                        <button onClick={() => setError('')} className={s.errorClose}>
                             <XMarkIcon width={16} height={16} />
                         </button>
                     </div>
                 )}
 
-                {/* Tournament Info */}
-                <div style={{
-                    background: 'var(--color-surface)',
-                    border: '3px solid var(--ink-700)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: 'var(--spacing-md)',
-                    marginBottom: 'var(--spacing-lg)',
-                    textAlign: 'center'
-                }}>
-                    <p style={{ fontSize: '0.75rem', color: 'rgba(51,51,51,0.7)', marginBottom: '4px' }}>
-                        Code PIN
-                    </p>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        <span style={{
-                            fontSize: '1.75rem',
-                            fontWeight: 800,
-                            fontFamily: 'monospace',
-                            letterSpacing: '0.1em',
-                            color: 'var(--ink-700)'
-                        }}>
-                            {tournament.pinCode}
-                        </span>
-                        <button onClick={handleCopyCode}
-                            style={{
-                                padding: '8px',
-                                background: 'rgba(51,51,51,0.1)',
-                                borderRadius: 'var(--radius-sm)',
-                                border: 'none',
-                                cursor: 'pointer'
-                            }}
-                        >
+                {/* Code PIN et format */}
+                <div className={s.infoCard}>
+                    <p className={s.infoLabel}>Code PIN</p>
+                    <div className={s.pinRow}>
+                        <span className={s.pinCode}>{tournament.pinCode}</span>
+                        <button onClick={handleCopyCode} className={`${s.iconButton} ${s.iconButtonMuted}`}>
                             {copied ? (
-                                <CheckCircleIcon width={20} height={20} style={{ color: 'var(--team-green)' }} />
+                                <CheckCircleIcon width={20} height={20} className={s.iconSuccess} />
                             ) : (
-                                <ClipboardDocumentIcon width={20} height={20} style={{ color: 'var(--ink-700)' }} />
+                                <ClipboardDocumentIcon width={20} height={20} className={s.iconDark} />
                             )}
                         </button>
                     </div>
-                    <div style={{ marginTop: '8px', fontSize: '0.75rem', color: 'rgba(51,51,51,0.6)' }}>
+                    <div className={s.infoMeta}>
                         {tournament.mode === 'round_robin' ? 'Tous contre tous' : 'Éliminatoire'} · {tournament.format}
                     </div>
                 </div>
 
-                {/* Status: Waiting - Show player list */}
+                {/* ─── Phase d'attente : qui est là ─────────────────────────── */}
                 {tournament.status === 'waiting' && (
                     <>
-                        {/* Player List */}
-                        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                marginBottom: 'var(--spacing-sm)'
-                            }}>
-                                <span style={{ fontSize: '0.875rem', color: 'var(--color-text-dark)', opacity: 0.6, fontWeight: 600 }}>
-                                    Joueurs
-                                </span>
-                                <span style={{ fontSize: '0.875rem', color: 'var(--team-green)', fontWeight: 700 }}>
+                        <div className={s.section}>
+                            <div className={s.sectionHead}>
+                                <span className={s.sectionTitle}>Joueurs</span>
+                                <span className={s.sectionCount}>
                                     {tournament.players.length}/{tournament.maxTeams * (tournament.format === '1v1' ? 1 : 2)}
                                 </span>
                             </div>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                {tournament.players.map((player) => (
-                                    <div key={player.userId}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '12px',
-                                            padding: '12px',
-                                            background: player.userId === user?.userId ? 'var(--team-green-tint)' : 'var(--color-surface)',
-                                            border: `3px solid ${player.userId === user?.userId ? 'var(--team-green)' : 'var(--ink-700)'}`,
-                                            borderRadius: 'var(--radius-md)'
-                                        }}
-                                    >
-                                        <div style={{
-                                            width: '40px',
-                                            height: '40px',
-                                            background: player.userId.startsWith('guest_') ? 'linear-gradient(to bottom right, var(--color-accent), var(--team-orange))' : 'linear-gradient(to bottom right, var(--team-green), var(--team-green))',
-                                            borderRadius: '50%',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: 'var(--ink-700)',
-                                            fontWeight: 700,
-                                            fontSize: '0.875rem',
-                                            border: '2px solid var(--ink-700)'
-                                        }}>
-                                            {player.username.charAt(0).toUpperCase()}
+                            <div className={s.stack}>
+                                {tournament.players.map((player) => {
+                                    const estMoi = player.userId === user?.userId;
+                                    const estInvite = player.userId.startsWith('guest_');
+                                    return (
+                                        <div key={player.userId} className={`${s.card} ${estMoi ? s.cardSelf : ''}`}>
+                                            <div className={`${s.avatar} ${estInvite ? s.avatarGuest : ''}`}>
+                                                {player.username.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className={s.nameColumn}>
+                                                <p className={`${s.name} ${s.nameUpper}`}>
+                                                    {player.username}
+                                                    {estMoi && <span className={`${s.tag} ${s.tagSelf}`}>(vous)</span>}
+                                                    {player.userId === tournament.hostId && (
+                                                        <span className={`${s.tag} ${s.tagHost}`}>(hote)</span>
+                                                    )}
+                                                    {estInvite && <span className={`${s.tag} ${s.tagGuest}`}>(guest)</span>}
+                                                </p>
+                                            </div>
+                                            {isHost && player.userId !== tournament.hostId && (
+                                                <button
+                                                    onClick={() => handleRemovePlayer(player.userId)}
+                                                    className={`${s.iconButton} ${s.iconButtonDanger}`}
+                                                >
+                                                    <TrashIcon width={16} height={16} className={s.iconDanger} />
+                                                </button>
+                                            )}
                                         </div>
-                                        <div style={{ flex: 1 }}>
-                                            <p style={{
-                                                fontWeight: 700,
-                                                color: 'var(--color-text-dark)',
-                                                textTransform: 'uppercase',
-                                                fontSize: '0.875rem'
-                                            }}>
-                                                {player.username}
-                                                {player.userId === user?.userId && (
-                                                    <span style={{ color: 'var(--team-green)', fontSize: '0.75rem', marginLeft: '8px' }}>(vous)</span>
-                                                )}
-                                                {player.userId === tournament.hostId && (
-                                                    <span style={{ color: 'var(--team-orange)', fontSize: '0.75rem', marginLeft: '8px' }}>(hote)</span>
-                                                )}
-                                                {player.userId.startsWith('guest_') && (
-                                                    <span style={{ color: 'var(--team-purple)', fontSize: '0.75rem', marginLeft: '8px' }}>(guest)</span>
-                                                )}
-                                            </p>
-                                        </div>
-                                        {isHost && player.userId !== tournament.hostId && (
-                                            <button onClick={() => handleRemovePlayer(player.userId)}
-                                                style={{
-                                                    padding: '8px',
-                                                    background: 'rgba(231, 76, 60, 0.1)',
-                                                    borderRadius: 'var(--radius-sm)',
-                                                    border: 'none',
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                <TrashIcon width={16} height={16} style={{ color: 'var(--color-danger)' }} />
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
 
-                        {/* Host Actions */}
                         {isHost && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-                                <button onClick={() => setShowGuestModal(true)}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '8px',
-                                        padding: 'var(--spacing-md)',
-                                        background: 'var(--color-surface)',
-                                        border: '3px solid var(--ink-700)',
-                                        borderRadius: 'var(--radius-md)',
-                                        color: 'var(--color-text-dark)',
-                                        fontWeight: 700,
-                                        cursor: 'pointer'
-                                    }}
-                                >
+                            <div className={s.actions}>
+                                <button onClick={() => setShowGuestModal(true)} className={s.actionButton}>
                                     <UserPlusIcon width={20} height={20} />
                                     Ajouter un guest
                                 </button>
 
-                                <button onClick={handleStartTeamSetup}
+                                <button
+                                    onClick={handleStartTeamSetup}
                                     disabled={!canStartSetup}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '8px',
-                                        padding: 'var(--spacing-md)',
-                                        background: canStartSetup ? 'var(--team-green)' : 'rgba(46, 204, 113, 0.3)',
-                                        border: '3px solid var(--ink-700)',
-                                        borderRadius: 'var(--radius-md)',
-                                        color: 'white',
-                                        fontWeight: 700,
-                                        cursor: canStartSetup ? 'pointer' : 'not-allowed',
-                                        opacity: canStartSetup ? 1 : 0.5
-                                    }}
+                                    className={`${s.actionButton} ${s.actionButtonPrimary}`}
                                 >
                                     <UsersIcon width={20} height={20} />
                                     {tournament.format === '1v1' ? 'Continuer' : 'Former les equipes'}
                                 </button>
 
                                 {!canStartSetup && (
-                                    <p style={{ fontSize: '0.75rem', color: 'rgba(51,51,51,0.6)', textAlign: 'center' }}>
-                                        Minimum {minPlayers} joueurs requis
-                                    </p>
+                                    <p className={s.hint}>Minimum {minPlayers} joueurs requis</p>
                                 )}
 
-                                <button onClick={handleCancel}
-                                    style={{
-                                        marginTop: 'var(--spacing-md)',
-                                        padding: 'var(--spacing-sm)',
-                                        background: 'transparent',
-                                        border: 'none',
-                                        color: 'var(--color-danger)',
-                                        fontWeight: 600,
-                                        fontSize: '0.875rem',
-                                        cursor: 'pointer'
-                                    }}
-                                >
+                                <button onClick={handleCancel} className={s.linkDanger}>
                                     Annuler le tournoi
                                 </button>
                             </div>
                         )}
 
-                        {/* Non-host message */}
                         {!isHost && (
-                            <div style={{ textAlign: 'center', marginTop: 'var(--spacing-lg)' }}>
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '8px',
-                                    color: 'rgba(51,51,51,0.6)',
-                                    marginBottom: 'var(--spacing-lg)'
-                                }}>
+                            <div className={s.waitBlock}>
+                                <div className={`${s.waitNotice} ${s.waitNoticeSpaced}`}>
                                     <ClockIcon width={20} height={20} />
-                                    <span>En attente de l'organisateur...</span>
+                                    <span>En attente de l&apos;organisateur...</span>
                                 </div>
-                                <button onClick={handleLeave}
-                                    style={{
-                                        padding: 'var(--spacing-sm)',
-                                        background: 'transparent',
-                                        border: 'none',
-                                        color: 'var(--color-danger)',
-                                        fontWeight: 600,
-                                        fontSize: '0.875rem',
-                                        cursor: 'pointer'
-                                    }}
-                                >
+                                <button onClick={handleLeave} className={s.linkDanger}>
                                     Quitter le tournoi
                                 </button>
                             </div>
@@ -476,120 +353,59 @@ export default function TournamentLobbyPage() {
                     </>
                 )}
 
-                {/* Status: Team Setup */}
+                {/* ─── Phase de formation des équipes ───────────────────────── */}
                 {tournament.status === 'team_setup' && (
                     <>
-                        {/* For 1v1: Show participants list and start button directly */}
                         {tournament.format === '1v1' ? (
                             <>
-                                {/* Participants */}
-                                <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                                    <div style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        marginBottom: 'var(--spacing-sm)'
-                                    }}>
-                                        <span style={{ fontSize: '0.875rem', color: 'var(--color-text-dark)', opacity: 0.6, fontWeight: 600 }}>
-                                            Participants
-                                        </span>
-                                        <span style={{ fontSize: '0.875rem', color: 'var(--team-green)', fontWeight: 700 }}>
+                                {/* En 1v1 une équipe est un joueur : rien à former. */}
+                                <div className={s.section}>
+                                    <div className={s.sectionHead}>
+                                        <span className={s.sectionTitle}>Participants</span>
+                                        <span className={s.sectionCount}>
                                             {tournament.teams.length} joueur{tournament.teams.length > 1 ? 's' : ''}
                                         </span>
                                     </div>
 
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        {tournament.teams.map((team) => (
-                                            <div key={team.teamId}
-                                                style={{
-                                                    padding: '12px',
-                                                    background: 'var(--color-surface)',
-                                                    border: '3px solid var(--ink-700)',
-                                                    borderRadius: 'var(--radius-md)',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '12px'
-                                                }}
-                                            >
-                                                <div style={{
-                                                    width: '40px',
-                                                    height: '40px',
-                                                    background: team.players[0]?.userId.startsWith('guest_')
-                                                        ? 'linear-gradient(to bottom right, var(--color-accent), var(--team-orange))'
-                                                        : 'linear-gradient(to bottom right, var(--team-green), var(--team-green))',
-                                                    borderRadius: '50%',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    color: 'var(--ink-700)',
-                                                    fontWeight: 700,
-                                                    fontSize: '0.875rem',
-                                                    border: '2px solid var(--ink-700)'
-                                                }}>
-                                                    {team.name.charAt(0).toUpperCase()}
+                                    <div className={s.stack}>
+                                        {tournament.teams.map((team) => {
+                                            const estInvite = !!team.players[0]?.userId.startsWith('guest_');
+                                            return (
+                                                <div key={team.teamId} className={s.card}>
+                                                    <div className={`${s.avatar} ${estInvite ? s.avatarGuest : ''}`}>
+                                                        {team.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div className={s.nameColumn}>
+                                                        <p className={s.name}>
+                                                            {team.name}
+                                                            {estInvite && <span className={`${s.tag} ${s.tagGuest}`}>(guest)</span>}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <p style={{
-                                                        fontWeight: 700,
-                                                        color: 'var(--color-text-dark)',
-                                                        fontSize: '0.875rem',
-                                                        overflow: 'hidden',
-                                                        textOverflow: 'ellipsis',
-                                                        whiteSpace: 'nowrap'
-                                                    }}>
-                                                        {team.name}
-                                                        {team.players[0]?.userId.startsWith('guest_') && (
-                                                            <span style={{ color: 'var(--team-purple)', fontSize: '0.75rem', marginLeft: '8px' }}>(guest)</span>
-                                                        )}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
-                                {/* Host Actions for 1v1 */}
                                 {isHost && (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-                                        <button onClick={handleStartTournament}
+                                    <div className={s.actions}>
+                                        <button
+                                            onClick={handleStartTournament}
                                             disabled={!canStartTournament}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: '8px',
-                                                padding: 'var(--spacing-md)',
-                                                background: canStartTournament ? 'var(--team-green)' : 'rgba(46, 204, 113, 0.3)',
-                                                border: '3px solid var(--ink-700)',
-                                                borderRadius: 'var(--radius-md)',
-                                                color: 'white',
-                                                fontWeight: 700,
-                                                cursor: canStartTournament ? 'pointer' : 'not-allowed',
-                                                opacity: canStartTournament ? 1 : 0.5
-                                            }}
+                                            className={`${s.actionButton} ${s.actionButtonPrimary}`}
                                         >
                                             <PlayIcon width={20} height={20} />
                                             Demarrer le tournoi
                                         </button>
-
                                         {!canStartTournament && (
-                                            <p style={{ fontSize: '0.75rem', color: 'rgba(51,51,51,0.6)', textAlign: 'center' }}>
-                                                Minimum 2 joueurs requis
-                                            </p>
+                                            <p className={s.hint}>Minimum 2 joueurs requis</p>
                                         )}
                                     </div>
                                 )}
 
-                                {/* Non-host message */}
                                 {!isHost && (
-                                    <div style={{ textAlign: 'center', marginTop: 'var(--spacing-lg)' }}>
-                                        <div style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '8px',
-                                            color: 'rgba(51,51,51,0.6)'
-                                        }}>
+                                    <div className={s.waitBlock}>
+                                        <div className={s.waitNotice}>
                                             <ClockIcon width={20} height={20} />
                                             <span>En attente du demarrage...</span>
                                         </div>
@@ -598,91 +414,33 @@ export default function TournamentLobbyPage() {
                             </>
                         ) : (
                             <>
-                                {/* For 2v2: Show team formation interface */}
-                                {/* Formed Teams */}
-                                <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                                    <div style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        marginBottom: 'var(--spacing-sm)'
-                                    }}>
-                                        <span style={{ fontSize: '0.875rem', color: 'var(--color-text-dark)', opacity: 0.6, fontWeight: 600 }}>
-                                            Equipes formees
-                                        </span>
-                                        <span style={{ fontSize: '0.875rem', color: 'var(--team-green)', fontWeight: 700 }}>
+                                <div className={s.section}>
+                                    <div className={s.sectionHead}>
+                                        <span className={s.sectionTitle}>Equipes formees</span>
+                                        <span className={s.sectionCount}>
                                             {tournament.teams.length} equipe{tournament.teams.length > 1 ? 's' : ''}
                                         </span>
                                     </div>
 
                                     {tournament.teams.length === 0 ? (
-                                        <div style={{
-                                            padding: 'var(--spacing-lg)',
-                                            background: 'var(--color-surface)',
-                                            border: '3px solid var(--ink-700)',
-                                            borderRadius: 'var(--radius-md)',
-                                            textAlign: 'center',
-                                            color: 'rgba(51,51,51,0.6)'
-                                        }}>
-                                            Aucune equipe formee
-                                        </div>
+                                        <div className={s.emptyBox}>Aucune equipe formee</div>
                                     ) : (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <div className={s.stack}>
                                             {tournament.teams.map((team, index) => (
-                                                <div key={team.teamId}
-                                                    style={{
-                                                        padding: '12px',
-                                                        background: 'var(--color-surface)',
-                                                        border: '3px solid var(--ink-700)',
-                                                        borderRadius: 'var(--radius-md)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '12px'
-                                                    }}
-                                                >
-                                                    <div style={{
-                                                        width: '40px',
-                                                        height: '40px',
-                                                        flexShrink: 0,
-                                                        background: TEAM_AVATAR_GRADIENTS[index % TEAM_AVATAR_GRADIENTS.length],
-                                                        borderRadius: '50%',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        color: 'white',
-                                                        fontWeight: 800,
-                                                        fontSize: '1rem',
-                                                        border: '2px solid var(--ink-700)'
-                                                    }}>
+                                                <div key={team.teamId} className={s.card}>
+                                                    <div
+                                                        className={`${s.avatar} ${s.avatarTeam}`}
+                                                        style={{ '--team-gradient': TEAM_AVATAR_GRADIENTS[index % TEAM_AVATAR_GRADIENTS.length] } as CSSProperties}
+                                                    >
                                                         {index + 1}
                                                     </div>
-                                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <p style={{
-                                                            fontWeight: 700,
-                                                            color: 'var(--color-text-dark)',
-                                                            fontSize: '0.875rem',
-                                                            marginBottom: '4px',
-                                                            overflow: 'hidden',
-                                                            textOverflow: 'ellipsis',
-                                                            whiteSpace: 'nowrap'
-                                                        }}>
-                                                            {team.name}
-                                                        </p>
-                                                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                                    <div className={s.nameColumn}>
+                                                        <p className={`${s.name} ${s.teamName}`}>{team.name}</p>
+                                                        <div className={s.chips}>
                                                             {team.players.map(player => (
-                                                                <span key={player.userId}
-                                                                    style={{
-                                                                        padding: '2px 8px',
-                                                                        background: player.userId.startsWith('guest_') ? 'var(--team-purple)' : 'var(--team-green)',
-                                                                        borderRadius: '4px',
-                                                                        color: 'white',
-                                                                        fontSize: '0.7rem',
-                                                                        fontWeight: 600,
-                                                                        maxWidth: '100px',
-                                                                        overflow: 'hidden',
-                                                                        textOverflow: 'ellipsis',
-                                                                        whiteSpace: 'nowrap'
-                                                                    }}
+                                                                <span
+                                                                    key={player.userId}
+                                                                    className={`${s.chip} ${player.userId.startsWith('guest_') ? s.chipGuest : ''}`}
                                                                 >
                                                                     {player.username}
                                                                 </span>
@@ -690,17 +448,11 @@ export default function TournamentLobbyPage() {
                                                         </div>
                                                     </div>
                                                     {isHost && (
-                                                        <button onClick={() => handleDeleteTeam(team.teamId)}
-                                                            style={{
-                                                                padding: '8px',
-                                                                flexShrink: 0,
-                                                                background: 'rgba(231, 76, 60, 0.1)',
-                                                                borderRadius: 'var(--radius-sm)',
-                                                                border: 'none',
-                                                                cursor: 'pointer'
-                                                            }}
+                                                        <button
+                                                            onClick={() => handleDeleteTeam(team.teamId)}
+                                                            className={`${s.iconButton} ${s.iconButtonDanger}`}
                                                         >
-                                                            <TrashIcon width={16} height={16} style={{ color: 'var(--color-danger)' }} />
+                                                            <TrashIcon width={16} height={16} className={s.iconDanger} />
                                                         </button>
                                                     )}
                                                 </div>
@@ -709,130 +461,62 @@ export default function TournamentLobbyPage() {
                                     )}
                                 </div>
 
-                                {/* Unassigned Players */}
                                 {unassignedPlayers.length > 0 && (
-                                    <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                                        <p style={{ fontSize: '0.875rem', color: 'var(--color-text-dark)', opacity: 0.6, fontWeight: 600, marginBottom: 'var(--spacing-sm)' }}>
+                                    <div className={s.section}>
+                                        <p className={s.slotLabel}>
                                             Joueurs non assignes ({unassignedPlayers.length})
                                         </p>
-                                        <div style={{
-                                            display: 'grid',
-                                            gridTemplateColumns: 'repeat(2, 1fr)',
-                                            gap: '8px'
-                                        }}>
+                                        <div className={s.slotGrid}>
                                             {unassignedPlayers.map(player => (
-                                                <div key={player.userId}
-                                                    style={{
-                                                        padding: '12px',
-                                                        background: 'var(--color-surface)',
-                                                        border: '2px dashed var(--ink-700)',
-                                                        borderRadius: 'var(--radius-sm)',
-                                                        textAlign: 'center',
-                                                        overflow: 'hidden'
-                                                    }}
-                                                >
-                                                    <div style={{
-                                                        width: '32px',
-                                                        height: '32px',
-                                                        background: player.userId.startsWith('guest_') ? 'var(--team-purple)' : 'var(--team-green)',
-                                                        borderRadius: '50%',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        color: 'white',
-                                                        fontWeight: 700,
-                                                        fontSize: '0.75rem',
-                                                        margin: '0 auto 8px',
-                                                        border: '2px solid var(--ink-700)'
-                                                    }}>
+                                                <div key={player.userId} className={s.slot}>
+                                                    <div
+                                                        className={`${s.avatar} ${s.slotAvatar} ${player.userId.startsWith('guest_') ? s.slotAvatarGuest : ''}`}
+                                                    >
                                                         {player.username.charAt(0).toUpperCase()}
                                                     </div>
-                                                    <p style={{
-                                                        fontSize: '0.75rem',
-                                                        fontWeight: 600,
-                                                        color: 'var(--color-text-dark)',
-                                                        overflow: 'hidden',
-                                                        textOverflow: 'ellipsis',
-                                                        whiteSpace: 'nowrap'
-                                                    }}>
-                                                        {player.username}
-                                                    </p>
+                                                    <p className={s.slotName}>{player.username}</p>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                 )}
 
-                                {/* Host Actions for Team Setup */}
                                 {isHost && (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-                                        {/* Create team button */}
+                                    <div className={s.actions}>
                                         {unassignedPlayers.length >= playersPerTeam && (
-                                            <button onClick={() => {
+                                            <button
+                                                onClick={() => {
                                                     setSelectedPlayers([]);
                                                     setTeamName('');
                                                     setShowTeamModal(true);
                                                 }}
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    gap: '8px',
-                                                    padding: 'var(--spacing-md)',
-                                                    background: 'var(--color-surface)',
-                                                    border: '3px solid var(--ink-700)',
-                                                    borderRadius: 'var(--radius-md)',
-                                                    color: 'var(--color-text-dark)',
-                                                    fontWeight: 700,
-                                                    cursor: 'pointer'
-                                                }}
+                                                className={s.actionButton}
                                             >
                                                 <PlusIcon width={20} height={20} />
                                                 Creer une equipe
                                             </button>
                                         )}
 
-                                        <button onClick={handleStartTournament}
+                                        <button
+                                            onClick={handleStartTournament}
                                             disabled={!canStartTournament}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: '8px',
-                                                padding: 'var(--spacing-md)',
-                                                background: canStartTournament ? 'var(--team-green)' : 'rgba(46, 204, 113, 0.3)',
-                                                border: '3px solid var(--ink-700)',
-                                                borderRadius: 'var(--radius-md)',
-                                                color: 'white',
-                                                fontWeight: 700,
-                                                cursor: canStartTournament ? 'pointer' : 'not-allowed',
-                                                opacity: canStartTournament ? 1 : 0.5
-                                            }}
+                                            className={`${s.actionButton} ${s.actionButtonPrimary}`}
                                         >
                                             <PlayIcon width={20} height={20} />
                                             Demarrer le tournoi
                                         </button>
 
                                         {!canStartTournament && (
-                                            <p style={{ fontSize: '0.75rem', color: 'rgba(51,51,51,0.6)', textAlign: 'center' }}>
-                                                Minimum 2 equipes requises
-                                            </p>
+                                            <p className={s.hint}>Minimum 2 equipes requises</p>
                                         )}
                                     </div>
                                 )}
 
-                                {/* Non-host message */}
                                 {!isHost && (
-                                    <div style={{ textAlign: 'center', marginTop: 'var(--spacing-lg)' }}>
-                                        <div style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '8px',
-                                            color: 'rgba(51,51,51,0.6)'
-                                        }}>
+                                    <div className={s.waitBlock}>
+                                        <div className={s.waitNotice}>
                                             <ClockIcon width={20} height={20} />
-                                            <span>L'organisateur forme les equipes...</span>
+                                            <span>L&apos;organisateur forme les equipes...</span>
                                         </div>
                                     </div>
                                 )}
@@ -842,34 +526,11 @@ export default function TournamentLobbyPage() {
                 )}
             </div>
 
-            {/* Guest Modal */}
+            {/* ─── Modale : ajouter un invité ───────────────────────────────── */}
             {showGuestModal && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    background: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: 'var(--spacing-lg)',
-                    zIndex: 1000
-                }}>
-                    <div style={{
-                        background: 'white',
-                        borderRadius: 'var(--radius-lg)',
-                        padding: 'var(--spacing-lg)',
-                        width: '100%',
-                        maxWidth: '320px',
-                        border: '3px solid var(--ink-700)'
-                    }}>
-                        <h3 style={{
-                            fontSize: '1.125rem',
-                            fontWeight: 700,
-                            color: 'var(--color-text-dark)',
-                            marginBottom: 'var(--spacing-md)'
-                        }}>
-                            Ajouter un guest
-                        </h3>
+                <div className={s.overlay}>
+                    <div className={`${s.modal} ${s.modalNarrow}`}>
+                        <h3 className={s.modalTitle}>Ajouter un guest</h3>
 
                         <input
                             type="text"
@@ -877,49 +538,23 @@ export default function TournamentLobbyPage() {
                             onChange={(e) => setGuestName(e.target.value)}
                             placeholder="Nom du joueur"
                             maxLength={20}
-                            style={{
-                                width: '100%',
-                                padding: 'var(--spacing-md)',
-                                border: '2px solid var(--ink-700)',
-                                borderRadius: 'var(--radius-md)',
-                                fontSize: '1rem',
-                                marginBottom: 'var(--spacing-md)',
-                                color: 'var(--ink-700)',
-                                background: 'white'
-                            }}
+                            className={s.modalInput}
                         />
 
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <button onClick={() => {
+                        <div className={s.modalActions}>
+                            <button
+                                onClick={() => {
                                     setShowGuestModal(false);
                                     setGuestName('');
                                 }}
-                                style={{
-                                    flex: 1,
-                                    padding: 'var(--spacing-sm)',
-                                    background: 'var(--color-surface)',
-                                    border: '2px solid var(--ink-700)',
-                                    borderRadius: 'var(--radius-md)',
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                    color: 'var(--ink-700)'
-                                }}
+                                className={`${s.modalButton} ${s.modalButtonGhost}`}
                             >
                                 Annuler
                             </button>
-                            <button onClick={handleAddGuest}
+                            <button
+                                onClick={handleAddGuest}
                                 disabled={!guestName.trim() || isAddingGuest}
-                                style={{
-                                    flex: 1,
-                                    padding: 'var(--spacing-sm)',
-                                    background: 'var(--team-green)',
-                                    border: '2px solid var(--ink-700)',
-                                    borderRadius: 'var(--radius-md)',
-                                    fontWeight: 600,
-                                    cursor: guestName.trim() && !isAddingGuest ? 'pointer' : 'not-allowed',
-                                    opacity: guestName.trim() && !isAddingGuest ? 1 : 0.5,
-                                    color: 'white'
-                                }}
+                                className={`${s.modalButton} ${s.modalButtonPrimary}`}
                             >
                                 {isAddingGuest ? '...' : 'Ajouter'}
                             </button>
@@ -928,36 +563,11 @@ export default function TournamentLobbyPage() {
                 </div>
             )}
 
-            {/* Team Creation Modal */}
+            {/* ─── Modale : créer une équipe ────────────────────────────────── */}
             {showTeamModal && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    background: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: 'var(--spacing-lg)',
-                    zIndex: 1000
-                }}>
-                    <div style={{
-                        background: 'white',
-                        borderRadius: 'var(--radius-lg)',
-                        padding: 'var(--spacing-lg)',
-                        width: '100%',
-                        maxWidth: '360px',
-                        border: '3px solid var(--ink-700)',
-                        maxHeight: '80vh',
-                        overflowY: 'auto'
-                    }}>
-                        <h3 style={{
-                            fontSize: '1.125rem',
-                            fontWeight: 700,
-                            color: 'var(--color-text-dark)',
-                            marginBottom: 'var(--spacing-md)'
-                        }}>
-                            Creer une equipe
-                        </h3>
+                <div className={s.overlay}>
+                    <div className={`${s.modal} ${s.modalWide}`}>
+                        <h3 className={s.modalTitle}>Creer une equipe</h3>
 
                         <input
                             type="text"
@@ -965,116 +575,56 @@ export default function TournamentLobbyPage() {
                             onChange={(e) => setTeamName(e.target.value)}
                             placeholder={`Equipe ${tournament.teams.length + 1}`}
                             maxLength={20}
-                            style={{
-                                width: '100%',
-                                padding: 'var(--spacing-md)',
-                                border: '2px solid var(--ink-700)',
-                                borderRadius: 'var(--radius-md)',
-                                fontSize: '1rem',
-                                marginBottom: 'var(--spacing-md)',
-                                color: 'var(--ink-700)',
-                                background: 'white'
-                            }}
+                            className={s.modalInput}
                         />
 
-                        <p style={{
-                            fontSize: '0.875rem',
-                            color: 'rgba(51,51,51,0.6)',
-                            marginBottom: 'var(--spacing-sm)'
-                        }}>
+                        <p className={s.modalHint}>
                             Selectionnez {playersPerTeam} joueur{playersPerTeam > 1 ? 's' : ''} ({selectedPlayers.length}/{playersPerTeam})
                         </p>
 
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '8px',
-                            marginBottom: 'var(--spacing-lg)'
-                        }}>
+                        <div className={s.pickList}>
                             {unassignedPlayers.map(player => {
                                 const isSelected = selectedPlayers.includes(player.userId);
+                                const estInvite = player.userId.startsWith('guest_');
                                 return (
-                                    <button key={player.userId}
+                                    <button
+                                        key={player.userId}
                                         onClick={() => togglePlayerSelection(player.userId)}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '12px',
-                                            padding: '12px',
-                                            background: isSelected ? 'var(--team-green)' : 'var(--color-surface)',
-                                            border: `3px solid ${isSelected ? '#27AE60' : 'var(--ink-700)'}`,
-                                            borderRadius: 'var(--radius-md)',
-                                            cursor: 'pointer',
-                                            textAlign: 'left',
-                                            transition: 'all 0.2s ease'
-                                        }}
+                                        className={`${s.pickRow} ${isSelected ? s.pickRowSelected : ''}`}
                                     >
-                                        <div style={{
-                                            width: '36px',
-                                            height: '36px',
-                                            background: player.userId.startsWith('guest_') ? 'var(--team-purple)' : (isSelected ? 'white' : 'var(--team-green)'),
-                                            borderRadius: '50%',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: isSelected ? 'var(--team-green)' : 'white',
-                                            fontWeight: 700,
-                                            fontSize: '0.875rem',
-                                            border: '2px solid var(--ink-700)'
-                                        }}>
+                                        <div
+                                            className={`${s.avatar} ${s.pickAvatar} ${estInvite ? s.slotAvatarGuest : ''} ${isSelected && !estInvite ? s.pickAvatarSelected : ''}`}
+                                        >
                                             {isSelected ? (
                                                 <CheckCircleIcon width={20} height={20} />
                                             ) : (
                                                 player.username.charAt(0).toUpperCase()
                                             )}
                                         </div>
-                                        <span style={{
-                                            fontWeight: 600,
-                                            color: isSelected ? 'white' : 'var(--color-text-dark)',
-                                            fontSize: '0.875rem'
-                                        }}>
+                                        <span className={`${s.pickName} ${isSelected ? s.pickNameSelected : ''}`}>
                                             {player.username}
-                                            {player.userId.startsWith('guest_') && (
-                                                <span style={{ opacity: 0.7, marginLeft: '4px' }}>(guest)</span>
-                                            )}
+                                            {estInvite && <span className={s.pickTag}>(guest)</span>}
                                         </span>
                                     </button>
                                 );
                             })}
                         </div>
 
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <button onClick={() => {
+                        <div className={s.modalActions}>
+                            <button
+                                onClick={() => {
                                     setShowTeamModal(false);
                                     setSelectedPlayers([]);
                                     setTeamName('');
                                 }}
-                                style={{
-                                    flex: 1,
-                                    padding: 'var(--spacing-sm)',
-                                    background: 'var(--color-surface)',
-                                    border: '2px solid var(--ink-700)',
-                                    borderRadius: 'var(--radius-md)',
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                    color: 'var(--ink-700)'
-                                }}
+                                className={`${s.modalButton} ${s.modalButtonGhost}`}
                             >
                                 Annuler
                             </button>
-                            <button onClick={handleCreateTeam}
+                            <button
+                                onClick={handleCreateTeam}
                                 disabled={selectedPlayers.length !== playersPerTeam || isCreatingTeam}
-                                style={{
-                                    flex: 1,
-                                    padding: 'var(--spacing-sm)',
-                                    background: selectedPlayers.length === playersPerTeam ? 'var(--team-green)' : 'rgba(46, 204, 113, 0.3)',
-                                    border: '2px solid var(--ink-700)',
-                                    borderRadius: 'var(--radius-md)',
-                                    fontWeight: 600,
-                                    cursor: selectedPlayers.length === playersPerTeam && !isCreatingTeam ? 'pointer' : 'not-allowed',
-                                    opacity: selectedPlayers.length === playersPerTeam && !isCreatingTeam ? 1 : 0.5,
-                                    color: 'white'
-                                }}
+                                className={`${s.modalButton} ${s.modalButtonPrimary}`}
                             >
                                 {isCreatingTeam ? '...' : 'Creer'}
                             </button>

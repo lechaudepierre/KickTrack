@@ -592,7 +592,7 @@ Rien commencé, volontairement le dernier.
 |---|---|---|---|
 | 9.1 | Score stocké deux fois | [fait] | dérivé des équipes |
 | 9.2 | `startTime` / `startedAt` en doublon | [fait] | + 9 conversions de date unifiées |
-| 9.3 | Découper les fichiers > 850 lignes | [en cours] | reste la page de tournoi (1 087 l.) |
+| 9.3 | Découper les fichiers > 850 lignes | [fait] | plus aucun fichier au-dessus du seuil |
 | 9.4 | Undo imparfait du multiplicateur | [fait] | l'état se rejoue depuis les buts |
 | 9.5 | Agrégations côté client | [a faire] | à surveiller |
 | 9.6 | Fichiers parasites à la racine | [fait] | `src.zip` ignoré, log sorti de l'index |
@@ -2719,16 +2719,21 @@ On ne supprime pas `startTime` — il faudrait migrer 1 020 documents pour ne ri
 **toute lecture passe par `gameStartMs()`**, qui sait lequel lire : plus personne n'a à choisir, et
 c'est ce choix arbitraire qui m'avait fait perdre du temps sur le chronomètre.
 
-### 9.3 [en cours] Découper les gros fichiers
+### 9.3 [fait] Découper les gros fichiers — *23 août 2026*
 
-Relevé le 23/08 :
-- `app/tournament/[id]/page.tsx` — **1 087 lignes** — [a faire]
-- ~~`lib/firebase/tournaments.ts`~~ — 935 → **709 lignes** — [fait], voir ci-dessous
-- ~~`lib/firebase/games.ts`~~ — 582 lignes, repassé sous le seuil tout seul (les routes
-  serveur en ont vidé le calcul, le moteur de buts en a sorti les règles)
-- ~~`components/profile/ProfileContent.tsx`~~ — 701 lignes, repassé sous le seuil
+**Plus aucun fichier de `src/` ne dépasse 850 lignes.**
 
-**Ce qui est sorti de `tournaments.ts` — *23 août 2026*.**
+| fichier | avant | après |
+|---|---|---|
+| `app/tournament/[id]/page.tsx` | 1 087 | **637** |
+| `lib/firebase/tournaments.ts` | 935 | **709** |
+| `lib/firebase/games.ts` | 912 | **582** |
+| `components/profile/ProfileContent.tsx` | 874 | **701** |
+
+Les deux derniers sont repassés sous le seuil sans qu'on les touche : les routes
+serveur ont vidé `games.ts` de son calcul, le moteur de buts en a sorti les règles.
+
+**`tournaments.ts` — la génération de format sort de Firestore.**
 Les trois fonctions qui décident du déroulé d'un tournoi vivaient au milieu des
 appels Firestore alors qu'elles ne touchent à aucune base. Elles étaient donc
 intestables — et ce sont elles qui disent qui joue contre qui.
@@ -2749,6 +2754,23 @@ Ce que les tests ont établi :
 - au passage : `generateId` était dupliqué, et trois avertissements de lint
   dormaient dans le fichier (dont un `let` jamais réassigné).
 
+**La page de lobby — ce n'était pas un problème de découpage.**
+Elle ne faisait pas 1 087 lignes à cause de sa logique, mais à cause de son
+style : **93 blocs `style={{}}` en ligne, soit 507 lignes**, et 24 couleurs
+écrites en dur. C'est exactement ce que la règle de styling interdit.
+
+Tout est passé en CSS Module à base de tokens (`page.module.css`, 68 classes).
+Il reste **un seul** style en ligne, et c'est légitime : le dégradé d'avatar
+d'une équipe, qui dépend de son rang et arrive par `--team-gradient`.
+
+Deux tokens manquaient, ajoutés à `variables.css` :
+- `--color-danger-tint` — fond des boutons d'action destructrice
+- `--color-scrim` — le voile derrière une modale, pour que toutes assombrissent
+  le fond de la même façon
+
+Corrigé au passage : le bouton « copier le code PIN » portait le fond rouge des
+boutons de suppression.
+
 **⚠️ Point signalé, pas tranché — la répartition des exemptions.**
 Le code annonce en commentaire « distribute byes evenly across the bracket for
 fairness ». Il ne le fait pas : l'espacement vaut `places / exemptions`, et
@@ -2759,6 +2781,20 @@ elles se rencontrent aussitôt.
 Le test fige le comportement actuel sans l'approuver. Corriger la répartition
 changerait la forme des tableaux : c'est une décision de jeu, pas de
 refactoring. À trancher par Sacha.
+
+**Reste à faire — le style en ligne dans les autres pages de tournoi.**
+Le même travers y est présent, moins massivement :
+
+| page | lignes | blocs `style={{}}` |
+|---|---|---|
+| `tournament/[id]/live/page.tsx` | 572 | **61** |
+| `tournament/[id]/results/page.tsx` | 369 | **38** |
+| `tournament/new/page.tsx` | 252 | 18 |
+| `tournament/[id]/match/page.tsx` | 278 | 17 |
+| `tournament/join/page.tsx` | 186 | 7 |
+
+Aucune n'est au-dessus du seuil de lignes, donc ce n'est plus 9.3 — mais c'est
+la même règle enfreinte. À reprendre dans un chantier de styling.
 
 ### 9.4 [fait] L'annulation d'un but ne soustrait plus, elle rejoue — *23 août 2026*
 

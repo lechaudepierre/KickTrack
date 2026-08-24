@@ -1,0 +1,497 @@
+/*
+ * LOBBY DE TOURNOI
+ *
+ * Cette page portait 93 blocs `style={{}}` en ligne, soit 507 de ses 1 087
+ * lignes, et 24 couleurs écrites en dur. Tout est ici, en tokens (chantier 9.3).
+ *
+ * Les motifs se répètent beaucoup d'une phase à l'autre — liste de joueurs,
+ * liste d'équipes, liste de participants ont la même carte. Les classes sont
+ * donc nommées par ce qu'elles SONT, pas par l'endroit où elles servent.
+ */
+
+/* ─── Bandeau d'erreur ──────────────────────────────────────────────────── */
+
+.errorBox {
+    margin-bottom: var(--spacing-md);
+}
+
+.errorClose {
+    margin-left: var(--spacing-sm);
+}
+
+/* ─── Carte d'en-tête : code PIN et format ──────────────────────────────── */
+
+.infoCard {
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+}
+
+.infoLabel {
+    font-size: var(--text-xs);
+    color: var(--color-text-dark-soft);
+    margin-bottom: var(--spacing-xs);
+}
+
+.pinRow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+}
+
+.pinCode {
+    font-size: 1.75rem;
+    font-weight: var(--weight-black);
+    font-family: monospace;
+    letter-spacing: 0.1em;
+    color: var(--ink-700);
+}
+
+.infoMeta {
+    margin-top: var(--spacing-sm);
+    font-size: var(--text-xs);
+    color: var(--color-text-dark-soft);
+}
+
+/* ─── Sections ──────────────────────────────────────────────────────────── */
+
+.section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.sectionHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-sm);
+}
+
+.sectionTitle {
+    font-size: var(--text-sm);
+    color: var(--color-text-dark);
+    opacity: 0.6;
+    font-weight: var(--weight-medium);
+}
+
+.sectionCount {
+    font-size: var(--text-sm);
+    color: var(--team-green);
+    font-weight: var(--weight-bold);
+}
+
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+/* ─── Carte de joueur ou d'équipe ───────────────────────────────────────── */
+
+.card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+}
+
+/* La ligne du joueur connecté, mise en avant. */
+.cardSelf {
+    background: var(--team-green-tint);
+    border-color: var(--team-green);
+}
+
+.emptyBox {
+    padding: var(--spacing-lg);
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    text-align: center;
+    color: var(--color-text-dark-soft);
+}
+
+/* ─── Pastilles d'avatar ────────────────────────────────────────────────── */
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: var(--border-arcade-thin);
+    font-weight: var(--weight-bold);
+    font-size: var(--text-sm);
+    color: var(--ink-700);
+    background: var(--team-green);
+}
+
+.avatarGuest {
+    background: linear-gradient(to bottom right, var(--color-accent), var(--team-orange));
+}
+
+/*
+ * L'avatar numéroté d'une équipe. Son dégradé change d'une équipe à l'autre :
+ * il arrive par la variable `--team-gradient`, posée en ligne, parce que c'est
+ * une donnée d'affichage et non un style.
+ */
+.avatarTeam {
+    background: var(--team-gradient);
+    color: var(--white);
+    font-weight: var(--weight-black);
+    font-size: var(--text-base);
+}
+
+/* ─── Nom et étiquettes ─────────────────────────────────────────────────── */
+
+.nameColumn {
+    flex: 1;
+    min-width: 0;
+}
+
+.name {
+    font-weight: var(--weight-bold);
+    color: var(--color-text-dark);
+    font-size: var(--text-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nameUpper {
+    text-transform: uppercase;
+}
+
+.tag {
+    font-size: var(--text-xs);
+    margin-left: var(--spacing-sm);
+}
+
+.tagSelf { color: var(--team-green); }
+.tagHost { color: var(--team-orange); }
+.tagGuest { color: var(--team-purple); }
+
+/* ─── Boutons d'icône ───────────────────────────────────────────────────── */
+
+.iconButton {
+    padding: var(--spacing-sm);
+    flex-shrink: 0;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    cursor: pointer;
+}
+
+.iconButtonDanger {
+    background: var(--color-danger-tint);
+}
+
+/* Fond neutre : copier le code PIN n'est pas une action destructrice. */
+.iconButtonMuted {
+    background: var(--color-surface-sunken);
+}
+
+.iconDanger {
+    color: var(--color-danger);
+}
+
+.iconDark {
+    color: var(--ink-700);
+}
+
+.iconSuccess {
+    color: var(--team-green);
+}
+
+/* ─── Actions de bas de page ────────────────────────────────────────────── */
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.actionButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    color: var(--color-text-dark);
+    font-weight: var(--weight-bold);
+    cursor: pointer;
+}
+
+.actionButtonPrimary {
+    background: var(--team-green);
+    color: var(--white);
+}
+
+/*
+ * Un bouton désactivé garde sa couleur et s'efface : c'est plus lisible qu'un
+ * vert délavé, qui se confondait avec un bouton actif sur petit écran.
+ */
+.actionButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.hint {
+    font-size: var(--text-xs);
+    color: var(--color-text-dark-soft);
+    text-align: center;
+}
+
+.linkDanger {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: transparent;
+    border: none;
+    color: var(--color-danger);
+    font-weight: var(--weight-medium);
+    font-size: var(--text-sm);
+    cursor: pointer;
+}
+
+/* ─── Attente côté invité ───────────────────────────────────────────────── */
+
+.waitBlock {
+    text-align: center;
+    margin-top: var(--spacing-lg);
+}
+
+.waitNotice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    color: var(--color-text-dark-soft);
+}
+
+.waitNoticeSpaced {
+    margin-bottom: var(--spacing-lg);
+}
+
+/* ─── Équipes formées : pastilles de joueurs ────────────────────────────── */
+
+.teamName {
+    margin-bottom: var(--spacing-xs);
+}
+
+.chips {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+}
+
+.chip {
+    padding: 2px var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    background: var(--team-green);
+    color: var(--white);
+    font-size: 0.7rem;
+    font-weight: var(--weight-medium);
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chipGuest {
+    background: var(--team-purple);
+}
+
+/* ─── Joueurs non assignés ──────────────────────────────────────────────── */
+
+.slotGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-sm);
+}
+
+.slot {
+    padding: 12px;
+    background: var(--color-surface);
+    border: 2px dashed var(--ink-700);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    overflow: hidden;
+}
+
+.slotAvatar {
+    width: 32px;
+    height: 32px;
+    margin: 0 auto var(--spacing-sm);
+    font-size: var(--text-xs);
+    color: var(--white);
+}
+
+.slotAvatarGuest {
+    background: var(--team-purple);
+}
+
+.slotName {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-dark);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.slotLabel {
+    font-size: var(--text-sm);
+    color: var(--color-text-dark);
+    opacity: 0.6;
+    font-weight: var(--weight-medium);
+    margin-bottom: var(--spacing-sm);
+}
+
+/* ─── Modales ───────────────────────────────────────────────────────────── */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: var(--color-scrim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+}
+
+.modal {
+    width: 100%;
+    background: var(--color-surface-raised);
+    border: var(--border-arcade);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+}
+
+.modalNarrow {
+    max-width: 320px;
+}
+
+/* La modale de création d'équipe contient une liste : elle doit pouvoir
+   défiler sans jamais dépasser l'écran. */
+.modalWide {
+    max-width: 360px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modalTitle {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
+    color: var(--color-text-dark);
+    margin-bottom: var(--spacing-md);
+}
+
+.modalInput {
+    width: 100%;
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border: var(--border-arcade-thin);
+    border-radius: var(--radius-md);
+    font-size: var(--text-base);
+    color: var(--ink-700);
+    background: var(--color-surface-raised);
+}
+
+.modalHint {
+    font-size: var(--text-sm);
+    color: var(--color-text-dark-soft);
+    margin-bottom: var(--spacing-sm);
+}
+
+.modalActions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.modalButton {
+    flex: 1;
+    padding: var(--spacing-sm);
+    border: var(--border-arcade-thin);
+    border-radius: var(--radius-md);
+    font-weight: var(--weight-medium);
+    cursor: pointer;
+}
+
+.modalButtonGhost {
+    background: var(--color-surface);
+    color: var(--ink-700);
+}
+
+.modalButtonPrimary {
+    background: var(--team-green);
+    color: var(--white);
+}
+
+.modalButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ─── Sélection des joueurs d'une équipe ────────────────────────────────── */
+
+.pickList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.pickRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    text-align: left;
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.pickRowSelected {
+    background: var(--team-green);
+    border-color: var(--color-primary-strong);
+}
+
+.pickAvatar {
+    width: 36px;
+    height: 36px;
+    color: var(--white);
+}
+
+.pickAvatarSelected {
+    background: var(--color-surface-raised);
+    color: var(--team-green);
+}
+
+.pickName {
+    font-weight: var(--weight-medium);
+    color: var(--color-text-dark);
+    font-size: var(--text-sm);
+}
+
+.pickNameSelected {
+    color: var(--white);
+}
+
+.pickTag {
+    opacity: 0.7;
+    margin-left: var(--spacing-xs);
+}
