@@ -11,6 +11,7 @@ import {
     HomeIcon
 } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
+import s from './page.module.css';
 
 export default function TournamentResultsPage() {
     const router = useRouter();
@@ -52,7 +53,7 @@ export default function TournamentResultsPage() {
 
     // Determine winner
     let winner = null;
-    let finalStandings = tournament.standings || [];
+    const finalStandings = tournament.standings || [];
 
     if (tournament.mode === 'round_robin' && tournament.standings && tournament.standings.length > 0) {
         winner = tournament.standings[0];
@@ -85,256 +86,109 @@ export default function TournamentResultsPage() {
         if (m.score) return sum + m.score[0] + m.score[1];
         return sum;
     }, 0);
-
     return (
         <div className={styles.pageContainer}>
             <FieldBackground />
 
             <div className={styles.contentWrapper}>
-                {/* Winner Celebration */}
-                <div style={{
-                    textAlign: 'center',
-                    marginBottom: 'var(--spacing-xl)',
-                    paddingTop: 'var(--spacing-lg)'
-                }}>
-                    <div style={{
-                        width: '100px',
-                        height: '100px',
-                        background: 'linear-gradient(to bottom right, #FFD700, #FFA500)',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        margin: '0 auto var(--spacing-md)',
-                        border: '4px solid var(--ink-700)',
-                        boxShadow: '0 8px 0 rgba(0,0,0,0.2)'
-                    }}>
-                        <TrophyIcon width={48} height={48} style={{ color: 'var(--ink-700)' }} />
+                {/* ─── Le vainqueur ──────────────────────────────────────────── */}
+                <div className={s.celebration}>
+                    <div className={s.trophy}>
+                        <TrophyIcon width={48} height={48} className={s.trophyIcon} />
                     </div>
 
-                    <h1 style={{
-                        fontSize: '1.25rem',
-                        fontWeight: 800,
-                        color: 'var(--color-text-dark)',
-                        marginBottom: '4px'
-                    }}>
-                        TOURNOI TERMINE
-                    </h1>
+                    <h1 className={s.title}>TOURNOI TERMINE</h1>
 
                     {winner && (
-                        <div style={{
-                            background: '#FFD700',
-                            border: '3px solid var(--ink-700)',
-                            borderRadius: 'var(--radius-lg)',
-                            padding: 'var(--spacing-lg)',
-                            marginTop: 'var(--spacing-lg)'
-                        }}>
-                            <p style={{
-                                fontSize: '0.75rem',
-                                color: 'rgba(51,51,51,0.7)',
-                                marginBottom: '8px',
-                                textTransform: 'uppercase',
-                                fontWeight: 600
-                            }}>
-                                Vainqueur
-                            </p>
-                            <p style={{
-                                fontSize: '1.75rem',
-                                fontWeight: 800,
-                                color: 'var(--ink-700)',
-                                marginBottom: '8px'
-                            }}>
-                                {winner.teamName}
-                            </p>
-                            <p style={{
-                                fontSize: '0.875rem',
-                                color: 'rgba(51,51,51,0.7)'
-                            }}>
+                        <div className={s.winnerCard}>
+                            <p className={s.winnerLabel}>Vainqueur</p>
+                            <p className={s.winnerName}>{winner.teamName}</p>
+                            <p className={s.winnerPlayers}>
                                 {winner.players.map(p => p.username).join(' & ')}
                             </p>
                         </div>
                     )}
                 </div>
 
-                {/* Tournament Stats */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: 'var(--spacing-sm)',
-                    marginBottom: 'var(--spacing-lg)'
-                }}>
-                    <div style={{
-                        background: 'var(--color-surface)',
-                        border: '3px solid var(--ink-700)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: 'var(--spacing-md)',
-                        textAlign: 'center'
-                    }}>
-                        <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text-dark)' }}>
-                            {totalMatches}
-                        </p>
-                        <p style={{ fontSize: '0.75rem', color: 'rgba(51,51,51,0.6)', fontWeight: 600 }}>
-                            MATCHS
-                        </p>
+                {/* ─── Deux chiffres du tournoi ──────────────────────────────── */}
+                <div className={s.statGrid}>
+                    <div className={s.statCard}>
+                        <p className={s.statValue}>{totalMatches}</p>
+                        <p className={s.statLabel}>MATCHS</p>
                     </div>
-                    <div style={{
-                        background: 'var(--color-surface)',
-                        border: '3px solid var(--ink-700)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: 'var(--spacing-md)',
-                        textAlign: 'center'
-                    }}>
-                        <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text-dark)' }}>
-                            {totalGoals}
-                        </p>
-                        <p style={{ fontSize: '0.75rem', color: 'rgba(51,51,51,0.6)', fontWeight: 600 }}>
-                            BUTS
-                        </p>
+                    <div className={s.statCard}>
+                        <p className={s.statValue}>{totalGoals}</p>
+                        <p className={s.statLabel}>BUTS</p>
                     </div>
                 </div>
 
-                {/* Final Standings (Round Robin) */}
+                {/* ─── Classement final ──────────────────────────────────────── */}
                 {tournament.mode === 'round_robin' && finalStandings.length > 0 && (
-                    <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                        <h2 style={{
-                            fontSize: '1rem',
-                            fontWeight: 700,
-                            color: 'var(--color-text-dark)',
-                            marginBottom: 'var(--spacing-sm)'
-                        }}>
-                            Classement final
-                        </h2>
-                        <div style={{
-                            background: 'var(--color-surface)',
-                            border: '3px solid var(--ink-700)',
-                            borderRadius: 'var(--radius-md)',
-                            overflow: 'hidden'
-                        }}>
-                            {finalStandings.map((standing, index) => (
-                                <div key={standing.teamId}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        padding: '12px',
-                                        borderTop: index > 0 ? '1px solid rgba(51,51,51,0.1)' : 'none',
-                                        background: index === 0 ? 'rgba(255, 215, 0, 0.3)' : 'transparent'
-                                    }}
-                                >
-                                    <span style={{
-                                        width: '28px',
-                                        height: '28px',
-                                        background: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : 'rgba(51,51,51,0.1)',
-                                        borderRadius: '50%',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '0.875rem',
-                                        fontWeight: 800,
-                                        color: index < 3 ? 'var(--ink-700)' : 'rgba(51,51,51,0.5)'
-                                    }}>
-                                        {index + 1}
-                                    </span>
-                                    <div style={{ flex: 1 }}>
-                                        <p style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--color-text-dark)' }}>
-                                            {standing.teamName}
-                                        </p>
-                                        <p style={{ fontSize: '0.7rem', color: 'rgba(51,51,51,0.5)' }}>
-                                            {standing.wins}V - {standing.losses}D | {standing.goalsFor} buts
-                                        </p>
+                    <div className={s.section}>
+                        <h2 className={s.sectionTitle}>Classement final</h2>
+                        <div className={s.standings}>
+                            {finalStandings.map((standing, index) => {
+                                const medaille = index === 0 ? s.medalGold
+                                    : index === 1 ? s.medalSilver
+                                    : index === 2 ? s.medalBronze
+                                    : '';
+                                return (
+                                    <div
+                                        key={standing.teamId}
+                                        className={`${s.standingRow} ${index === 0 ? s.standingRowWinner : ''}`}
+                                    >
+                                        <span className={`${s.medal} ${medaille}`}>{index + 1}</span>
+                                        <div className={s.standingBody}>
+                                            <p className={s.standingName}>{standing.teamName}</p>
+                                            <p className={s.standingDetail}>
+                                                {standing.wins}V - {standing.losses}D | {standing.goalsFor} buts
+                                            </p>
+                                        </div>
+                                        <span className={s.standingPoints}>{standing.points} pts</span>
                                     </div>
-                                    <span style={{
-                                        fontSize: '1rem',
-                                        fontWeight: 800,
-                                        color: 'var(--color-text-dark)'
-                                    }}>
-                                        {standing.points} pts
-                                    </span>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 )}
 
-                {/* Bracket View (Bracket mode) */}
+                {/* ─── Tableau final ─────────────────────────────────────────── */}
                 {tournament.mode === 'bracket' && tournament.bracket && (
-                    <div style={{ marginBottom: 'var(--spacing-lg)', overflowX: 'auto' }}>
-                        <h2 style={{
-                            fontSize: '1rem',
-                            fontWeight: 700,
-                            color: 'var(--color-text-dark)',
-                            marginBottom: 'var(--spacing-sm)'
-                        }}>
-                            Bracket final
-                        </h2>
-                        <div style={{
-                            display: 'flex',
-                            gap: 'var(--spacing-md)',
-                            minWidth: 'fit-content'
-                        }}>
+                    <div className={`${s.section} ${s.sectionScroll}`}>
+                        <h2 className={s.sectionTitle}>Bracket final</h2>
+                        <div className={s.bracketRounds}>
                             {tournament.bracket.map((round) => (
-                                <div key={round.roundNumber} style={{ minWidth: '180px' }}>
-                                    <p style={{
-                                        fontSize: '0.75rem',
-                                        fontWeight: 700,
-                                        color: 'rgba(51,51,51,0.6)',
-                                        marginBottom: '8px',
-                                        textAlign: 'center'
-                                    }}>
-                                        {round.roundName}
-                                    </p>
-                                    <div style={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '8px'
-                                    }}>
-                                        {round.matches.map((match) => (
-                                            <div key={match.matchId}
-                                                style={{
-                                                    background: match.status === 'bye' ? 'rgba(51,51,51,0.05)' : 'var(--color-surface)',
-                                                    border: '2px solid var(--ink-700)',
-                                                    borderRadius: 'var(--radius-sm)',
-                                                    padding: '8px',
-                                                    opacity: match.status === 'bye' ? 0.5 : 1
-                                                }}
-                                            >
-                                                <div style={{
-                                                    display: 'flex',
-                                                    justifyContent: 'space-between',
-                                                    alignItems: 'center',
-                                                    padding: '4px 0',
-                                                    borderBottom: '1px solid rgba(51,51,51,0.1)'
-                                                }}>
-                                                    <span style={{
-                                                        fontSize: '0.7rem',
-                                                        fontWeight: match.winnerId === match.team1.teamId ? 700 : 500,
-                                                        color: match.winnerId === match.team1.teamId ? '#2ECC71' : 'var(--color-text-dark)'
-                                                    }}>
-                                                        {match.team1.name || 'TBD'}
-                                                    </span>
-                                                    {match.score && (
-                                                        <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>{match.score[0]}</span>
-                                                    )}
+                                <div key={round.roundNumber} className={s.bracketRound}>
+                                    <p className={s.roundName}>{round.roundName}</p>
+                                    <div className={s.bracketColumn}>
+                                        {round.matches.map((match) => {
+                                            const exemption = match.status === 'bye';
+                                            const gagnant1 = match.winnerId === match.team1.teamId;
+                                            const gagnant2 = match.winnerId === match.team2.teamId;
+                                            return (
+                                                <div
+                                                    key={match.matchId}
+                                                    className={`${s.matchCard} ${exemption ? s.matchCardBye : ''}`}
+                                                >
+                                                    <div className={`${s.matchSide} ${s.matchSideTop}`}>
+                                                        <span className={`${s.matchTeam} ${gagnant1 ? s.matchTeamWinner : ''}`}>
+                                                            {match.team1.name || 'TBD'}
+                                                        </span>
+                                                        {match.score && (
+                                                            <span className={s.matchScore}>{match.score[0]}</span>
+                                                        )}
+                                                    </div>
+                                                    <div className={s.matchSide}>
+                                                        <span className={`${s.matchTeam} ${gagnant2 ? s.matchTeamWinner : ''}`}>
+                                                            {exemption ? '-' : (match.team2.name || 'TBD')}
+                                                        </span>
+                                                        {match.score && (
+                                                            <span className={s.matchScore}>{match.score[1]}</span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div style={{
-                                                    display: 'flex',
-                                                    justifyContent: 'space-between',
-                                                    alignItems: 'center',
-                                                    padding: '4px 0'
-                                                }}>
-                                                    <span style={{
-                                                        fontSize: '0.7rem',
-                                                        fontWeight: match.winnerId === match.team2.teamId ? 700 : 500,
-                                                        color: match.winnerId === match.team2.teamId ? '#2ECC71' : 'var(--color-text-dark)'
-                                                    }}>
-                                                        {match.status === 'bye' ? '-' : (match.team2.name || 'TBD')}
-                                                    </span>
-                                                    {match.score && (
-                                                        <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>{match.score[1]}</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             ))}
@@ -342,24 +196,7 @@ export default function TournamentResultsPage() {
                     </div>
                 )}
 
-                {/* Back to Dashboard */}
-                <button onClick={() => router.push('/dashboard')}
-                    style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px',
-                        padding: 'var(--spacing-md) var(--spacing-lg)',
-                        background: 'var(--green-600)',
-                        border: '3px solid var(--ink-700)',
-                        borderRadius: 'var(--radius-md)',
-                        color: 'white',
-                        fontWeight: 700,
-                        fontSize: '1rem',
-                        cursor: 'pointer'
-                    }}
-                >
+                <button onClick={() => router.push('/dashboard')} className={s.backButton}>
                     <HomeIcon width={20} height={20} />
                     Retour au tableau de bord
                 </button>

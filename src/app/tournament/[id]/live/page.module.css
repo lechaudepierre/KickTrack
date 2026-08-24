@@ -1,0 +1,425 @@
+/*
+ * TOURNOI EN COURS — classement, tableau, liste des matchs.
+ *
+ * Cette page portait 61 blocs `style={{}}` en ligne et 15 couleurs écrites en
+ * dur. Tout est ici, en tokens.
+ *
+ * Une seule valeur reste calculée en JavaScript : la hauteur d'une colonne du
+ * tableau à élimination, qui dépend du nombre de matchs du premier tour. Elle
+ * arrive par `--hauteur-colonne`.
+ */
+
+.errorBox {
+    margin-bottom: var(--spacing-md);
+}
+
+/* ─── Bandeau de progression ────────────────────────────────────────────── */
+
+.progress {
+    background: var(--color-accent);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+}
+
+.progressLabel {
+    font-size: var(--text-xs);
+    color: var(--color-text-dark-soft);
+    margin-bottom: var(--spacing-xs);
+}
+
+.progressValue {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-black);
+    color: var(--ink-700);
+}
+
+/* ─── Sections ──────────────────────────────────────────────────────────── */
+
+.section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.sectionTitle {
+    font-size: var(--text-base);
+    font-weight: var(--weight-bold);
+    color: var(--color-text-dark);
+    margin-bottom: var(--spacing-sm);
+}
+
+.sectionTitleCentered {
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+}
+
+/* ─── Classement du championnat ─────────────────────────────────────────── */
+
+.table {
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+/* Les six colonnes : équipe, puis J V D +/- Pts. */
+.row {
+    display: grid;
+    grid-template-columns: 2fr repeat(5, 1fr);
+}
+
+.tableHead {
+    composes: row;
+    padding: var(--spacing-sm) 12px;
+    background: var(--color-hairline);
+    font-size: 0.65rem;
+    font-weight: var(--weight-bold);
+    color: var(--color-text-dark-soft);
+    text-transform: uppercase;
+}
+
+.tableRow {
+    composes: row;
+    padding: 10px 12px;
+    border-top: 1px solid var(--color-hairline);
+}
+
+/* La première ligne n'a pas de filet au-dessus : le cadre le porte déjà. */
+.tableRow:first-of-type {
+    border-top: none;
+}
+
+.tableRowLeader {
+    background: var(--color-accent-tint);
+}
+
+.teamCell {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-width: 0;
+    font-weight: var(--weight-bold);
+    font-size: var(--text-sm);
+    color: var(--color-text-dark);
+}
+
+.rank {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    border-radius: var(--radius-full);
+    background: var(--color-hairline);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: var(--weight-black);
+}
+
+.rankLeader {
+    background: var(--color-accent);
+}
+
+.ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stat {
+    text-align: center;
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+}
+
+.statWins {
+    color: var(--team-green);
+    font-weight: var(--weight-medium);
+}
+
+.statLosses {
+    color: var(--color-danger);
+    font-weight: var(--weight-medium);
+}
+
+.statPoints {
+    font-weight: var(--weight-black);
+}
+
+/* ─── Tableau à élimination ─────────────────────────────────────────────── */
+
+/* L'arbre peut être plus large que l'écran : il défile dans sa propre boîte,
+   jamais en poussant la page. */
+.bracketScroll {
+    overflow-x: auto;
+    padding-bottom: var(--spacing-md);
+}
+
+.bracketRounds {
+    display: flex;
+    align-items: center;
+    min-width: fit-content;
+    justify-content: center;
+    padding: 0 var(--spacing-sm);
+}
+
+.bracketRound {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.roundName {
+    font-size: 0.65rem;
+    font-weight: var(--weight-bold);
+    color: var(--color-text-dark-faint);
+    margin-bottom: 12px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    white-space: nowrap;
+}
+
+/*
+ * Tous les tours ont la même hauteur — celle du premier — et répartissent
+ * leurs matchs dedans. C'est ce qui aligne un match sur le milieu des deux
+ * matchs qui l'alimentent.
+ */
+.bracketColumn {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    height: var(--hauteur-colonne);
+}
+
+.bracketColumnFirst {
+    gap: 8px;
+}
+
+.bracketSlot {
+    display: flex;
+    align-items: center;
+}
+
+.connector {
+    width: 12px;
+    height: 2px;
+    background: var(--ink-700);
+    opacity: 0.3;
+}
+
+.matchCard {
+    width: 120px;
+    background: var(--color-surface-raised);
+    border: var(--border-arcade-thin);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.matchCardDone {
+    background: var(--color-surface);
+}
+
+.matchCardLive {
+    background: var(--color-accent-tint);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 8px var(--color-accent-tint);
+}
+
+.matchCardReady {
+    border-color: var(--team-green);
+}
+
+/* Une exemption n'est pas un match : elle s'efface. */
+.matchCardBye {
+    background: var(--color-surface);
+    opacity: 0.4;
+}
+
+.matchSide {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px var(--spacing-sm);
+}
+
+.matchSideTop {
+    border-bottom: 1px solid var(--color-hairline);
+}
+
+.matchSideWinner {
+    background: var(--color-success-tint);
+}
+
+.matchTeam {
+    flex: 1;
+    font-size: 0.65rem;
+    font-weight: var(--weight-regular);
+    color: var(--color-text-dark);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.matchTeamWinner {
+    font-weight: var(--weight-bold);
+    color: var(--color-primary-strong);
+}
+
+/* Place encore vide : le nom est là pour tenir la mise en page, pas pour
+   être lu. */
+.matchTeamEmpty {
+    color: var(--color-text-dark-faint);
+}
+
+.matchScore {
+    margin-left: var(--spacing-xs);
+    font-size: 0.65rem;
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-700);
+}
+
+.matchScoreWinner {
+    color: var(--color-primary-strong);
+}
+
+/* ─── Liste des matchs ──────────────────────────────────────────────────── */
+
+.matchList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.matchRow {
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+}
+
+.matchRowLive {
+    background: var(--color-accent-tint);
+    border-color: var(--color-accent);
+}
+
+.matchRowBody {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.matchRowTeams {
+    flex: 1;
+    min-width: 0;
+}
+
+.matchRowSide {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+}
+
+.matchRowSideTop {
+    margin-bottom: var(--spacing-sm);
+}
+
+.matchRowName {
+    flex: 1;
+    min-width: 0;
+    font-weight: var(--weight-bold);
+    font-size: var(--text-sm);
+    color: var(--color-text-dark);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.matchRowNameWinner {
+    color: var(--team-green);
+}
+
+.matchRowScore {
+    flex-shrink: 0;
+    font-weight: var(--weight-black);
+    font-size: var(--text-base);
+    font-variant-numeric: tabular-nums;
+}
+
+.matchRowState {
+    flex-shrink: 0;
+}
+
+.badgeLive {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--color-accent);
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    font-weight: var(--weight-bold);
+    color: var(--ink-700);
+    white-space: nowrap;
+}
+
+.iconDone {
+    color: var(--team-green);
+}
+
+.iconPending {
+    color: var(--color-text-dark-faint);
+}
+
+/* ─── Lancer le match suivant ───────────────────────────────────────────── */
+
+.startButton {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md);
+    background: var(--team-green);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    color: var(--white);
+    font-weight: var(--weight-bold);
+    cursor: pointer;
+}
+
+.startButton:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.startButtonMain {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--text-base);
+}
+
+.startButtonTeams {
+    max-width: 100%;
+    padding: 0 var(--spacing-sm);
+    font-size: var(--text-xs);
+    opacity: 0.9;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ─── Fin de tournoi ────────────────────────────────────────────────────── */
+
+.finishing {
+    text-align: center;
+    padding: var(--spacing-lg);
+    color: var(--color-text-dark-soft);
+}
+
+.iconTrophy {
+    color: var(--color-accent);
+}

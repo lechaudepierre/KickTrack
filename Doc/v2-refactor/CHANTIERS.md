@@ -2810,19 +2810,36 @@ Le test fige le comportement actuel sans l'approuver. Corriger la répartition
 changerait la forme des tableaux : c'est une décision de jeu, pas de
 refactoring. À trancher par Sacha.
 
-**Reste à faire — le style en ligne dans les autres pages de tournoi.**
-Le même travers y est présent, moins massivement :
+**Suite — le style en ligne dans les autres pages de tournoi.**
+Le même travers y était présent. Les deux plus grosses sont faites le 23/08 :
 
-| page | lignes | blocs `style={{}}` |
-|---|---|---|
-| `tournament/[id]/live/page.tsx` | 572 | **61** |
-| `tournament/[id]/results/page.tsx` | 369 | **38** |
-| `tournament/new/page.tsx` | 252 | 18 |
-| `tournament/[id]/match/page.tsx` | 278 | 17 |
-| `tournament/join/page.tsx` | 186 | 7 |
+| page | lignes | `style={{}}` | couleurs en dur | état |
+|---|---|---|---|---|
+| `tournament/[id]/page.tsx` | 1 087 -> **637** | 93 -> **1** | 24 -> 0 | [fait] |
+| `tournament/[id]/live/page.tsx` | 572 -> **322** | 61 -> **1** | 15 -> 0 | [fait] |
+| `tournament/[id]/results/page.tsx` | 369 -> **206** | 38 -> **0** | 9 -> 0 | [fait] |
+| `tournament/new/page.tsx` | 252 | 18 | 3 | [a faire] |
+| `tournament/[id]/match/page.tsx` | 278 | 17 | 6 | [a faire] |
+| `tournament/join/page.tsx` | 186 | 7 | 1 | [a faire] |
 
-Aucune n'est au-dessus du seuil de lignes, donc ce n'est plus 9.3 — mais c'est
-la même règle enfreinte. À reprendre dans un chantier de styling.
+Les deux `style={{}}` qui restent sont légitimes : ils portent une valeur que la
+feuille de styles ne peut pas connaître — le dégradé d'avatar d'une équipe, et
+la hauteur d'une colonne du tableau à élimination, qui dépend du nombre de
+matchs du premier tour. Les deux passent par une variable CSS.
+
+**Cinq tokens ajoutés** à `variables.css`, tous réutilisés par plusieurs pages :
+
+| token | usage |
+|---|---|
+| `--color-danger-tint` | fond des boutons d'action destructrice |
+| `--color-scrim` | voile derrière une modale |
+| `--color-hairline` | filet de séparation, fond d'en-tête de tableau |
+| `--color-text-dark-faint` | texte inactif : place vide, adversaire non désigné |
+| `--color-accent-tint` / `--color-success-tint` | surligner une ligne sans la repeindre |
+
+La page de résultats écrivait ses couleurs de podium en dur (`#FFD700`,
+`#C0C0C0`, `#CD7F32`) alors que `--medal-gold`, `--medal-silver-edge` et
+`--medal-bronze` existaient déjà.
 
 ### 9.4 [fait] L'annulation d'un but ne soustrait plus, elle rejoue — *23 août 2026*
 
