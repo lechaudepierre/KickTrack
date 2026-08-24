@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Player, Team, TeamColor } from '@/types';
 import styles from './TeamSetup.module.css';
 import PlayerRow from '@/components/common/PlayerRow';
@@ -50,8 +50,33 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
     const [selectedSource, setSelectedSource] = useState<'waiting' | 'team1' | 'team2' | null>(null);
 
-    // Initialize waiting list with all players
-    useEffect(() => {
+    /*
+     * LA COMPOSITION DE DÉPART, POSÉE UNE FOIS PAR LISTE DE JOUEURS
+     *
+     * ═══════════════════════════════════════════════════════════════════════
+     * LE DÉFAUT QUE ÇA CORRIGE — chantier 9.46
+     * ═══════════════════════════════════════════════════════════════════════
+     * C'était un `useEffect` dépendant de `players`. Or `players` est un
+     * TABLEAU, et sa référence change sans que son contenu bouge :
+     *   - dans le lobby, à chaque snapshot Firestore ;
+     *   - en mode invité, à CHAQUE rendu — la liste y est écrite en toutes
+     *     lettres dans le JSX de l'appelant.
+     *
+     * L'effet se redéclenchait donc, remettait les équipes à zéro, ce qui
+     * changeait l'état, ce qui redéclenchait un rendu. Deux conséquences :
+     * une composition faite à la main pouvait être effacée par l'arrivée d'un
+     * joueur, et le mode invité bouclait.
+     *
+     * On compare désormais la SIGNATURE de la liste — les identifiants, dans
+     * l'ordre — et non la référence du tableau. Recalculer pendant le rendu
+     * plutôt que dans un effet est le motif prévu par React pour un état qui
+     * dérive de ses props : il n'y a pas de rendu intermédiaire affiché.
+     */
+    const signature = `${format}|${players.map(p => p.userId).join(',')}`;
+    const [signatureAppliquee, setSignatureAppliquee] = useState<string | null>(null);
+
+    if (signature !== signatureAppliquee) {
+        setSignatureAppliquee(signature);
         if (players.length > 0) {
             if (format === '1v1' && players.length >= 2) {
                 setTeam1Players([players[0]]);
@@ -63,7 +88,7 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
                 setTeam2Players([]);
             }
         }
-    }, [players, format]);
+    }
 
     // Handle player selection (click on player)
     const handlePlayerClick = (player: Player, source: 'waiting' | 'team1' | 'team2') => {

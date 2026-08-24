@@ -1,7 +1,7 @@
 'use client';
 
 import { toDate } from '@/lib/game/dates';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { createGameSession, subscribeToSession, cancelSession, startGame, kickPlayerFromSession, updateSessionExpiry } from '@/lib/firebase/game-sessions';
@@ -45,6 +45,26 @@ export default function NewGamePage() {
     const stepRef = useRef<Step>('config');
     useEffect(() => { sessionRef.current = session; }, [session]);
     useEffect(() => { stepRef.current = step; }, [step]);
+
+    /*
+     * La liste « moi + les invités », posée UNE fois.
+     *
+     * Elle était écrite en toutes lettres dans le JSX, donc reconstruite à
+     * chaque rendu. `TeamSetup` la recevait comme une liste toujours nouvelle
+     * et remettait les équipes à zéro en boucle (chantier 9.46).
+     */
+    const joueursAvecInvites = useMemo(() => {
+        if (!user) return [];
+        const invite = (n: number) => ({
+            userId: `guest_${user.userId}_${n}`,
+            username: `Invité ${n}`,
+            avatarUrl: null,
+        });
+        return [
+            { userId: user.userId, username: user.username, avatarUrl: user.avatarUrl || null },
+            ...(format === '1v1' ? [invite(1)] : [invite(1), invite(2), invite(3)]),
+        ];
+    }, [user, format]);
 
     // Cancel session if host navigates away without clicking the cancel button
     useEffect(() => {
@@ -348,39 +368,7 @@ Annuler la partie
 
                 {/* Step 4: Guest Mode Team Setup */}
                 {step === 'guest-teams' && user && (
-                    <TeamSetup players={[
-                            {
-                                userId: user.userId,
-                                username: user.username,
-                                avatarUrl: user.avatarUrl || null
-                            },
-                            ...(format === '1v1'
-                                ? [
-                                    {
-                                        userId: `guest_${user.userId}_1`,
-                                        username: 'Invité 1',
-                                        avatarUrl: null
-                                    }
-                                ]
-                                : [
-                                    {
-                                        userId: `guest_${user.userId}_1`,
-                                        username: 'Invité 1',
-                                        avatarUrl: null
-                                    },
-                                    {
-                                        userId: `guest_${user.userId}_2`,
-                                        username: 'Invité 2',
-                                        avatarUrl: null
-                                    },
-                                    {
-                                        userId: `guest_${user.userId}_3`,
-                                        username: 'Invité 3',
-                                        avatarUrl: null
-                                    }
-                                ]
-                            )
-                        ]}
+                    <TeamSetup players={joueursAvecInvites}
                         format={format}
                         onStartGame={handleStartGame}
                     />
