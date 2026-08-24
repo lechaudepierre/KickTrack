@@ -601,6 +601,7 @@ Rien commencé, volontairement le dernier.
 | 9.45 | Passe de contraste | [fait] | 28 conteneurs, audit 105 -> 61 |
 | 9.46 | Le lint de fond | [fait] | 85 -> 6, plus une seule erreur |
 | 9.47 | Le profil ne lit que 200 parties | [fait] | + un second plafond caché à 300 |
+| 9.48 | `season:close` ne démarrait pas | [fait] | `tsx` n'était pas une dépendance |
 | 9.8 | Comptes fantômes (inscriptions ratées) | [fait] | 2 joueurs bloqués, débloqués le 23/08 |
 | 9.9 | Erreur en fin de partie sans lieu | [fait] | — |
 | 9.10 | Page de match fragile aux ajouts de contenu | [en cours] | 1re passe faite, reste les dimensions figées |
@@ -2638,6 +2639,45 @@ joueur, et le mode invité bouclait.
 `TeamSetup` compare désormais la **signature** de la liste — les identifiants,
 dans l'ordre — et non la référence du tableau. Le calcul se fait pendant le
 rendu, motif prévu par React pour un état qui dérive de ses props.
+
+### 9.48 [fait] `npm run season:close` ne démarrait pas — *24 août 2026*
+
+En revérifiant la clôture après une journée de modifications, la commande a
+répondu :
+
+```
+sh: tsx: command not found
+```
+
+**`tsx` n'était pas une dépendance du projet.** Trois commandes le référencent
+— `season:close`, `audit:scores`, `audit:comptes` — et aucune ne pouvait
+démarrer. Ça n'a jamais posé de problème parce que je les lançais toutes avec
+`npx tsx`, qui télécharge l'outil à la volée.
+
+C'est exactement le genre de défaut qui ne se voit qu'au pire moment : la
+documentation dit aux coéquipiers de Sacha de lancer `npm run season:close` en
+septembre, et ils seraient tombés sur ce message sans rapport avec le sujet.
+
+Ajouté en `devDependencies`. Les trois commandes démarrent.
+
+**Vérifié en même temps : la clôture produit toujours le même plan.** Après le
+`seasonId` sur les parties, la limite de 500, le moteur de buts et le reste,
+le contrôle à blanc rend des chiffres identiques à ceux du 23/08 :
+
+| | 23/08 | 24/08 |
+|---|---|---|
+| Joueurs classés | 114 | **114** |
+| Octrois | 677 | **677** |
+| Premier — Lionel messi | 1469 → 1235 | **1469 → 1235** |
+| Dernier — Théo | 793 → 897 | **793 → 897** |
+
+Aucune régression sur le chemin critique de septembre.
+
+**Les treize commandes d'administration ont été passées en revue une par une**
+(`rules:check`, `catalog:sync`, `seasons:backfill`, `season:rollback`,
+`season:revoke`, `venues:backfill`, `pack:grant`, `item:grant`,
+`indexes:deploy`, `audit:*`) : toutes démarrent et affichent leur mode ou leur
+mode d'emploi.
 
 ### 9.47 [fait] Le profil ignorait les parties les plus anciennes — *24 août 2026*
 
