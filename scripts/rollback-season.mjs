@@ -40,6 +40,28 @@ if (!seasonId) {
 
 announceMode(`Retour arrière de la clôture « ${seasonId} »`);
 
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * UN HUMAIN, DEVANT UN VRAI TERMINAL — même règle que la clôture
+ * ═══════════════════════════════════════════════════════════════════════════
+ * Ce script restaure des ELO et EFFACE des archives de saison. Lancé par
+ * erreur après une vraie clôture, il détruirait le travail de toute une
+ * saison.
+ *
+ * Comme `close-season.ts`, il exige donc un terminal interactif : une commande
+ * lancée par un agent, un script ou un cron reçoit des tuyaux, et `isTTY` y
+ * vaut `false`.
+ */
+if (APPLY && (!process.stdin.isTTY || !process.stdout.isTTY)) {
+    console.error('\n  ═══════════════════════════════════════════════════════════════');
+    console.error('  REFUS — cette commande exige un terminal interactif.');
+    console.error('  ═══════════════════════════════════════════════════════════════\n');
+    console.error('  Le retour arrière restaure des ELO et efface des archives de');
+    console.error('  saison. Il doit être lancé à la main, par une personne, dans un');
+    console.error('  vrai terminal — jamais par un script, un agent ou un cron.\n');
+    process.exit(1);
+}
+
 // ─── La saison a-t-elle seulement été clôturée ? ─────────────────────────────
 const seasonSnap = await db.collection('seasons').doc(seasonId).get();
 if (!seasonSnap.exists) {
@@ -112,7 +134,6 @@ if (!APPLY) {
     console.log('\n  Rien n\'a été écrit. Relancer avec --apply.\n');
     process.exit(0);
 }
-
 // ─── L'ordre inverse de la clôture ───────────────────────────────────────────
 // 1. retirer les récompenses ; 2. rendre l'ELO et les compteurs ;
 // 3. effacer les archives ; 4. rouvrir la saison.

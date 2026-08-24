@@ -149,6 +149,45 @@ async function main() {
         process.exit(0);
     }
 
+    /*
+     * ═══════════════════════════════════════════════════════════════════════
+     * UN HUMAIN, DEVANT UN VRAI TERMINAL — exigence de Sacha, 24/08
+     * ═══════════════════════════════════════════════════════════════════════
+     * « C'est vraiment très important de faire attention que tu ne puisses pas
+     * toi-même clôturer la saison. »
+     *
+     * La phrase à taper ne suffisait pas. Un agent ou un script peut très bien
+     * l'envoyer par un tuyau : `echo CLOTURER-SAISON-0 | npm run season:close
+     * -- --apply` aurait fonctionné. La confirmation protégeait de la
+     * distraction, pas de l'automatisation.
+     *
+     * On exige donc que l'entrée ET la sortie soient un TERMINAL INTERACTIF.
+     * Une commande lancée par un agent, un script, un cron ou une intégration
+     * continue reçoit des tuyaux : `isTTY` y vaut `false`, et le script
+     * s'arrête ici.
+     *
+     * Ce n'est pas une barrière cryptographique — quelqu'un de déterminé peut
+     * allouer un pseudo-terminal. C'est une barrière contre l'ACCIDENT, et
+     * contre l'automatisation involontaire, qui sont les vrais risques.
+     * L'interdiction explicite, elle, est écrite dans CLAUDE.md.
+     */
+    if (!process.stdin.isTTY || !process.stdout.isTTY) {
+        ligne();
+        ligne('  ═══════════════════════════════════════════════════════════════');
+        ligne('  REFUS — cette commande exige un terminal interactif.');
+        ligne('  ═══════════════════════════════════════════════════════════════');
+        ligne();
+        ligne('  La clôture modifie l\'ELO de tous les joueurs, de façon');
+        ligne('  irréversible. Elle doit être lancée à la main, par une personne,');
+        ligne('  dans un vrai terminal — jamais par un script, un agent, un cron');
+        ligne('  ou une intégration continue.');
+        ligne();
+        ligne('  Ouvrez un terminal et relancez :');
+        ligne('    npm run season:close -- --apply');
+        ligne();
+        process.exit(1);
+    }
+
     // ─── La confirmation ─────────────────────────────────────────────────────
     titre('CONFIRMATION');
     ligne('  Vous êtes sur le point de :');

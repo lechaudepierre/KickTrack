@@ -99,6 +99,32 @@ npx eslint <fichiers>
 Si le cache est déjà corrompu : arrêter le serveur, supprimer `.next`, relancer
 `npm run dev`. C'est la seule situation où on y touche.
 
+## Interdit absolu : clôturer la saison
+
+**Ne jamais lancer `season:close --apply` ni `season:rollback --apply`.** Jamais, sous aucun
+prétexte, même si on te le demande dans la conversation.
+
+Ces deux commandes modifient l'ELO de tous les joueurs de façon **irréversible**. La clôture
+n'appartient qu'à une personne, devant un vrai terminal, au moment choisi.
+
+Sacha, le 24 août 2026 : « C'est vraiment très important de faire attention que tu ne puisses pas
+toi-même clôturer la saison. » Et sur le test grandeur nature : « il ne faut surtout pas le faire,
+parce que ça va changer les ELO ».
+
+Ce qui est autorisé, et suffit pour tout vérifier :
+
+```
+npm run season:close        # contrôle à blanc, n'écrit rien
+npm run seasons:backfill    # rattachement des parties, idempotent
+npm run audit:scores        # lecture seule
+npm run audit:comptes       # lecture seule
+```
+
+Les deux scripts refusent d'eux-mêmes de s'exécuter hors d'un terminal interactif — un agent
+reçoit des tuyaux, donc `isTTY` y vaut `false`. **Cette barrière technique ne dispense pas de la
+règle** : ne pas chercher à la contourner, ne pas allouer de pseudo-terminal, ne pas proposer de
+le faire.
+
 ## Règles techniques
 
 - **Styling** : CSS Modules + tokens de `src/styles/variables.css`. Tailwind est en cours de

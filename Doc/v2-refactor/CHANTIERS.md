@@ -550,14 +550,21 @@ Vous trois jouez en V2 plusieurs soirées réelles, puis `v2 everyone`.
 | 3.5 | Historique de saison sur le profil | [fait] | `SeasonHistory.tsx`, sous la barre de progression |
 | 3.8 | Filtre par saison sur le profil | [fait] | `seasonId` sur la partie, 1 023 reprises |
 
-### Bloc 4 — Monnaie & packs *(après septembre)*
-| | Chantier | État |
-|---|---|---|
+### Bloc 4 — Monnaie & packs
+
+> **Tableau corrigé le 24/08.** Il annonçait trois chantiers à faire. Sacha : « les packs, je ne
+> comprends pas ce que tu parles des packs, on a déjà des packs. » Il avait raison — vérification
+> faite dans les sources, seul le *pity* manque, et il attend des valeurs que personne n'a
+> tranchées.
+
+| | Chantier | État | Où |
+|---|---|---|---|
 | 4.1 | Monnaie : solde + journal | [reporte] |
-| 4.2 | Définition de pack au catalogue | [a faire] |
-| 4.3 | Tirage serveur + pity invisible | [a faire] |
-| 4.4 | Doublons -> monnaie | [abandonne] |
-| 4.5 | Animation d'ouverture | [a faire] |
+| 4.2 | Définition de pack au catalogue | [fait] | `buildPackPool(catalog)` |
+| 4.3 | Tirage serveur | [fait] | `POST /api/packs/open` + `openPack` |
+| 4.3b | Pity invisible | [a faire] | valeurs PROVISOIRE, à trancher |
+| 4.4 | Doublons -> monnaie | [abandonne] | pas de monnaie |
+| 4.5 | Animation d'ouverture | [fait] | `PackOpening.tsx` |
 
 ### Bloc 5 — Design system *(en fond, continu)*
 | | Chantier | État | Qui |
