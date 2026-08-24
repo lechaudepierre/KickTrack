@@ -526,7 +526,7 @@ Vous trois jouez en V2 plusieurs soirées réelles, puis `v2 everyone`.
 | 2.5 | Migration `bannerUtils` -> données | [fait] | repli par pseudo supprimé le 24/08 |
 | 2.6 | Équipement + route validée serveur | [fait] | moi |
 | 2.7 | Format de bannière unifié (4:1 partout) | [fait] | moi |
-| 2.8 | Alléger les assets bannières | [a faire] | **Sacha** — re-export WebP |
+| 2.8 | Alléger les assets bannières | [fait] | 12 Mo -> 1,0 Mo, toutes sous 150 Ko |
 | 2.13 | Catalogue déclaratif + `npm run catalog:sync` | [fait] | moi |
 | 2.9 | Réversibilité des octrois | [fait] | moi |
 | 2.10 | Registre de types + page `/collection` | [fait] | moi |
@@ -549,9 +549,6 @@ Vous trois jouez en V2 plusieurs soirées réelles, puis `v2 everyone`.
 | 3.7 | Marche arrière de clôture | [fait] | `scripts/rollback-season.mjs` — voir ci-dessous |
 | 3.5 | Historique de saison sur le profil | [fait] | `SeasonHistory.tsx`, sous la barre de progression |
 | 3.8 | Filtre par saison sur le profil | [fait] | `seasonId` sur la partie, 1 023 reprises |
-| 3.6 | Outil admin de clôture + confirmation forte | [a faire] | moi |
-| 3.7 | Marche arrière de clôture | [a faire] | moi — plomberie déjà faite (2.9) |
-| 3.8 | Filtre par saison sur tout le profil | [a faire] | moi — dépend de 3.1 |
 
 ### Bloc 4 — Monnaie & packs *(après septembre)*
 | | Chantier | État |
@@ -3124,6 +3121,54 @@ encaissés cette saison » calculé ainsi serait faux, sans qu'aucune erreur ne 
 vrai total, il faut repartir des parties.
 
 ---
+
+## Où en est le refactoring — *24 août 2026*
+
+> Question de Sacha, le 24/08 : « j'ai l'impression qu'il y a des choses à
+> l'infini… c'est quand qu'on arrive à la fin ? »
+
+**Le refactoring V2 est fini à 88 %** : 72 chantiers faits, 10 restants — et
+**aucun des 10 n'est nécessaire pour septembre**.
+
+| bloc | reste | nécessaire en septembre ? |
+|---|---|---|
+| 0 Infra & sécurité | 0 | — |
+| 1 ELO & stats | 1, bloqué sur une décision d'équipe | non |
+| 2 Collection | 0 | — |
+| 3 Saisons | **0** | — |
+| 4 Packs | 3 | non — décidé « après septembre » |
+| 5 Design system | 0 | — |
+| 6 Avatar 2D | 3 | non — optionnel de fin de liste |
+| 7 Modes de jeu | 0 | — |
+| 9 Dette technique | 3 en cours | non |
+
+**Pourquoi de nouvelles choses apparaissaient chaque jour.** Ce ne sont pas des
+changements ajoutés au périmètre : ce sont des défauts qui existaient déjà et
+que personne n'avait vus. Ouvrir un fichier pour le nettoyer, c'est le lire —
+et lire, c'est trouver. Les quatre chantiers nés le 24/08 (9.44 à 9.47) sont
+tous de cette nature :
+
+| trouvé | depuis quand | comment il s'est révélé |
+|---|---|---|
+| Deux joueurs bloqués à la connexion | février | en vérifiant le suivi |
+| Le chrono de match sans aucun style | mai (retrait de Tailwind) | en cherchant la dernière trace |
+| Une feuille de style de 1 169 lignes morte | découpage du profil | en cherchant le texte blanc |
+| Le profil ignorait 56 parties du plus gros joueur | toujours | en mesurant le filtre saison |
+
+**Ce mécanisme est sans fin par nature.** Il faut donc l'arrêter par décision,
+pas par épuisement.
+
+### La ligne d'arrêt
+
+**Le refactoring V2 s'arrête ici.** Ce qui reste ne se fait que si Sacha le
+demande explicitement. Trois choses restent légitimes d'ici septembre :
+
+1. un bug **signalé par un joueur** ;
+2. ce que la clôture de saison exige, si le test de septembre révèle un manque ;
+3. ce que Sacha demande.
+
+Tout le reste — lint, `any`, dépendances de hooks, style en ligne des pages
+hors tournoi — part dans « plus tard ». C'est de la propreté, pas du risque.
 
 ## Décisions en attente
 > Règle : ne jamais trancher ces points sans l'équipe. Implémenter la mécanique avec la valeur en
