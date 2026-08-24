@@ -20,7 +20,8 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+    min-height: 40px;
 }
 
 .backButton {
@@ -34,21 +35,26 @@
     color: var(--color-text-primary);
 }
 
+/* Aligné sur .pageTitle de content-page.module.css — même traitement partout. */
 .title {
-    font-size: 1.5rem;
-    font-weight: 800;
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-black);
     color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-shadow: 0 3px 0 var(--ink-900);
 }
 
 /* Top 3 Podium */
+/* Podium. `max-height` retiré : il rognait les noms longs et la couronne du
+   premier, qui déborde volontairement vers le haut. La hauteur suit le contenu. */
 .podium {
     display: flex;
     align-items: flex-end;
     justify-content: center;
     gap: var(--spacing-md);
-    margin-bottom: var(--spacing-xl);
-    padding-top: var(--spacing-sm);
-    max-height: 150px;
+    margin-bottom: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
 }
 
 .podiumSpot {
@@ -83,35 +89,35 @@
 .podiumAvatar {
     width: 4rem;
     height: 4rem;
-    border-radius: 50%;
-    background: var(--color-pitch-medium);
-    border: 3px solid;
+    border-radius: var(--radius-full);
+    background: var(--field-light);
+    border: var(--border-arcade);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
-    font-size: 1.5rem;
-    color: white;
-    box-shadow: var(--shadow-medium);
+    font-weight: var(--weight-black);
+    font-size: var(--text-xl);
+    color: var(--color-text-primary);
+    box-shadow: var(--shadow-arcade);
 }
 
 .firstPlace .podiumAvatar {
     width: 5rem;
     height: 5rem;
-    border-color: var(--color-accent-yellow);
-    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-    color: var(--color-pitch-dark);
+    border-color: var(--color-accent);
+    background: linear-gradient(135deg, var(--medal-gold) 0%, var(--medal-gold-deep) 100%);
+    color: var(--field-dark);
 }
 
 .secondPlace .podiumAvatar {
-    border-color: #C0C0C0;
-    background: linear-gradient(135deg, #E0E0E0 0%, #B0B0B0 100%);
-    color: var(--color-pitch-dark);
+    border-color: var(--medal-silver-edge);
+    background: linear-gradient(135deg, var(--medal-silver) 0%, var(--medal-silver-deep) 100%);
+    color: var(--field-dark);
 }
 
 .thirdPlace .podiumAvatar {
-    border-color: #CD7F32;
-    background: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%);
+    border-color: var(--medal-bronze);
+    background: linear-gradient(135deg, var(--medal-bronze) 0%, var(--medal-bronze-deep) 100%);
 }
 
 .crownIcon {
@@ -121,14 +127,14 @@
     transform: translateX(-50%);
     width: 2rem;
     height: 2rem;
-    color: var(--color-accent-yellow);
+    color: var(--color-accent);
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .podiumName {
-    font-weight: 700;
-    font-size: 0.875rem;
-    color: white;
+    font-weight: var(--weight-bold);
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
     margin-bottom: 0.25rem;
     max-width: 6rem;
     white-space: nowrap;
@@ -137,7 +143,7 @@
 }
 
 .podiumScore {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     color: var(--color-text-secondary);
     background: rgba(0, 0, 0, 0.2);
     padding: 0.125rem 0.5rem;
@@ -145,97 +151,152 @@
 }
 
 .firstPlace .podiumScore {
-    color: var(--color-accent-yellow);
+    color: var(--color-accent);
     background: rgba(255, 215, 0, 0.1);
 }
 
 /* List */
+/* Le conteneur n'a plus ni fond ni contour : chaque ligne porte les siens,
+   exactement comme l'en-tête de profil. Il ne fait qu'espacer les lignes. */
+/* Lignes collées. Les contours se chevauchent de 3 px pour ne former qu'un
+   seul trait entre deux lignes, au lieu d'un double liseré. Chaque ligne garde
+   sa boîte, identique à celle du profil. */
 .listContainer {
-    background: var(--color-beige);
-    border-radius: var(--radius-md);
-    border: 3px solid #333333;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.listContainer > *:not(:last-child) {
+    margin-bottom: calc(-1 * var(--border-arcade-width));
 }
 
 .listHeader {
     display: grid;
-    grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem 3rem;
+    grid-template-columns: auto minmax(0, 1fr) 2.5rem 3rem;
     gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
-    background: rgba(51, 51, 51, 0.1);
-    border-bottom: 2px solid #333333;
-    font-size: 0.625rem;
-    font-weight: 600;
-    color: var(--color-text-dark);
+    /* Aligné sur le rembourrage des lignes, qui vient de `PlayerBanner` :
+       sans ça, les colonnes ne tomberaient pas en face. */
+    padding: 0 var(--spacing-md) var(--spacing-xs);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-label);
+    color: var(--color-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.03em;
 }
 
 @media (min-width: 400px) {
     .listHeader {
-        grid-template-columns: 3rem minmax(0, 1fr) 3rem 3.5rem;
-        padding: var(--spacing-md) var(--spacing-lg);
-        font-size: 0.75rem;
+        grid-template-columns: auto minmax(0, 1fr) 3rem 3.5rem;
+        padding: 0 var(--spacing-lg) var(--spacing-xs);
+        font-size: var(--text-xs);
         gap: var(--spacing-md);
     }
 }
 
+/* Toutes les lignes ont EXACTEMENT la même hauteur.
+   Sans `min-height`, la hauteur suivait le contenu : une ligne avec bannière,
+   une avec un pseudo long ou un indicateur d'évolution ne faisaient pas la
+   même taille, et la liste ondulait. Une liste se lit à sa régularité. */
+/* Disposition interne uniquement. La forme vient de `PlayerBanner` — même
+   ratio, même rembourrage, même contour que l'en-tête de profil. */
 .listItem {
     display: grid;
-    grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem 3rem;
+    grid-template-columns: auto minmax(0, 1fr) 2.5rem 3rem;
     gap: var(--spacing-sm);
     align-items: center;
-    padding: var(--spacing-md);
-    border-bottom: 1px solid rgba(51, 51, 51, 0.2);
-    transition: background var(--transition-normal);
+    transition: background var(--transition-fast);
 }
 
 @media (min-width: 400px) {
     .listItem {
-        grid-template-columns: 3rem minmax(0, 1fr) 3rem 3.5rem;
-        padding: var(--spacing-md) var(--spacing-lg);
+        grid-template-columns: auto minmax(0, 1fr) 3rem 3.5rem;
+        padding: 0 var(--spacing-lg);
         gap: var(--spacing-md);
     }
 }
 
-.listItem:last-child {
-    border-bottom: none;
-}
 
-.listItem:hover {
-    background: rgba(255, 255, 255, 0.05);
-}
+
+/* Le survol est géré par `PlayerBanner`, pour toutes les listes à la fois.
+   Ne pas le redéfinir ici : c'est exactement ce genre de règle en double qui
+   faisait diverger le classement du profil. */
 
 /* Separator row between leaderboard segments */
 .listSeparator {
-    display: grid;
-    grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem 3rem;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-xs) var(--spacing-md);
-    border-bottom: 1px solid rgba(51, 51, 51, 0.2);
-    background: rgba(51, 51, 51, 0.04);
+    display: flex;
+    justify-content: center;
+    padding: var(--spacing-xs);
 }
 
 .listSeparatorDots {
-    font-size: 1rem;
-    font-weight: 700;
-    color: rgba(51, 51, 51, 0.4);
+    font-size: var(--text-base);
+    font-weight: var(--weight-bold);
+    color: rgba(26, 33, 24, 0.4);
     text-align: center;
     line-height: 1;
 }
 
-.currentUserItem {
-    background: rgba(76, 175, 80, 0.1);
-    border-left: 3px solid var(--color-field-green);
+/* La ligne du joueur connecté : marquée par un liseré et une teinte, PAS par
+   une hauteur différente.
+
+   BUG CORRIGÉ (21/08) : la teinte était `rgba(45, 133, 49, 0.12)`. Une couleur
+   de fond ne se superpose pas, elle REMPLACE — la ligne perdait son crème
+   opaque et laissait voir le fond terrain à travers. C'est ce que Sacha
+   décrivait comme « le fond devient invisible ». Teinte opaque désormais. */
+/* Ma ligne : le CONTOUR passe en doré, et rien d'autre.
+ *
+ * Rien qui touche au fond. La version précédente posait une teinte et une
+ * barre d'accent de 4 px à gauche — c'est cette barre que Sacha lisait comme
+ * un trou dans sa bannière, et le raccourci `background` de la teinte
+ * annulait au passage le cadrage de l'image (voir 9.30). Un contour ne touche
+ * ni au fond ni à la mise en page : l'épaisseur est déjà celle du contour
+ * arcade, seule la couleur change.
+ *
+ * DEUX classes volontairement : le composant PlayerBanner pose `border` sur
+ * `.wrap`, une classe unique. À égalité de spécificité, le gagnant dépendrait
+ * de l'ordre des feuilles de style, qui n'est pas garanti entre modules CSS. */
+.listItem.myItem {
+    border-color: var(--medal-gold);
+
+    /* Le contour doré passe au-dessus des lignes voisines, sur ses QUATRE côtés.
+     *
+     * Les lignes se chevauchent de 3 px (`.listContainer`, marge négative) pour
+     * ne montrer qu'un seul trait entre deux voisines. Sans ordre d'empilement,
+     * c'est le suivant dans le flux qui gagne : le bord du HAUT de la ligne
+     * d'après recouvrait le bord du BAS du contour doré, qui apparaissait
+     * ouvert en bas.
+     *
+     * `position` est déjà `relative` via `.wrap`, mais on le repose ici : cette
+     * règle ne doit pas dépendre d'un autre module CSS pour fonctionner. */
+    position: relative;
+    z-index: 3;
 }
 
+/* Sur une ligne à bannière, l'image est posée en style inline : elle passe
+   devant cette teinte, qui reste donc invisible. Rien à prévoir de plus. */
+
+/* Colonne de rang : le numéro, et sous lui l'évolution de la semaine.
+   Élargie pour l'accueillir — c'est aussi elle qui occupe le tiers gauche de
+   la bannière, cette zone qu'on demande de laisser calme au design. */
+/* `auto` en largeur de colonne, et non une valeur fixe : une largeur fixe
+   réservait plus de place qu'il n'en fallait, et laissait un vide entre le
+   rang et l'avatar — visible surtout sur les lignes à bannière. */
 .rank {
-    font-weight: 700;
-    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+    min-width: 2.25rem;
     color: var(--banner-text-color, var(--color-text-dark));
-    text-align: center;
-    min-width: 2.5rem;
     flex-shrink: 0;
+}
+
+.rankNumber {
+    font-weight: var(--weight-black);
+    font-size: var(--text-xl);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
 }
 
 .playerInfo {
@@ -256,9 +317,9 @@
 }
 
 .playerElo {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: rgba(51, 51, 51, 0.6);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    color: rgba(26, 33, 24, 0.6);
     white-space: nowrap;
 }
 
@@ -272,14 +333,14 @@
     width: 1.5rem;
     height: 1.5rem;
     min-width: 1.5rem;
-    border-radius: 50%;
-    background: var(--color-green-medium);
+    border-radius: var(--radius-full);
+    background: var(--green-600);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.5rem;
-    font-weight: 700;
-    color: var(--color-white);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    color: var(--color-text-primary);
 }
 
 @media (min-width: 400px) {
@@ -287,13 +348,22 @@
         width: 2rem;
         height: 2rem;
         min-width: 2rem;
-        font-size: 0.75rem;
+        font-size: var(--text-xs);
     }
 }
 
+/* Le pseudo et le titre forment un bloc : le titre ne doit pas pousser
+   l'avatar ni déborder de la colonne. */
+.playerNameBlock {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 1px;
+}
+
 .playerName {
-    font-weight: 600;
-    font-size: 0.75rem;
+    font-weight: var(--weight-medium);
+    font-size: var(--text-xs);
     color: var(--banner-text-color, var(--color-text-dark));
     overflow: hidden;
     text-overflow: ellipsis;
@@ -302,14 +372,14 @@
 
 @media (min-width: 400px) {
     .playerName {
-        font-size: 0.9375rem;
+        font-size: var(--text-sm);
     }
 }
 
 .statCol {
     text-align: center;
-    font-weight: 600;
-    font-size: 0.75rem;
+    font-weight: var(--weight-medium);
+    font-size: var(--text-xs);
     color: var(--banner-text-color, var(--color-text-dark));
     min-width: 2.5rem;
     flex-shrink: 0;
@@ -317,7 +387,7 @@
 
 @media (min-width: 400px) {
     .statCol {
-        font-size: 0.9375rem;
+        font-size: var(--text-sm);
     }
 }
 
@@ -326,12 +396,52 @@
 }
 
 /* Filter Tabs */
+/* ─── Choix de l'échelle de classement (chantier 7.11) ────────────────────── */
+.ladderTabs {
+    display: flex;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-xs);
+}
+
+.ladderTab {
+    flex: 1;
+    padding: var(--spacing-sm);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-black);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-secondary);
+    background: rgba(0, 0, 0, 0.22);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.ladderTabActive {
+    background: var(--color-surface);
+    color: var(--color-text-dark);
+}
+
+/* Le classement de référence doit être NOMMÉ, pas deviné. */
+.ladderNote {
+    margin: 0 0 var(--spacing-md);
+    font-size: var(--text-xs);
+    line-height: 1.4;
+    color: var(--color-text-secondary);
+    text-align: center;
+}
+
 .filterTabs {
     display: flex;
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-md);
 }
 
+/* Onglets de filtre — migrés vers les tokens (chantier 5.3).
+   L'onglet actif utilisait `var(--color-primary) !important`, l'ancien vert clair, resté
+   seul de son espèce dans toute l'app. */
 .filterTab {
     flex: 1;
     display: flex;
@@ -339,23 +449,29 @@
     justify-content: center;
     gap: var(--spacing-xs);
     padding: var(--spacing-sm) var(--spacing-md);
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
+    box-shadow: var(--shadow-arcade-sm);
     color: var(--color-text-dark);
-    font-weight: 700;
-    font-size: 0.875rem;
+    font-weight: var(--weight-bold);
+    font-size: var(--text-sm);
     cursor: pointer;
-    transition: all var(--transition-normal);
+    transition: background var(--transition-fast), transform var(--transition-fast),
+                box-shadow var(--transition-fast);
 }
 
 .filterTab:hover {
-    background: #f5e6c0;
+    background: var(--color-surface-raised);
 }
 
+/* L'onglet sélectionné s'enfonce : l'ombre disparaît sous lui. C'est la même
+   grammaire que les boutons, en inversé — un onglet actif est un bouton pressé. */
 .filterTabActive {
-    background: #4CAF50 !important;
-    color: #333333 !important;
+    background: var(--color-primary);
+    color: var(--color-text-primary);
+    transform: translateY(2px);
+    box-shadow: none;
 }
 
 /* Filter Section */
@@ -368,17 +484,25 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     padding: var(--spacing-sm) var(--spacing-md);
     margin-bottom: var(--spacing-md);
 }
 
+/* La barre n'avait AUCUN état de focus : rien ne signalait qu'on était en
+   train d'y taper. `:focus-within` marque le conteneur quand le champ à
+   l'intérieur prend le focus. */
+.searchContainer:focus-within {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 1px;
+}
+
 .searchIcon {
     width: 18px;
     height: 18px;
-    color: rgba(51, 51, 51, 0.5);
+    color: rgba(26, 33, 24, 0.5);
     flex-shrink: 0;
 }
 
@@ -387,20 +511,20 @@
     background: none;
     border: none;
     outline: none;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     color: var(--color-text-dark);
     font-family: inherit;
 }
 
 .searchInput::placeholder {
-    color: rgba(51, 51, 51, 0.4);
+    color: rgba(26, 33, 24, 0.4);
 }
 
 .searchClear {
     background: none;
     border: none;
     cursor: pointer;
-    color: rgba(51, 51, 51, 0.5);
+    color: rgba(26, 33, 24, 0.5);
     padding: 2px;
     display: flex;
     align-items: center;
@@ -422,18 +546,18 @@
     align-items: center;
     gap: var(--spacing-sm);
     padding: var(--spacing-md) var(--spacing-lg);
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     color: var(--color-text-dark);
-    font-weight: 600;
-    font-size: 1rem;
+    font-weight: var(--weight-medium);
+    font-size: var(--text-base);
     cursor: pointer;
-    transition: all var(--transition-normal);
+    transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .dropdownButton:hover {
-    background: #f5e6c0;
+    background: var(--color-surface-raised);
 }
 
 .dropdownButton span {
@@ -455,8 +579,8 @@
     top: calc(100% + var(--spacing-xs));
     left: 0;
     right: 0;
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     overflow: hidden;
     z-index: 100;
@@ -470,24 +594,24 @@
     background: transparent;
     border: none;
     color: var(--color-text-dark);
-    font-size: 0.9375rem;
+    font-size: var(--text-sm);
     text-align: left;
     cursor: pointer;
-    transition: background var(--transition-normal);
+    transition: background var(--transition-fast);
 }
 
 .dropdownItem:hover {
-    background: rgba(51, 51, 51, 0.1);
+    background: rgba(26, 33, 24, 0.1);
 }
 
 .dropdownItemActive {
-    background: var(--color-green-light);
-    color: var(--color-white);
-    font-weight: 600;
+    background: var(--color-success);
+    color: var(--color-text-primary);
+    font-weight: var(--weight-medium);
 }
 
 .dropdownItem:not(:last-child) {
-    border-bottom: 1px solid rgba(51, 51, 51, 0.2);
+    border-bottom: 2px solid rgba(26, 33, 24, 0.14);
 }
 
 /* Text on banner — color driven by --banner-text-color set per banner */
@@ -511,16 +635,16 @@
 }
 
 .createdByLabel {
-    font-size: 0.65rem;
-    font-weight: 900;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-black);
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #B8820A;
+    color: var(--medal-gold-text);
 }
 
 .createdByNames {
-    font-size: 0.8rem;
-    font-weight: 700;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
     color: var(--color-text-dark);
     opacity: 0.7;
 }
@@ -530,7 +654,69 @@
     text-align: center;
     padding: var(--spacing-2xl);
     color: var(--color-text-secondary);
-    background: var(--color-pitch-medium);
+    background: var(--field-light);
     border-radius: var(--radius-lg);
     border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+/* ─── Rappel de ta position ───────────────────────────────────────────────────
+   Affiché en tête, avant le podium. Quand on est 47e sur 141, il faut faire
+   défiler pour se trouver : c'est l'information qu'on vient chercher en
+   premier, elle mérite d'être au premier écran.
+   ──────────────────────────────────────────────────────────────────────────── */
+.myPosition {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-arcade);
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    color: var(--color-text-dark);
+}
+
+.myPositionRank {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-xs);
+    min-width: 3.5rem;
+}
+
+.myPositionNumber {
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-black);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.myPositionInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    flex: 1;
+}
+
+.myPositionLabel {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-text-dark-soft);
+}
+
+.myPositionElo {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+}
+
+.myPositionTotal {
+    font-size: var(--text-xs);
+    color: var(--color-text-dark-soft);
 }

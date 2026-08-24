@@ -1,0 +1,57 @@
+/* ─── Gage (règle sociale) ────────────────────────────────────────────────────
+   Affichage éphémère par-dessus la partie. Ne bloque jamais le jeu :
+   pas de bouton, pas de modale, ça part tout seul.
+   ⚠️ Lit uniquement des tokens (chantier 5.1).
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.stack {
+    position: fixed;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    bottom: calc(var(--nav-height) + var(--spacing-lg));
+    z-index: 60;
+    /* `%` et non `vw` : en paysage forcé, l'ancêtre transformé a ses
+       dimensions inversées et `vw` ne correspond plus à sa largeur. */
+    width: min(420px, calc(100% - 2 * var(--spacing-md)));
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    pointer-events: none;
+}
+
+.toast {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--spacing-md);
+    background: var(--color-surface);
+    color: var(--color-text-dark);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-arcade-lg);
+    animation: pop 0.28s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.rule {
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-dark-soft);
+}
+
+.text {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+@keyframes pop {
+    from { opacity: 0; transform: translateY(14px) scale(0.94); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toast { animation: none; }
+}

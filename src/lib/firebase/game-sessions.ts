@@ -25,7 +25,8 @@ export async function createGameSession(
     hostName: string,
     venueId: string,
     venueName: string,
-    format: GameFormat
+    format: GameFormat,
+    modeId: string = 'normal'
 ): Promise<GameSession> {
     const db = getFirebaseDb();
     const sessionRef = doc(collection(db, SESSIONS_COLLECTION));
@@ -37,6 +38,7 @@ export async function createGameSession(
         sessionId: sessionRef.id,
         pinCode,
         format,
+        modeId,
         venueId,
         venueName,
         hostId,
@@ -197,6 +199,8 @@ export async function startGame(
         playerIds: sanitizedTeams.flatMap(t => t.players.map(p => p.userId || '')).filter(id => id !== ''),
         hostId: session.hostId,
         sessionId: session.sessionId,
+        // Le mode suit la partie : c'est lui qui pilote l'affichage des gages.
+        modeId: session.modeId || 'normal',
         isGuestGame: hasGuestPlayers // Mark guest games
     };
 

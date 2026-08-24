@@ -1,0 +1,165 @@
+/* ─── Carte d'item de collection ──────────────────────────────────────────────
+   ⚠️ Lit uniquement des tokens (chantier 5.1). À migrer avec le reste.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.card {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    text-align: left;
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    box-shadow: var(--shadow-arcade);
+}
+
+@media (hover: hover) {
+    .card:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 0 rgba(0, 0, 0, 0.25);
+    }
+}
+
+.card:disabled {
+    cursor: default;
+}
+
+/* Non possédé : l'item reste visible — on doit voir ce qu'il y a à gagner —
+   mais désaturé pour ne pas se confondre avec la collection réelle. */
+/* Verrouillé : gris, comme avant.
+ *
+ * J'avais retiré la désaturation le 21/08 en pensant qu'un item en couleur
+ * donnerait plus envie. Sacha a tranché l'inverse, et pour une raison que je
+ * n'avais pas anticipée : sans le gris, **il n'avait pas compris que les
+ * cartes étaient cliquables**. Le contraste entre débloqué et verrouillé est
+ * ce qui signale qu'il se passe quelque chose au clic.
+ *
+ * La couleur reste visible dans la FICHE, où elle a toute la place. */
+.locked .visual,
+.locked .textPreview {
+    filter: grayscale(1);
+    opacity: 0.45;
+}
+
+.equipped {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-arcade), 0 0 0 3px rgba(241, 196, 15, 0.35);
+}
+
+.visualWrap {
+    position: relative;
+    background: var(--ink-900);
+}
+
+.visual {
+    width: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.wideImage { aspect-ratio: var(--banner-aspect-ratio); }
+.squareImage { aspect-ratio: 1 / 1; }
+
+.placeholder {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    color: rgba(255, 255, 255, 0.45);
+    background: repeating-linear-gradient(45deg, var(--ink-900), var(--ink-900) 8px, var(--ink-700) 8px, var(--ink-700) 16px);
+}
+
+.body {
+    padding: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+}
+
+.name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+    line-height: 1.2;
+}
+
+.source {
+    font-size: 0.7rem;
+    color: rgba(0, 0, 0, 0.55);
+    margin-top: 2px;
+}
+
+.rarityPill {
+    flex-shrink: 0;
+    font-size: 0.62rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+    border: 2px solid;
+}
+
+.equippedBadge {
+    position: absolute;
+    top: var(--spacing-xs);
+    right: var(--spacing-xs);
+    background: var(--color-accent);
+    color: var(--ink-900);
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+}
+
+/* Prévisualisation d'un titre : le texte lui-même, coloré par sa rareté. */
+/* Le fond de l'aperçu est sombre (`--ink-900`) : le titre s'y lit en blanc,
+   comme il se lira sur une bannière. */
+.textPreview {
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 72px;
+    padding: var(--spacing-md) var(--spacing-sm);
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-align: center;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55);
+}
+
+/* Cadenas centré sur le visuel d'un item non débloqué. */
+.lockOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.lockIcon {
+    width: 28px;
+    height: 28px;
+    color: var(--white);
+    /* Une ombre portée plutôt qu'un fond : le cadenas doit rester lisible sur
+       une image claire sans masquer ce qu'il y a dessous. */
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.85));
+}
+
+
+/* Nombre d'exemplaires, accolé au nom de l'item. */
+.quantity {
+    margin-left: 6px;
+    font-weight: var(--weight-black);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-accent);
+}

@@ -63,13 +63,18 @@
     align-items: center;
 }
 
+/* Le logo, en capitales, avec le contour arcade sous forme de contre-ombre
+   portée : c'est ce qui le détache du fond terrain rayé sans l'encadrer. */
 .logoText {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--color-white);
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-black);
+    color: var(--color-text-primary);
     letter-spacing: -0.02em;
+    line-height: 1;
+    text-shadow: 0 3px 0 var(--ink-900);
 }
 
+/* Le jaune, réservé à « important ». Le nom de l'app en fait partie. */
 .logoAccent {
     color: var(--color-accent);
 }
@@ -81,15 +86,21 @@
     align-items: center;
     justify-content: center;
     background: var(--color-surface);
-    border: none;
+    border: var(--border-arcade-thin);
     border-radius: var(--radius-md);
-    color: var(--color-text-secondary);
+    box-shadow: var(--shadow-arcade-sm);
+    color: var(--color-text-dark);
     cursor: pointer;
-    transition: color var(--transition-fast);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.logoutBtn:active {
+    transform: translateY(2px);
+    box-shadow: none;
 }
 
 .logoutBtn:hover {
-    color: var(--color-white);
+    background: var(--color-surface-raised);
 }
 
 .logoutIcon {
@@ -97,23 +108,40 @@
     height: 20px;
 }
 
-/* Welcome */
+/* Salutation.
+   Elle était en NOIR sur le fond terrain vert foncé : illisible, et le contraste
+   ne passait aucun seuil d'accessibilité. */
 .welcome {
     margin-bottom: var(--spacing-lg);
 }
 
 .welcomeText {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: var(--color-text-dark);
-    letter-spacing: -0.02em;
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    color: var(--color-text-secondary);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
 }
 
+/* Le pseudo ressort, le reste de la phrase s'efface : c'est le nom qui compte. */
 .username {
-    color: var(--color-text-dark);
+    color: var(--color-text-primary);
+    font-weight: var(--weight-black);
 }
 
-/* Actions */
+/* ─── Actions ─────────────────────────────────────────────────────────────────
+   HIÉRARCHIE. Les trois actions étaient strictement identiques : même fond,
+   même bordure, même taille. Rien n'indiquait laquelle est l'action principale.
+
+   Désormais :
+     Nouvelle Partie   accent jaune, plus grande     — c'est POUR ÇA qu'on ouvre l'app
+     Rejoindre         crème, taille normale
+     Tournoi           crème, taille normale
+     + Ami / + Stade   discrètes, sur une ligne
+
+   Le jaune est réservé à « premier / important » (doc 10). L'action que
+   l'app existe pour déclencher en fait partie ; les autres, non.
+   ──────────────────────────────────────────────────────────────────────────── */
 .actions {
     display: flex;
     flex-direction: column;
@@ -127,49 +155,64 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
     border-radius: var(--radius-md);
     text-decoration: none;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    background: var(--color-beige);
-    border: 3px solid #333333;
-    box-shadow: none;
+    color: var(--color-text-dark);
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    box-shadow: var(--shadow-arcade);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.primaryAction:hover,
-.secondaryAction:hover,
-.tournamentAction:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+    .primaryAction:hover,
+    .secondaryAction:hover,
+    .tournamentAction:hover {
+        transform: var(--lift-arcade);
+        box-shadow: var(--shadow-arcade-lifted);
+    }
 }
 
 .primaryAction:active,
 .secondaryAction:active,
 .tournamentAction:active {
-    transform: translateY(-2px);
-    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
+    transform: translateY(2px);
+    box-shadow: var(--shadow-arcade-sm);
 }
 
+/* L'action dominante. Plus grande, en jaune, avec un intitulé plus fort. */
 .primaryAction {
-    background: var(--color-beige);
+    background: var(--color-accent);
+    color: var(--color-text-on-accent);
+    padding: var(--spacing-lg) var(--spacing-md);
 }
 
-.secondaryAction {
-    background: var(--color-beige);
+.primaryAction .actionTitle {
+    font-size: var(--text-xl);
 }
 
+.primaryAction .actionIconWrapper {
+    width: 40px;
+    height: 40px;
+    background: rgba(26, 33, 24, 0.14);
+}
+
+/* Les deux actions secondaires restent en crème, à taille normale. */
+.secondaryAction,
 .tournamentAction {
-    background: var(--color-beige);
+    background: var(--color-surface);
 }
 
 .actionIconWrapper {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(51, 51, 51, 0.1);
+    background: rgba(26, 33, 24, 0.1);
     border-radius: var(--radius-sm);
+    flex-shrink: 0;
 }
 
 .actionIcon {
@@ -211,22 +254,27 @@
     justify-content: center;
     gap: var(--spacing-xs);
     padding: var(--spacing-sm) 0;
-    background: var(--color-green-medium);
-    border: 3px solid #333333;
+    /* Crème comme toutes les autres surfaces cliquables. Elles étaient en vert
+       foncé : la couleur ne signalait rien, elle les rendait juste plus
+       difficiles à distinguer du fond terrain. */
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     text-decoration: none;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.smallAction:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+    .smallAction:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+    }
 }
 
 .smallAction:active {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+    transform: translateY(2px);
+    box-shadow: none;
 }
 
 .smallActionIconWrapper {
@@ -242,13 +290,13 @@
 .smallActionIcon {
     width: 18px;
     height: 18px;
-    color: var(--color-white);
+    color: var(--color-text-dark);
 }
 
 .smallActionTitle {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: var(--color-white);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
+    color: var(--color-text-dark);
 }
 
 /* Stats Row */
@@ -260,8 +308,8 @@
 
 .statBox {
     flex: 1;
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     padding: var(--spacing-md);
     text-align: center;

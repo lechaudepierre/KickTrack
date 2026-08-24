@@ -13,6 +13,7 @@ import {
     ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import styles from './AddVenueModal.module.css';
+import { Button } from '@/components/common/ui';
 
 const venueTypes: { type: VenueType; label: string; icon: React.ElementType }[] = [
     { type: 'bar', label: 'Bar', icon: BuildingStorefrontIcon },
@@ -80,13 +81,13 @@ export default function AddVenueModal({ isOpen, onClose, onSuccess }: AddVenueMo
         <div className={styles.overlay} onClick={onClose}>
             <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
                 <button onClick={onClose} className={styles.closeButton}>
-                    <XMarkIcon className="w-6 h-6" />
+                    <XMarkIcon width={24} height={24} />
                 </button>
 
                 <div className={styles.formCard}>
                     {error && (
                         <div className={styles.errorBox}>
-                            <ExclamationTriangleIcon className="w-5 h-5" />
+                            <ExclamationTriangleIcon width={20} height={20} />
                             {error}
                         </div>
                     )}
@@ -112,8 +113,7 @@ export default function AddVenueModal({ isOpen, onClose, onSuccess }: AddVenueMo
                             </label>
                             <div className={styles.typeGrid}>
                                 {venueTypes.map((vt) => (
-                                    <button
-                                        key={vt.type}
+                                    <button key={vt.type}
                                         type="button"
                                         onClick={() => setType(vt.type)}
                                         className={`${styles.typeButton} ${type === vt.type ? styles.typeButtonActive : styles.typeButtonInactive}`}
@@ -138,17 +138,9 @@ export default function AddVenueModal({ isOpen, onClose, onSuccess }: AddVenueMo
                             />
                         </div>
 
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="btn-primary w-full"
-                            style={{ padding: 0, border: 'none', background: 'transparent' }}
-                        >
-                            <div className="btn-primary-shadow" />
-                            <div className="btn-primary-content" style={{ width: '100%' }}>
-                                {isLoading ? 'Création...' : 'Ajouter le stade'}
-                            </div>
-                        </button>
+                        <Button type="submit" disabled={isLoading} fullWidth>
+{isLoading ? 'Création...' : 'Ajouter le stade'}
+</Button>
                     </form>
                 </div>
             </div>

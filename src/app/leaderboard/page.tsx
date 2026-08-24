@@ -1,16 +1,17 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
+import { useFeature } from '@/lib/features';
 import { getVenueLeaderboard, getGlobalLeaderboard, getFriendsLeaderboard, LeaderboardEntry } from '@/lib/firebase/games';
+import { orderedLadders, LADDERS, type LadderId } from '@/lib/game/ladders';
 import { getFriends } from '@/lib/firebase/friends';
 import { Venue } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import BottomNav from '@/components/common/BottomNav';
 import VenueDropdown from '@/components/venues/VenueDropdown';
 import {
-    ArrowLeftIcon,
     UsersIcon,
     GlobeAltIcon,
     MagnifyingGlassIcon,
@@ -19,10 +20,14 @@ import {
 import styles from './page.module.css';
 import RankAvatar from '@/components/common/RankAvatar';
 import PlayerBanner from '@/components/common/PlayerBanner';
+import { PageHeader } from '@/components/common/ui';
+import { resolveBanner } from '@/lib/collection/banner';
+import RankMovement from '@/components/common/RankMovement';
+import PlayerTitle from '@/components/common/PlayerTitle';
+import { computeMovements } from '@/lib/game/ranking';
 
 type FilterType = 'general' | 'friends';
 
-const CREATORS = ['Astroboy', 'PIGEON ou BAGARRE', 'lechauvepierre'];
 
 type DisplayEntry =
     | { type: 'player'; entry: LeaderboardEntry; rank: number }
@@ -31,7 +36,7 @@ type DisplayEntry =
 function buildDisplayEntries(
     leaderboard: LeaderboardEntry[],
     currentUserId: string | undefined,
-    applySlicing: boolean
+    applySlicing: boolean,
 ): DisplayEntry[] {
     const n = leaderboard.length;
     if (n === 0) return [];
@@ -51,7 +56,8 @@ function buildDisplayEntries(
     // Build index segments [start, end] inclusive
     const segments: [number, number][] = [];
 
-    // Top 20
+    // Top 20. Le podium reprend les trois premiers au-dessus, volontairement :
+    // il met en avant, la liste fait référence. Les deux ont leur rôle.
     segments.push([0, Math.min(TOP - 1, n - 1)]);
 
     // Context around user (only if outside top 20)
@@ -93,12 +99,16 @@ function buildDisplayEntries(
 export default function LeaderboardPage() {
     const router = useRouter();
     const { user: currentUser, initialize } = useAuthStore();
+    const v2Enabled = useFeature('v2');
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     // Filter type state
     const [filterType, setFilterType] = useState<FilterType>('general');
+    // Échelle affichée — chantier 7.11. Le général reste le défaut : c'est le
+    // classement de référence, et c'est ce qu'on doit voir en arrivant.
+    const [ladder, setLadder] = useState<LadderId>('normal');
     const [friendIds, setFriendIds] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -118,7 +128,7 @@ export default function LeaderboardPage() {
 
     useEffect(() => {
         loadLeaderboard();
-    }, [selectedVenue, filterType, friendIds]);
+    }, [selectedVenue, filterType, friendIds, ladder]);
 
     const loadFriendIds = async () => {
         if (!currentUser) return;
@@ -138,10 +148,15 @@ export default function LeaderboardPage() {
             const venueId = selectedVenue?.venueId || 'all';
             let data: LeaderboardEntry[];
 
-            if (filterType === 'friends') {
+            if (ladder !== 'normal') {
+                // Les échelles secondaires n'ont ni filtre d'amis ni filtre de
+                // stade : elles ne tiennent qu'un ELO. Y ajouter des filtres
+                // qui ne s'appuient sur rien serait mentir sur la donnée.
+                data = await getGlobalLeaderboard(ladder);
+            } else if (filterType === 'friends') {
                 data = await getFriendsLeaderboard(friendIds, venueId);
             } else if (!selectedVenue) {
-                data = await getGlobalLeaderboard();
+                data = await getGlobalLeaderboard('normal');
             } else {
                 data = await getVenueLeaderboard(selectedVenue.venueId);
             }
@@ -150,7 +165,7 @@ export default function LeaderboardPage() {
             if (callId !== loadCallIdRef.current) return;
 
             // Diagnostic + self-healing: if current user is missing from global leaderboard
-            if (filterType === 'general' && !selectedVenue && currentUser) {
+            if (ladder === 'normal' && filterType === 'general' && !selectedVenue && currentUser) {
                 const userInList = data.some(p => p.userId === currentUser.userId);
                 if (!userInList && data.length > 0) {
                     // Cross-check: does the user exist in friends leaderboard (same games, different filter)?
@@ -183,7 +198,22 @@ export default function LeaderboardPage() {
 
     const hasData = leaderboard.length > 0;
 
+    // Évolution sur la semaine, reconstituée depuis l'historique d'ELO déjà
+    // stocké sur chaque profil. Recalculée seulement quand le classement change.
+    const movements = useMemo(
+        () => computeMovements(leaderboard, new Date().toISOString().split('T')[0]),
+        [leaderboard]
+    );
+
+    // Position du joueur connecté, pour le rappel en tête.
+    const myPosition = useMemo(() => {
+        if (!currentUser) return null;
+        const index = leaderboard.findIndex(p => p.userId === currentUser.userId);
+        return index === -1 ? null : { entry: leaderboard[index], rank: index + 1 };
+    }, [leaderboard, currentUser]);
+
     const isSearching = searchQuery.trim().length > 0;
+    const showPodium = !isSearching && leaderboard.length > 0;
     const searchFiltered = isSearching
         ? leaderboard
             .map((entry, i) => ({ entry, rank: i + 1 }))
@@ -193,29 +223,65 @@ export default function LeaderboardPage() {
     return (
         <div className={styles.container}>
             <div className={styles.contentWrapper}>
-                <div className={styles.header}>
-                    <h1 className={styles.title}>Classement</h1>
-                </div>
+                <PageHeader title="Classement" back={false} />
 
-                {/* Filter Type Tabs */}
+                {/* Choix de l'échelle — chantier 7.11.
+                    N'apparaît que s'il y a autre chose que le classement de
+                    référence : un onglet seul ne choisit rien. */}
+                {orderedLadders().length > 1 && (
+                    <div className={styles.ladderTabs} role="tablist" aria-label="Choisir le classement">
+                        {orderedLadders().map(l => (
+                            <button key={l.id} type="button" role="tab"
+                                aria-selected={ladder === l.id}
+                                className={`${styles.ladderTab} ${ladder === l.id ? styles.ladderTabActive : ''}`}
+                                onClick={() => setLadder(l.id)}
+                            >
+                                {l.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* Le classement de référence doit être NOMMÉ. Deux onglets
+                    côte à côte se valent visuellement : sans cette phrase,
+                    personne ne sait lequel compte. */}
+                <p className={styles.ladderNote}>{LADDERS[ladder].description}</p>
+
+                {/* Filtre de périmètre : général ou entre amis.
+                    Sans objet hors du classement de référence. */}
+                {ladder === 'normal' && (
                 <div className={styles.filterTabs}>
-                    <button
-                        onClick={() => setFilterType('general')}
+                    <button onClick={() => setFilterType('general')}
                         className={`${styles.filterTab} ${filterType === 'general' ? styles.filterTabActive : ''}`}
                     >
-                        <GlobeAltIcon className="w-5 h-5" />
+                        <GlobeAltIcon width={20} height={20} />
                         <span>General</span>
                     </button>
-                    <button
-                        onClick={() => setFilterType('friends')}
+                    <button onClick={() => setFilterType('friends')}
                         className={`${styles.filterTab} ${filterType === 'friends' ? styles.filterTabActive : ''}`}
                     >
-                        <UsersIcon className="w-5 h-5" />
+                        <UsersIcon width={20} height={20} />
                         <span>Amis</span>
                     </button>
                 </div>
+                )}
 
-                {/* Search bar */}
+                {/* Filtre de lieu. Regroupé avec les onglets ci-dessus : la
+                    recherche était coincée entre les deux, ce qui les faisait
+                    passer pour deux réglages sans rapport.
+                    Masqué hors du classement de référence : les compteurs par
+                    stade ne sont tenus que globalement. */}
+                {ladder === 'normal' && (
+                <div className={styles.filterSection}>
+                    <VenueDropdown selectedVenue={selectedVenue}
+                        onSelectVenue={setSelectedVenue}
+                        showNoneOption={true}
+                        noneLabel="Tous les stades"
+                    />
+                </div>
+                )}
+
+                {/* Recherche : trouver quelqu'un DANS le classement filtré. */}
                 <div className={styles.searchContainer}>
                     <MagnifyingGlassIcon className={styles.searchIcon} />
                     <input
@@ -227,41 +293,65 @@ export default function LeaderboardPage() {
                     />
                     {isSearching && (
                         <button className={styles.searchClear} onClick={() => setSearchQuery('')}>
-                            <XMarkIcon className="w-4 h-4" />
+                            <XMarkIcon width={16} height={16} />
                         </button>
                     )}
                 </div>
 
-                {/* Venue Filter Dropdown */}
-                <div className={styles.filterSection}>
-                    <VenueDropdown
-                        selectedVenue={selectedVenue}
-                        onSelectVenue={setSelectedVenue}
-                        showNoneOption={true}
-                        noneLabel="Tous les stades"
-                    />
-                </div>
 
                 {isLoading ? (
-                    <div className="flex justify-center py-12">
-                        <div className="w-12 h-12 border-4 border-[var(--color-field-green)] border-t-transparent rounded-full animate-spin" />
+                    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 'var(--spacing-2xl)', paddingBottom: 'var(--spacing-2xl)' }}>
+                        <div className="spinner-ring" style={{ width: '48px', height: '48px', borderWidth: '4px', borderTopColor: 'transparent', borderRadius: 'var(--radius-full)' }} />
                     </div>
                 ) : !hasData ? (
                     <div className={styles.emptyState}>
-                        {filterType === 'friends'
-                            ? 'Ajoute des amis pour voir leur classement !'
-                            : 'Aucun classement disponible pour ce stade'
+                        {/* Le message doit correspondre à ce qui est RÉELLEMENT
+                            filtré : « aucun classement pour ce stade » sur le
+                            Blitz, où aucun stade n'est sélectionné, laissait
+                            croire à un bug. */}
+                        {ladder !== 'normal'
+                            ? `Personne n'a encore joué en ${LADDERS[ladder].label}.`
+                            : filterType === 'friends'
+                                ? 'Ajoute des amis pour voir leur classement !'
+                                : selectedVenue
+                                    ? 'Aucun classement disponible pour ce stade'
+                                    : 'Aucun classement disponible pour le moment'
                         }
                     </div>
                 ) : (
                     <>
-                        {/* Podium — masqué pendant la recherche */}
-                        {!isSearching && leaderboard.length > 0 && (
+                        {/* Ta position, rappelée en tête. Quand on est 47e sur 141,
+                            il faut faire défiler pour se trouver — or c'est
+                            l'information qu'on vient chercher en premier. */}
+                        {myPosition && !isSearching && (
+                            <button
+                                className={styles.myPosition}
+                                onClick={() => router.push(`/profile/${myPosition.entry.userId}`)}
+                            >
+                                <span className={styles.myPositionRank}>
+                                    <span className={styles.myPositionNumber}>{myPosition.rank}</span>
+                                    <RankMovement movement={movements[myPosition.entry.userId]} />
+                                </span>
+                                <span className={styles.myPositionInfo}>
+                                    <span className={styles.myPositionLabel}>Ta position</span>
+                                    <span className={styles.myPositionElo}>
+                                        {myPosition.entry.elo || 1000} Elo
+                                    </span>
+                                    <span className={styles.myPositionTotal}>
+                                        sur {leaderboard.length} joueurs
+                                    </span>
+                                </span>
+                                <RankAvatar elo={myPosition.entry.elo} size="md" />
+                            </button>
+                        )}
+
+                        {/* Podium. Masqué pendant une recherche : chercher quelqu'un,
+                            c'est vouloir une liste, pas un tableau d'honneur. */}
+                        {showPodium && (
                             <div className={styles.podium}>
                                 {/* 2nd Place */}
                                 {leaderboard[1] && (
-                                    <div
-                                        className={`${styles.podiumSpot} ${styles.secondPlace} cursor-pointer`}
+                                    <div className={`${styles.podiumSpot} ${styles.secondPlace}`}
                                         onClick={() => router.push(`/profile/${leaderboard[1].userId}`)}
                                     >
                                         <div className={styles.avatarContainer}>
@@ -274,8 +364,7 @@ export default function LeaderboardPage() {
 
                                 {/* 1st Place */}
                                 {leaderboard[0] && (
-                                    <div
-                                        className={`${styles.podiumSpot} ${styles.firstPlace} cursor-pointer`}
+                                    <div className={`${styles.podiumSpot} ${styles.firstPlace}`}
                                         onClick={() => router.push(`/profile/${leaderboard[0].userId}`)}
                                     >
                                         <div className={styles.avatarContainer}>
@@ -288,8 +377,7 @@ export default function LeaderboardPage() {
 
                                 {/* 3rd Place */}
                                 {leaderboard[2] && (
-                                    <div
-                                        className={`${styles.podiumSpot} ${styles.thirdPlace} cursor-pointer`}
+                                    <div className={`${styles.podiumSpot} ${styles.thirdPlace}`}
                                         onClick={() => router.push(`/profile/${leaderboard[2].userId}`)}
                                     >
                                         <div className={styles.avatarContainer}>
@@ -308,32 +396,47 @@ export default function LeaderboardPage() {
                         ) : (
                             <div className={styles.listContainer}>
                                 <div className={styles.listHeader}>
-                                    <div className="text-center">#</div>
+                                    <div style={{ textAlign: 'center' }}>#</div>
                                     <div>Joueur</div>
-                                    <div className="text-center">V</div>
-                                    <div className="text-center">Elo</div>
+                                    {/* « V » pour victoires. À revoir quand les saisons
+                                        existeront : Sacha veut le total de la saison
+                                        en cours, pas le cumul de tous les temps. */}
+                                    <div style={{ textAlign: 'center' }} title="Victoires">V</div>
+                                    <div style={{ textAlign: 'center' }}>Elo</div>
                                 </div>
 
                                 {isSearching
                                     ? searchFiltered!.map(({ entry: player, rank }) => {
-                                        const isCreator = CREATORS.includes(player.username);
+                                        // La couleur du texte suit la bannière réellement
+                                        // affichée, plus une liste de pseudos en dur.
+                                        const onBanner = !!resolveBanner(player.username, player.bannerId,
+                                            v2Enabled ? player.equipped : null);
                                         return (
-                                            <PlayerBanner
-                                                key={player.userId}
+                                            <PlayerBanner key={player.userId}
                                                 username={player.username}
-                                                className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.currentUserItem : ''} cursor-pointer`}
+                                                bannerId={player.bannerId}
+                                                equipped={v2Enabled ? player.equipped : null}
+                                                className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.myItem : ''}`}
                                                 onClick={() => router.push(`/profile/${player.userId}`)}
                                             >
-                                                <div className={`${styles.rank} ${isCreator ? styles.textOnBanner : ''}`}>{rank}</div>
+                                                <div className={`${styles.rank} ${onBanner ? styles.textOnBanner : ''}`}>
+                                                    <span className={styles.rankNumber}>{rank}</span>
+                                                    <RankMovement movement={movements[player.userId]} />
+                                                </div>
                                                 <div className={styles.playerInfo}>
                                                     <RankAvatar elo={player.elo} size="md" />
-                                                    <span className={`${styles.playerName} ${isCreator ? styles.textOnBanner : ''}`}>
-                                                        {player.username}
-                                                        {currentUser?.userId === player.userId && ' (Moi)'}
-                                                    </span>
+                                                    <div className={styles.playerNameBlock}>
+                                                        <span className={`${styles.playerName} ${onBanner ? styles.textOnBanner : ''}`}>
+                                                            {player.username}
+                                                            {currentUser?.userId === player.userId && ' (Moi)'}
+                                                        </span>
+                                                        {/* Le titre se lit SOUS le pseudo, et prend la
+                                                            couleur de la bannière. */}
+                                                        <PlayerTitle equipped={v2Enabled ? player.equipped : null} compact />
+                                                    </div>
                                                 </div>
-                                                <div className={`${styles.statCol} ${isCreator ? styles.textOnBanner : ''}`}>{player.wins}</div>
-                                                <div className={`${styles.statCol} ${styles.winRate} ${isCreator ? styles.textOnBanner : ''}`}>
+                                                <div className={`${styles.statCol} ${onBanner ? styles.textOnBanner : ''}`}>{player.wins}</div>
+                                                <div className={`${styles.statCol} ${styles.winRate} ${onBanner ? styles.textOnBanner : ''}`}>
                                                     {player.elo || 1000}
                                                 </div>
                                             </PlayerBanner>
@@ -352,24 +455,36 @@ export default function LeaderboardPage() {
                                             );
                                         }
                                         const { entry: player, rank } = item;
-                                        const isCreator = CREATORS.includes(player.username);
+                                        // La couleur du texte suit la bannière réellement
+                                        // affichée, plus une liste de pseudos en dur.
+                                        const onBanner = !!resolveBanner(player.username, player.bannerId,
+                                            v2Enabled ? player.equipped : null);
                                         return (
-                                            <PlayerBanner
-                                                key={player.userId}
+                                            <PlayerBanner key={player.userId}
                                                 username={player.username}
-                                                className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.currentUserItem : ''} cursor-pointer`}
+                                                bannerId={player.bannerId}
+                                                equipped={v2Enabled ? player.equipped : null}
+                                                className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.myItem : ''}`}
                                                 onClick={() => router.push(`/profile/${player.userId}`)}
                                             >
-                                                <div className={`${styles.rank} ${isCreator ? styles.textOnBanner : ''}`}>{rank}</div>
+                                                <div className={`${styles.rank} ${onBanner ? styles.textOnBanner : ''}`}>
+                                                    <span className={styles.rankNumber}>{rank}</span>
+                                                    <RankMovement movement={movements[player.userId]} />
+                                                </div>
                                                 <div className={styles.playerInfo}>
                                                     <RankAvatar elo={player.elo} size="md" />
-                                                    <span className={`${styles.playerName} ${isCreator ? styles.textOnBanner : ''}`}>
-                                                        {player.username}
-                                                        {currentUser?.userId === player.userId && ' (Moi)'}
-                                                    </span>
+                                                    <div className={styles.playerNameBlock}>
+                                                        <span className={`${styles.playerName} ${onBanner ? styles.textOnBanner : ''}`}>
+                                                            {player.username}
+                                                            {currentUser?.userId === player.userId && ' (Moi)'}
+                                                        </span>
+                                                        {/* Le titre se lit SOUS le pseudo, et prend la
+                                                            couleur de la bannière. */}
+                                                        <PlayerTitle equipped={v2Enabled ? player.equipped : null} compact />
+                                                    </div>
                                                 </div>
-                                                <div className={`${styles.statCol} ${isCreator ? styles.textOnBanner : ''}`}>{player.wins}</div>
-                                                <div className={`${styles.statCol} ${styles.winRate} ${isCreator ? styles.textOnBanner : ''}`}>
+                                                <div className={`${styles.statCol} ${onBanner ? styles.textOnBanner : ''}`}>{player.wins}</div>
+                                                <div className={`${styles.statCol} ${styles.winRate} ${onBanner ? styles.textOnBanner : ''}`}>
                                                     {player.elo || 1000}
                                                 </div>
                                             </PlayerBanner>
@@ -381,7 +496,7 @@ export default function LeaderboardPage() {
 
                         {/* Created by section */}
                         <div className={styles.createdBySection}>
-                            <span className={styles.createdByLabel}>Créateurs</span>
+                            <span className={styles.createdByLabel}>Fondateurs</span>
                             <span className={styles.createdByNames}>
                                 Romain Brantegem · Pierre Léchaudé · Sacha Theben
                             </span>

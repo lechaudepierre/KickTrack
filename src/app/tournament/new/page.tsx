@@ -8,7 +8,6 @@ import { createTournament } from '@/lib/firebase/tournaments';
 import { Venue, TournamentFormat, TournamentMode } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import {
-    ArrowLeftIcon,
     UserIcon,
     UsersIcon,
     MapPinIcon,
@@ -17,6 +16,11 @@ import {
     ListBulletIcon
 } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
+import { PageHeader, Button } from '@/components/common/ui';
+import { MODES } from '@/lib/gamemodes/modes';
+import ModeInfoModal, { ModeInfoButton } from '@/components/game/ModeInfoModal';
+import type { GameMode } from '@/lib/gamemodes/types';
+import { useFeature } from '@/lib/features';
 
 export default function NewTournamentPage() {
     const router = useRouter();
@@ -25,7 +29,9 @@ export default function NewTournamentPage() {
     const [format, setFormat] = useState<TournamentFormat>('1v1');
     const [mode, setMode] = useState<TournamentMode>('round_robin');
     const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
-    const [targetScore, setTargetScore] = useState<6 | 11>(6);
+    const [modeId, setModeId] = useState('normal');
+    const [infoMode, setInfoMode] = useState<GameMode | null>(null);
+    const v2Enabled = useFeature('v2');
     const [venues, setVenues] = useState<Venue[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -71,7 +77,7 @@ export default function NewTournamentPage() {
                 selectedVenue?.name || 'Aucun',
                 format,
                 mode,
-                targetScore
+                modeId
             );
             router.push(`/tournament/${tournament.tournamentId}`);
         } catch (err: unknown) {
@@ -97,15 +103,7 @@ export default function NewTournamentPage() {
 
             <div className={styles.contentWrapper}>
                 {/* Header */}
-                <div className={styles.pageHeader}>
-                    <button
-                        onClick={() => router.back()}
-                        className={styles.backButton}
-                    >
-                        <ArrowLeftIcon className="h-6 w-6" />
-                    </button>
-                    <h1 className={styles.pageTitle}>Nouveau Tournoi</h1>
-                </div>
+                <PageHeader title="Nouveau Tournoi" />
 
                 {error && (
                     <div className="error-box" style={{ marginBottom: 'var(--spacing-md)' }}>
@@ -116,23 +114,19 @@ export default function NewTournamentPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
                     {/* Venue Selection */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: 'var(--spacing-md)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                            Stade
-                        </label>
+                        <label className={styles.fieldLabel}>Stade</label>
                         <div className={styles.dropdownContainer}>
-                            <button
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            <button onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                 className={styles.dropdownButton}
                             >
-                                <MapPinIcon className="w-5 h-5" />
+                                <MapPinIcon width={20} height={20} />
                                 <span>{selectedVenue?.name || 'Aucun'}</span>
-                                <ChevronDownIcon className={`w-5 h-5 ${styles.chevron} ${isDropdownOpen ? styles.chevronOpen : ''}`} />
+                                <ChevronDownIcon width={20} height={20} className={`${styles.chevron} ${isDropdownOpen ? styles.chevronOpen : ''}`} />
                             </button>
 
                             {isDropdownOpen && (
                                 <div className={styles.dropdownMenu}>
-                                    <button
-                                        onClick={() => {
+                                    <button onClick={() => {
                                             setSelectedVenue(null);
                                             setIsDropdownOpen(false);
                                         }}
@@ -141,8 +135,7 @@ export default function NewTournamentPage() {
                                         Aucun
                                     </button>
                                     {venues.map(venue => (
-                                        <button
-                                            key={venue.venueId}
+                                        <button key={venue.venueId}
                                             onClick={() => {
                                                 setSelectedVenue(venue);
                                                 setIsDropdownOpen(false);
@@ -158,24 +151,48 @@ export default function NewTournamentPage() {
                     </div>
 
                     {/* Tournament Mode Selection */}
+                    {/* Mode de jeu — chantier 9.11.
+                        Choisi une fois pour tout le tournoi : des règles qui
+                        changeraient d'un match à l'autre n'auraient aucun sens. */}
+                    {v2Enabled && (
+                        <div>
+                            <label className={styles.fieldLabel}>Mode de jeu</label>
+                            <div className={styles.grid2}>
+                                {MODES.map(m => (
+                                    <div key={m.id} style={{ position: 'relative' }}>
+                                        <button onClick={() => setModeId(m.id)}
+                                            className={`${styles.selectionCard} ${modeId === m.id ? styles.selectionCardActive : styles.selectionCardInactive}`}
+                                            aria-pressed={modeId === m.id}
+                                            style={{ width: '100%' }}
+                                        >
+                                            <p style={{ fontWeight: 600, color: modeId === m.id ? 'white' : 'var(--color-text-dark)', fontSize: '0.875rem' }}>
+                                                {m.name}
+                                            </p>
+                                        </button>
+                                        <ModeInfoButton modeName={m.name} onClick={() => setInfoMode(m)} />
+                                    </div>
+                                ))}
+                            </div>
+                            <p className={styles.fieldHint}>
+                                {MODES.find(m => m.id === modeId)?.description}
+                            </p>
+                        </div>
+                    )}
+
                     <div>
-                        <label style={{ display: 'block', marginBottom: 'var(--spacing-md)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                            Mode de tournoi
-                        </label>
+                        <label className={styles.fieldLabel}>Mode de tournoi</label>
                         <div className={styles.grid2}>
-                            <button
-                                onClick={() => setMode('round_robin')}
+                            <button onClick={() => setMode('round_robin')}
                                 className={`${styles.selectionCard} ${mode === 'round_robin' ? styles.selectionCardActive : styles.selectionCardInactive}`}
                             >
-                                <ListBulletIcon className="h-8 w-8 mx-auto mb-2" style={{ color: mode === 'round_robin' ? 'white' : 'var(--color-text-dark)' }} />
+                                <ListBulletIcon width={28} height={28} style={{ color: mode === 'round_robin' ? 'white' : 'var(--color-text-dark)' }} />
                                 <p style={{ fontWeight: 600, color: mode === 'round_robin' ? 'white' : 'var(--color-text-dark)', fontSize: '0.875rem' }}>Tous contre tous</p>
                                 <p style={{ fontSize: '0.7rem', color: mode === 'round_robin' ? 'rgba(255,255,255,0.7)' : 'rgba(51,51,51,0.5)', marginTop: '4px' }}>Max 8 equipes</p>
                             </button>
-                            <button
-                                onClick={() => setMode('bracket')}
+                            <button onClick={() => setMode('bracket')}
                                 className={`${styles.selectionCard} ${mode === 'bracket' ? styles.selectionCardActive : styles.selectionCardInactive}`}
                             >
-                                <TrophyIcon className="h-8 w-8 mx-auto mb-2" style={{ color: mode === 'bracket' ? 'white' : 'var(--color-text-dark)' }} />
+                                <TrophyIcon width={28} height={28} style={{ color: mode === 'bracket' ? 'white' : 'var(--color-text-dark)' }} />
                                 <p style={{ fontWeight: 600, color: mode === 'bracket' ? 'white' : 'var(--color-text-dark)', fontSize: '0.875rem' }}>Eliminatoire</p>
                                 <p style={{ fontSize: '0.7rem', color: mode === 'bracket' ? 'rgba(255,255,255,0.7)' : 'rgba(51,51,51,0.5)', marginTop: '4px' }}>Bracket</p>
                             </button>
@@ -184,50 +201,27 @@ export default function NewTournamentPage() {
 
                     {/* Format Selection */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: 'var(--spacing-md)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                            Format des matchs
-                        </label>
+                        <label className={styles.fieldLabel}>Format des matchs</label>
                         <div className={styles.grid2}>
-                            <button
-                                onClick={() => setFormat('1v1')}
+                            <button onClick={() => setFormat('1v1')}
                                 className={`${styles.selectionCard} ${format === '1v1' ? styles.selectionCardActive : styles.selectionCardInactive}`}
                             >
-                                <UserIcon className="h-8 w-8 mx-auto mb-2" style={{ color: format === '1v1' ? 'white' : 'var(--color-text-dark)' }} />
+                                <UserIcon width={28} height={28} style={{ color: format === '1v1' ? 'white' : 'var(--color-text-dark)' }} />
                                 <p style={{ fontWeight: 600, color: format === '1v1' ? 'white' : 'var(--color-text-dark)' }}>1 vs 1</p>
                             </button>
-                            <button
-                                onClick={() => setFormat('2v2')}
+                            <button onClick={() => setFormat('2v2')}
                                 className={`${styles.selectionCard} ${format === '2v2' ? styles.selectionCardActive : styles.selectionCardInactive}`}
                             >
-                                <UsersIcon className="h-8 w-8 mx-auto mb-2" style={{ color: format === '2v2' ? 'white' : 'var(--color-text-dark)' }} />
+                                <UsersIcon width={28} height={28} style={{ color: format === '2v2' ? 'white' : 'var(--color-text-dark)' }} />
                                 <p style={{ fontWeight: 600, color: format === '2v2' ? 'white' : 'var(--color-text-dark)' }}>2 vs 2</p>
                             </button>
-                        </div>
-                    </div>
-
-                    {/* Target Score */}
-                    <div>
-                        <label style={{ display: 'block', marginBottom: 'var(--spacing-md)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                            Score de victoire
-                        </label>
-                        <div className={styles.grid2}>
-                            {([6, 11] as const).map((score) => (
-                                <button
-                                    key={score}
-                                    onClick={() => setTargetScore(score)}
-                                    className={`${styles.selectionCard} ${targetScore === score ? styles.selectionCardActive : styles.selectionCardInactive}`}
-                                >
-                                    <p style={{ fontSize: '1.5rem', fontWeight: 700, color: targetScore === score ? 'white' : 'var(--color-text-dark)' }}>{score}</p>
-                                    <p style={{ fontSize: '0.75rem', color: targetScore === score ? 'rgba(255,255,255,0.8)' : 'rgba(51,51,51,0.6)' }}>buts</p>
-                                </button>
-                            ))}
                         </div>
                     </div>
 
                     {/* Info Box */}
                     <div style={{
                         background: 'rgba(255, 215, 0, 0.2)',
-                        border: '2px solid #FFD700',
+                        border: '2px solid var(--color-accent)',
                         borderRadius: 'var(--radius-md)',
                         padding: 'var(--spacing-md)',
                         marginTop: 'var(--spacing-sm)'
@@ -241,38 +235,18 @@ export default function NewTournamentPage() {
                     </div>
 
                     {/* Create Button */}
-                    <button
-                        onClick={handleCreateTournament}
-                        disabled={isLoading}
-                        style={{
-                            width: '100%',
-                            padding: 'var(--spacing-md) var(--spacing-lg)',
-                            background: '#FFD700',
-                            border: '3px solid #333333',
-                            borderRadius: 'var(--radius-md)',
-                            color: 'var(--color-text-dark)',
-                            fontWeight: 700,
-                            fontSize: '1rem',
-                            cursor: 'pointer',
-                            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                            opacity: isLoading ? 0.5 : 1,
-                            marginTop: 'var(--spacing-md)'
-                        }}
-                        onMouseEnter={(e) => {
-                            if (!isLoading) {
-                                e.currentTarget.style.transform = 'translateY(-4px)';
-                                e.currentTarget.style.boxShadow = '0 6px 0 rgba(0, 0, 0, 0.3)';
-                            }
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = 'none';
-                        }}
+                    <Button onClick={handleCreateTournament}
+                        isLoading={isLoading}
+                        variant="accent"
+                        fullWidth
+                        style={{ marginTop: 'var(--spacing-md)' }}
                     >
-                        {isLoading ? 'Creation...' : 'Creer le tournoi'}
-                    </button>
+                        {isLoading ? 'Création...' : 'Créer le tournoi'}
+                    </Button>
                 </div>
             </div>
+
+            <ModeInfoModal mode={infoMode} onClose={() => setInfoMode(null)} />
         </div>
     );
 }

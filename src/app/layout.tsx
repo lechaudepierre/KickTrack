@@ -25,7 +25,10 @@ export const viewport: Viewport = {
     initialScale: 1,
     maximumScale: 1,
     userScalable: false,
-    themeColor: "#1B5E20",
+    // Couleur littérale obligatoire : c'est une méta-donnée PWA lue par le
+    // système d'exploitation, pas du CSS — une variable n'y serait pas résolue.
+    // Doit rester alignée sur --field-dark dans styles/variables.css.
+    themeColor: "#1D5A20",
 };
 
 export default function RootLayout({
@@ -35,7 +38,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="fr">
-            <body className={`${inter.variable} font-sans antialiased`}>
+            <body className={inter.variable}>
                 {children}
                 <Analytics />
                 <SpeedInsights />

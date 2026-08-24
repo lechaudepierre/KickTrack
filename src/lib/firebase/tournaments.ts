@@ -20,7 +20,9 @@ import {
     TournamentFormat,
     TournamentMode,
     BracketRound,
-    Player
+    Player,
+    Game,
+    Team
 } from '@/types';
 import { generatePinCode } from '@/lib/utils/code-generator';
 
@@ -39,7 +41,7 @@ export async function createTournament(
     venueName: string,
     format: TournamentFormat,
     mode: TournamentMode,
-    targetScore: 6 | 11
+    modeId: string = 'normal'
 ): Promise<Tournament> {
     const db = getFirebaseDb();
     const tournamentRef = doc(collection(db, TOURNAMENTS_COLLECTION));
@@ -55,7 +57,7 @@ export async function createTournament(
         pinCode,
         format,
         mode,
-        targetScore,
+        modeId,
         venueId,
         venueName,
         hostId,
@@ -868,10 +870,16 @@ export async function createTournamentGame(
     const gameRef = doc(collection(db, 'games'));
 
     // Convert tournament teams to game teams
-    const teams = [
+    //
+    // BUG CORRIGÉ (chantier 9.11) : le repli de couleur écrivait un OBJET
+    // `{ primary, secondary }` alors que `Team.color` attend une valeur de
+    // `TeamColor` ('red' | 'blue' | …). GameBoard fait `styles[team.color]`
+    // pour choisir son thème : avec un objet, la clé n'existait pas et toutes
+    // les parties de tournoi s'affichaient en gris neutre.
+    const teams: [Team, Team] = [
         {
             name: match.team1.name,
-            color: match.team1.color || { primary: '#E74C3C', secondary: '#C0392B' },
+            color: match.team1.color ?? 'red',
             players: match.team1.players.map(p => ({
                 userId: p.userId,
                 username: p.username,
@@ -881,7 +889,7 @@ export async function createTournamentGame(
         },
         {
             name: match.team2.name,
-            color: match.team2.color || { primary: '#3498DB', secondary: '#2980B9' },
+            color: match.team2.color ?? 'blue',
             players: match.team2.players.map(p => ({
                 userId: p.userId,
                 username: p.username,
@@ -896,11 +904,12 @@ export async function createTournamentGame(
         team.players.some(player => player.userId.startsWith('guest_'))
     );
 
-    const game = {
+    // Typé explicitement : sans annotation, TypeScript ne vérifiait rien de cet
+    // objet — c'est ce qui a laissé passer la couleur d'équipe malformée.
+    const game: Game = {
         gameId: gameRef.id,
         venueId: tournament.venueId,
         venueName: tournament.venueName,
-        gameType: tournament.targetScore === 6 ? '6' : '11',
         teams,
         score: [0, 0],
         multiplier: 1,
@@ -912,6 +921,10 @@ export async function createTournamentGame(
         playerIds: teams.flatMap(t => t.players.map(p => p.userId)).filter(id => id !== ''),
         hostId: tournament.hostId,
         isGuestGame: hasGuestPlayers,
+        // Le mode de jeu du tournoi s'applique à chacun de ses matchs
+        // (chantier 9.11). C'est le contexte où le bibitif a le plus de sens :
+        // plusieurs matchs d'affilée, au bar, entre les mêmes personnes.
+        modeId: tournament.modeId || 'normal',
         tournamentId: tournament.tournamentId,
         tournamentMatchId: match.matchId
     };

@@ -20,36 +20,49 @@
 }
 
 /* Header */
+/* En-tête de page : bouton retour + titre.
+   `align-items: center` et non `baseline` : le bouton est un carré de 40px, le
+   titre une ligne de texte. Les aligner sur la ligne de base décalait le bouton
+   vers le bas — c'est le « gap pas propre » constaté sur la page classement. */
 .pageHeader {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+    min-height: 40px;
 }
 
 .backButton {
     width: 40px;
     height: 40px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     color: var(--color-text-dark);
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.backButton:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+    .backButton:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+    }
 }
 
+/* Titre de page. La contre-ombre franche le détache du fond terrain rayé :
+   sans elle, un titre blanc posé sur des rayures vertes perd ses contours. */
 .pageTitle {
-    font-size: 1.5rem;
-    font-weight: 800;
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-black);
     color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-shadow: 0 3px 0 var(--ink-900);
 }
 
 /* Search Input */
@@ -71,8 +84,8 @@
 .searchInput {
     width: 100%;
     padding: 1rem 1rem 1rem 3rem;
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     color: var(--color-text-dark);
     font-weight: 600;
@@ -85,7 +98,7 @@
 
 .searchInput:focus {
     outline: none;
-    border-color: var(--color-field-green);
+    border-color: var(--field-dark);
     box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
@@ -109,20 +122,22 @@
 }
 
 .filterPillActive {
-    background: var(--color-green-medium);
+    background: var(--color-primary);
     color: white;
-    border: 3px solid #333333;
+    border: var(--border-arcade);
 }
 
 .filterPillInactive {
-    background: var(--color-beige);
+    background: var(--color-surface);
     color: var(--color-text-dark);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
 }
 
-.filterPillInactive:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+@media (hover: hover) {
+    .filterPillInactive:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+    }
 }
 
 /* List Items */
@@ -131,17 +146,19 @@
     align-items: center;
     gap: var(--spacing-md);
     padding: var(--spacing-md);
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     margin-bottom: var(--spacing-sm);
     transition: all 0.2s ease;
     cursor: pointer;
 }
 
-.listItem:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+    .listItem:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+    }
 }
 
 /* Grid Layouts */
@@ -152,43 +169,87 @@
 }
 
 /* Selection Cards */
+/* ─── Libellé de champ ────────────────────────────────────────────────────────
+   Le titre au-dessus d'un groupe de choix (« Stade », « Format de jeu »…).
+   Il était écrit en style inline, à l'identique, dans 8 endroits du parcours
+   de lancement — donc 8 occasions de diverger. Une seule définition ici.
+   ──────────────────────────────────────────────────────────────────────────── */
+.fieldLabel {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+}
+
+/* Explication sous un groupe de choix. */
+.fieldHint {
+    margin-top: var(--spacing-sm);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    color: var(--color-text-secondary);
+}
+
+/* Un champ et son libellé. Remplace les `<div>` nus qui les regroupaient. */
+.field {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Carte de choix (format de jeu, mode de tournoi…).
+   Rembourrage réduit le 21/08 : ces cartes occupaient un tiers de l'écran
+   pour porter deux mots. */
+/* La COULEUR est obligatoire, pas facultative.
+ *
+ * DÉFAUT CORRIGÉ (22/08) : un `<button>` sans `color` explicite hérite de la
+ * couleur par défaut du navigateur. Sur macOS c'est un gris presque noir, sur
+ * **iOS Safari c'est le bleu système** — d'où les icônes et les libellés de
+ * mode en bleu sur le téléphone de Sacha, et nulle part ailleurs.
+ *
+ * Règle à retenir : tout bouton pose sa couleur de texte. Ne rien écrire, ce
+ * n'est pas « neutre », c'est laisser le système décider à notre place. */
 .selectionCard {
-    padding: var(--spacing-md);
+    color: var(--color-text-dark);
+    padding: var(--spacing-sm);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     cursor: pointer;
     text-align: center;
-    background: var(--color-beige);
+    background: var(--color-surface);
 }
 
-.selectionCard:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+    .selectionCard:hover {
+        transform: var(--lift-arcade);
+        box-shadow: var(--shadow-arcade);
+    }
 }
 
 .selectionCardActive {
-    background: var(--color-green-light);
-    border-color: #333333;
+    background: var(--color-success);
+    border-color: var(--ink-700);
 }
 
 .selectionCardActive p,
 .selectionCardActive span {
-    color: var(--color-white) !important;
+    color: var(--color-text-primary) !important;
 }
 
 .selectionCardInactive {
-    background: var(--color-beige);
+    background: var(--color-surface);
 }
 
 .selectionCardInactive:hover {
-    background: #f5e6c0;
+    background: var(--color-surface-raised);
 }
 
 /* Empty State */
 .emptyState {
     text-align: center;
-    padding: var(--spacing-3xl) var(--spacing-lg);
+    padding: var(--spacing-2xl) var(--spacing-lg);
 }
 
 .emptyIcon {
@@ -207,14 +268,14 @@
 .loadingContainer {
     display: flex;
     justify-content: center;
-    padding: var(--spacing-3xl);
+    padding: var(--spacing-2xl);
 }
 
 .spinner {
     width: 2rem;
     height: 2rem;
     border: 3px solid rgba(76, 175, 80, 0.2);
-    border-top-color: var(--color-field-green);
+    border-top-color: var(--field-dark);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -237,8 +298,8 @@
     align-items: center;
     gap: var(--spacing-sm);
     padding: var(--spacing-md) var(--spacing-lg);
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     color: var(--color-text-dark);
     font-weight: 600;
@@ -247,10 +308,12 @@
     transition: all 0.2s ease;
 }
 
-.dropdownButton:hover {
-    background: #f5e6c0;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+    .dropdownButton:hover {
+        background: var(--color-surface-raised);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+    }
 }
 
 .dropdownButton span {
@@ -272,8 +335,8 @@
     top: calc(100% + var(--spacing-xs));
     left: 0;
     right: 0;
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     overflow: hidden;
     z-index: 100;
@@ -299,8 +362,8 @@
 }
 
 .dropdownItemActive {
-    background: var(--color-green-light);
-    color: var(--color-white);
+    background: var(--color-success);
+    color: var(--color-text-primary);
     font-weight: 600;
 }
 
@@ -311,10 +374,10 @@
 .mainButton {
     width: 100%;
     padding: var(--spacing-md) var(--spacing-lg);
-    background: var(--color-green-medium);
-    border: 3px solid #333333;
+    background: var(--color-primary);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
-    color: var(--color-white);
+    color: var(--color-text-primary);
     font-size: 1rem;
     font-weight: 800;
     text-transform: uppercase;
@@ -324,10 +387,12 @@
     box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
 }
 
-.mainButton:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3);
-    background: var(--color-green-light);
+@media (hover: hover) {
+    .mainButton:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3);
+        background: var(--color-success);
+    }
 }
 
 .mainButton:active {

@@ -1,9 +1,8 @@
 .overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    /* `inset: 0` et non 100vw/100vh : voir la note dans GameBoard.module.css.
+       Un ancêtre transformé (paysage forcé) redéfinit le bloc conteneur. */
+    inset: 0;
     z-index: 50;
     pointer-events: none;
     animation: fadeOut 0.5s ease-out 3.5s forwards;

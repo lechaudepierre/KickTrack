@@ -1,13 +1,15 @@
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
-    signInAnonymously,
     signOut,
     updateProfile,
     linkWithCredential,
     EmailAuthProvider,
+    GoogleAuthProvider,
+    signInWithPopup,
     onAuthStateChanged,
     sendPasswordResetEmail,
+    sendEmailVerification,
     User as FirebaseUser
 } from 'firebase/auth';
 import {
@@ -39,7 +41,7 @@ const initialStats: UserStats = {
 };
 
 // Create user document in Firestore
-async function createUserDocument(userId: string, username: string, email?: string): Promise<User> {
+export async function createUserDocument(userId: string, username: string, email?: string): Promise<User> {
     const db = getFirebaseDb();
     const user: User = {
         userId,
@@ -55,14 +57,6 @@ async function createUserDocument(userId: string, username: string, email?: stri
 
     await setDoc(doc(db, 'users', userId), user);
     return user;
-}
-
-// Quick registration (anonymous auth with username)
-export async function registerQuick(username: string): Promise<User> {
-    const auth = getFirebaseAuth();
-    const result = await signInAnonymously(auth);
-    await updateProfile(result.user, { displayName: username });
-    return createUserDocument(result.user.uid, username);
 }
 
 // Complete registration (email + password)
@@ -90,7 +84,54 @@ export async function registerComplete(
         throw new Error('Ce nom d\'utilisateur est déjà pris');
     }
 
+    // Confirmation de l'adresse, dès l'inscription.
+    //
+    // Ce n'est pas une formalité : Firebase supprime un mot de passe dont
+    // l'adresse n'est pas vérifiée à la première connexion Google. Confirmer
+    // l'adresse rend les deux méthodes compatibles pour de bon.
+    //
+    // L'échec ne doit JAMAIS faire échouer l'inscription — le compte est déjà
+    // créé à ce stade, et Firebase limite le nombre d'envois. Le bandeau du
+    // tableau de bord rattrapera le joueur.
+    try {
+        await sendEmailVerification(result.user);
+    } catch {
+        // silencieux : voir EmailVerificationBanner
+    }
+
     return createUserDocument(result.user.uid, username, email);
+}
+
+/**
+ * (Ré)envoie le mail de confirmation d'adresse au compte connecté.
+ *
+ * Utilisé par le bandeau du tableau de bord pour les 140 comptes créés avant
+ * que l'envoi soit automatique.
+ *
+ * @throws si personne n'est connecté, ou si Firebase limite les envois
+ *         (`auth/too-many-requests`).
+ */
+export async function sendVerificationEmail(): Promise<void> {
+    const auth = getFirebaseAuth();
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error('Aucun compte connecté');
+    await sendEmailVerification(currentUser);
+}
+
+/**
+ * Redemande à Firebase l'état du compte.
+ *
+ * Le drapeau `emailVerified` est figé dans le jeton local : après un clic sur
+ * le lien reçu par mail, il reste faux tant qu'on n'a pas rechargé. Sans ça,
+ * le bandeau resterait affiché jusqu'à la prochaine connexion.
+ */
+export async function refreshVerificationStatus(): Promise<boolean> {
+    const auth = getFirebaseAuth();
+    const currentUser = auth.currentUser;
+    if (!currentUser) return false;
+    await currentUser.reload();
+    await currentUser.getIdToken(true);
+    return auth.currentUser?.emailVerified ?? false;
 }
 
 // Login with email/password
@@ -235,3 +276,132 @@ export async function getLeaderboard(limitCount: number = 20): Promise<User[]> {
 }
 
 //klqsfklsdjflksdjflksdjf
+
+
+// ─── Connexion Google ────────────────────────────────────────────────────────
+//
+// La connexion Google s'ajoute à l'email/mot de passe, elle ne le remplace pas :
+// sur les 147 comptes existants, 34 utilisent une adresse non-Google (hotmail,
+// icloud, yahoo, ulb.be…) et ne pourront jamais s'en servir.
+//
+// Le projet est réglé sur « une seule adresse par compte ». Consequence : quand
+// une adresse a déjà un compte mot de passe, Firebase REFUSE la connexion
+// Google avec `auth/account-exists-with-different-credential`. On rattache
+// alors le fournisseur Google au compte existant — le même UID est conservé,
+// donc ELO, statistiques, amis et historique restent intacts.
+
+export class GoogleLinkRequiredError extends Error {
+    constructor(public email: string, public pendingCredential: ReturnType<typeof GoogleAuthProvider.credentialFromError>) {
+        super('Un compte existe déjà avec cette adresse. Saisis ton mot de passe pour lier ton compte Google.');
+        this.name = 'GoogleLinkRequiredError';
+    }
+}
+
+/** Résultat d'une connexion : le profil s'il existe, ou l'obligation de choisir un pseudo. */
+export interface SignInOutcome {
+    user: User | null;
+    /** Le compte est authentifié mais n'a pas de profil : il faut choisir un pseudo. */
+    needsUsername: boolean;
+    userId: string;
+    email?: string;
+}
+
+/**
+ * Connexion Google.
+ *
+ * @throws GoogleLinkRequiredError si l'adresse a déjà un compte mot de passe.
+ *         L'appelant doit alors demander le mot de passe et appeler
+ *         `linkGoogleToExistingAccount`.
+ */
+export async function signInWithGoogle(): Promise<SignInOutcome> {
+    const auth = getFirebaseAuth();
+    const provider = new GoogleAuthProvider();
+    // On force le choix du compte : sinon Google reconnecte silencieusement le
+    // dernier utilisé, ce qui est déroutant sur un téléphone partagé au bar.
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    try {
+        const result = await signInWithPopup(auth, provider);
+        return resolveProfile(result.user);
+    } catch (err: unknown) {
+        const error = err as { code?: string; customData?: { email?: string } };
+        if (error?.code === 'auth/account-exists-with-different-credential') {
+            throw new GoogleLinkRequiredError(
+                error.customData?.email ?? '',
+                GoogleAuthProvider.credentialFromError(err as never)
+            );
+        }
+        throw err;
+    }
+}
+
+/**
+ * Rattache Google à un compte email/mot de passe existant.
+ *
+ * Le mot de passe n'est demandé qu'une fois : après ça, le joueur se connecte
+ * avec Google et ne le ressaisit plus jamais. L'UID ne change pas.
+ */
+export async function linkGoogleToExistingAccount(
+    email: string,
+    password: string,
+    pendingCredential: ReturnType<typeof GoogleAuthProvider.credentialFromError>
+): Promise<SignInOutcome> {
+    const auth = getFirebaseAuth();
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    if (pendingCredential) {
+        await linkWithCredential(result.user, pendingCredential);
+    }
+    return resolveProfile(result.user);
+}
+
+/**
+ * Le compte authentifié a-t-il un profil Firestore ?
+ *
+ * Répond aussi au bug des inscriptions ratées (chantier 9.8) : deux comptes de
+ * février ont un compte Auth mais aucun document, et l'app leur est
+ * inutilisable. Ils tomberont désormais sur l'écran de choix de pseudo.
+ */
+export async function resolveProfile(firebaseUser: FirebaseUser): Promise<SignInOutcome> {
+    const db = getFirebaseDb();
+    const snap = await getDoc(doc(db, 'users', firebaseUser.uid));
+
+    if (snap.exists()) {
+        return {
+            user: snap.data() as User,
+            needsUsername: false,
+            userId: firebaseUser.uid,
+            email: firebaseUser.email ?? undefined,
+        };
+    }
+
+    return {
+        user: null,
+        needsUsername: true,
+        userId: firebaseUser.uid,
+        email: firebaseUser.email ?? undefined,
+    };
+}
+
+/**
+ * Termine la création d'un compte : le joueur choisit son pseudo.
+ *
+ * Sert à trois cas d'un seul geste :
+ *   1. nouveau compte Google (Google ne fournit pas de pseudo)
+ *   2. réparation d'une inscription interrompue (chantier 9.8)
+ *   3. tout futur compte sans document
+ */
+export async function completeProfile(username: string): Promise<User> {
+    const auth = getFirebaseAuth();
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error('Aucun compte connecté');
+
+    const trimmed = username.trim();
+    if (trimmed.length < 2) throw new Error('Le pseudo doit faire au moins 2 caractères');
+    if (trimmed.length > 25) throw new Error('Le pseudo ne peut pas dépasser 25 caractères');
+
+    const available = await checkUsernameAvailable(trimmed, currentUser.uid);
+    if (!available) throw new Error('Ce pseudo est déjà pris');
+
+    await updateProfile(currentUser, { displayName: trimmed });
+    return createUserDocument(currentUser.uid, trimmed, currentUser.email ?? undefined);
+}

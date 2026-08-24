@@ -152,8 +152,7 @@ export default function VenueDropdown({
 
     return (
         <div className={styles.container} ref={containerRef}>
-            <button
-                type="button"
+            <button type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className={styles.button}
             >
@@ -181,8 +180,7 @@ export default function VenueDropdown({
                     {/* Options */}
                     <div className={styles.options}>
                         {showNoneOption && (
-                            <div
-                                onClick={() => handleSelectVenue(null)}
+                            <div onClick={() => handleSelectVenue(null)}
                                 className={`${styles.option} ${selectedVenue === null ? styles.optionActive : ''}`}
                             >
                                 <span>{noneLabel}</span>
@@ -197,14 +195,12 @@ export default function VenueDropdown({
                             filteredVenues.map(venue => {
                                 const isFavorite = favoriteVenues.includes(venue.venueId);
                                 return (
-                                    <div
-                                        key={venue.venueId}
+                                    <div key={venue.venueId}
                                         onClick={() => handleSelectVenue(venue)}
                                         className={`${styles.option} ${selectedVenue?.venueId === venue.venueId ? styles.optionActive : ''}`}
                                     >
                                         <span className={styles.venueName}>{venue.name}</span>
-                                        <div
-                                            onClick={(e) => handleToggleFavorite(venue.venueId, e)}
+                                        <div onClick={(e) => handleToggleFavorite(venue.venueId, e)}
                                             onMouseDown={(e) => e.stopPropagation()}
                                             className={styles.favoriteButton}
                                         >

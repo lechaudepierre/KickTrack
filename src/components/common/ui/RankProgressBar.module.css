@@ -1,0 +1,90 @@
+/* ─── Carte d'identité du profil ──────────────────────────────────────────────
+   Ce qu'un joueur vient voir en premier : qui il est, où il en est, et ce qui
+   le sépare du grade suivant.
+   Lit uniquement des tokens (chantier 5.1).
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.progress {
+    margin-top: var(--spacing-md);
+}
+
+.progressHeader {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+}
+
+.progressLabel {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-text-dark-soft);
+}
+
+.progressRemaining {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-black);
+    color: var(--color-text-dark);
+    font-variant-numeric: tabular-nums;
+}
+
+/* La barre reprend la grammaire arcade : contour épais, coins pleins. */
+.track {
+    position: relative;
+    height: 14px;
+    background: var(--color-surface-sunken);
+    border: var(--border-arcade-thin);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: var(--radius-full);
+    transition: width var(--transition-normal);
+}
+
+/* Au sommet, la barre est pleine et prend l'accent : c'est un aboutissement,
+   pas une progression en cours. */
+.fillMax {
+    background: var(--color-accent);
+}
+
+.milestones {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
+}
+
+.milestone {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    color: var(--color-text-dark-soft);
+}
+
+.milestoneIcon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+.maxed {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-text-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fill { transition: none; }
+}

@@ -23,10 +23,16 @@
     margin-bottom: var(--spacing-lg);
 }
 
+/* Même traitement que `PageHeader` : capitales lisibles sur le fond terrain
+   grâce à la contre-ombre franche. Ce titre avait sa propre définition, plus
+   petite et sans ombre — c'est pourquoi il dépareillait avec les autres pages. */
 .title {
-    font-size: 1.5rem;
-    font-weight: 800;
+    font-size: var(--text-xl);
+    font-weight: var(--weight-black);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
     color: var(--color-text-primary);
+    text-shadow: 0 3px 0 var(--ink-900);
 }
 
 .headerActions {
@@ -40,17 +46,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     color: var(--color-text-dark);
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.logoutBtn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+    .logoutBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+    }
 }
 
 .logoutIcon {
@@ -64,8 +72,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     color: var(--color-text-dark);
     cursor: pointer;
@@ -73,9 +81,11 @@
     position: relative;
 }
 
-.friendRequestsBtn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+    .friendRequestsBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+    }
 }
 
 .feedbackBtn {
@@ -84,17 +94,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     color: var(--color-text-dark);
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.feedbackBtn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+    .feedbackBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+    }
 }
 
 .friendRequestsBadge {
@@ -103,7 +115,7 @@
     right: -8px;
     width: 20px;
     height: 20px;
-    background: #FF5722;
+    background: var(--color-danger);
     color: white;
     font-size: 0.7rem;
     font-weight: 800;
@@ -111,7 +123,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid #333333;
+    border: var(--border-arcade-thin);
 }
 
 /* Profile Header */
@@ -120,16 +132,16 @@
     align-items: center;
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
-    background: var(--color-beige);
+    background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
 }
 
 .avatar {
     width: 3rem;
     height: 3rem;
-    background: var(--color-green-medium);
+    background: var(--green-600);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -137,7 +149,7 @@
     font-size: 1.25rem;
     font-weight: 800;
     color: var(--color-text-dark);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
 }
 
 .userInfo {
@@ -194,11 +206,11 @@
 }
 
 .statCard {
-    background: var(--color-beige);
+    background: var(--color-surface);
     color: var(--color-text-dark);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     text-align: center;
 }
 
@@ -219,7 +231,7 @@
 }
 
 .statCardHighlight {
-    background: var(--color-beige);
+    background: var(--color-surface);
     border-color: var(--color-text-dark);
 }
 
@@ -244,10 +256,10 @@
 
 /* Form récente */
 .formCard {
-    background: var(--color-beige);
+    background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
 }
 
 .formIndicators {
@@ -275,23 +287,23 @@
     justify-content: center;
     font-weight: 900;
     font-size: 1rem;
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
 }
 
 .formWin {
-    background: #4CAF50;
-    color: #333333;
+    background: var(--color-primary);
+    color: var(--ink-700);
 }
 
 .formLoss {
-    background: #FF9800;
-    color: #333333;
+    background: var(--color-warning);
+    color: var(--ink-700);
 }
 
 .formDraw {
-    background: #9E9E9E;
-    color: #333333;
+    background: var(--color-text-dark-soft);
+    color: var(--ink-700);
 }
 
 .streakText {
@@ -303,10 +315,10 @@
 
 /* Venue Card */
 .venueCard {
-    background: var(--color-beige);
+    background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
@@ -316,13 +328,13 @@
 .venueIcon {
     width: 2.5rem;
     height: 2.5rem;
-    background: #FF9800;
+    background: var(--color-warning);
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #333333;
-    border: 2px solid #333333;
+    color: var(--ink-700);
+    border: var(--border-arcade-thin);
 }
 
 .venueInfo {
@@ -353,8 +365,8 @@
     display: flex;
     justify-content: space-between;
     padding: var(--spacing-sm) var(--spacing-md);
-    background: var(--color-beige);
-    border: 2px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade-thin);
     border-radius: var(--radius-sm);
 }
 
@@ -378,17 +390,17 @@
 }
 
 .goalCard {
-    background: var(--color-beige);
+    background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     text-align: center;
 }
 
 .goalValue {
     font-size: 1.5rem;
     font-weight: 900;
-    color: #4CAF50;
+    color: var(--color-primary);
     line-height: 1;
     margin-bottom: 2px;
 }
@@ -403,10 +415,10 @@
 
 /* Position Card */
 .positionCard {
-    background: var(--color-beige);
+    background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
 }
 
 .positionHighlight {
@@ -415,13 +427,13 @@
     align-items: center;
     padding-bottom: var(--spacing-sm);
     margin-bottom: var(--spacing-sm);
-    border-bottom: 2px solid #333333;
+    border-bottom: var(--border-arcade-thin);
 }
 
 .positionName {
     font-size: 1.125rem;
     font-weight: 900;
-    color: #4CAF50;
+    color: var(--color-primary);
     text-transform: uppercase;
 }
 
@@ -453,15 +465,15 @@
 .positionBar {
     flex: 1;
     height: 0.75rem;
-    background: #e0d5b8;
+    background: var(--color-surface-sunken);
     border-radius: var(--radius-full);
     overflow: hidden;
-    border: 1px solid #333333;
+    border: 1px solid var(--ink-700);
 }
 
 .positionBarFill {
     height: 100%;
-    background: #4CAF50;
+    background: var(--color-primary);
     border-radius: var(--radius-full);
     transition: width var(--transition-normal);
 }
@@ -482,10 +494,10 @@
 }
 
 .detailItem {
-    background: var(--color-beige);
+    background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -511,17 +523,17 @@
 }
 
 .formatCard {
-    background: var(--color-beige);
+    background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     text-align: center;
     transition: all var(--transition-normal);
 }
 
 .formatCardActive {
-    border-color: #4CAF50;
-    background: #f0f9f0;
+    border-color: var(--color-primary);
+    background: var(--tint-success);
 }
 
 .formatTitle {
@@ -542,7 +554,7 @@
 .formatWinRate {
     font-size: 0.8rem;
     font-weight: 800;
-    color: #4CAF50;
+    color: var(--color-primary);
 }
 
 /* Recent Games */
@@ -553,10 +565,10 @@
 }
 
 .gameCard {
-    background: var(--color-beige);
+    background: var(--color-surface);
     border-radius: var(--radius-md);
     padding: var(--spacing-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -575,11 +587,11 @@
 }
 
 .resultWin {
-    color: #4CAF50;
+    color: var(--color-primary);
 }
 
 .resultLoss {
-    color: #FF9800;
+    color: var(--color-warning);
 }
 
 .gameOpponent {
@@ -624,13 +636,13 @@
 }
 
 .eloPositive {
-    color: #1B8A2A;
+    color: var(--color-primary-strong);
     background-color: rgba(46, 204, 113, 0.15);
     border: 1.5px solid rgba(46, 204, 113, 0.3);
 }
 
 .eloNegative {
-    color: #C0392B;
+    color: var(--color-danger);
     background-color: rgba(231, 76, 60, 0.1);
     border: 1.5px solid rgba(231, 76, 60, 0.2);
 }
@@ -646,9 +658,9 @@
     text-align: center;
     padding: var(--spacing-lg);
     color: rgba(51, 51, 51, 0.6);
-    background: var(--color-beige);
+    background: var(--color-surface);
     border-radius: var(--radius-lg);
-    border: 3px dashed #333333;
+    border: 3px dashed var(--ink-700);
     font-weight: 600;
 }
 
@@ -660,10 +672,10 @@
 }
 
 .perfectCard {
-    background: var(--color-beige);
+    background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     text-align: center;
 }
 
@@ -690,8 +702,8 @@
 
 /* Podium - Top Teammates */
 .podiumCard {
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     padding: var(--spacing-lg) var(--spacing-md);
 }
@@ -714,7 +726,7 @@
 .podiumAvatar {
     width: 2.5rem;
     height: 2.5rem;
-    background: var(--color-green-medium);
+    background: var(--green-600);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -722,14 +734,14 @@
     font-size: 1rem;
     font-weight: 800;
     color: white;
-    border: 3px solid #333333;
+    border: var(--border-arcade);
 }
 
 .podiumAvatarFirst {
     width: 3rem;
     height: 3rem;
     font-size: 1.25rem;
-    background: var(--color-green-light);
+    background: var(--color-success);
 }
 
 .podiumName {
@@ -747,7 +759,7 @@
 .podiumWins {
     font-size: 0.875rem;
     font-weight: 900;
-    color: #4CAF50;
+    color: var(--color-primary);
 }
 
 .podiumGames {
@@ -765,24 +777,24 @@
     font-weight: 900;
     color: white;
     border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     border-bottom: none;
     margin-top: 4px;
 }
 
 .podiumBar1 {
     height: 4rem;
-    background: var(--color-green-light);
+    background: var(--color-success);
 }
 
 .podiumBar2 {
     height: 2.75rem;
-    background: var(--color-green-medium);
+    background: var(--green-600);
 }
 
 .podiumBar3 {
     height: 2rem;
-    background: var(--color-green-primary);
+    background: var(--color-primary);
 }
 
 /* Head-to-Head */
@@ -793,10 +805,10 @@
 }
 
 .h2hCard {
-    background: var(--color-beige);
+    background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -830,7 +842,7 @@
 .h2hWins {
     font-size: 0.9375rem;
     font-weight: 900;
-    color: #4CAF50;
+    color: var(--color-primary);
 }
 
 .h2hSeparator {
@@ -841,7 +853,7 @@
 .h2hLosses {
     font-size: 0.9375rem;
     font-weight: 900;
-    color: #FF9800;
+    color: var(--color-warning);
 }
 
 /* Filter Section */
@@ -860,10 +872,10 @@
 .segmentedControl {
     flex: 1;
     display: flex;
-    background: #e0d5b8;
+    background: var(--color-surface-sunken);
     padding: 3px;
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
 }
 
 .segment {
@@ -881,17 +893,17 @@
 }
 
 .segmentActive {
-    background: var(--color-beige);
+    background: var(--color-surface);
     color: var(--color-text-dark);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Chart */
 .chartCard {
-    background: var(--color-beige);
+    background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
 }
 
 .chartContainer {
@@ -933,10 +945,10 @@
 }
 
 .matchPointCard {
-    background: var(--color-beige);
+    background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     text-align: center;
 }
 
@@ -962,10 +974,10 @@
 }
 
 .gamelleCard {
-    background: var(--color-beige);
+    background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     text-align: center;
 }
 
@@ -999,10 +1011,10 @@
 }
 
 .roleCard {
-    background: var(--color-beige);
+    background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     text-align: center;
 }
 
@@ -1060,13 +1072,13 @@
 }
 
 .modalContent {
-    background: var(--color-beige);
-    border: 4px solid #333;
+    background: var(--color-surface);
+    border: 4px solid var(--ink-700);
     border-radius: var(--radius-lg);
     padding: var(--spacing-xl);
     max-width: 400px;
     width: 100%;
-    box-shadow: 0 8px 0 #333;
+    box-shadow: 0 8px 0 var(--ink-700);
 }
 
 .modalTitle {
@@ -1113,8 +1125,8 @@
     width: 100%;
     padding: var(--spacing-xs) var(--spacing-md);
     padding-left: 2.5rem;
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     color: var(--color-text-dark);
     font-size: 0.875rem;
@@ -1124,7 +1136,7 @@
 
 .h2hSearchInput:focus {
     outline: none;
-    border-color: var(--color-green-medium);
+    border-color: var(--green-600);
 }
 
 

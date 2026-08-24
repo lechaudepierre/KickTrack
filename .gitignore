@@ -24,6 +24,11 @@
 .DS_Store
 *.pem
 
+# firebase admin credentials — NE JAMAIS COMMITER
+serviceAccountKey.json
+*-firebase-adminsdk-*.json
+firebase-debug.log
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -39,3 +44,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Fichiers SOURCE de design. `public/` est servi PUBLIQUEMENT et part dans
+# chaque déploiement : un gabarit Affinity y serait téléchargeable par
+# n'importe qui, et alourdirait le build pour rien.
+*.aftemplate
+*.afdesign
+*.afphoto
+
+# Sources et références de design : `public/` est servi PUBLIQUEMENT et
+# part dans chaque déploiement. Rien de tout ça ne doit y arriver.
+public/banners-inspi/
+*~lock~
+
+# archives de travail — jamais dans le depot
+src.zip

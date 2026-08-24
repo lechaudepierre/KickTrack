@@ -1,16 +1,16 @@
 /* ─── Profile Banner ─────────────────────────────────────────────────────────
-   Fixed 4:1 ratio — always shows the full image, never crops.
-   Width = 100% of parent. Height is automatically width / 4.
+   Ratio unique des bannières — voir --banner-aspect-ratio dans variables.css.
+   L'image source étant au même ratio, elle s'affiche en entier, jamais rognée.
    ──────────────────────────────────────────────────────────────────────────── */
 
 .bannerWrapper {
     width: 100%;
-    aspect-ratio: 4 / 1;
+    aspect-ratio: var(--banner-aspect-ratio);
     overflow: hidden;
     border-radius: var(--radius-md);
-    border: 3px solid #333;
+    border: var(--border-arcade);
     box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
-    background: #1a1a1a;
+    background: var(--ink-900);
 }
 
 .bannerImage {

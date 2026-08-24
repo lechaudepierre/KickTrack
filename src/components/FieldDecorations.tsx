@@ -1,61 +1,31 @@
+/**
+ * Décor de terrain — marquage et accents géométriques.
+ *
+ * Migré des classes utilitaires Tailwind vers un module CSS (chantier 5.4).
+ * Les couleurs et les arrondis viennent des tokens.
+ */
+
 import styles from './FieldDecorations.module.css';
 
 export function FieldLines() {
     return (
-        <div className="field-lines">
-            {/* Horizontal center line */}
-            <div className="field-line h-1 w-full top-1/2 left-0" />
+        <div className={styles.fieldLines}>
+            {/* Les lignes droites et diagonales ont été RETIRÉES (21/08).
+                Elles s'appuyaient sur une classe `.field-line` qui n'a jamais
+                existé dans le CSS : elles ne rendaient donc rien depuis
+                toujours. En les migrant, je les avais rendues visibles pour la
+                première fois — et le terrain devenait chargé.
+                Seuls le rond central et les arcs de coin étaient réellement
+                affichés : eux seuls restent. */}
 
-            {/* Vertical lines */}
-            <div className="field-line w-1 h-full top-0 left-1/4" />
-            <div className="field-line w-1 h-full top-0 left-1/2" />
-            <div className="field-line w-1 h-full top-0 left-3/4" />
+            {/* Rond central */}
+            <div className={`${styles.circle} ${styles.centerCircle}`} />
 
-            {/* Diagonal lines */}
-            <div
-                className="field-line h-1"
-                style={{
-                    width: '141%',
-                    top: '25%',
-                    left: '-20%',
-                    transform: 'rotate(45deg)',
-                    transformOrigin: 'center'
-                }}
-            />
-            <div
-                className="field-line h-1"
-                style={{
-                    width: '141%',
-                    top: '75%',
-                    left: '-20%',
-                    transform: 'rotate(-45deg)',
-                    transformOrigin: 'center'
-                }}
-            />
-
-            {/* Center circle */}
-            <div
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white/10"
-                style={{ width: '300px', height: '300px' }}
-            />
-
-            {/* Corner arcs */}
-            <div
-                className="absolute -top-12 -left-12 rounded-full border-4 border-white/10"
-                style={{ width: '100px', height: '100px' }}
-            />
-            <div
-                className="absolute -top-12 -right-12 rounded-full border-4 border-white/10"
-                style={{ width: '100px', height: '100px' }}
-            />
-            <div
-                className="absolute -bottom-12 -left-12 rounded-full border-4 border-white/10"
-                style={{ width: '100px', height: '100px' }}
-            />
-            <div
-                className="absolute -bottom-12 -right-12 rounded-full border-4 border-white/10"
-                style={{ width: '100px', height: '100px' }}
-            />
+            {/* Arcs de coin */}
+            <div className={`${styles.circle} ${styles.cornerArc} ${styles.cornerTopLeft}`} />
+            <div className={`${styles.circle} ${styles.cornerArc} ${styles.cornerTopRight}`} />
+            <div className={`${styles.circle} ${styles.cornerArc} ${styles.cornerBottomLeft}`} />
+            <div className={`${styles.circle} ${styles.cornerArc} ${styles.cornerBottomRight}`} />
         </div>
     );
 }
@@ -63,13 +33,8 @@ export function FieldLines() {
 export function FieldBackground() {
     return (
         <div className={styles.fieldBackground}>
-            {/* Geometric green accent */}
             <div className={styles.geometricAccentTop} />
-
-            {/* Bottom left accent */}
             <div className={styles.geometricAccentBottom} />
-
-            {/* Subtle field lines */}
             <FieldLines />
         </div>
     );

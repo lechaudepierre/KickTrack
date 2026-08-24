@@ -1,11 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Game, Team, Player, GoalPosition, GoalType } from '@/types';
-import { PlusIcon, XMarkIcon, StarIcon } from '@heroicons/react/24/solid';
+import { XMarkIcon, StarIcon } from '@heroicons/react/24/solid';
 import GameTimer from './GameTimer';
+import ChronoBar from './ChronoBar';
+import GageToast from './GageToast';
+import { getMode, isNormalMode } from '@/lib/gamemodes/modes';
+import ModeInfoModal from './ModeInfoModal';
+import { evaluate, type TriggeredMessage } from '@/lib/gamemodes/engine';
 import { useSound } from '@/hooks/useSound';
 import styles from './GameBoard.module.css';
-import RankAvatar from '@/components/common/RankAvatar';
+import PlayerRow from '@/components/common/PlayerRow';
+import { usePlayerProfiles } from '@/lib/firebase/usePlayerProfiles';
+import { useCatalog } from '@/lib/collection/catalogClient';
+import { gameStartMs } from '@/lib/game/dates';
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
@@ -15,9 +23,10 @@ interface GameBoardProps {
     onPauseResume?: () => void;
     onTimeLimitReached?: () => void;
     onEndGame?: () => void;
+    /** Fin déclenchée par le chronomètre : directe, sans confirmation. */
+    onChronoEnd?: () => void;
     isViewer?: boolean;
     isPortrait: boolean;
-    playerEloMap?: Record<string, number>;
 }
 
 const positions: { value: GoalPosition; label: string; color: string; isNarrow?: boolean }[] = [
@@ -34,25 +43,33 @@ const goalTypes: { value: GoalType; label: string; description: string }[] = [
     { value: 'gamelle_rentrante', label: 'Gamelle Rentrante', description: 'Ressort et rentre' }
 ];
 
-export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGame, isViewer = false, isPortrait, playerEloMap = {} }: GameBoardProps) {
+export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGame, onChronoEnd, isViewer = false, isPortrait }: GameBoardProps) {
     const { play: playSound } = useSound({ volume: 0.7 });
+    // Déclenche le chargement du catalogue : sans lui, les bannières ne
+    // s'affichent qu'au rendu suivant.
+    useCatalog();
+
+    /* L'ELO, la bannière et le titre viennent du MÊME accès que le lobby.
+     *
+     * DÉFAUT CORRIGÉ (22/08) : la page passait deux objets distincts, un pour
+     * l'ELO et un pour les cosmétiques, et celui des cosmétiques ne portait pas
+     * l'ELO. Résultat, tout le monde affichait le même grade pendant le match.
+     *
+     * Deux sources pour la même chose finissent toujours par diverger : il n'y
+     * en a plus qu'une. */
+    const profils = usePlayerProfiles(
+        game.teams.flatMap(t => t.players.map(p => p.userId)),
+        { withRank: true },
+    );
 
     // Time limit check (1 hour)
     useEffect(() => {
         if (isViewer || !game.startTime) return;
 
         const checkTimeLimit = () => {
-            let start: Date;
-            if (game.startTime && typeof (game.startTime as any).toDate === 'function') {
-                start = (game.startTime as any).toDate();
-            } else {
-                start = game.startTime instanceof Date ? game.startTime : new Date(game.startTime);
-            }
-
-            if (isNaN(start.getTime())) return;
-
-            const now = new Date();
-            const elapsedSeconds = Math.floor((now.getTime() - start.getTime()) / 1000);
+            const debut = gameStartMs(game);
+            if (debut === 0) return;
+            const elapsedSeconds = Math.floor((Date.now() - debut) / 1000);
 
             if (elapsedSeconds >= 3600) { // 1 hour = 3600 seconds
                 onTimeLimitReached?.();
@@ -71,9 +88,44 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
     const [step, setStep] = useState<'player' | 'position' | 'type'>('player');
 
     // Animation states for scores
-    const [animatingScore, setAnimatingScore] = useState<0 | 1 | null>(null);
 
     // Flash animation state
+    // ─── Règles sociales (chantier 7.3) ──────────────────────────────────────
+    // Couche d'ÉCOUTE par-dessus le moteur de score, jamais dedans : on observe
+    // les buts qui arrivent et on affiche un message. Le score, les stats et
+    // l'ELO ne sont jamais touchés (garde-fou du doc 33).
+    const [gages, setGages] = useState<TriggeredMessage[]>([]);
+    const firedRules = useRef<Set<string>>(new Set());
+    const lastSeenGoalCount = useRef<number>(game.goals?.length ?? 0);
+
+    useEffect(() => {
+        const goals = game.goals ?? [];
+        // On ne réagit qu'aux buts NOUVEAUX. Sans ce garde, chaque re-rendu
+        // (et chaque mise à jour temps réel) rejouerait tous les gages.
+        if (goals.length <= lastSeenGoalCount.current) {
+            lastSeenGoalCount.current = goals.length;
+            return;
+        }
+        lastSeenGoalCount.current = goals.length;
+
+        const mode = getMode(game.modeId);
+        if (mode.rules.length === 0) return;
+
+        const triggered = evaluate(
+            mode,
+            { kind: 'goal', goal: goals[goals.length - 1], teams: game.teams },
+            firedRules.current
+        );
+        if (triggered.length === 0) return;
+
+        triggered.forEach(m => firedRules.current.add(m.ruleId));
+        setGages(triggered);
+    }, [game.goals, game.teams, game.modeId]);
+
+    const dismissGages = useCallback(() => setGages([]), []);
+    const [showModeInfo, setShowModeInfo] = useState(false);
+    const activeMode = getMode(game.modeId);
+
     const [showFlashAnimation, setShowFlashAnimation] = useState(false);
     const [flashAnimationData, setFlashAnimationData] = useState<object | null>(null);
 
@@ -88,32 +140,20 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
     const totalPlayers = team1.players.length + team2.players.length;
     const isFourPlayers = totalPlayers === 4;
 
-    // Use state to track previous score for animation
-    const [prevScore, setPrevScore] = useState<[number, number]>(game.score);
-    useEffect(() => {
-        if (game.score[0] !== prevScore[0]) {
-            setAnimatingScore(0);
-            setTimeout(() => setAnimatingScore(null), 600);
-        } else if (game.score[1] !== prevScore[1]) {
-            setAnimatingScore(1);
-            setTimeout(() => setAnimatingScore(null), 600);
-        }
-        setPrevScore(game.score);
-    }, [game.score, prevScore]);
+    /* L'animation du score ne passe par AUCUN état.
+     *
+     * Chaque chiffre porte `key={game.score[i]}` : un but change la clé, React
+     * remonte l'élément, et son animation CSS rejoue. C'est tout.
+     *
+     * L'ancienne version tenait un `prevScore` en état et appelait `setState`
+     * depuis un effet qui avait `prevScore` en dépendance — un rendu de plus à
+     * chaque but, pour une valeur que personne n'affiche. React 19 refuse ce
+     * motif, et il a raison.
+     *
+     * Même technique que le « +30 s » du chronomètre : quand une animation doit
+     * rejouer à chaque changement, la clé suffit. */
 
-    const getTeamColors = (teamIndex: 0 | 1) => {
-        const team = game.teams[teamIndex];
-        const colorMap: Record<string, { bg: string; border: string; text: string; light: string }> = {
-            blue: { bg: 'bg-blue-500', border: 'border-blue-500', text: 'text-blue-500', light: 'bg-blue-500/10' },
-            red: { bg: 'bg-red-500', border: 'border-red-500', text: 'text-red-500', light: 'bg-red-500/10' },
-            green: { bg: 'bg-green-500', border: 'border-green-500', text: 'text-green-500', light: 'bg-green-500/10' },
-            yellow: { bg: 'bg-yellow-500', border: 'border-yellow-500', text: 'text-yellow-500', light: 'bg-yellow-500/10' },
-            purple: { bg: 'bg-purple-500', border: 'border-purple-500', text: 'text-purple-500', light: 'bg-purple-500/10' },
-            orange: { bg: 'bg-orange-500', border: 'border-orange-500', text: 'text-orange-500', light: 'bg-orange-500/10' },
-            slate: { bg: 'bg-slate-500', border: 'border-slate-500', text: 'text-slate-500', light: 'bg-slate-500/10' },
-        };
-        return colorMap[team.color] || colorMap.slate;
-    };
+
 
     const handleStartAddGoal = (teamIndex: 0 | 1, player?: Player) => {
         const team = game.teams[teamIndex];
@@ -184,7 +224,7 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
             <div className={styles.modalOverlay}>
                 <div className={`${styles.modalContent} ${teamColorClass}`}>
                     <div className={styles.inputHeader}>
-                        <div className="flex flex-col">
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <span className={styles.inputTitle}>
                                 {step === 'player' && 'Qui a marqué ?'}
                                 {step === 'position' && 'Position du tir'}
@@ -204,16 +244,15 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                         {step === 'player' && (
                             <div className={styles.selectionGrid}>
                                 {team.players.map(player => (
-                                    <button
-                                        key={player.userId}
+                                    // La même carte que partout ailleurs : le
+                                    // choix du buteur n'est qu'une liste de
+                                    // joueurs de plus.
+                                    <PlayerRow key={player.userId}
+                                        username={player.username}
+                                        profile={profils[player.userId]}
                                         onClick={() => handleSelectPlayer(player)}
                                         className={styles.playerButton}
-                                    >
-                                        <div className={styles.playerAvatar}>
-                                            <RankAvatar size="md" elo={playerEloMap[player.userId]} />
-                                        </div>
-                                        <span className={styles.playerName}>{player.username}</span>
-                                    </button>
+                                    />
                                 ))}
                             </div>
                         )}
@@ -223,8 +262,7 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                             <div className={styles.selectionGrid}>
                                 {positions.map(pos => (
                                     <div key={pos.value} className={`${styles.positionContainer} ${pos.isNarrow ? styles.narrowContainer : ''}`}>
-                                        <button
-                                            onClick={() => handleSelectPosition(pos.value)}
+                                        <button onClick={() => handleSelectPosition(pos.value)}
                                             className={`${styles.positionButton} ${pos.isNarrow ? styles.narrowButton : ''} ${pos.color === 'green' ? styles.bgGreen :
                                                 pos.color === 'blue' ? styles.bgBlue :
                                                     pos.color === 'yellow' ? styles.bgYellow :
@@ -233,8 +271,7 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                                         >
                                             <span className={styles.positionLabel}>{pos.label}</span>
                                         </button>
-                                        <button
-                                            onClick={() => handleOpenTypeSelection(pos.value)}
+                                        <button onClick={() => handleOpenTypeSelection(pos.value)}
                                             className={`${styles.starButton} ${pos.color === 'green' ? styles.bgGreen :
                                                 pos.color === 'blue' ? styles.bgBlue :
                                                     pos.color === 'yellow' ? styles.bgYellow :
@@ -252,8 +289,7 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                         {step === 'type' && (
                             <div className={styles.typeGrid}>
                                 {goalTypes.map(type => (
-                                    <button
-                                        key={type.value}
+                                    <button key={type.value}
                                         onClick={() => handleSelectGoalType(type.value)}
                                         className={`${styles.typeButton} ${type.value === 'normal' ? styles.bgNormal :
                                             type.value === 'flash' ? styles.bgFlash :
@@ -274,11 +310,6 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
         );
     };
 
-    const getTeamPlayerNames = (teamIndex: 0 | 1) => {
-        const team = game.teams[teamIndex];
-        return team.players.map(p => p.username).join(' & ');
-    };
-
     return (
         <div className={styles.hostLandscapeMode}>
             {isViewer && (
@@ -286,8 +317,27 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                     MODE SPECTATEUR
                 </div>
             )}
+            {/* Rappel permanent du mode de jeu.
+                SA PROPRE LIGNE, au-dessus de la carte de score, volontairement.
+                Deux tentatives précédentes ont échoué pour la même raison : la
+                carte porte des dégradés décoratifs en position absolue, donc un
+                `overflow: hidden` obligatoire. Tout ce qu'on y ajoute finit
+                rogné ou superposé. Une info de match mérite sa propre ligne. */}
+            {!isNormalMode(game.modeId) && (
+                <div className={styles.modeBar}>
+                    <button type="button"
+                        className={styles.modeBadge}
+                        onClick={() => setShowModeInfo(true)}
+                        aria-label={`Règles du mode ${activeMode.name}`}
+                    >
+                        MODE {activeMode.name.toUpperCase()}
+                        <span className={styles.modeBadgeInfo}>i</span>
+                    </button>
+                </div>
+            )}
+
             {/* Score Board */}
-            <div className={styles.scoreBoard}>
+            <div className={`${styles.scoreBoard} ${styles.scoreBoardShell}`}>
                 {/* Background Accents */}
                 <div className={`${styles.gradientAccent} ${styles.gradientAccentLeft} ${styles[team1.color] || styles.slate}`} />
                 <div className={`${styles.gradientAccent} ${styles.gradientAccentRight} ${styles[team2.color] || styles.slate}`} />
@@ -295,25 +345,27 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                 <div className={styles.scoreBoardContent}>
                     {/* Team 1 Score */}
                     <div className={`${styles.teamScore} ${styles[team1.color] || styles.slate}`}>
-                        <div className={`${styles.scoreValue} ${animatingScore === 0 ? styles.scoreValueAnimated : ''}`}>
+                        <div key={game.score[0]} className={`${styles.scoreValue} ${styles.scoreValueAnimated}`}>
                             {game.score[0]}
-                        </div>
-                        <div className={styles.teamInfo}>
-                            <div className={styles.playerAvatars}>
-                                {team1.players.map((player) => (
-                                    <RankAvatar key={player.userId} size="xs" elo={playerEloMap[player.userId]} />
-                                ))}
-                            </div>
-                            <span className={styles.teamLabel}>{getTeamPlayerNames(0)}</span>
                         </div>
                     </div>
 
                     {/* Timer & Info */}
                     <div className={styles.centerInfo}>
                         <div className={styles.timerWrapper}>
-                            <GameTimer startedAt={game.startTime} />
+                            {/* Un mode au temps remplace le minuteur décoratif par
+                                un vrai compte à rebours, qui termine la partie.
+                                Les autres modes gardent le compteur croissant. */}
+                            {activeMode.timing ? (
+                                <ChronoBar game={game}
+                                    timing={activeMode.timing}
+                                    isHost={!isViewer}
+                                    onTimeUp={() => onChronoEnd?.()}
+                                />
+                            ) : (
+                                <GameTimer startedAt={game.startTime} />
+                            )}
                         </div>
-                        <div className={styles.vsLabel}>VS</div>
                         {game.multiplier > 1 && (
                             <div className={styles.multiplierBadge}>
                                 PROCHAIN BUT: {game.multiplier} PTS
@@ -321,8 +373,7 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                         )}
 
                         {!isViewer && (
-                            <button
-                                onClick={onEndGame}
+                            <button onClick={onEndGame}
                                 className={styles.finishMatchButton}
                             >
                                 FINIR LE MATCH
@@ -332,26 +383,21 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
 
                     {/* Team 2 Score */}
                     <div className={`${styles.teamScore} ${styles[team2.color] || styles.slate}`}>
-                        <div className={`${styles.scoreValue} ${animatingScore === 1 ? styles.scoreValueAnimated : ''}`}>
+                        <div key={game.score[1]} className={`${styles.scoreValue} ${styles.scoreValueAnimated}`}>
                             {game.score[1]}
-                        </div>
-                        <div className={styles.teamInfo}>
-                            <div className={styles.playerAvatars}>
-                                {team2.players.map((player) => (
-                                    <RankAvatar key={player.userId} size="xs" elo={playerEloMap[player.userId]} />
-                                ))}
-                            </div>
-                            <span className={styles.teamLabel}>{getTeamPlayerNames(1)}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
+            {/* Gages du mode de jeu — purement déclaratif, aucun effet sur la partie */}
+            <GageToast messages={gages} onDismiss={dismissGages} />
+            <ModeInfoModal mode={showModeInfo ? activeMode : null} onClose={() => setShowModeInfo(false)} />
+
             {/* Flash Animation Overlay */}
             {showFlashAnimation && flashAnimationData && (
                 <div className={styles.flashOverlay}>
-                    <Lottie
-                        animationData={flashAnimationData}
+                    <Lottie animationData={flashAnimationData}
                         loop={false}
                         className={styles.flashLottie}
                     />
@@ -365,34 +411,29 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                         {/* Team 1 Buttons */}
                         <div className={styles.teamButtonsColumn}>
                             {team1.players.map((player) => (
-                                <button
-                                    key={player.userId}
+                                <button key={player.userId}
                                     onClick={() => handleStartAddGoal(0, player)}
                                     disabled={activeTeamIndex !== null}
                                     className={`
-                                        ${styles.goalButton} 
+                                        ${styles.goalButton}
                                         ${styles[team1.color] || styles.slate}
                                         ${(activeTeamIndex === 0 && selectedPlayer?.userId === player.userId) ? styles.goalButtonActive : styles.goalButtonInactive}
                                         ${activeTeamIndex === 1 ? styles.goalButtonDisabled : ''}
                                     `}
                                 >
-                                    <div className={`${styles.buttonContent} ${isFourPlayers ? styles.buttonContentFourPlayers : ''}`}>
-                                        {isFourPlayers ? (
-                                            <>
-                                                <div className={styles.iconWrapper}>
-                                                    <PlusIcon className={styles.plusIcon} />
-                                                </div>
-                                                <span className={styles.buttonLabel}>{player.username}</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span className={styles.buttonLabel}>{player.username}</span>
-                                                <div className={styles.iconWrapper}>
-                                                    <PlusIcon className={styles.plusIcon} />
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
+                                    {/* EXACTEMENT la carte du lobby, avec le pseudo
+                                        en grand : on lit de loin et de travers
+                                        pendant un match. Le ratio de bannière est
+                                        imposé par `PlayerBanner`, donc respecté
+                                        d'office, en 1v1 comme en 2v2. */}
+                                    {/* Pas d'icône « + » : toute la carte EST le
+                                        bouton, l'icône n'apprenait rien et
+                                        mangeait la place du pseudo. */}
+                                    <PlayerRow username={player.username}
+                                        profile={profils[player.userId]}
+                                        size="large"
+                                        className={styles.goalButtonRow}
+                                    />
                                 </button>
                             ))}
                         </div>
@@ -400,34 +441,29 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
                         {/* Team 2 Buttons */}
                         <div className={styles.teamButtonsColumn}>
                             {team2.players.map((player) => (
-                                <button
-                                    key={player.userId}
+                                <button key={player.userId}
                                     onClick={() => handleStartAddGoal(1, player)}
                                     disabled={activeTeamIndex !== null}
                                     className={`
-                                        ${styles.goalButton} 
+                                        ${styles.goalButton}
                                         ${styles[team2.color] || styles.slate}
                                         ${(activeTeamIndex === 1 && selectedPlayer?.userId === player.userId) ? styles.goalButtonActive : styles.goalButtonInactive}
                                         ${activeTeamIndex === 0 ? styles.goalButtonDisabled : ''}
                                     `}
                                 >
-                                    <div className={`${styles.buttonContent} ${isFourPlayers ? styles.buttonContentFourPlayers : ''}`}>
-                                        {isFourPlayers ? (
-                                            <>
-                                                <div className={styles.iconWrapper}>
-                                                    <PlusIcon className={styles.plusIcon} />
-                                                </div>
-                                                <span className={styles.buttonLabel}>{player.username}</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span className={styles.buttonLabel}>{player.username}</span>
-                                                <div className={styles.iconWrapper}>
-                                                    <PlusIcon className={styles.plusIcon} />
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
+                                    {/* EXACTEMENT la carte du lobby, avec le pseudo
+                                        en grand : on lit de loin et de travers
+                                        pendant un match. Le ratio de bannière est
+                                        imposé par `PlayerBanner`, donc respecté
+                                        d'office, en 1v1 comme en 2v2. */}
+                                    {/* Pas d'icône « + » : toute la carte EST le
+                                        bouton, l'icône n'apprenait rien et
+                                        mangeait la place du pseudo. */}
+                                    <PlayerRow username={player.username}
+                                        profile={profils[player.userId]}
+                                        size="large"
+                                        className={styles.goalButtonRow}
+                                    />
                                 </button>
                             ))}
                         </div>

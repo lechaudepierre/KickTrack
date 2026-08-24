@@ -1,5 +1,3 @@
-@reference "../../app/globals.css";
-
 .container {
     display: flex;
     flex-direction: column;
@@ -21,7 +19,7 @@
 }
 
 .headerCount {
-    color: #2ECC71;
+    color: var(--team-green);
     font-weight: 700;
 }
 
@@ -31,26 +29,24 @@
     gap: 0.5rem;
 }
 
+/* Ligne de joueur au lancement d'une partie. Sa forme vient de `PlayerBanner`,
+   qui applique le ratio de bannière à toutes les lignes. On ne redéfinit
+   surtout pas de hauteur ici — sinon cette liste divergerait du classement. */
+/* Disposition interne uniquement. La forme vient de `PlayerBanner`. */
 .playerItem {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    border-radius: 0.75rem;
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
-    border: 3px solid #333333;
-    background-color: var(--color-beige);
+    gap: var(--spacing-sm);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .playerItemActive {
-    background-color: #EAF9F1;
-    border-color: #2ECC71;
+    background-color: var(--team-green-tint);
+    border-color: var(--team-green);
 }
 
 .playerItemInactive {
-    background-color: var(--color-beige);
+    background-color: var(--color-surface);
 }
 
 /* Banner active: transparent background so the image shows */
@@ -64,21 +60,21 @@
 }
 
 .checkIconOnBanner {
-    color: var(--banner-text-color, #2ECC71) !important;
+    color: var(--banner-text-color, var(--team-green)) !important;
     opacity: 0.85;
 }
 
 .avatar {
     width: 2.5rem;
     height: 2.5rem;
-    background: linear-gradient(to bottom right, #2ECC71, #1abc9c);
+    background: linear-gradient(to bottom right, var(--team-green), var(--team-green));
     border-radius: 9999px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--color-text-dark);
     font-weight: 700;
-    border: 2px solid #333333;
+    border: var(--border-arcade-thin);
 }
 
 .playerInfo {
@@ -93,7 +89,7 @@
 }
 
 .youLabel {
-    color: #2ECC71;
+    color: var(--team-green);
     font-size: 0.75rem;
     margin-left: 0.5rem;
 }
@@ -110,7 +106,7 @@
 .checkIcon {
     height: 1.5rem;
     width: 1.5rem;
-    color: #2ECC71;
+    color: var(--team-green);
 }
 
 .kickButton {
@@ -122,7 +118,7 @@
     border-radius: 50%;
     background: rgba(255, 75, 75, 0.15);
     border: 2px solid rgba(255, 75, 75, 0.5);
-    color: #FF4B4B;
+    color: var(--team-red);
     cursor: pointer;
     flex-shrink: 0;
     transition: background 0.15s ease, border-color 0.15s ease;
@@ -132,7 +128,7 @@
 
 .kickButton:hover {
     background: rgba(255, 75, 75, 0.2);
-    border-color: #FF4B4B;
+    border-color: var(--team-red);
 }
 
 .kickIcon {
@@ -140,14 +136,25 @@
     height: 0.9rem;
 }
 
+/* Une place libre a EXACTEMENT la forme d'une place occupée.
+ *
+ * DÉFAUT CORRIGÉ (22/08) : elle avait son propre rembourrage et son propre
+ * arrondi, plus petits. Dans la même liste, les lignes vides et les lignes
+ * pleines n'avaient donc pas la même hauteur — c'est ce qui donnait
+ * l'impression que « le format n'est pas le bon » dans le lobby.
+ *
+ * La forme de référence est celle de `PlayerBanner` : même ratio, même
+ * rembourrage, même contour, même arrondi. */
 .emptySlot {
+    box-sizing: border-box;
+    aspect-ratio: var(--banner-aspect-ratio);
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    background-color: var(--color-beige);
-    border: 3px solid #333333;
-    border-radius: 0.75rem;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background-color: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
     opacity: 0.6;
 }
 
@@ -172,4 +179,13 @@
     opacity: 0.4;
     font-size: 0.875rem;
     font-weight: 500;
+}
+/* L'ELO sous le pseudo, dans le lobby. Discret : c'est une information de
+   contexte, pas le sujet de l'écran. */
+.elo {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    opacity: 0.75;
 }

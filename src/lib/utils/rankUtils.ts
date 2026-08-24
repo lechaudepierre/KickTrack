@@ -101,3 +101,58 @@ export const getRankInfo = (elo: number = 1000): RankInfo => {
         iconPath: `/icons/ranks/${rankFileNames[rank]} ${level}.png`
     };
 };
+
+// ─── Progression vers le grade suivant ───────────────────────────────────────
+//
+// Les paliers ci-dessus existent depuis toujours et n'étaient affichés NULLE
+// PART. Un joueur ne pouvait pas savoir ce qui le séparait du grade suivant —
+// c'est pourtant l'information qui donne envie de rejouer une partie.
+
+/** Bornes de chaque palier, dans l'ordre croissant. Dérivées des seuils ci-dessus. */
+const RANK_THRESHOLDS: number[] = [
+    0, 700, 800,          // Argent III, II, I
+    900, 950, 1000,       // Or III, II, I
+    1050, 1100, 1150,     // Diamant III, II, I
+    1200, 1250, 1300,     // Master III, II, I
+    1350, 1450, 1600,     // GrandMaster III, II, I
+];
+
+export interface RankProgress {
+    /** Grade actuel. */
+    current: RankInfo;
+    /** Grade suivant, ou null si le joueur est au sommet. */
+    next: RankInfo | null;
+    /** ELO du seuil à atteindre, ou null au sommet. */
+    nextThreshold: number | null;
+    /** Points restants avant le palier suivant, ou null au sommet. */
+    pointsToNext: number | null;
+    /** Avancement dans le palier courant, entre 0 et 1. Vaut 1 au sommet. */
+    ratio: number;
+}
+
+/**
+ * Où en est un joueur dans son palier, et ce qui le sépare du suivant.
+ *
+ * Le dernier palier (GrandMaster I) n'a pas de suite : on renvoie alors un
+ * avancement complet plutôt qu'une barre qui ne se remplirait jamais.
+ */
+export function getRankProgress(elo: number = 1000): RankProgress {
+    const current = getRankInfo(elo);
+
+    const floor = [...RANK_THRESHOLDS].reverse().find(t => elo >= t) ?? 0;
+    const nextThreshold = RANK_THRESHOLDS.find(t => t > elo) ?? null;
+
+    if (nextThreshold === null) {
+        return { current, next: null, nextThreshold: null, pointsToNext: null, ratio: 1 };
+    }
+
+    const span = nextThreshold - floor;
+    return {
+        current,
+        next: getRankInfo(nextThreshold),
+        nextThreshold,
+        pointsToNext: nextThreshold - elo,
+        // `span` ne peut pas valoir 0 : les seuils sont strictement croissants.
+        ratio: Math.min(1, Math.max(0, (elo - floor) / span)),
+    };
+}

@@ -32,17 +32,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     color: var(--color-text-dark);
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.backButton:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+    .backButton:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+    }
 }
 
 .title {
@@ -60,8 +62,8 @@
 
 /* Cards */
 .formCard {
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-lg);
     box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
     padding: var(--spacing-lg);
@@ -73,7 +75,7 @@
 .sectionTitle {
     font-size: 1rem;
     font-weight: 800;
-    color: #222222;
+    color: var(--ink-900);
 }
 
 /* Type selector */
@@ -100,15 +102,15 @@
 }
 
 .typeBtnActive {
-    background: #333333;
-    border-color: #333333;
-    color: var(--color-beige);
+    background: var(--ink-700);
+    border-color: var(--ink-700);
+    color: var(--color-surface);
 }
 
 .typeBtnActiveNews {
-    background: var(--color-green-light);
-    border-color: #333333;
-    color: #333333;
+    background: var(--color-success);
+    border-color: var(--ink-700);
+    color: var(--ink-700);
 }
 
 /* Fields */
@@ -134,18 +136,18 @@
 .input {
     padding: var(--spacing-sm) var(--spacing-md);
     background: white;
-    border: 2px solid #333333;
+    border: var(--border-arcade-thin);
     border-radius: var(--radius-md);
     font-size: 0.9rem;
     font-weight: 500;
-    color: #333333;
+    color: var(--ink-700);
     outline: none;
     font-family: inherit;
     transition: border-color 0.15s ease;
 }
 
 .input:focus {
-    border-color: var(--color-green-primary);
+    border-color: var(--color-primary);
 }
 
 .input::placeholder {
@@ -165,11 +167,11 @@
     gap: 5px;
     padding: 4px 10px;
     background: transparent;
-    border: 2px solid #333333;
+    border: var(--border-arcade-thin);
     border-radius: var(--radius-full);
     font-size: 0.78rem;
     font-weight: 700;
-    color: #333333;
+    color: var(--ink-700);
     cursor: pointer;
     transition: background 0.15s ease;
 }
@@ -183,11 +185,11 @@
     min-height: 200px;
     padding: var(--spacing-md);
     background: white;
-    border: 2px solid #333333;
+    border: var(--border-arcade-thin);
     border-radius: var(--radius-md);
     font-size: 0.88rem;
     font-family: 'Menlo', 'Monaco', monospace;
-    color: #333333;
+    color: var(--ink-700);
     resize: vertical;
     outline: none;
     line-height: 1.6;
@@ -195,14 +197,14 @@
 }
 
 .textarea:focus {
-    border-color: var(--color-green-primary);
+    border-color: var(--color-primary);
 }
 
 .previewBox {
     min-height: 200px;
     padding: var(--spacing-md);
     background: white;
-    border: 2px solid #333333;
+    border: var(--border-arcade-thin);
     border-radius: var(--radius-md);
 }
 
@@ -214,7 +216,7 @@
 
 /* Markdown preview */
 .markdownContent {
-    color: #444444;
+    color: var(--ink-700);
     font-size: 0.88rem;
     line-height: 1.65;
 }
@@ -223,7 +225,7 @@
 .markdownContent :global(h2),
 .markdownContent :global(h3) {
     font-weight: 800;
-    color: #222222;
+    color: var(--ink-900);
     margin-top: var(--spacing-md);
     margin-bottom: var(--spacing-sm);
 }
@@ -234,14 +236,14 @@
 
 .markdownContent :global(p) { margin-bottom: var(--spacing-sm); }
 .markdownContent :global(p:last-child) { margin-bottom: 0; }
-.markdownContent :global(strong) { font-weight: 800; color: #222222; }
+.markdownContent :global(strong) { font-weight: 800; color: var(--ink-900); }
 .markdownContent :global(ul), .markdownContent :global(ol) { padding-left: var(--spacing-lg); margin-bottom: var(--spacing-sm); }
 .markdownContent :global(li) { margin-bottom: 4px; }
 
 .markdownContent :global(img) {
     width: 100%;
     border-radius: var(--radius-md);
-    border: 2px solid #333333;
+    border: var(--border-arcade-thin);
     margin: var(--spacing-sm) 0;
     display: block;
 }
@@ -254,7 +256,7 @@
 }
 
 .success {
-    color: var(--color-green-primary);
+    color: var(--color-primary);
     font-size: 0.85rem;
     font-weight: 700;
 }
@@ -262,20 +264,22 @@
 /* Publish button */
 .publishBtn {
     padding: var(--spacing-md);
-    background: var(--color-green-light);
-    border: 3px solid #333333;
+    background: var(--color-success);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     font-size: 0.95rem;
     font-weight: 800;
-    color: #333333;
+    color: var(--ink-700);
     cursor: pointer;
     box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
     transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
-.publishBtn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 4px 6px 0 rgba(0, 0, 0, 0.2);
+@media (hover: hover) {
+    .publishBtn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 4px 6px 0 rgba(0, 0, 0, 0.2);
+    }
 }
 
 .publishBtn:disabled {
@@ -305,8 +309,8 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
     padding: var(--spacing-sm) var(--spacing-md);
@@ -329,18 +333,18 @@
     font-weight: 800;
     padding: 2px 7px;
     border-radius: var(--radius-full);
-    border: 1.5px solid #333333;
+    border: 1.5px solid var(--ink-700);
     text-transform: uppercase;
 }
 
 .badgePatch {
-    background: #333333;
-    color: var(--color-beige);
+    background: var(--ink-700);
+    color: var(--color-surface);
 }
 
 .badgeNews {
-    background: var(--color-green-light);
-    color: #333333;
+    background: var(--color-success);
+    color: var(--ink-700);
 }
 
 .version {
@@ -358,7 +362,7 @@
 .announcementTitle {
     font-size: 0.88rem;
     font-weight: 700;
-    color: #333333;
+    color: var(--ink-700);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -396,7 +400,7 @@
 .loadingDot {
     width: 10px;
     height: 10px;
-    background: var(--color-beige);
+    background: var(--color-surface);
     border-radius: 50%;
     animation: bounce 0.8s ease-in-out infinite;
 }

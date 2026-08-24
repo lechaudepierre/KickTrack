@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button, Input } from '@/components/common/ui';
+import { Button, Input, PageHeader } from '@/components/common/ui';
 import { getVenues, searchVenues, getUserFavoriteVenues, toggleVenueFavorite } from '@/lib/firebase/firestore';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { Venue, VenueType } from '@/types';
@@ -23,10 +23,10 @@ import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
 
 const venueTypeIcons: Record<VenueType, React.ReactNode> = {
-    bar: <BuildingStorefrontIcon className="h-5 w-5" />,
-    home: <HomeIcon className="h-5 w-5" />,
-    cercle: <UserGroupIcon className="h-5 w-5" />,
-    other: <MapPinIcon className="h-5 w-5" />
+    bar: <BuildingStorefrontIcon width={20} height={20} />,
+    home: <HomeIcon width={20} height={20} />,
+    cercle: <UserGroupIcon width={20} height={20} />,
+    other: <MapPinIcon width={20} height={20} />
 };
 
 const venueTypeLabels: Record<VenueType, string> = {
@@ -34,13 +34,6 @@ const venueTypeLabels: Record<VenueType, string> = {
     home: 'Domicile',
     cercle: 'Cercle',
     other: 'Autre'
-};
-
-const venueTypeColors: Record<VenueType, string> = {
-    bar: 'bg-amber-500/20 text-amber-400',
-    home: 'bg-blue-500/20 text-blue-400',
-    cercle: 'bg-purple-500/20 text-purple-400',
-    other: 'bg-slate-500/20 text-slate-400'
 };
 
 export default function VenuesPage() {
@@ -127,23 +120,14 @@ export default function VenuesPage() {
 
             <div className={styles.contentWrapper}>
                 {/* Header */}
-                <div className={styles.pageHeader}>
-                    <button onClick={() => router.back()} className={styles.backButton}>
-                        <ArrowLeftIcon className="h-6 w-6" />
-                    </button>
-                    <div style={{ flex: 1 }}>
-                        <h1 className={styles.pageTitle}>Stades de jeu</h1>
-                        <p className="text-secondary text-sm">{venues.length} stades enregistrés</p>
-                    </div>
-                    <button onClick={() => setIsModalOpen(true)} style={{ border: 'none', background: 'none', padding: 0 }}>
-                        <div className="btn-primary" style={{ marginBottom: 0 }}>
-                            <div className="btn-primary-shadow" />
-                            <div className="btn-primary-content" style={{ padding: '0.375rem 0.5rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0' }}>
-                                <PlusIcon className="h-4 w-4" />
-                            </div>
-                        </div>
-                    </button>
-                </div>
+                <PageHeader title="Stades de jeu"
+                    subtitle={`${venues.length} stades enregistrés`}
+                    action={
+                        <Button onClick={() => setIsModalOpen(true)} size="sm" aria-label="Ajouter un stade">
+                            <PlusIcon width={16} height={16} />
+                        </Button>
+                    }
+                />
 
                 {/* Search */}
                 <div className={styles.searchWrapper}>
@@ -160,8 +144,7 @@ export default function VenuesPage() {
                 {/* Filter Pills */}
                 <div className={styles.filterPills}>
                     {(['all', 'bar', 'home', 'cercle', 'other'] as const).map((type) => (
-                        <button
-                            key={type}
+                        <button key={type}
                             onClick={() => setFilter(type)}
                             className={`${styles.filterPill} ${filter === type ? styles.filterPillActive : styles.filterPillInactive}`}
                         >
@@ -179,23 +162,17 @@ export default function VenuesPage() {
                     <div className={styles.emptyState}>
                         <MapPinIcon className={styles.emptyIcon} />
                         <p className={styles.emptyText}>Aucun stade trouvé</p>
-                        <button onClick={() => setIsModalOpen(true)} style={{ border: 'none', background: 'none', padding: 0 }}>
-                            <div className="btn-secondary" style={{ display: 'inline-block' }}>
-                                <div className="btn-secondary-shadow" />
-                                <div className="btn-secondary-content">
-                                    Ajouter un stade
-                                </div>
-                            </div>
-                        </button>
+                        <Button onClick={() => setIsModalOpen(true)} variant="secondary">
+                            Ajouter un stade
+                        </Button>
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
                         {filteredVenues.map((venue) => (
-                            <div
-                                key={venue.venueId}
+                            <div key={venue.venueId}
                                 className={styles.listItem}
                             >
-                                <div className={`p-3 rounded-xl`} style={{ background: 'rgba(51, 51, 51, 0.05)', color: 'var(--color-text-dark)' }}>
+                                <div style={{ padding: '0.75rem', borderRadius: 'var(--radius-lg)', background: 'rgba(51, 51, 51, 0.05)', color: 'var(--color-text-dark)' }}>
                                     {venueTypeIcons[venue.type]}
                                 </div>
                                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -207,8 +184,7 @@ export default function VenuesPage() {
                                     </p>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-                                    <button
-                                        onClick={(e) => handleToggleFavorite(venue.venueId, e)}
+                                    <button onClick={(e) => handleToggleFavorite(venue.venueId, e)}
                                         style={{
                                             background: 'none',
                                             border: 'none',
@@ -219,7 +195,7 @@ export default function VenuesPage() {
                                         }}
                                     >
                                         {favoriteVenues.includes(venue.venueId) ? (
-                                            <StarIconSolid style={{ width: '1.5rem', height: '1.5rem', color: '#F1C40F' }} />
+                                            <StarIconSolid style={{ width: '1.5rem', height: '1.5rem', color: 'var(--color-accent)' }} />
                                         ) : (
                                             <StarIconOutline style={{ width: '1.5rem', height: '1.5rem', color: 'rgba(51, 51, 51, 0.3)' }} />
                                         )}
@@ -246,8 +222,7 @@ export default function VenuesPage() {
                 </div>
 
                 {/* Add Venue Modal */}
-                <AddVenueModal
-                    isOpen={isModalOpen}
+                <AddVenueModal isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     onSuccess={loadVenues}
                 />

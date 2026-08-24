@@ -1,344 +1,38 @@
 import {
     collection,
     doc,
-    setDoc,
     getDoc,
     updateDoc,
     arrayUnion,
     onSnapshot,
     Unsubscribe,
-    runTransaction,
     query,
     where,
-    getDocs
+    orderBy,
+    limit,
+    getDocs,
+    getCountFromServer,
 } from 'firebase/firestore';
-import { getFirebaseDb } from './config';
-import { updateVenueStats } from './firestore';
-import { Game, Goal, GoalPosition, Player, GameResults, GoalType, Team } from '@/types';
-import { Firestore } from 'firebase/firestore';
+import { getFirebaseDb, getFirebaseAuth } from './config';
+import { scoreFromTeams } from '@/lib/game/score';
+import { toMillis } from '@/lib/game/dates';
+import { appliquerBut, effetDuBut, rejouerButs, sansLeDernierBut } from '@/lib/game/goalEngine';
+import {
+    readLadder,
+    gamesFieldPath,
+    eloFieldPath,
+    LADDERS,
+    type LadderId,
+} from '@/lib/game/ladders';
+import { Game, Goal, GoalPosition, GameResults, GoalType } from '@/types';
+import type { Equipped } from '@/types/collection';
 
 const GAMES_COLLECTION = 'games';
 
-// Elo calculation helpers
-
-// K-Factor: 64 for first 10 games (placement), 32 afterwards (standard)
-function getKFactor(gamesPlayed: number): number {
-    if (gamesPlayed < 10) return 64;
-    return 32;
-}
-
-// Calculate expected probability of winning based on Elo difference
-function calculateProbability(rating1: number, rating2: number): number {
-    return 1.0 / (1.0 + Math.pow(10, (rating2 - rating1) / 400.0));
-}
-
-interface EloUpdate {
-    newElo: number;
-    eloChange: number;
-}
-
-// Calculate new Elo for a player in a 2v2 match
-function calculateEloChange(
-    playerElo: number,
-    partnerElo: number,
-    opponentAvgElo: number,
-    result: number, // 1 for win, 0 for loss
-    gamesPlayed: number
-): EloUpdate {
-    // 1. Team Probability (50% weight)
-    // Based on the average of the team vs average of opponents
-    const teamAvgElo = (playerElo + partnerElo) / 2;
-    const teamProb = calculateProbability(teamAvgElo, opponentAvgElo);
-
-    // 2. Personal Probability (50% weight)
-    // Based on the player's own rating vs average of opponents
-    const personalProb = calculateProbability(playerElo, opponentAvgElo);
-
-    // 3. Combined Probability
-    // We average the two probabilities to account for both team strength and individual contribution
-    const finalProb = (teamProb + personalProb) / 2;
-
-    // 4. K-Factor
-    const kFactor = getKFactor(gamesPlayed);
-
-    // 5. Calculate Change
-    const change = Math.round(kFactor * (result - finalProb));
-
-    return {
-        newElo: playerElo + change,
-        eloChange: change
-    };
-}
-
-// Helper function to update player stats after a game ends
-// Elo changes stored on the game document for display
-export interface GameEloChanges {
-    [userId: string]: {
-        previousElo: number;
-        newElo: number;
-        eloChange: number;
-        username: string;
-        isMVP?: boolean;
-    };
-}
-
-// ─── MVP Calculation ──────────────────────────────────────────────────────────
-// Rôle : attaquant si a marqué depuis 'attack', défenseur sinon (par défaut).
-// Score attaquant : (ses_buts / buts_équipe) × 90
-// Score défenseur : clean_sheet → 95, sinon max(0, (1 - buts_concédés/target) × 100)
-// En cas d'égalité : joueur de l'équipe gagnante l'emporte.
-function computeMVP(
-    teams: Team[],
-    goals: Goal[],
-    winner: 0 | 1
-): string | null {
-    const target = Math.max(teams[0].score, teams[1].score);
-    if (target === 0) return null;
-
-    const scores: { userId: string; score: number; isWinner: boolean }[] = [];
-
-    for (let teamIndex = 0; teamIndex < teams.length; teamIndex++) {
-        const team = teams[teamIndex];
-        const isWinner = teamIndex === winner;
-        const goalsConceded = teams[1 - teamIndex].score;
-        const teamGoals = team.score; // total buts de l'équipe
-
-        for (const player of team.players) {
-            if (player.userId.startsWith('guest_')) continue;
-
-            const playerGoals = goals.filter(g => g.scoredBy === player.userId);
-            const attackGoals = playerGoals.filter(g => g.position === 'attack').length;
-            const isAttacker = attackGoals > 0;
-
-            let score: number;
-            if (isAttacker) {
-                score = teamGoals > 0 ? (attackGoals / teamGoals) * 90 : 0;
-            } else {
-                // défenseur par défaut
-                score = goalsConceded === 0 ? 95 : Math.max(0, (1 - goalsConceded / target) * 100);
-            }
-
-            scores.push({ userId: player.userId, score, isWinner });
-        }
-    }
-
-    if (scores.length === 0) return null;
-
-    scores.sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        // égalité → gagnant prioritaire
-        return (b.isWinner ? 1 : 0) - (a.isWinner ? 1 : 0);
-    });
-
-    return scores[0].userId;
-}
-
-async function updatePlayerStatsAfterGame(
-    db: Firestore,
-    teams: Team[],
-    goals: Goal[],
-    winner: 0 | 1,
-    format?: string // '1v1' or '2v2'
-): Promise<GameEloChanges> {
-    // Check if any player is a guest (userId starts with 'guest_')
-    const hasGuestPlayers = teams.some(team =>
-        team.players.some(player => player.userId.startsWith('guest_'))
-    );
-
-    // Don't update stats if there are guest players
-    if (hasGuestPlayers) {
-        console.log('Skipping stats update - game contains guest players');
-        return {};
-    }
-
-    const goalsByPlayer: Record<string, number> = {};
-    goals.forEach(goal => {
-        goalsByPlayer[goal.scoredBy] = (goalsByPlayer[goal.scoredBy] || 0) + 1;
-    });
-
-    // Pre-fetch user data to get current Elo ratings
-    // We fetch for both 1v1 and 2v2 to handle Elo updates
-    const playerUserData: Record<string, any> = {};
-
-    for (const team of teams) {
-        for (const player of team.players) {
-            const userDoc = await getDoc(doc(db, 'users', player.userId));
-            if (userDoc.exists()) {
-                playerUserData[player.userId] = userDoc.data();
-            }
-        }
-    }
-
-    // Compute MVP before transaction loop
-    const mvpUserId = computeMVP(teams, goals, winner);
-
-    const updatePromises = [];
-    const allEloChanges: GameEloChanges = {};
-
-    for (let teamIndex = 0; teamIndex < teams.length; teamIndex++) {
-        const team = teams[teamIndex];
-        const isWinner = teamIndex === winner;
-        const goalsConceded = teams[1 - teamIndex].score;
-        const opponentTeam = teams[1 - teamIndex];
-
-        // Prepare Elo calculations for this team if 2v2
-        let eloUpdates: Record<string, EloUpdate> = {};
-
-        if (format === '2v2' && team.players.length === 2 && opponentTeam.players.length === 2) {
-            // Calculate opponent average Elo
-            let opponentEloSum = 0;
-            let opponentCount = 0;
-
-            for (const oppPlayer of opponentTeam.players) {
-                const oppData = playerUserData[oppPlayer.userId];
-                // Default to 1000 if no Elo found
-                opponentEloSum += (oppData?.stats?.elo || 1000);
-                opponentCount++;
-            }
-            const opponentAvgElo = opponentCount > 0 ? opponentEloSum / opponentCount : 1000;
-
-            // Calculate Elo update for each player in the current team
-            for (const player of team.players) {
-                const partner = team.players.find(p => p.userId !== player.userId);
-                if (partner) {
-                    const playerData = playerUserData[player.userId];
-                    const partnerData = playerUserData[partner.userId];
-
-                    const playerElo = playerData?.stats?.elo || 1000;
-                    const partnerElo = partnerData?.stats?.elo || 1000;
-                    // For games played, we use totals from stats (or 0 if new)
-                    // Note: This logic assumes 'totalGames' is accurate for 2v2 context mostly, 
-                    // or essentially captures experience level.
-                    const gamesPlayed = playerData?.stats?.totalGames || 0;
-
-                    eloUpdates[player.userId] = calculateEloChange(
-                        playerElo,
-                        partnerElo,
-                        opponentAvgElo,
-                        isWinner ? 1 : 0,
-                        gamesPlayed
-                    );
-                }
-            }
-        } else if (format === '1v1' && team.players.length === 1 && opponentTeam.players.length === 1) {
-            const player = team.players[0];
-            const opponent = opponentTeam.players[0];
-
-            const playerData = playerUserData[player.userId];
-            const opponentData = playerUserData[opponent.userId];
-
-            const playerElo = playerData?.stats?.elo || 1000;
-            const opponentElo = opponentData?.stats?.elo || 1000;
-            const gamesPlayed = playerData?.stats?.totalGames || 0;
-
-            // Standard Elo formula for 1v1
-            // We reuse calculateProbability helper
-            const prob = calculateProbability(playerElo, opponentElo);
-            const kFactor = getKFactor(gamesPlayed);
-            const change = Math.round(kFactor * ((isWinner ? 1 : 0) - prob));
-
-            eloUpdates[player.userId] = {
-                newElo: playerElo + change,
-                eloChange: change
-            };
-        }
-
-        // Collect Elo changes for display on results page
-        for (const player of team.players) {
-            if (eloUpdates[player.userId]) {
-                const playerData = playerUserData[player.userId];
-                const previousElo = playerData?.stats?.elo || 1000;
-                const isMVP = player.userId === mvpUserId;
-                allEloChanges[player.userId] = {
-                    previousElo,
-                    newElo: eloUpdates[player.userId].newElo + (isMVP ? 3 : 0),
-                    eloChange: eloUpdates[player.userId].eloChange + (isMVP ? 3 : 0),
-                    username: player.username,
-                    isMVP,
-                };
-            }
-        }
-
-        for (const player of team.players) {
-            const playerRef = doc(db, 'users', player.userId);
-
-            updatePromises.push(runTransaction(db, async (transaction) => {
-                const userDoc = await transaction.get(playerRef);
-                if (!userDoc.exists()) return;
-
-                const userData = userDoc.data();
-                const currentStats = userData.stats || {
-                    totalGames: 0,
-                    wins: 0,
-                    losses: 0,
-                    goalsScored: 0,
-                    goalsConceded: 0,
-                    winRate: 0,
-                    elo: 1000
-                };
-
-                const today = new Date().toISOString().split('T')[0];
-                const currentHistory = currentStats.history || {};
-                const dailyStats = currentHistory[today] || {
-                    date: today,
-                    gamesPlayed: 0,
-                    wins: 0,
-                    goalsScored: 0
-                };
-
-                // Determine new Elo
-                let newElo = currentStats.elo || 1000;
-                let eloHistory = currentStats.eloHistory || [];
-
-                // Only apply Elo update if calculated (meaning it was 2v2)
-                if (eloUpdates[player.userId]) {
-                    newElo = eloUpdates[player.userId].newElo;
-                    // MVP bonus +3 applied in-transaction
-                    if (player.userId === mvpUserId) {
-                        newElo += 3;
-                    }
-
-                    // Add to history
-                    eloHistory.push({
-                        date: new Date().toISOString(), // Full timestamp for precision
-                        elo: newElo
-                    });
-                }
-
-                const newDailyStats = {
-                    date: today,
-                    gamesPlayed: dailyStats.gamesPlayed + 1,
-                    wins: dailyStats.wins + (isWinner ? 1 : 0),
-                    goalsScored: dailyStats.goalsScored + (goalsByPlayer[player.userId] || 0),
-                    elo: newElo // Store end-of-day Elo
-                };
-
-                const newStats = {
-                    totalGames: currentStats.totalGames + 1,
-                    wins: currentStats.wins + (isWinner ? 1 : 0),
-                    losses: currentStats.losses + (isWinner ? 0 : 1),
-                    goalsScored: currentStats.goalsScored + (goalsByPlayer[player.userId] || 0),
-                    goalsConceded: currentStats.goalsConceded + goalsConceded,
-                    winRate: 0,
-                    elo: newElo,
-                    eloHistory: eloHistory,
-                    mvpCount: (currentStats.mvpCount || 0) + (player.userId === mvpUserId ? 1 : 0),
-                    history: {
-                        ...currentHistory,
-                        [today]: newDailyStats
-                    }
-                };
-
-                newStats.winRate = newStats.totalGames > 0 ? newStats.wins / newStats.totalGames : 0;
-
-                transaction.update(playerRef, { stats: newStats });
-            }));
-        }
-    }
-
-    await Promise.all(updatePromises);
-    return allEloChanges;
-}
+// Le calcul d'ELO/MVP vit dans src/lib/game/scoring.ts (module pur, testable),
+// et son exécution dans POST /api/games/:id/end (chantier 0.4).
+// Ce type est ré-exporté ici pour les imports existants.
+export type { GameEloChanges } from '@/lib/game/scoring';
 
 // Get game by ID
 export async function getGame(gameId: string): Promise<Game | null> {
@@ -375,6 +69,19 @@ export function subscribeToGame(
     });
 }
 
+/**
+ * Reporte des scores rejoués sur les équipes, sans toucher au reste.
+ *
+ * Les joueurs, la couleur et le nom d'équipe sont préservés : seul le score
+ * est remplacé, et il vient toujours du moteur de buts.
+ */
+function equipesAvecScores(teams: Game['teams'], scores: [number, number]): Game['teams'] {
+    return [
+        { ...teams[0], score: scores[0] },
+        { ...teams[1], score: scores[1] },
+    ];
+}
+
 // Add a goal
 export async function addGoal(
     gameId: string,
@@ -393,32 +100,13 @@ export async function addGoal(
     }
 
     const game = gameSnap.data() as Game;
-    const currentMultiplier = game.multiplier || 1;
-    const isMidfield = position === 'midfield';
-    const isNormal = type === 'normal' || type === 'flash';
-    const isGamelle = type === 'gamelle';
-    const isGamelleRentrante = type === 'gamelle_rentrante';
+    const butsAvant = game.goals ?? [];
 
-    let points = 0;
-    let opponentPointsChange = 0;
-    let nextMultiplier = currentMultiplier;
-
-    if (isMidfield) {
-        points = 0;
-        nextMultiplier = currentMultiplier + 1;
-    } else if (isNormal) {
-        points = currentMultiplier;
-        nextMultiplier = 1;
-    } else if (isGamelle) {
-        points = 0;
-        opponentPointsChange = -1;
-    } else if (isGamelleRentrante) {
-        points = 1;
-        opponentPointsChange = -1;
-    } else {
-        points = 1;
-        nextMultiplier = currentMultiplier;
-    }
+    // L'état d'avant est REJOUÉ depuis les buts, pas relu sur la partie : c'est
+    // ce qui garantit qu'ajouter et annuler restent exactement inverses
+    // (chantier 9.4). Une partie dont le score aurait dérivé se recale ici.
+    const etatAvant = rejouerButs(butsAvant);
+    const effet = effetDuBut(etatAvant, { type, position, teamIndex });
 
     const goal: Goal = {
         id: `goal-${Date.now()}`,
@@ -428,34 +116,24 @@ export async function addGoal(
         scoredBy: scorerId,
         scorerName,
         teamIndex,
-        points,
-        previousMultiplier: currentMultiplier
+        // Informatif : ce que ce but a rapporté, pour l'afficher dans la
+        // timeline sans rejouer la partie. Le score, lui, ne s'en sert plus.
+        points: effet.points,
+        previousMultiplier: etatAvant.multiplier
     };
 
-    const opponentIndex = 1 - teamIndex;
-    const newScore = game.teams[teamIndex].score + points;
-    const newOpponentScore = game.teams[opponentIndex].score + opponentPointsChange;
-    // Updated teams with new scores
-    const updatedTeams = [...game.teams];
-    updatedTeams[teamIndex] = {
-        ...updatedTeams[teamIndex],
-        score: newScore
-    };
-    updatedTeams[opponentIndex] = {
-        ...updatedTeams[opponentIndex],
-        score: newOpponentScore
-    };
+    const etatApres = appliquerBut(etatAvant, { type, position, teamIndex });
+    const updatedTeams = equipesAvecScores(game.teams, etatApres.scores);
 
     // Note: Automatic win logic removed here. Game must be ended manually by host.
 
     await updateDoc(gameRef, {
         goals: arrayUnion(goal),
         teams: updatedTeams,
-        score: [
-            teamIndex === 0 ? newScore : newOpponentScore,
-            teamIndex === 1 ? newScore : newOpponentScore
-        ],
-        multiplier: nextMultiplier
+        // DÉRIVÉ des équipes, jamais reconstruit à la main : c'est ce qui rend
+        // une divergence entre les deux copies impossible (chantier 9.1).
+        score: scoreFromTeams(updatedTeams),
+        multiplier: etatApres.multiplier
     });
 
     // Note: Stats update removed here. It's now handled by endGame when called manually.
@@ -473,102 +151,56 @@ export async function removeLastGoal(gameId: string): Promise<void> {
 
     const game = gameSnap.data() as Game;
 
-    if (game.goals.length === 0) {
+    if (!game.goals || game.goals.length === 0) {
         return;
     }
 
-    const lastGoal = game.goals[game.goals.length - 1];
-    const newGoals = game.goals.slice(0, -1);
-
-    // We need to undo what was done in addGoal
-    // 1. Subtract points from the scorer's team
-    // 2. If it was a gamelle, it subtracted 1 from opponent, so we add 1 back
-    // Note: This is a bit simplified as it doesn't perfectly restore multiplier state 
-    // if we wanted to be 100% accurate, but it handles the scores.
-
-    const teamIndex = lastGoal.teamIndex;
-    const opponentIndex = 1 - teamIndex;
-    const points = lastGoal.points || 0;
-    const isGamelle = lastGoal.type === 'gamelle' || lastGoal.type === 'gamelle_rentrante';
-    const opponentPointsChange = isGamelle ? -1 : 0;
-
-    const updatedTeams = [...game.teams];
-    const newScore = updatedTeams[teamIndex].score - points;
-    const newOpponentScore = updatedTeams[opponentIndex].score - opponentPointsChange;
-
-    updatedTeams[teamIndex] = {
-        ...updatedTeams[teamIndex],
-        score: newScore
-    };
-    updatedTeams[opponentIndex] = {
-        ...updatedTeams[opponentIndex],
-        score: newOpponentScore
-    };
+    // On ne soustrait plus le dernier but : on rejoue la partie sans lui.
+    // Scores et multiplicateur retombent donc exactement sur l'état d'avant,
+    // y compris quand l'ajout avait été borné à zéro (chantier 9.4).
+    const newGoals = sansLeDernierBut(game.goals);
+    const etat = rejouerButs(newGoals);
+    const updatedTeams = equipesAvecScores(game.teams, etat.scores);
 
     await updateDoc(gameRef, {
         goals: newGoals,
         teams: updatedTeams,
-        score: [
-            teamIndex === 0 ? newScore : newOpponentScore,
-            teamIndex === 1 ? newScore : newOpponentScore
-        ],
-        multiplier: lastGoal.previousMultiplier || 1
+        // DÉRIVÉ des équipes, jamais reconstruit à la main : c'est ce qui rend
+        // une divergence entre les deux copies impossible (chantier 9.1).
+        score: scoreFromTeams(updatedTeams),
+        multiplier: etat.multiplier
     });
 }
 
 // End game manually
+/**
+ * Termine une partie.
+ *
+ * ⚠️ NE CALCULE PLUS RIEN — délègue à POST /api/games/:id/end (chantier 0.4).
+ *
+ * Tout le calcul d'ELO, de MVP et l'écriture des stats se font côté serveur
+ * avec le SDK admin. Le client ne peut plus écrire `stats` sur qui que ce soit,
+ * ce qui referme la faille décrite dans firestore.rules.
+ */
 export async function endGame(gameId: string): Promise<GameResults> {
-    const db = getFirebaseDb();
-    const gameRef = doc(db, GAMES_COLLECTION, gameId);
-    const gameSnap = await getDoc(gameRef);
+    const auth = getFirebaseAuth();
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error('Vous devez être connecté pour terminer une partie');
 
-    if (!gameSnap.exists()) {
-        throw new Error('Game not found');
-    }
+    const idToken = await currentUser.getIdToken();
 
-    const game = gameSnap.data() as Game;
-
-    // Idempotency guard: prevent double processing (double-tap, network retry, etc.)
-    if (game.status !== 'in_progress') {
-        throw new Error('La partie n\'est pas en cours');
-    }
-
-    const endedAt = new Date();
-    const startedAt = game.startedAt instanceof Date ? game.startedAt : new Date(game.startedAt);
-    const duration = Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000);
-
-    const winner = game.teams[0].score > game.teams[1].score ? 0 :
-        game.teams[1].score > game.teams[0].score ? 1 : undefined;
-
-    if (winner === undefined) {
-        throw new Error('Impossible de terminer un match sur une égalité. Continuez de jouer !');
-    }
-
-    // Update player stats BEFORE marking as completed to avoid race condition
-    // (the game page listener redirects to results as soon as status is 'completed')
-    let eloChanges: GameEloChanges = {};
-    if (winner !== undefined) {
-        const playerCount = game.teams[0].players.length;
-        const format = playerCount === 1 ? '1v1' : '2v2';
-        eloChanges = await updatePlayerStatsAfterGame(db, game.teams, game.goals, winner, format);
-    }
-
-    // Write everything atomically: status + eloChanges in a single update
-    const mvpId = Object.entries(eloChanges).find(([, v]) => v.isMVP)?.[0];
-    await updateDoc(gameRef, {
-        status: 'completed',
-        endedAt,
-        duration,
-        winner,
-        ...(Object.keys(eloChanges).length > 0 ? { eloChanges } : {}),
-        ...(mvpId ? { mvpId } : {})
+    const response = await fetch(`/api/games/${gameId}/end`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}` },
     });
 
-    // Update venue stats
-    const totalPlayers = game.teams.reduce((sum, team) => sum + team.players.length, 0);
-    await updateVenueStats(game.venueId, { playersCount: totalPlayers });
+    const payload = await response.json().catch(() => ({}));
 
-    return calculateGameResults({ ...game, status: 'completed', winner });
+    if (!response.ok) {
+        throw new Error(payload?.error ?? 'Erreur lors de la clôture de la partie');
+    }
+
+    return payload as GameResults;
 }
 
 // Abandon game (delete from stats)
@@ -599,93 +231,139 @@ export async function forfeitGame(gameId: string, forfeitingTeamIndex: 0 | 1): P
 
     await updateDoc(gameRef, {
         teams: updatedTeams,
-        score: [
-            winningTeamIndex === 0 ? symbolicWinScore : game.score[0],
-            winningTeamIndex === 1 ? symbolicWinScore : game.score[1]
-        ]
+        // Dérivé, comme partout ailleurs. L'ancienne version reprenait
+        // `game.score` pour l'équipe perdante : si cette copie avait déjà
+        // divergé, le forfait la recopiait telle quelle.
+        score: scoreFromTeams(updatedTeams)
     });
 
     await endGame(gameId);
 }
 
-// Get user's recent games
+/**
+ * Les dernières parties d'un joueur.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * LE DÉFAUT QUE ÇA CORRIGE (mesuré le 22/08)
+ * ═══════════════════════════════════════════════════════════════════════════
+ * L'ancienne version demandait TOUTES les parties du joueur, puis appliquait
+ * `limitCount` avec un `.slice()` **après le téléchargement**. Le paramètre ne
+ * servait donc à rien côté réseau.
+ *
+ * Chiffres réels de production : ouvrir un profil téléchargeait jusqu'à
+ * **892 Ko** de documents de parties — pour en afficher quelques-unes. C'est
+ * la cause principale des lenteurs signalées par Sacha.
+ *
+ * Le commentaire d'origine disait « sans orderBy pour éviter un index
+ * composite ». L'index évité coûtait 890 Ko à chaque ouverture de profil.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * DEUX CHEMINS, ET C'EST VOLONTAIRE
+ * ═══════════════════════════════════════════════════════════════════════════
+ * Le chemin rapide a besoin d'un index composite (voir `firestore.indexes.json`).
+ * Tant qu'il n'existe pas — ou pendant les quelques minutes de sa
+ * construction — Firestore répond `failed-precondition`. On retombe alors sur
+ * l'ancien comportement : lent, mais correct. Aucune fenêtre de casse.
+ *
+ * Le repli disparaîtra quand l'index sera en place partout.
+ */
 export async function getUserGames(userId: string, limitCount: number = 10): Promise<Game[]> {
     const db = getFirebaseDb();
 
-    // Query without orderBy to avoid needing a composite index
-    // We'll sort client-side instead
-    const q = query(
-        collection(db, GAMES_COLLECTION),
-        where('playerIds', 'array-contains', userId)
-    );
-
-    const snapshot = await getDocs(q);
-    const games = snapshot.docs.map(doc => doc.data() as Game);
-
-    // Filter out non-completed games and guest games
-    const validGames = games.filter(game => {
-        // Only include completed games
+    /** Les parties avec invités sont écartées ici, pas par la requête. */
+    const estValable = (game: Game): boolean => {
         if (game.status !== 'completed') return false;
-
-        // If the flag exists and is true, filter it out
         if (game.isGuestGame) return false;
-
-        // For old games without the flag, check if it contains guest players
-        const hasGuestPlayers = game.teams?.some(team =>
+        // Les parties d'avant le drapeau : on regarde les joueurs.
+        return !game.teams?.some(team =>
             team.players?.some(player => player.userId.startsWith('guest_'))
         );
-        return !hasGuestPlayers;
-    });
+    };
 
-    // Sort by startedAt descending (client-side)
-    validGames.sort((a, b) => {
-        const dateA = a.startedAt instanceof Date ? a.startedAt : new Date((a.startedAt as any).seconds * 1000);
-        const dateB = b.startedAt instanceof Date ? b.startedAt : new Date((b.startedAt as any).seconds * 1000);
-        return dateB.getTime() - dateA.getTime();
-    });
 
-    // Apply limit
-    return validGames.slice(0, limitCount);
+    // ── Chemin rapide : le tri et la coupe se font côté serveur ──────────────
+    try {
+        // Une marge, pas un doublement : `status == completed` est désormais
+        // filtré CÔTÉ SERVEUR, il ne reste que les parties avec invités à
+        // écarter ici, et elles sont minoritaires. Doubler la demande revenait
+        // à télécharger deux fois trop.
+        const marge = Math.min(limitCount + 30, 300);
+        const rapide = query(
+            collection(db, GAMES_COLLECTION),
+            where('playerIds', 'array-contains', userId),
+            where('status', '==', 'completed'),
+            orderBy('startedAt', 'desc'),
+            limit(marge)
+        );
+        const snap = await getDocs(rapide);
+        return snap.docs.map(d => d.data() as Game).filter(estValable).slice(0, limitCount);
+    } catch (err) {
+        const code = (err as { code?: string })?.code;
+        if (code !== 'failed-precondition') throw err;
+        console.warn(
+            '[getUserGames] index composite absent — repli lent. '
+            + 'Créer l\'index décrit dans firestore.indexes.json.'
+        );
+    }
+
+    // ── Repli : tout télécharger, trier et couper ici ────────────────────────
+    const snapshot = await getDocs(query(
+        collection(db, GAMES_COLLECTION),
+        where('playerIds', 'array-contains', userId)
+    ));
+    const valables = snapshot.docs.map(doc => doc.data() as Game).filter(estValable);
+    valables.sort((a, b) => toMillis(b.startedAt) - toMillis(a.startedAt));
+    return valables.slice(0, limitCount);
 }
 
-// Calculate game results
-function calculateGameResults(game: Game): GameResults {
-    // Count goals by player
-    const goalsByPlayer: Record<string, number> = {};
-    const goalsByPosition: Record<GoalPosition, number> = {
-        defense: 0,
-        midfield: 0,
-        attack: 0,
-        goalkeeper: 0
-    };
+/**
+ * La place d'un joueur au classement général.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * UN COMPTAGE SERVEUR, PAS UN TÉLÉCHARGEMENT
+ * ═══════════════════════════════════════════════════════════════════════════
+ * La position, c'est « combien de joueurs ont un meilleur ELO, plus un ». La
+ * réponse tient dans un entier : `getCountFromServer` la calcule côté
+ * Firestore et ne rapatrie que ce nombre.
+ *
+ * L'alternative — charger le classement pour y chercher sa ligne — coûterait
+ * **225 Ko** (mesuré : 141 documents users, avec leur `eloHistory` dedans).
+ * Pour afficher « #21 ». C'est exactement le genre d'appel qui rendait
+ * l'application lente.
+ *
+ * Les deux filtres reprennent EXACTEMENT la définition du classement
+ * (`getGlobalLeaderboard`) : seuls les joueurs ayant joué y figurent. Les 27
+ * comptes à zéro partie ne doivent pas décaler les places.
+ *
+ * @returns la place (1 = premier), ou `null` si elle ne peut pas être calculée.
+ *          On préfère ne RIEN afficher plutôt qu'une place fausse.
+ */
+export async function getPlayerRank(elo: number, ladder: LadderId = 'normal'): Promise<number | null> {
+    try {
+        const db = getFirebaseDb();
 
-    for (const goal of game.goals) {
-        goalsByPlayer[goal.scoredBy] = (goalsByPlayer[goal.scoredBy] || 0) + 1;
-        if (goal.position) {
-            goalsByPosition[goal.position]++;
+        // Sur une échelle SECONDAIRE, une seule inégalité suffit — et c'est un
+        // heureux effet de bord du modèle : Firestore exclut d'office les
+        // documents où le champ est absent, donc les joueurs qui n'ont jamais
+        // touché à cette échelle sortent tout seuls du comptage. Aucun index
+        // composite nécessaire.
+        const filtres = LADDERS[ladder].primary
+            ? [where('stats.elo', '>', elo), where('stats.totalGames', '>', 0)]
+            : [where(eloFieldPath(ladder), '>', elo)];
+
+        const snap = await getCountFromServer(query(collection(db, 'users'), ...filtres));
+        return snap.data().count + 1;
+    } catch (err) {
+        const code = (err as { code?: string })?.code;
+        // Deux inégalités demandent un index composite. Tant qu'il n'existe
+        // pas, on se tait — voir `firestore.indexes.json`.
+        if (code === 'failed-precondition') {
+            console.warn('[getPlayerRank] index composite absent, place non affichée.');
+            return null;
         }
+        console.error('[getPlayerRank]', err);
+        return null;
     }
-
-    // Find MVP
-    let mvp: Player = game.teams[0].players[0];
-    let maxGoals = 0;
-
-    for (const team of game.teams) {
-        for (const player of team.players) {
-            const goals = goalsByPlayer[player.userId] || 0;
-            if (goals > maxGoals) {
-                maxGoals = goals;
-                mvp = player;
-            }
-        }
-    }
-
-    return {
-        game,
-        mvp,
-        goalsByPlayer,
-        goalsByPosition
-    };
 }
 
 // Leaderboard stats per player
@@ -698,6 +376,21 @@ export interface LeaderboardEntry {
     goalsScored: number;
     winRate: number;
     elo?: number;
+    /**
+     * Cosmétiques équipés. Portés jusqu'ici volontairement : doc 20 —
+     * « `equipped` … c'est ce qu'on lit pour afficher n'importe qui dans un
+     * classement ». Sans ça, une bannière gagnée resterait invisible là où
+     * elle compte le plus.
+     */
+    equipped?: Equipped;
+    /** @deprecated ancien champ, le temps de la migration (chantier 2.5). */
+    bannerId?: string;
+    /**
+     * Historique d'ELO par jour. Sert à reconstituer le classement d'il y a
+     * une semaine pour afficher l'évolution de chaque joueur — la donnée
+     * existait déjà, aucune migration n'a été nécessaire.
+     */
+    history?: Record<string, { date: string; elo?: number }>;
 }
 
 // Alias for backwards compatibility
@@ -707,102 +400,55 @@ export type VenueLeaderboardEntry = LeaderboardEntry;
 export async function getVenueLeaderboard(venueId: string): Promise<VenueLeaderboardEntry[]> {
     const db = getFirebaseDb();
 
-    // Get all completed games at this venue
+    // ═══════════════════════════════════════════════════════════════════════
+    // UNE LECTURE DE PROFILS, PLUS UNE AGRÉGATION DE PARTIES
+    // ═══════════════════════════════════════════════════════════════════════
+    // L'ancienne version lisait TOUTES les parties terminées du stade pour les
+    // additionner à l'affichage. Mesuré en production le 22/08 : **1 055 Ko**
+    // pour le stade le plus fréquenté, à chaque ouverture.
+    //
+    // Les compteurs sont désormais tenus à la fin de chaque partie
+    // (`stats.venues`, chantier 9.36). Le classement d'un stade se lit donc
+    // avec exactement la même requête que le classement général — et la même
+    // page n'a plus qu'un seul jeu de données à charger, quel que soit le
+    // filtre choisi.
     const q = query(
-        collection(db, GAMES_COLLECTION),
-        where('venueId', '==', venueId),
-        where('status', '==', 'completed')
+        collection(db, 'users'),
+        where('stats.totalGames', '>', 0)
     );
 
     const snapshot = await getDocs(q);
-    const games = snapshot.docs.map(doc => doc.data() as Game);
 
-    // Calculate stats per player
-    const playerStats = new Map<string, VenueLeaderboardEntry>();
+    const leaderboard: VenueLeaderboardEntry[] = [];
+    for (const docSnap of snapshot.docs) {
+        const data = docSnap.data();
+        const c = data.stats?.venues?.[venueId];
+        // Jamais joué ici : le joueur n'apparaît pas dans ce classement.
+        if (!c || !c.games) continue;
 
-    for (const game of games) {
-        if (game.winner === undefined) continue; // Skip draws
-        if (game.isGuestGame) continue; // Skip guest games
-
-        // For old games without flag, check for guest players
-        const hasGuestPlayers = game.teams?.some(team =>
-            team.players?.some(player => player.userId.startsWith('guest_'))
-        );
-        if (hasGuestPlayers) continue;
-
-        for (let teamIndex = 0; teamIndex < game.teams.length; teamIndex++) {
-            const team = game.teams[teamIndex];
-            const isWinner = teamIndex === game.winner;
-
-            for (const player of team.players) {
-                // Skip guest players
-                if (player.userId.startsWith('guest_')) continue;
-
-                const existing = playerStats.get(player.userId) || {
-                    userId: player.userId,
-                    username: player.username,
-                    wins: 0,
-                    losses: 0,
-                    totalGames: 0,
-                    goalsScored: 0,
-                    winRate: 0
-                };
-
-                existing.totalGames++;
-                if (isWinner) {
-                    existing.wins++;
-                } else {
-                    existing.losses++;
-                }
-
-                // Count goals scored by this player in this game
-                const playerGoals = game.goals.filter(g => g.scoredBy === player.userId).length;
-                existing.goalsScored += playerGoals;
-
-                existing.winRate = existing.totalGames > 0 ? existing.wins / existing.totalGames : 0;
-
-                playerStats.set(player.userId, existing);
-            }
-        }
-    }
-
-    // Convert to array and sort by wins
-    const leaderboard = Array.from(playerStats.values());
-
-    // Fetch current usernames to ensure they are up to date
-    if (leaderboard.length > 0) {
-        const userIds = leaderboard.map(e => e.userId);
-        for (let i = 0; i < userIds.length; i += 30) {
-            const batch = userIds.slice(i, i + 30);
-            const usersQ = query(collection(db, 'users'), where('userId', 'in', batch));
-            const usersSnapshot = await getDocs(usersQ);
-            usersSnapshot.forEach(doc => {
-                const userData = doc.data();
-                const entry = playerStats.get(doc.id);
-                if (entry) {
-                    entry.username = userData.username;
-                    // Fetch current Elo from user profile
-                    // This is better than aggregating from games as games might be out of order or misses manual adjustments
-                    entry.elo = userData.stats?.elo || 1000;
-                }
-            });
-        }
+        leaderboard.push({
+            userId: data.userId,
+            username: data.username,
+            wins: c.wins ?? 0,
+            losses: Math.max(0, (c.games ?? 0) - (c.wins ?? 0)),
+            totalGames: c.games ?? 0,
+            goalsScored: c.goalsScored ?? 0,
+            winRate: c.games > 0 ? (c.wins ?? 0) / c.games : 0,
+            elo: data.stats?.elo,
+            bannerId: data.bannerId,
+            equipped: data.equipped,
+        } as VenueLeaderboardEntry);
     }
 
     leaderboard.sort((a, b) => {
-        // Sort by Elo if available, otherwise fallback to winRate
-        const eloA = a.elo || 1000;
-        const eloB = b.elo || 1000;
-
-        if (eloA !== eloB) return eloB - eloA;
+        if (b.wins !== a.wins) return b.wins - a.wins;
         if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-        return b.wins - a.wins;
+        return b.totalGames - a.totalGames;
     });
 
     return leaderboard;
 }
 
-// Get friends leaderboard (only friends stats)
 export async function getFriendsLeaderboard(friendIds: string[], venueId?: string): Promise<LeaderboardEntry[]> {
     if (friendIds.length === 0) return [];
 
@@ -850,7 +496,11 @@ export async function getFriendsLeaderboard(friendIds: string[], venueId?: strin
                 usersSnap.forEach(d => {
                     const u = d.data();
                     const entry = playerStats.get(d.id);
-                    if (entry) entry.elo = u.stats?.elo || 1000;
+                    if (entry) {
+                        entry.elo = u.stats?.elo || 1000;
+                        entry.equipped = u.equipped;
+                        entry.bannerId = u.bannerId;
+                    }
                 });
             }
         }
@@ -873,7 +523,9 @@ export async function getFriendsLeaderboard(friendIds: string[], venueId?: strin
                 totalGames: u.stats?.totalGames || 0,
                 goalsScored: u.stats?.goalsScored || 0,
                 winRate: u.stats?.winRate || 0,
-                elo: u.stats?.elo || 1000
+                elo: u.stats?.elo || 1000,
+                equipped: u.equipped,
+                bannerId: u.bannerId
             });
         });
     }
@@ -882,31 +534,50 @@ export async function getFriendsLeaderboard(friendIds: string[], venueId?: strin
 }
 
 // Get global leaderboard from all completed games
-export async function getGlobalLeaderboard(): Promise<LeaderboardEntry[]> {
+/**
+ * Le classement d'une échelle donnée — chantier 7.11.
+ *
+ * Le classement PRINCIPAL se lit dans les champs historiques, les secondaires
+ * dans `stats.ladders`. `readLadder` masque la différence, et les chemins de
+ * requête viennent de `gamesFieldPath` : ajouter un troisième classement ne
+ * demandera pas une ligne ici.
+ *
+ * Un joueur qui n'a jamais joué sur l'échelle **n'apparaît pas** (décision de
+ * Sacha, 22/08). Un classement où cent trente joueurs sont à égalité à 1000
+ * n'apprendrait rien.
+ */
+export async function getGlobalLeaderboard(ladder: LadderId = 'normal'): Promise<LeaderboardEntry[]> {
     const db = getFirebaseDb();
 
-    // On récupère tous les utilisateurs ayant joué au moins une partie
     const q = query(
         collection(db, 'users'),
-        where('stats.totalGames', '>', 0)
+        where(gamesFieldPath(ladder), '>', 0)
     );
 
     const snapshot = await getDocs(q);
 
     const leaderboard: LeaderboardEntry[] = snapshot.docs.map(doc => {
         const userData = doc.data();
+        const l = readLadder(userData.stats, ladder);
         return {
             userId: userData.userId,
             username: userData.username,
-            wins: userData.stats?.wins || 0,
-            losses: userData.stats?.losses || 0,
-            totalGames: userData.stats?.totalGames || 0,
-            goalsScored: userData.stats?.goalsScored || 0,
-            winRate: userData.stats?.winRate || 0,
-            elo: userData.stats?.elo || 1000
+            wins: l.wins,
+            losses: Math.max(0, l.games - l.wins),
+            totalGames: l.games,
+            // Les buts et l'historique quotidien ne sont tenus que globalement.
+            // Sur une échelle secondaire, on n'invente pas une valeur : on
+            // affiche zéro plutôt qu'un chiffre qui voudrait dire autre chose.
+            goalsScored: ladder === 'normal' ? (userData.stats?.goalsScored || 0) : 0,
+            winRate: l.games > 0 ? l.wins / l.games : 0,
+            elo: l.elo,
+            equipped: userData.equipped,
+            bannerId: userData.bannerId,
+            history: ladder === 'normal' ? userData.stats?.history : undefined,
         };
     });
 
-    // On trie côté client (car Firestore demande un index composite pour le WHERE > 0 + ORDER BY)
+    // Tri côté client : Firestore demanderait un index composite pour un
+    // `where > 0` suivi d'un `orderBy` sur un autre champ.
     return leaderboard.sort((a, b) => (b.elo || 1000) - (a.elo || 1000));
 }

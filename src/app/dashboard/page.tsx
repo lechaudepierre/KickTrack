@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/authStore';
 import BottomNav from '@/components/common/BottomNav';
+import EmailVerificationBanner from '@/components/common/EmailVerificationBanner';
 import {
     PlusCircleIcon,
     QrCodeIcon,
@@ -13,6 +14,7 @@ import {
     TrophyIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
+import { PageHeader } from '@/components/common/ui';
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -50,21 +52,20 @@ export default function DashboardPage() {
     return (
         <div className={styles.screen}>
             <div className={styles.container}>
-                {/* Header */}
-                <header className={styles.header}>
-                    <div className={styles.logo}>
-                        <h1 className={styles.logoText}>
-                            KICK<span className={styles.logoAccent}>TRACKER</span>
-                        </h1>
-                    </div>
-                </header>
+                {/* En-tête : même composant, donc même traitement que toutes les
+                    autres pages. Le tableau de bord avait son propre style de
+                    titre — c'est ce qui le faisait dépareiller avec le classement.
+                    La salutation devient le sous-titre : c'est ce qu'elle est. */}
+                <PageHeader title={<>KICK<span className={styles.logoAccent}>TRACKER</span></>}
+                    subtitle={`Salut ${user?.username || 'Joueur'}`}
+                    back={false}
+                />
 
-                {/* Welcome */}
-                <div className={styles.welcome}>
-                    <h2 className={styles.welcomeText}>
-                        Salut <span className={styles.username}>{user?.username || 'Joueur'}</span> !
-                    </h2>
-                </div>
+                {/* Confirmation d'adresse. Placé sur le tableau de bord parce que
+                    tout le monde y passe après connexion, et rien ne bloque :
+                    le bandeau s'écarte. Le composant décide seul de s'afficher
+                    ou non. */}
+                <EmailVerificationBanner />
 
                 {/* Action Buttons */}
                 <div className={styles.actions}>

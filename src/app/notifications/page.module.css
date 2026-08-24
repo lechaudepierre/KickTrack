@@ -32,17 +32,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     color: var(--color-text-dark);
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.backButton:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+    .backButton:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+    }
 }
 
 .title {
@@ -64,8 +66,8 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-lg);
     box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
     padding: var(--spacing-md);
@@ -74,13 +76,15 @@
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 4px 6px 0 rgba(0, 0, 0, 0.2);
+@media (hover: hover) {
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 4px 6px 0 rgba(0, 0, 0, 0.2);
+    }
 }
 
 .cardUnread {
-    border-color: var(--color-green-light);
+    border-color: var(--color-success);
     box-shadow: 4px 4px 0 rgba(76, 175, 80, 0.3);
 }
 
@@ -88,11 +92,11 @@
     font-size: 0.6rem;
     font-weight: 900;
     color: white;
-    background: #FF5722;
+    background: var(--color-danger);
     border-radius: var(--radius-full);
     padding: 2px 6px;
     letter-spacing: 0.06em;
-    border: 1.5px solid #333333;
+    border: 1.5px solid var(--ink-700);
 }
 
 .cardLeft {
@@ -115,7 +119,7 @@
     gap: 4px;
     padding: 2px 8px;
     border-radius: var(--radius-full);
-    border: 2px solid #333333;
+    border: var(--border-arcade-thin);
     font-size: 0.65rem;
     font-weight: 800;
     text-transform: uppercase;
@@ -124,13 +128,13 @@
 }
 
 .typePatch {
-    background: #333333;
-    color: var(--color-beige);
+    background: var(--ink-700);
+    color: var(--color-surface);
 }
 
 .typeNews {
-    background: var(--color-green-light);
-    color: #333333;
+    background: var(--color-success);
+    color: var(--ink-700);
 }
 
 .badgeIcon {
@@ -148,7 +152,7 @@
 .cardTitle {
     font-size: 0.95rem;
     font-weight: 800;
-    color: #333333;
+    color: var(--ink-700);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -207,7 +211,7 @@
 .loadingDot {
     width: 10px;
     height: 10px;
-    background: var(--color-beige);
+    background: var(--color-surface);
     border-radius: 50%;
     animation: bounce 0.8s ease-in-out infinite;
 }
@@ -241,9 +245,9 @@
     align-items: center;
     gap: var(--spacing-sm);
     padding: var(--spacing-sm) var(--spacing-lg);
-    background: var(--color-beige);
-    color: #333333;
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    color: var(--ink-700);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     font-size: 0.875rem;
     font-weight: 800;
@@ -252,9 +256,11 @@
     box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
 }
 
-.feedbackButton:hover {
-    transform: translateY(-2px);
-    box-shadow: 4px 6px 0 rgba(0, 0, 0, 0.25);
+@media (hover: hover) {
+    .feedbackButton:hover {
+        transform: translateY(-2px);
+        box-shadow: 4px 6px 0 rgba(0, 0, 0, 0.25);
+    }
 }
 
 .feedbackIcon {

@@ -51,13 +51,13 @@ async function addInitialVenues() {
             };
 
             await setDoc(venueRef, venue);
-            console.log(`✓ Added venue: ${venue.name} (${venue.type})`);
+            console.log(`[ok] Added venue: ${venue.name} (${venue.type})`);
         } catch (error) {
-            console.error(`✗ Error adding venue ${venueData.name}:`, error);
+            console.error(`[echec] Error adding venue ${venueData.name}:`, error);
         }
     }
 
-    console.log('✓ All venues added successfully!');
+    console.log('[ok] All venues added successfully!');
 }
 
 // Run the script

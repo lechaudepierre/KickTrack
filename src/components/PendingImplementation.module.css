@@ -31,16 +31,16 @@
 .iconBox {
     position: relative;
     padding: var(--spacing-2xl);
-    background: var(--color-pitch-medium);
+    background: var(--field-light);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-soft);
+    box-shadow: var(--shadow-arcade-sm);
 }
 
 .icon {
     width: 5rem;
     height: 5rem;
-    color: var(--color-accent-yellow);
+    color: var(--color-accent);
 }
 
 /* Title */
@@ -58,8 +58,8 @@
     align-items: center;
     gap: var(--spacing-md);
     padding: var(--spacing-md) var(--spacing-xl);
-    background: var(--color-pitch-medium);
-    border: 2px solid var(--color-accent-yellow);
+    background: var(--field-light);
+    border: 2px solid var(--color-accent);
     border-radius: var(--radius-full);
     margin-bottom: var(--spacing-2xl);
 }
@@ -67,7 +67,7 @@
 .statusDot {
     width: 0.75rem;
     height: 0.75rem;
-    background: var(--color-accent-yellow);
+    background: var(--color-accent);
     border-radius: 50%;
     animation: pulse 2s ease-in-out infinite;
 }
@@ -87,19 +87,19 @@
 .statusText {
     font-size: 0.875rem;
     font-weight: 700;
-    color: var(--color-accent-yellow);
+    color: var(--color-accent);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
 /* Description */
 .descriptionCard {
-    background: var(--color-pitch-medium);
+    background: var(--field-light);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-lg);
     padding: var(--spacing-xl);
     margin-bottom: var(--spacing-2xl);
-    box-shadow: var(--shadow-soft);
+    box-shadow: var(--shadow-arcade-sm);
 }
 
 .description {
@@ -126,7 +126,7 @@
 .footerDivider {
     height: 2px;
     width: 3rem;
-    background: linear-gradient(90deg, var(--color-field-green) 0%, var(--color-field-light) 100%);
+    background: linear-gradient(90deg, var(--field-dark) 0%, var(--field-light) 100%);
     border-radius: var(--radius-full);
 }
 
@@ -135,4 +135,31 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.1em;
+}
+
+/* Lien stylé comme un bouton secondaire. Un <button> dans un <a> serait du
+   HTML invalide, donc on reprend l'apparence sans le composant. */
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-weight: var(--weight-bold);
+    font-size: var(--text-base);
+    color: var(--color-text-dark);
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-arcade);
+    text-decoration: none;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+@media (hover: hover) {
+    .backLink:hover {
+        transform: var(--lift-arcade);
+        box-shadow: var(--shadow-arcade-lifted);
+    }
 }

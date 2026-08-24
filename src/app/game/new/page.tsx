@@ -1,5 +1,6 @@
 'use client';
 
+import { toDate } from '@/lib/game/dates';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
@@ -9,6 +10,10 @@ import VenueDropdown from '@/components/venues/VenueDropdown';
 import PinCodeDisplay from '@/components/game/PinCodeDisplay';
 import PlayerList from '@/components/game/PlayerList';
 import { Venue, GameFormat, GameSession, Team } from '@/types';
+import { MODES, getMode, isNormalMode } from '@/lib/gamemodes/modes';
+import ModeInfoModal, { ModeInfoButton } from '@/components/game/ModeInfoModal';
+import type { GameMode } from '@/lib/gamemodes/types';
+import { useFeature } from '@/lib/features';
 import { FieldBackground } from '@/components/FieldDecorations';
 import {
     ArrowLeftIcon,
@@ -16,6 +21,7 @@ import {
     UsersIcon
 } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
+import { Button, PageHeader } from '@/components/common/ui';
 
 type Step = 'config' | 'waiting' | 'teams' | 'guest-teams';
 
@@ -25,6 +31,10 @@ export default function NewGamePage() {
 
     const [step, setStep] = useState<Step>('config');
     const [format, setFormat] = useState<GameFormat>('1v1');
+    const [modeId, setModeId] = useState('normal');
+    const [infoMode, setInfoMode] = useState<GameMode | null>(null);
+    // Les modes font partie de la V2 : masqués tant que le drop n'est pas fait.
+    const v2Enabled = useFeature('v2');
     const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
     const [session, setSession] = useState<GameSession | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -106,7 +116,10 @@ export default function NewGamePage() {
                 user.username,
                 selectedVenue?.venueId || 'none',
                 selectedVenue?.name || 'Aucun',
-                format
+                format,
+                // On n'envoie jamais autre chose que ce qui est affiché : si le
+                // sélecteur n'est pas visible, il vaut 'normal' de toute façon.
+                modeId
             );
             setSession(newSession);
             setStep('waiting');
@@ -137,7 +150,11 @@ export default function NewGamePage() {
                     user.username,
                     selectedVenue?.venueId || 'none',
                     selectedVenue?.name || 'Aucun',
-                    format
+                    format,
+                    // BUG CORRIGÉ : le mode était oublié sur ce chemin, donc une
+                    // partie avec invités repartait toujours en Normal, même
+                    // quand Bibitif était sélectionné.
+                    modeId
                 );
                 sessionId = newSession.sessionId;
             } catch (err) {
@@ -191,20 +208,14 @@ export default function NewGamePage() {
             <FieldBackground />
 
             <div className={styles.contentWrapper}>
-                {/* Header */}
-                <div className={styles.pageHeader}>
-                    <button
-                        onClick={() => step === 'config' ? router.back() : handleCancel()}
-                        className={styles.backButton}
-                    >
-                        <ArrowLeftIcon className="h-6 w-6" />
-                    </button>
-                    <h1 className={styles.pageTitle}>
-                        {step === 'config' ? 'Nouvelle Partie' :
-                            step === 'waiting' ? 'En attente...' :
-                                'Équipes'}
-                    </h1>
-                </div>
+                {/* Le retour annule la session en cours si elle existe. Passé par
+                    `onBack` et non par une action à droite : la flèche garde sa
+                    position et sa taille standard, comme sur toutes les pages. */}
+                <PageHeader title={step === 'config' ? 'Nouvelle Partie'
+                        : step === 'waiting' ? 'En attente...'
+                            : 'Équipes'}
+                    onBack={() => step === 'config' ? router.back() : handleCancel()}
+                />
 
                 {error && (
                     <div className="error-box" style={{ marginBottom: 'var(--spacing-md)' }}>
@@ -217,34 +228,52 @@ export default function NewGamePage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
                         {/* Venue Selection */}
                         <div>
-                            <label style={{ display: 'block', marginBottom: 'var(--spacing-md)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                                Stade
-                            </label>
-                            <VenueDropdown
-                                selectedVenue={selectedVenue}
+                            <label className={styles.fieldLabel}>Stade</label>
+                            <VenueDropdown selectedVenue={selectedVenue}
                                 onSelectVenue={setSelectedVenue}
                                 showNoneOption={true}
                             />
                         </div>
 
+                        {/* Mode de jeu — doc 33 : « Un mode se choisit au lancement de la partie ».
+                            Placé ici, dans l'étape de configuration, avant que quiconque rejoigne. */}
+                        {v2Enabled && (
+                            <div>
+                                <label className={styles.fieldLabel}>Mode de jeu</label>
+                                <div className={styles.grid2}>
+                                    {MODES.map(mode => (
+                                        <div key={mode.id} style={{ position: 'relative' }}>
+                                            <button onClick={() => setModeId(mode.id)}
+                                                className={`${styles.selectionCard} ${modeId === mode.id ? styles.selectionCardActive : `${styles.selectionCardInactive}`}`}
+                                                aria-pressed={modeId === mode.id}
+                                                style={{ width: '100%' }}
+                                            >
+                                                <p style={{ fontWeight: 600 }}>{mode.name}</p>
+                                            </button>
+                                            <ModeInfoButton modeName={mode.name} onClick={() => setInfoMode(mode)} />
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className={styles.fieldHint}>
+                                    {MODES.find(m => m.id === modeId)?.description}
+                                </p>
+                            </div>
+                        )}
+
                         {/* Format Selection */}
                         <div>
-                            <label style={{ display: 'block', marginBottom: 'var(--spacing-md)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                                Format de jeu
-                            </label>
+                            <label className={styles.fieldLabel}>Format de jeu</label>
                             <div className={styles.grid2}>
-                                <button
-                                    onClick={() => setFormat('1v1')}
-                                    className={`${styles.selectionCard} ${format === '1v1' ? styles.selectionCardActive : `${styles.selectionCardInactive} opacity-60`}`}
+                                <button onClick={() => setFormat('1v1')}
+                                    className={`${styles.selectionCard} ${format === '1v1' ? styles.selectionCardActive : `${styles.selectionCardInactive}`}`}
                                 >
-                                    <UserIcon className="h-8 w-8 mx-auto mb-2" />
+                                    <UserIcon style={{ height: '32px', width: '32px', margin: '0 auto', marginBottom: 'var(--spacing-sm)' }} />
                                     <p style={{ fontWeight: 600 }}>1 vs 1</p>
                                 </button>
-                                <button
-                                    onClick={() => setFormat('2v2')}
-                                    className={`${styles.selectionCard} ${format === '2v2' ? styles.selectionCardActive : `${styles.selectionCardInactive} opacity-60`}`}
+                                <button onClick={() => setFormat('2v2')}
+                                    className={`${styles.selectionCard} ${format === '2v2' ? styles.selectionCardActive : `${styles.selectionCardInactive}`}`}
                                 >
-                                    <UsersIcon className="h-8 w-8 mx-auto mb-2" />
+                                    <UsersIcon style={{ height: '32px', width: '32px', margin: '0 auto', marginBottom: 'var(--spacing-sm)' }} />
                                     <p style={{ fontWeight: 600 }}>2 vs 2</p>
                                 </button>
                             </div>
@@ -252,16 +281,14 @@ export default function NewGamePage() {
 
                         {/* Actions */}
                         <div style={{ display: 'flex', flexDirection: 'column', marginTop: 'var(--spacing-lg)' }}>
-                            <button
-                                onClick={handleCreateSession}
+                            <button onClick={handleCreateSession}
                                 disabled={isLoading}
                                 className={styles.mainButton}
                             >
                                 {isLoading ? 'Création...' : 'Générer le code'}
                             </button>
 
-                            <button
-                                onClick={handleGuestMode}
+                            <button onClick={handleGuestMode}
                                 disabled={isLoading}
                                 className={styles.secondaryTextButton}
                             >
@@ -274,20 +301,24 @@ export default function NewGamePage() {
                 {/* Step 2: Waiting for Players */}
                 {step === 'waiting' && session && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2xl)' }}>
-                        <PinCodeDisplay
-                            pinCode={session.pinCode}
-                            createdAt={
-                                session.createdAt && typeof (session.createdAt as any).toDate === 'function'
-                                    ? (session.createdAt as any).toDate()
-                                    : session.createdAt instanceof Date
-                                        ? session.createdAt
-                                        : new Date(session.createdAt)
-                            }
+                        {!isNormalMode(session?.modeId) && (
+                            <div style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                                padding: '8px 14px', borderRadius: '99px', border: '3px solid var(--ink-700)',
+                                background: 'rgba(241,196,15,0.2)', marginBottom: 'var(--spacing-md)',
+                            }}>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-text-dark)' }}>
+                                    Mode {getMode(session?.modeId).name}
+                                </span>
+                            </div>
+                        )}
+
+                        <PinCodeDisplay pinCode={session.pinCode}
+                            createdAt={toDate(session.createdAt)}
                             onExpired={handleExpired}
                         />
 
-                        <PlayerList
-                            players={session.players}
+                        <PlayerList players={session.players}
                             maxPlayers={session.maxPlayers}
                             currentUserId={user?.userId}
                             hostId={user?.userId}
@@ -296,31 +327,20 @@ export default function NewGamePage() {
 
                         {/* Launch button — only when lobby is full */}
                         {session.players.length >= session.maxPlayers && (
-                            <button onClick={() => setStep('teams')} style={{ width: '100%', border: 'none', background: 'none', padding: 0 }}>
-                                <div className="btn-primary">
-                                    <div className="btn-primary-shadow" />
-                                    <div className="btn-primary-content">
-                                        Lancer la partie
-                                    </div>
-                                </div>
-                            </button>
+                            <Button onClick={() => setStep('teams')} fullWidth>
+                                Lancer la partie
+                            </Button>
                         )}
 
-                        <button onClick={handleCancel} style={{ width: '100%', border: 'none', background: 'none', padding: 0 }}>
-                            <div className="btn-primary">
-                                <div className="btn-primary-shadow" />
-                                <div className="btn-primary-content" style={{ color: 'var(--color-error)' }}>
-                                    Annuler la partie
-                                </div>
-                            </div>
-                        </button>
+                        <Button onClick={handleCancel} variant="danger" fullWidth>
+Annuler la partie
+</Button>
                     </div>
                 )}
 
                 {/* Step 3: Team Setup */}
                 {step === 'teams' && session && (
-                    <TeamSetup
-                        players={session.players}
+                    <TeamSetup players={session.players}
                         format={format}
                         onStartGame={handleStartGame}
                     />
@@ -328,8 +348,7 @@ export default function NewGamePage() {
 
                 {/* Step 4: Guest Mode Team Setup */}
                 {step === 'guest-teams' && user && (
-                    <TeamSetup
-                        players={[
+                    <TeamSetup players={[
                             {
                                 userId: user.userId,
                                 username: user.username,
@@ -367,6 +386,8 @@ export default function NewGamePage() {
                     />
                 )}
             </div>
+
+            <ModeInfoModal mode={infoMode} onClose={() => setInfoMode(null)} />
         </div>
     );
 }

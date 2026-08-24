@@ -1,0 +1,20 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KickTrack — règles Cloud Storage
+//
+// Vérifié le 20 août 2026 : Cloud Storage n'est utilisé NULLE PART dans le code
+// (aucun `getStorage`, `uploadBytes` ni `ref(storage)`). Les assets cosmétiques
+// (bannières, pièces d'avatar) sont servis depuis /public par Vercel.
+//
+// Le bucket est donc entièrement fermé. Le jour où un upload utilisateur
+// apparaît, ouvrir un chemin précis ici — jamais la racine.
+// ─────────────────────────────────────────────────────────────────────────────
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

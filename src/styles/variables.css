@@ -1,34 +1,111 @@
-/* CSS Variables - Flat Design */
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOKENS — L'ÉTAGE 1, SEULE SOURCE DE VÉRITÉ
+   Doc/v2-refactor/10-design-system.md · chantier 5.1
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Architecture en pyramide, règle absolue :
+
+     Étage 3  PAGES        n'écrivent JAMAIS une couleur ou une taille en dur
+     Étage 2  COMPOSANTS   Button, Card, Input, Badge ; lisent UNIQUEMENT les tokens
+     Étage 1  TOKENS       ce fichier
+
+   Test de réussite du chantier : changer le thème entier de l'app en éditant
+   uniquement ce fichier. Si un changement de thème oblige à toucher une page,
+   c'est raté.
+
+   ---------------------------------------------------------------------------
+   DIRECTION : RÉTRO ARCADE
+   Contour noir épais, coins bien arrondis, ombre portée franche et décalée
+   (jamais floue), couleurs primaires saturées. Le JAUNE est réservé à
+   « premier / important » — ne pas le dépenser ailleurs.
+   ---------------------------------------------------------------------------
+
+   ATTENTION — VALEURS PROVISOIRES (décision D12 en attente)
+   Les hex de la palette arcade ci-dessous respectent les contraintes du doc 10
+   (vert plus foncé qu'avant, jaune = important, ancrage sur l'existant) mais
+   n'ont PAS été validés par l'équipe. Ils sont marqués PROVISOIRE. Les changer
+   ne demande de toucher qu'à ce fichier — c'est tout l'intérêt.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 :root {
-    /* Green Palette - From inspiration */
-    --color-green-dark: #144718;
-    --color-green-medium: #2E7D32;
-    --color-green-primary: #388E3C;
-    --color-green-light: #4CAF50;
-    --color-green-pale: #66BB6A;
-    --color-white: #FFFFFF;
-    --color-beige: #fef2d5;
 
-    /* Semantic Colors */
-    --color-background: var(--color-green-dark);
-    --color-grass-light: var(--color-green-medium);
-    --color-grass-dark: var(--color-green-primary);
-    --color-surface: var(--color-green-medium);
-    --color-primary: var(--color-green-light);
-    --color-accent: var(--color-green-pale);
+    /* ─── Échelle de verts — UNE SEULE ────────────────────────────────────────
+       Remplace les cinq verts quasi-identiques qui coexistaient
+       (#4CAF50, #2ECC71, #2E7D32, #1B5E20, #1B8A2A).
+       Plus foncée que l'ancienne, mais pas au point d'éteindre l'écran : une
+       première version tirait trop vers le noir. Calibrée sur retour de Sacha.
+       PROVISOIRE — D12 */
+    --green-900: #10360F;
+    --green-800: #17491A;
+    --green-700: #1D5A20;
+    --green-600: #246E28;
+    --green-500: #2D8531;
+    --green-400: #3AA03F;
+    --green-300: #57BC5C;
 
-    /* Text Colors */
-    --color-text-primary: var(--color-white);
-    --color-text-secondary: rgba(255, 255, 255, 0.7);
+    /* ─── Palette arcade — primaires saturées ─────────────────────────────────
+       PROVISOIRE — D12 */
+    --red-500: #E23B33;
+    --red-400: #FF4B4B;
+    --blue-500: #3563E0;
+    --blue-400: #4B7BFF;
+    --purple-500: #8E4CB0;
+    --orange-500: #E07A22;
+
+    /* Le jaune. Réservé à « premier / important ». */
+    --yellow-500: #E8B412;
+    --yellow-400: #F1C40F;
+
+    /* ─── Neutres ─────────────────────────────────────────────────────────────
+       Le crème des surfaces, et le noir des contours — légèrement teinté vert
+       plutôt que gris pur : un noir neutre jure sur un fond de terrain. */
+    --cream-100: #FFF9E9;
+    --cream-200: #FEF2D5;
+    --cream-300: #F0E2C0;
+    --ink-900: #1A2118;
+    --ink-700: #333333;
+    --white: #FFFFFF;
+
+    /* ═══ SÉMANTIQUE — ce que les composants lisent ═══════════════════════════
+       Les composants n'utilisent JAMAIS les tokens bruts ci-dessus. Ils lisent
+       ces alias-là, qui disent un rôle et pas une couleur. */
+
+    --color-background: var(--green-800);
+    --color-surface: var(--cream-200);
+    --color-surface-raised: var(--cream-100);
+    --color-surface-sunken: var(--cream-300);
+
+    --color-primary: var(--green-500);
+    --color-primary-strong: var(--green-600);
+    --color-accent: var(--yellow-400);
+    --color-danger: var(--red-500);
+    --color-success: var(--green-400);
+    --color-warning: var(--orange-500);
+    --color-error: var(--red-500);
+
+    --color-text-primary: var(--white);
+    --color-text-secondary: rgba(255, 255, 255, 0.72);
     --color-text-muted: rgba(255, 255, 255, 0.5);
-    --color-text-dark: #333333;
+    --color-text-dark: var(--ink-900);
+    --color-text-dark-soft: rgba(26, 33, 24, 0.68);
+    --color-text-on-accent: var(--ink-900);
 
-    /* Status Colors */
-    --color-error: #E53935;
-    --color-warning: #FB8C00;
-    --color-success: var(--color-green-light);
+    /* ─── Identité arcade ─────────────────────────────────────────────────────
+       Les trois tokens qui portent le style à eux seuls. */
+    --border-arcade-width: 3px;
+    --border-arcade: var(--border-arcade-width) solid var(--ink-700);
+    --border-arcade-thin: 2px solid var(--ink-700);
 
-    /* Spacing */
+    /* Ombre franche, décalée, SANS flou. C'est ce qui donne l'aspect physique. */
+    --shadow-arcade: 0 4px 0 var(--ink-700);
+    --shadow-arcade-sm: 0 2px 0 var(--ink-700);
+    --shadow-arcade-lg: 0 6px 0 var(--ink-700);
+    /* Décalage appliqué au survol : le bouton se soulève. */
+    --lift-arcade: translateY(-2px);
+    --shadow-arcade-lifted: 0 6px 0 var(--ink-700);
+
+    /* ─── Espacements ─────────────────────────────────────────────────────────
+       Échelle unique. Ne pas écrire de rem en dur dans un composant. */
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
@@ -36,24 +113,122 @@
     --spacing-xl: 2rem;
     --spacing-2xl: 3rem;
 
-    /* Border Radius - Flat but friendly */
+    /* ─── Arrondis ────────────────────────────────────────────────────────────
+       Échelle unique. Les valeurs 9999px et 999px qui coexistaient sont
+       remplacées par --radius-full, et par elle seule. */
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
+    --radius-xl: 24px;
     --radius-full: 9999px;
 
-    /* Transitions */
+    /* ─── Typographie ─────────────────────────────────────────────────────────
+       Échelle de tailles et de graisses, pour ne plus écrire de rem au hasard. */
+    --text-xs: 0.72rem;
+    --text-sm: 0.85rem;
+    --text-base: 1rem;
+    --text-lg: 1.15rem;
+    --text-xl: 1.4rem;
+    --text-2xl: 1.85rem;
+    --text-3xl: 2.5rem;
+
+    --weight-regular: 400;
+    --weight-medium: 600;
+    --weight-bold: 700;
+    --weight-black: 900;
+
+    /* Interlettrage des libellés en capitales. */
+    --tracking-label: 0.06em;
+
+    /* ─── Transitions ─────────────────────────────────────────────────────────*/
     --transition-fast: 0.15s ease;
     --transition-normal: 0.25s ease;
 
-    /* Bottom Nav Height */
+    /* ─── Gabarit ─────────────────────────────────────────────────────────────*/
     --nav-height: 72px;
+    --page-max-width: 480px;
 
-    /* Team Colors */
-    --team-blue: #4B7BFF;
-    --team-red: #FF4B4B;
-    --team-green: #2ECC71;
-    --team-yellow: #F1C40F;
-    --team-orange: #E67E22;
-    --team-purple: #9B59B6;
+    /* ─── Bannières ───────────────────────────────────────────────────────────
+       UN SEUL RATIO, PARTOUT : profil, classement, liste de joueurs, collection.
+       Le fichier source est au même ratio, donc l'image s'affiche toujours en
+       entier — aucun recadrage, aucune zone perdue selon la page.
+       Ne jamais réécrire cette valeur ailleurs. */
+    /* 9/2 = 4,5:1. Passé de 4:1 le 21/08 : à 4:1, une ligne de classement
+       faisait plus de 100 px de haut et la liste devenait interminable.
+       Aucune bannière n'ayant encore été produite, le changement n'invalide
+       rien — le format source devient 1800 x 400 px. */
+    --banner-aspect-ratio: 9 / 2;
+
+    /* Il n'existe PAS de hauteur de ligne séparée : la hauteur d'une ligne de
+       joueur découle du ratio ci-dessus, appliqué par `PlayerBanner`.
+       Une seule forme, partout — classement, lancement de partie, profil. */
+
+    /* ─── Fond terrain rayé ───────────────────────────────────────────────────
+       Identité de l'app, conservée mais fiabilisée (chantier 5.5).
+       La largeur de rayure est RELATIVE : à 200px fixes, le grain du terrain
+       changeait complètement entre un téléphone et un écran large. */
+    --field-dark: var(--green-700);
+    --field-light: var(--green-500);
+    --field-stripe: 14vmax;
+    /* Le motif lui-même, en un seul endroit. Toute surface qui doit porter le
+       terrain lit ce token — jamais une copie du dégradé. */
+    --field-gradient: repeating-linear-gradient(-45deg,
+        var(--field-dark) 0,
+        var(--field-dark) var(--field-stripe),
+        var(--field-light) var(--field-stripe),
+        var(--field-light) calc(var(--field-stripe) * 2));
+
+    /* ─── Médailles du podium ─────────────────────────────────────────────────
+       Or, argent, bronze. Ce sont des matières, pas des couleurs d'interface :
+       elles ne participent pas à la palette arcade et n'ont pas à s'y accorder.
+       Elles ont leur place ici pour qu'aucune page ne les réinvente. */
+    --medal-gold: #FFD700;
+    --medal-gold-deep: #FFA500;
+    --medal-gold-text: #B8820A;
+    --medal-silver: #E0E0E0;
+    --medal-silver-deep: #B0B0B0;
+    --medal-silver-edge: #C0C0C0;
+    --medal-bronze: #CD7F32;
+    --medal-bronze-deep: #8B4513;
+
+    /* ─── Teintes claires d'équipe ────────────────────────────────────────────
+       Fond très clair, dérivé de chaque couleur d'équipe. Sert aux surfaces
+       teintées (carte d'équipe, ligne de joueur) où la couleur pleine serait
+       trop violente. */
+    --team-red-tint: #FFEAEA;
+    --team-blue-tint: #EAF0FF;
+    --team-green-tint: #EAF9F1;
+    --team-yellow-tint: #FEF9E7;
+    --team-orange-tint: #FDF2E9;
+    --team-purple-tint: #F5EEF8;
+    --team-slate-tint: #F2F4F4;
+
+    /* ─── Teintes d'état ──────────────────────────────────────────────────────
+       Fonds très clairs pour les encarts de message. */
+    --tint-danger: #fee2e2;
+    --tint-success: #f0f9f0;
+    /* Teinte de mise en avant, OPAQUE. Une teinte translucide posée sur une
+       surface la REMPLACE au lieu de s'y superposer : la ligne perdrait son
+       crème et laisserait voir le fond terrain à travers. */
+    --tint-primary: #E3F0E1;
+
+    /* ─── Couleurs d'équipe ───────────────────────────────────────────────────
+       Identité de jeu, distincte de la palette d'interface. */
+    --team-blue: var(--blue-400);
+    --team-red: var(--red-400);
+    --team-green: var(--green-300);
+    --team-yellow: var(--yellow-400);
+    --team-orange: var(--orange-500);
+    --team-purple: var(--purple-500);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Le bloc d'alias de compatibilité a été SUPPRIMÉ le 20 août 2026.
+
+   Il reprenait les noms de l'ancien système le temps de la migration. Toutes
+   les pages lisent désormais les tokens ci-dessus directement, et il ne reste
+   aucune couleur écrite en dur dans les `.module.css` du projet (471 au départ).
+
+   Ne pas le réintroduire : un alias, c'est une deuxième façon de nommer la
+   même chose, donc une deuxième chance de diverger.
+   ═══════════════════════════════════════════════════════════════════════════ */

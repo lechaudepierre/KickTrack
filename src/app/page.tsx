@@ -5,11 +5,38 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { login, resetPassword } from '@/lib/firebase/auth';
 import { useAuthStore } from '@/lib/stores/authStore';
+import GoogleSignInButton from '@/components/common/GoogleSignInButton';
+import { useFeaturePreAuth } from '@/lib/features';
 import styles from './page.module.css';
+
+/**
+ * Ce compte se connecte-t-il uniquement avec Google ?
+ * Renvoie le message à afficher, ou null si ce n'est pas le cas.
+ */
+async function googleOnlyMessage(email: string): Promise<string | null> {
+    try {
+        const res = await fetch('/api/auth/methods', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
+        const { useGoogle } = await res.json();
+        return useGoogle
+            ? 'Ce compte se connecte avec Google. Utilise le bouton « Se connecter avec Google » ci-dessous.'
+            : null;
+    } catch {
+        // Le diagnostic est un confort, pas une étape obligatoire : s'il échoue,
+        // on retombe sur le message générique.
+        return null;
+    }
+}
 
 export default function LoginPage() {
     const router = useRouter();
     const { setUser } = useAuthStore();
+    // Écran d'avant connexion : on ne peut pas savoir qui est devant, donc
+    // l'audience `admins` vaut visible. Voir useFeaturePreAuth.
+    const v2Enabled = useFeaturePreAuth('v2');
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -34,9 +61,15 @@ export default function LoginPage() {
             const error = err as { code?: string };
             switch (error.code) {
                 case 'auth/invalid-credential':
-                case 'auth/wrong-password':
-                    setError('Mot de passe incorrect');
+                case 'auth/wrong-password': {
+                    // Le mot de passe peut être introuvable parce que le compte
+                    // est passé à Google : Firebase supprime le mot de passe
+                    // quand on lie un fournisseur qui vérifie l'adresse, si
+                    // celle-ci ne l'était pas. Dire « mot de passe incorrect »
+                    // envoie alors le joueur chercher au mauvais endroit.
+                    setError(await googleOnlyMessage(email) ?? 'Mot de passe incorrect');
                     break;
+                }
                 case 'auth/user-not-found':
                     setError('Aucun compte trouvé avec cet email');
                     break;
@@ -132,8 +165,7 @@ export default function LoginPage() {
                                 required
                                 className="input-field"
                             />
-                            <button
-                                type="button"
+                            <button type="button"
                                 onClick={handleResetPassword}
                                 disabled={resetLoading}
                                 className={styles.forgotPassword}
@@ -142,14 +174,15 @@ export default function LoginPage() {
                             </button>
                         </div>
 
-                        <button
-                            type="submit"
+                        <button type="submit"
                             disabled={isLoading}
                             className={styles.submitButton}
                         >
                             {isLoading ? 'CONNEXION...' : 'SE CONNECTER'}
                         </button>
                     </form>
+
+                    {v2Enabled && <GoogleSignInButton label="Se connecter avec Google" />}
 
                     <div className={styles.divider}>
                         <span className={styles.dividerText}>

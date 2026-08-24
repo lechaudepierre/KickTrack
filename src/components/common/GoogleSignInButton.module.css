@@ -1,0 +1,110 @@
+/* ─── Connexion Google ────────────────────────────────────────────────────────
+   Lit uniquement des tokens (chantier 5.1).
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.separator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin: var(--spacing-lg) 0;
+}
+
+.separator::before,
+.separator::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.separatorText {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+}
+
+.button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text-dark);
+    background: var(--white);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-arcade);
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+@media (hover: hover) {
+    .button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 0 var(--ink-700);
+    }
+}
+
+.button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.logo {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.error {
+    margin-top: var(--spacing-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-error);
+}
+
+/* Formulaire de liaison, quand l'adresse a déjà un compte mot de passe */
+.linkBox {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: rgba(0, 0, 0, 0.25);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+}
+
+.linkText {
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Avertissement sur la perte du mot de passe. Traité comme une information
+   importante, pas comme une erreur : c'est un comportement normal de Firebase. */
+.linkWarning {
+    font-size: var(--text-xs);
+    line-height: 1.45;
+    font-weight: var(--weight-bold);
+    color: var(--color-text-on-accent);
+    background: var(--color-accent);
+    border: var(--border-arcade-thin);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.linkInput {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.95rem;
+    color: var(--color-text-dark);
+    background: var(--white);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-sm);
+}

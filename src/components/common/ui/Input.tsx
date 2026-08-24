@@ -1,5 +1,15 @@
-import { InputHTMLAttributes, forwardRef, useState } from 'react';
+/**
+ * Input — étage 2 du design system.
+ *
+ * Remplace la version en Tailwind, dont la palette slate/emerald était
+ * étrangère au reste de l'app.
+ *
+ * Ne lit QUE des tokens.
+ */
+
+import { InputHTMLAttributes, forwardRef, useId, useState } from 'react';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import styles from './Input.module.css';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     label?: string;
@@ -7,63 +17,52 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     hint?: string;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
-    ({ label, error, hint, type, className = '', ...props }, ref) => {
-        const [showPassword, setShowPassword] = useState(false);
-        const isPassword = type === 'password';
+const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+    { label, error, hint, type, className = '', id, ...props },
+    ref
+) {
+    const [showPassword, setShowPassword] = useState(false);
+    const generatedId = useId();
+    const inputId = id ?? generatedId;
+    const isPassword = type === 'password';
 
-        return (
-            <div className="w-full">
-                {label && (
-                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                        {label}
-                    </label>
-                )}
-                <div className="relative">
-                    <input
-                        ref={ref}
-                        type={isPassword && showPassword ? 'text' : type}
-                        className={`
-              w-full px-4 py-3 
-              bg-slate-800/50 backdrop-blur-sm
-              border border-slate-700 
-              rounded-xl
-              text-white placeholder-slate-500
-              transition-all duration-200
-              focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent
-              hover:border-slate-600
-              disabled:opacity-50 disabled:cursor-not-allowed
-              ${error ? 'border-red-500 focus:ring-red-500' : ''}
-              ${isPassword ? 'pr-12' : ''}
-              ${className}
-            `}
-                        {...props}
-                    />
-                    {isPassword && (
-                        <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
-                        >
-                            {showPassword ? (
-                                <EyeSlashIcon className="h-5 w-5" />
-                            ) : (
-                                <EyeIcon className="h-5 w-5" />
-                            )}
-                        </button>
-                    )}
-                </div>
-                {error && (
-                    <p className="mt-1.5 text-sm text-red-400">{error}</p>
-                )}
-                {hint && !error && (
-                    <p className="mt-1.5 text-sm text-slate-500">{hint}</p>
+    return (
+        <div className={styles.field}>
+            {label && <label className={styles.label} htmlFor={inputId}>{label}</label>}
+
+            <div className={styles.wrapper}>
+                <input
+                    ref={ref}
+                    id={inputId}
+                    type={isPassword && showPassword ? 'text' : type}
+                    aria-invalid={error ? true : undefined}
+                    className={[
+                        styles.input,
+                        error ? styles.invalid : '',
+                        isPassword ? styles.withToggle : '',
+                        className,
+                    ].filter(Boolean).join(' ')}
+                    {...props}
+                />
+
+                {isPassword && (
+                    <button type="button"
+                        className={styles.toggle}
+                        onClick={() => setShowPassword(v => !v)}
+                        aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    >
+                        {showPassword
+                            ? <EyeSlashIcon width={20} height={20} />
+                            : <EyeIcon width={20} height={20} />}
+                    </button>
                 )}
             </div>
-        );
-    }
-);
 
-Input.displayName = 'Input';
+            {error ? <span className={styles.error}>{error}</span>
+                : hint ? <span className={styles.hint}>{hint}</span>
+                    : null}
+        </div>
+    );
+});
 
 export default Input;

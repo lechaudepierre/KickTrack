@@ -3,13 +3,15 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
+import { useFeature } from '@/lib/features';
 import { getUserById, checkUsernameAvailable, updateUsername } from '@/lib/firebase/auth';
-import { getUserGames } from '@/lib/firebase/games';
+import { getUserGames, getPlayerRank } from '@/lib/firebase/games';
 import { getFriendRequestCount } from '@/lib/firebase/friends';
 import { getAnnouncements, countUnread } from '@/lib/firebase/announcements';
 import { Game, Venue, User, Announcement } from '@/types';
 import VenueDropdown from '@/components/venues/VenueDropdown';
 import BottomNav from '@/components/common/BottomNav';
+import PlayerTitle from '@/components/common/PlayerTitle';
 import { calculateAdvancedStats, getPositionLabel, AdvancedStats, BadgeId } from '@/lib/utils/statsCalculator';
 import { BADGE_CONFIG } from '@/lib/utils/badgeConfig';
 import {
@@ -49,7 +51,15 @@ import styles from './ProfileContent.module.css';
 import RankAvatar from '@/components/common/RankAvatar';
 import PlayerBanner from '@/components/common/PlayerBanner';
 import { getRankInfo } from '@/lib/utils/rankUtils';
+import { readLadder, LADDERS } from '@/lib/game/ladders';
+import { toDate } from '@/lib/game/dates';
 import { CREATOR_USERNAMES } from '@/lib/utils/bannerUtils';
+import { resolvePeakElo } from '@/lib/game/scoring';
+import { RankProgressBar, Button } from '@/components/common/ui';
+import ProfileTabs, { type ProfileTab } from './ProfileTabs';
+import ProfileHistoryTab from './ProfileHistoryTab';
+import ProfilePlayersTab from './ProfilePlayersTab';
+import ProfileStatsTab from './ProfileStatsTab';
 
 interface ProfileContentProps {
     targetUserId: string;
@@ -58,14 +68,20 @@ interface ProfileContentProps {
 
 export default function ProfileContent({ targetUserId, isMe = false }: ProfileContentProps) {
     const router = useRouter();
+    const v2Enabled = useFeature('v2');
     const { user: currentUser, logout } = useAuthStore();
 
     const [profileUser, setProfileUser] = useState<User | null>(null);
     const [recentGames, setRecentGames] = useState<Game[]>([]);
     const [allGames, setAllGames] = useState<Game[]>([]);
+    // Place au classement général. `null` = pas encore chargée, ou incalculable.
+    const [rank, setRank] = useState<number | null>(null);
+    // Classement Blitz — chantier 7.11. Sa propre carte, comme demandé.
+    const [blitzRank, setBlitzRank] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [advancedStats, setAdvancedStats] = useState<AdvancedStats | null>(null);
     const [selectedBadge, setSelectedBadge] = useState<BadgeId | null>(null);
+    const [activeTab, setActiveTab] = useState<ProfileTab>('stats');
 
     // Filters state
     const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
@@ -113,6 +129,23 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
 
             setProfileUser(userData);
             setAllGames(gamesData);
+
+            // Un simple comptage côté serveur : la place revient en un entier,
+            // sans télécharger le classement. Jamais bloquant pour l'affichage.
+            if (userData?.stats?.elo) {
+                getPlayerRank(userData.stats.elo)
+                    .then(setRank)
+                    .catch(() => setRank(null));
+            }
+
+            // Une seule requête de plus, et seulement si le joueur a
+            // réellement joué en Blitz. Sinon la carte n'existe pas.
+            const blitz = readLadder(userData?.stats, 'blitz');
+            if (blitz.games > 0) {
+                getPlayerRank(blitz.elo, 'blitz')
+                    .then(setBlitzRank)
+                    .catch(() => setBlitzRank(null));
+            }
 
             if (isMe) {
                 const count = await getFriendRequestCount(targetUserId);
@@ -165,14 +198,6 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
     }, [selectedVenue, modeFilter, allGames, profileUser]);
 
     // Filter head-to-head based on search
-    const filteredH2H = useMemo(() => {
-        if (!advancedStats) return [];
-        const list = h2hSearchQuery.trim()
-            ? advancedStats.headToHead.filter(h2h => h2h.opponentName.toLowerCase().includes(h2hSearchQuery.toLowerCase()))
-            : advancedStats.headToHead;
-        return list.slice(0, 5);
-    }, [advancedStats, h2hSearchQuery]);
-
     // Top 3 teammates by wins in 2v2
     const topTeammates = useMemo(() => {
         if (!profileUser || allGames.length === 0) return [];
@@ -224,7 +249,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
     if (isLoading) {
         return (
             <div className="container-center">
-                <div className="w-16 h-16 border-4 border-[var(--color-field-green)] border-t-transparent rounded-full animate-spin" />
+                <div className="spinner-ring" style={{ width: '64px', height: '64px', borderWidth: '4px', borderTopColor: 'transparent', borderRadius: 'var(--radius-full)' }} />
             </div>
         );
     }
@@ -234,17 +259,16 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
             <div className={styles.container}>
                 <div className={styles.contentWrapper}>
                     <p className={styles.emptyState}>Joueur non trouvé</p>
-                    <button onClick={() => router.back()} className="btn-primary mt-4">
-                        <div className="btn-primary-content">Retour</div>
-                    </button>
+                    <Button onClick={() => router.back()} style={{ marginTop: 'var(--spacing-md)' }}>Retour</Button>
                 </div>
             </div>
         );
     }
 
-    const formatDate = (date: Date | any) => {
+    // `startedAt` arrive soit en Date, soit en Timestamp Firestore ({ seconds }).
+    const formatDate = (date: Date | { seconds: number } | null | undefined) => {
         if (!date) return '';
-        const d = date instanceof Date ? date : new Date(date.seconds * 1000);
+        const d = toDate(date);
         return new Intl.DateTimeFormat('fr-FR', {
             day: 'numeric',
             month: 'long',
@@ -331,76 +355,6 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
     };
 
     // Elo Chart Component
-    const EloChart = ({ data }: { data: Array<{ date: string, elo: number }> }) => {
-        if (data.length < 2) return <div className={styles.chartEmpty}>Pas assez de données pour le graphique</div>;
-
-        const width = 300;
-        const height = 120;
-        const padX = 20;
-        const padY = 25;
-
-        const values = data.map(d => d.elo);
-        const minElo = Math.min(...values);
-        const maxElo = Math.max(...values);
-
-        const range = maxElo - minElo;
-        const displayRange = range === 0 ? 40 : range;
-        const displayMin = range === 0 ? minElo - 20 : minElo;
-
-        const getX = (i: number) => (i / (data.length - 1)) * (width - 2 * padX) + padX;
-        const getY = (val: number) => height - (((val - displayMin) / displayRange) * (height - 2 * padY) + padY);
-
-        const points = data.map((d, i) => `${getX(i)},${getY(d.elo)}`).join(' ');
-
-        return (
-            <div className={styles.chartContainer}>
-                <div className={styles.chartEloLegend}>
-                    <span className="text-[0.6rem] font-black">{Math.round(maxElo)}</span>
-                    <span className="text-[0.6rem] font-black">{Math.round(minElo)}</span>
-                </div>
-                <svg viewBox={`0 0 ${width} ${height}`} className={styles.svgChart}>
-                    {/* Grid lines (min/max) */}
-                    <line x1={padX} y1={padY} x2={width - padX} y2={padY} stroke="rgba(51,51,51,0.05)" strokeDasharray="2" />
-                    <line x1={padX} y1={height - padY} x2={width - padX} y2={height - padY} stroke="rgba(51,51,51,0.05)" strokeDasharray="2" />
-
-                    {/* The line */}
-                    <polyline
-                        fill="none"
-                        stroke="var(--color-green-medium)"
-                        strokeWidth="3.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        points={points}
-                    />
-
-                    {/* Dots and Labels */}
-                    {data.map((d, i) => {
-                        const x = getX(i);
-                        const y = getY(d.elo);
-                        const isLast = i === data.length - 1;
-                        return (
-                            <g key={i}>
-                                <circle cx={x} cy={y} r="3" fill="#333" />
-                                {isLast && (
-                                    <g>
-                                        <rect x={x - 15} y={y - 20} width="30" height="14" rx="4" fill="#333" />
-                                        <text x={x} y={y - 10} fontSize="9" fontWeight="900" textAnchor="middle" fill="white">
-                                            {Math.round(d.elo)}
-                                        </text>
-                                    </g>
-                                )}
-                            </g>
-                        );
-                    })}
-                </svg>
-                <div className={styles.chartLabels}>
-                    <span className="text-[0.65rem] opacity-40 font-black uppercase">{data[0].date}</span>
-                    <span className="text-[0.7rem] font-black uppercase tracking-tight text-green-700">Progression Elo (20p)</span>
-                    <span className="text-[0.65rem] opacity-40 font-black uppercase">{data[data.length - 1].date}</span>
-                </div>
-            </div>
-        );
-    };
 
     return (
         <div className={styles.container}>
@@ -409,7 +363,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                     <div className={styles.headerLeft}>
                         {!isMe && (
                             <button onClick={() => router.back()} className={styles.backButton}>
-                                <ArrowLeftIcon className="w-5 h-5" />
+                                <ArrowLeftIcon width={20} height={20} />
                             </button>
                         )}
                         <h1 className={styles.title}>{isMe ? 'Tableau de Bord' : 'Profil'}</h1>
@@ -439,24 +393,23 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                         ) : (
                             <>
                                 {relationshipStatus === 'none' && (
-                                    <button
-                                        onClick={handleAddFriend}
+                                    <button onClick={handleAddFriend}
                                         className={styles.addFriendBtn}
                                         disabled={isActionPending}
                                     >
-                                        <UserPlusIcon className="w-5 h-5 mr-2" />
+                                        <UserPlusIcon style={{ width: '20px', height: '20px', marginRight: 'var(--spacing-sm)' }} />
                                         <span>Ajouter</span>
                                     </button>
                                 )}
                                 {relationshipStatus === 'pending' && (
                                     <button className={styles.pendingBtn} disabled>
-                                        <ClockIcon className="w-5 h-5 mr-2" />
+                                        <ClockIcon style={{ width: '20px', height: '20px', marginRight: 'var(--spacing-sm)' }} />
                                         <span>En attente</span>
                                     </button>
                                 )}
                                 {relationshipStatus === 'friend' && (
                                     <div className={styles.friendBadge}>
-                                        <CheckIcon className="w-5 h-5 mr-2" />
+                                        <CheckIcon style={{ width: '20px', height: '20px', marginRight: 'var(--spacing-sm)' }} />
                                         <span>Ami</span>
                                     </div>
                                 )}
@@ -465,9 +418,9 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                     </div>
                 </div>
 
-                <PlayerBanner
-                    username={profileUser.username}
+                <PlayerBanner username={profileUser.username}
                     bannerId={profileUser.bannerId}
+                    equipped={v2Enabled ? profileUser.equipped : null}
                     className={`${styles.profileHeader} ${styles.profileBannerBlock}`}
                 >
                     <RankAvatar elo={profileUser.stats.elo} size="md" />
@@ -478,17 +431,79 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                             </h2>
                             {isMe && (
                                 <button onClick={openUpdateModal} className={styles.editBtn}>
-                                    <PencilIcon className="w-4 h-4" />
+                                    <PencilIcon width={16} height={16} />
                                 </button>
                             )}
                         </div>
+                        {/* Le titre équipé, juste sous le pseudo. Avant ça, on
+                            pouvait équiper un titre sans qu'il s'affiche nulle
+                            part. */}
+                        <PlayerTitle equipped={v2Enabled ? profileUser.equipped : null} />
                         <p className={styles.eloRankLine}>
                             {profileUser.stats.elo || 1000} Elo
                             {' – '}
                             {(() => { const r = getRankInfo(profileUser.stats.elo); return `${r.label} ${r.romanLevel}`; })()}
+                            {/* La place n'apparaît que lorsqu'elle est connue :
+                                mieux vaut ne rien montrer qu'un rang faux. */}
+                            {rank !== null && (
+                                <>
+                                    {' – '}
+                                    <span className={styles.rankPosition}>#{rank}</span>
+                                </>
+                            )}
                         </p>
+                        {/* Pic d'ELO. Reconstitué depuis `eloHistory` quand `peakElo` n'a
+                            jamais été suivi — ce qui est le cas des 147 comptes antérieurs
+                            au 20/08. Masqué quand il égale l'ELO courant : afficher
+                            « Record : 1000 » à quelqu'un qui est à 1000 n'apprend rien. */}
+                        {(() => {
+                            const peak = resolvePeakElo(profileUser.stats);
+                            if (peak <= (profileUser.stats.elo ?? 1000)) return null;
+                            const r = getRankInfo(peak);
+                            return (
+                                <p className={styles.peakEloLine}>
+                                    Record : {peak} Elo – {r.label} {r.romanLevel}
+                                </p>
+                            );
+                        })()}
                     </div>
                 </PlayerBanner>
+
+                {/* Progression vers le grade suivant.
+                    Placée SOUS la bannière et non dedans : la bannière est une
+                    image de fond arbitraire, une barre par-dessus serait
+                    illisible sur la moitié des visuels. */}
+                <RankProgressBar elo={profileUser.stats.elo} />
+
+                {/* Carte du classement Blitz — chantier 7.11.
+                    Une carte À PART ENTIÈRE, pas une ligne de plus sur la carte
+                    principale : c'est une autre échelle, pas une autre
+                    statistique de la même. Elle n'apparaît que si le joueur y a
+                    joué (décision de Sacha, 22/08). */}
+                {(() => {
+                    const blitz = readLadder(profileUser.stats, 'blitz');
+                    if (blitz.games === 0) return null;
+                    const r = getRankInfo(blitz.elo);
+                    return (
+                        <div className={styles.ladderCard}>
+                            <div className={styles.ladderCardHeader}>
+                                <span className={styles.ladderCardTitle}>{LADDERS.blitz.label}</span>
+                                <span className={styles.ladderCardGames}>
+                                    {blitz.games} partie{blitz.games > 1 ? 's' : ''}
+                                </span>
+                            </div>
+                            <p className={styles.ladderCardLine}>
+                                {blitz.elo} Elo – {r.label} {r.romanLevel}
+                                {blitzRank !== null && (
+                                    <>
+                                        {' – '}
+                                        <span className={styles.rankPosition}>#{blitzRank}</span>
+                                    </>
+                                )}
+                            </p>
+                        </div>
+                    );
+                })()}
 
                 {/* Badges */}
                 {advancedStats && advancedStats.badges.length > 0 && (
@@ -497,8 +512,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                             const badge = BADGE_CONFIG[badgeId];
                             const Icon = BADGE_ICONS[badgeId];
                             return (
-                                <button
-                                    key={badgeId}
+                                <button key={badgeId}
                                     className={styles.badgePill}
                                     onClick={() => setSelectedBadge(badgeId)}
                                 >
@@ -510,6 +524,20 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                     </div>
                 )}
 
+                {/* Voir la collection d'un autre joueur — chantier 4.9.
+                    SOUS les pastilles de badge, pas au-dessus (Sacha, 21/08) :
+                    les badges décrivent le joueur, le bouton emmène ailleurs.
+                    Un bouton coincé entre deux blocs descriptifs se lit comme
+                    une étiquette de plus. */}
+                {!isMe && v2Enabled && (
+                    <button type="button"
+                        className={`${styles.collectionLink} ${styles.collectionLinkOther}`}
+                        onClick={() => router.push(`/collection?joueur=${targetUserId}`)}
+                    >
+                        Voir sa collection →
+                    </button>
+                )}
+
                 <p className={styles.joinDate}>
                     {CREATOR_USERNAMES.includes(profileUser.username) ? 'CREATOR' : `Membre depuis ${formatDate(profileUser.createdAt)}`}
                 </p>
@@ -518,22 +546,18 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                 <div className={styles.filterSection}>
                     <div className={styles.filterRow}>
                         <div className={styles.segmentedControl}>
-                            <button
-                                className={`${styles.segment} ${modeFilter === 'all' ? styles.segmentActive : ''}`}
+                            <button className={`${styles.segment} ${modeFilter === 'all' ? styles.segmentActive : ''}`}
                                 onClick={() => setModeFilter('all')}
                             >Tous</button>
-                            <button
-                                className={`${styles.segment} ${modeFilter === '1v1' ? styles.segmentActive : ''}`}
+                            <button className={`${styles.segment} ${modeFilter === '1v1' ? styles.segmentActive : ''}`}
                                 onClick={() => setModeFilter('1v1')}
                             >1v1</button>
-                            <button
-                                className={`${styles.segment} ${modeFilter === '2v2' ? styles.segmentActive : ''}`}
+                            <button className={`${styles.segment} ${modeFilter === '2v2' ? styles.segmentActive : ''}`}
                                 onClick={() => setModeFilter('2v2')}
                             >2v2</button>
                         </div>
                     </div>
-                    <VenueDropdown
-                        selectedVenue={selectedVenue}
+                    <VenueDropdown selectedVenue={selectedVenue}
                         onSelectVenue={setSelectedVenue}
                         showNoneOption={true}
                         noneLabel="Tous les stades"
@@ -549,7 +573,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                                 <p className={styles.statLabel}>Victoires</p>
                             </div>
                             <div className={styles.statCard}>
-                                <p className={styles.statValue} style={{ color: 'var(--color-accent-orange)' }}>
+                                <p className={styles.statValue} style={{ color: 'var(--color-warning)' }}>
                                     {advancedStats.losses}
                                 </p>
                                 <p className={styles.statLabel}>Défaites</p>
@@ -562,241 +586,37 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                                 <p className={styles.statValue}>
                                     {Math.round(advancedStats.winRate)}%
                                 </p>
-                                <p className={styles.statLabel}>Winrate</p>
-                            </div>
-                        </div>
-
-                        {/* Elo History Chart */}
-                        <div className={styles.section}>
-                            <h3 className={styles.sectionTitle}>
-                                <ChartBarIcon className="w-5 h-5" />
-                                Évolution de l&apos;Elo
-                            </h3>
-                            <div className={styles.chartCard}>
-                                <EloChart data={advancedStats.eloHistory} />
+                                <p className={styles.statLabel}>Ratio</p>
                             </div>
                         </div>
 
 
-                        {/* Gamelles Section */}
-                        <div className={styles.section}>
-                            <h3 className={styles.sectionTitle}>
-                                <FireIcon className="w-5 h-5" />
-                                Gamelles
-                            </h3>
-                            <div className={styles.gamellesGrid}>
-                                <div className={styles.gamelleCard}>
-                                    <p className={styles.gamelleValue}>{advancedStats.gamelleStats.total}</p>
-                                    <p className={styles.gamelleLabel}>Total</p>
-                                    <p className={styles.gamelleSub}>{Math.round(advancedStats.gamelleStats.totalPercentage)}% des matchs</p>
-                                </div>
-                                <div className={styles.gamelleCard}>
-                                    <p className={styles.gamelleValue}>{advancedStats.gamelleStats.rentrantes}</p>
-                                    <p className={styles.gamelleLabel}>Rentrantes</p>
-                                    <p className={styles.gamelleSub}>{Math.round(advancedStats.gamelleStats.rentrantesPercentage)}% des matchs</p>
-                                </div>
-                            </div>
-                        </div>
+                        {/* Onglets — refonte du profil. Les onze sections empilées
+                            sont regroupées en trois vues. Aucune donnée retirée. */}
+                        <ProfileTabs active={activeTab} onChange={setActiveTab} />
 
-                        {/* Flash Goals Section */}
-                        {advancedStats.flashStats.total > 0 && (
-                            <div className={styles.section}>
-                                <h3 className={styles.sectionTitle}>
-                                    <FireIcon className="w-5 h-5" />
-                                    Buts Flash
-                                </h3>
-                                <div className={styles.gamellesGrid}>
-                                    <div className={styles.gamelleCard}>
-                                        <p className={styles.gamelleValue}>{advancedStats.flashStats.total}</p>
-                                        <p className={styles.gamelleLabel}>Total</p>
-                                        <p className={styles.gamelleSub}>{Math.round(advancedStats.flashStats.totalPercentage)}% des matchs</p>
-                                    </div>
-                                </div>
-                            </div>
+                        {activeTab === 'stats' && (
+                            <ProfileStatsTab advancedStats={advancedStats}
+                                modeFilter={modeFilter}
+                                onShowRemontadaInfo={() => setShowRemontadaInfo(true)}
+                            />
                         )}
 
-                        {/* Roles Section (Only if 2v2 is possible) */}
-                        {modeFilter !== '1v1' && (advancedStats.roleStats.attack.games > 0 || advancedStats.roleStats.defense.games > 0) && (
-                            <div className={styles.section}>
-                                <h3 className={styles.sectionTitle}>
-                                    <TrophyIcon className="w-5 h-5" />
-                                    Performance par Rôle (2v2)
-                                </h3>
-                                <div className={styles.rolesGrid}>
-                                    <div className={styles.roleCard}>
-                                        <p className={styles.roleTitle}>Attaque</p>
-                                        <p className={styles.roleValue}>{Math.round(advancedStats.roleStats.attack.winRate * 100)}%</p>
-                                        <p className={styles.roleSub}>{advancedStats.roleStats.attack.games} matchs</p>
-                                    </div>
-                                    <div className={styles.roleCard}>
-                                        <p className={styles.roleTitle}>Défense</p>
-                                        <p className={styles.roleValue}>{Math.round(advancedStats.roleStats.defense.winRate * 100)}%</p>
-                                        <p className={styles.roleSub}>{advancedStats.roleStats.defense.games} matchs</p>
-                                    </div>
-                                </div>
-                            </div>
+                        {activeTab === 'joueurs' && (
+                            <ProfilePlayersTab advancedStats={advancedStats}
+                                topTeammates={topTeammates}
+                                teammateElos={teammateElos}
+                                modeFilter={modeFilter}
+                                searchQuery={h2hSearchQuery}
+                                onSearchChange={setH2hSearchQuery}
+                            />
                         )}
 
-                        {/* Detailed Metrics */}
-                        <div className={styles.section}>
-                            <h3 className={styles.sectionTitle}>
-                                <ChartBarIcon className="w-5 h-5" />
-                                Métriques Détaillées
-                            </h3>
-                            <div className={styles.detailsGrid}>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>Buts / Match</span>
-                                    <span className={styles.detailValue}>{advancedStats.goalsPerGame.overall.toFixed(1)}</span>
-                                </div>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>Clean Sheets</span>
-                                    <span className={styles.detailValue}>{advancedStats.cleanSheets}</span>
-                                </div>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>Remontadas</span>
-                                    <span className={styles.detailValue}>{advancedStats.comebacks}</span>
-                                    <button onClick={() => setShowRemontadaInfo(true)} className={styles.infoBtn}>
-                                        <InformationCircleIcon className="w-4 h-4" />
-                                    </button>
-                                </div>
-                                <div className={styles.detailItem}>
-                                    <span className={styles.detailLabel}>Meilleure Série</span>
-                                    <span className={styles.detailValue}>{advancedStats.winStreak} V</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Top Teammates Podium */}
-                        {modeFilter !== '1v1' && topTeammates.length > 0 && (
-                            <div className={styles.section}>
-                                <h3 className={styles.sectionTitle}>
-                                    <UserPlusIcon className="w-5 h-5" />
-                                    Duo de Choc (2v2)
-                                </h3>
-                                <div className={styles.podiumCard}>
-                                    <div className={styles.podium}>
-                                        {/* 2nd place - left */}
-                                        {topTeammates[1] ? (
-                                            <div className={`${styles.podiumSpot} cursor-pointer`} onClick={() => router.push(`/profile/${topTeammates[1].userId}`)}>
-                                                <RankAvatar size="md" elo={teammateElos.get(topTeammates[1].userId)} />
-                                                <span className={styles.podiumName}>{topTeammates[1].username}</span>
-                                                <span className={styles.podiumWins}>{topTeammates[1].wins}V</span>
-                                                <span className={styles.podiumGames}>{topTeammates[1].games} matchs</span>
-                                                <div className={`${styles.podiumBar} ${styles.podiumBar2}`}>2</div>
-                                            </div>
-                                        ) : (
-                                            <div className={styles.podiumSpot} />
-                                        )}
-
-                                        {/* 1st place - center */}
-                                        <div className={`${styles.podiumSpot} cursor-pointer`} onClick={() => router.push(`/profile/${topTeammates[0].userId}`)}>
-                                            <RankAvatar size="lg" elo={teammateElos.get(topTeammates[0].userId)} />
-                                            <span className={styles.podiumName}>{topTeammates[0].username}</span>
-                                            <span className={styles.podiumWins}>{topTeammates[0].wins}V</span>
-                                            <span className={styles.podiumGames}>{topTeammates[0].games} matchs</span>
-                                            <div className={`${styles.podiumBar} ${styles.podiumBar1}`}>1</div>
-                                        </div>
-
-                                        {/* 3rd place - right */}
-                                        {topTeammates[2] ? (
-                                            <div className={`${styles.podiumSpot} cursor-pointer`} onClick={() => router.push(`/profile/${topTeammates[2].userId}`)}>
-                                                <RankAvatar size="md" elo={teammateElos.get(topTeammates[2].userId)} />
-                                                <span className={styles.podiumName}>{topTeammates[2].username}</span>
-                                                <span className={styles.podiumWins}>{topTeammates[2].wins}V</span>
-                                                <span className={styles.podiumGames}>{topTeammates[2].games} matchs</span>
-                                                <div className={`${styles.podiumBar} ${styles.podiumBar3}`}>3</div>
-                                            </div>
-                                        ) : (
-                                            <div className={styles.podiumSpot} />
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Head-to-Head */}
-                        {advancedStats.headToHead.length > 0 && (
-                            <div className={styles.section}>
-                                <h3 className={styles.sectionTitle}>
-                                    <UsersIcon className="w-5 h-5" />
-                                    Face à Face
-                                </h3>
-                                <div className={styles.h2hSearch}>
-                                    <MagnifyingGlassIcon className={styles.h2hSearchIcon} />
-                                    <input
-                                        type="text"
-                                        placeholder="Rechercher un adversaire..."
-                                        value={h2hSearchQuery}
-                                        onChange={(e) => setH2hSearchQuery(e.target.value)}
-                                        className={styles.h2hSearchInput}
-                                    />
-                                </div>
-                                <div className={styles.h2hList}>
-                                    {filteredH2H.map((h2h) => (
-                                        <div key={h2h.opponentId} className={`${styles.h2hCard} cursor-pointer`} onClick={() => router.push(`/profile/${h2h.opponentId}`)}>
-                                            <div className={styles.h2hInfo}>
-                                                <span className={styles.h2hName}>{h2h.opponentName}</span>
-                                                <span className={styles.h2hGames}>{h2h.gamesPlayed} parties</span>
-                                            </div>
-                                            <div className={styles.h2hStats}>
-                                                <span className={styles.h2hWins}>{h2h.wins}V</span>
-                                                <span className={styles.h2hSeparator}>-</span>
-                                                <span className={styles.h2hLosses}>{h2h.losses}D</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                        {activeTab === 'historique' && (
+                            <ProfileHistoryTab games={recentGames} userId={profileUser.userId} />
                         )}
                     </>
                 )}
-
-                {/* Dernières parties */}
-                <div className={styles.section}>
-                    <h3 className={styles.sectionTitle}>
-                        <ClockIcon className="w-5 h-5" />
-                        Dernières Parties
-                    </h3>
-                    {recentGames.length === 0 ? (
-                        <div className={styles.emptyState}>Aucune partie trouvée avec ces filtres</div>
-                    ) : (
-                        <div className={styles.gamesList}>
-                            {recentGames.map((game) => {
-                                const result = getGameResult(game);
-                                const isWin = result === 'Victoire';
-                                const teammate = getTeammateName(game);
-                                const eloChange = getEloChange(game);
-                                return (
-                                    <div key={game.gameId} className={styles.gameCard}>
-                                        <div className={styles.gameInfo}>
-                                            <span className={`${styles.gameResult} ${isWin ? styles.resultWin : styles.resultLoss}`}>{result}</span>
-                                            <span className={styles.gameOpponent}>vs {getOpponentNames(game)}</span>
-                                            {teammate && (
-                                                <span className={styles.gameTeammate}>avec {teammate}</span>
-                                            )}
-                                            <span className={styles.gameDate}>{formatDate(game.startedAt)}</span>
-                                        </div>
-                                        <div className={styles.gameRight}>
-                                            <div className={styles.gameScore}>
-                                                {(() => {
-                                                    const userTeamIndex = game.teams.findIndex(t => t.players.some(p => p.userId === profileUser.userId));
-                                                    if (userTeamIndex === -1) return `${game.score[0]} - ${game.score[1]}`;
-                                                    const opponentTeamIndex = userTeamIndex === 0 ? 1 : 0;
-                                                    return `${game.score[userTeamIndex]} - ${game.score[opponentTeamIndex]}`;
-                                                })()}
-                                            </div>
-                                            {eloChange !== null && (
-                                                <span className={`${styles.gameElo} ${eloChange >= 0 ? styles.eloPositive : styles.eloNegative}`}>
-                                                    {eloChange >= 0 ? '+' : ''}{eloChange}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
             </div>
 
             {/* Modals */}
@@ -805,10 +625,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                     <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
                         <h3 className={styles.modalTitle}>Remontadas</h3>
                         <p className={styles.modalText}>Victoire épique après avoir eu au moins 4 buts de retard à n&apos;importe quel moment du match.</p>
-                        <button onClick={() => setShowRemontadaInfo(false)} className="btn-primary">
-                            <div className="btn-primary-shadow" />
-                            <div className="btn-primary-content">Compris !</div>
-                        </button>
+                        <Button onClick={() => setShowRemontadaInfo(false)} fullWidth>Compris !</Button>
                     </div>
                 </div>
             )}
@@ -819,16 +636,15 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                     <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
                         <div className={styles.modalHeader}>
                             <h3 className={styles.modalTitle}>Pseudo</h3>
-                            <button
-                                onClick={() => setShowUpdateModal(false)}
+                            <button onClick={() => setShowUpdateModal(false)}
                                 disabled={isUpdating}
                                 className={styles.modalCloseBtn}
                             >
-                                <XMarkIcon className="w-6 h-6" />
+                                <XMarkIcon width={24} height={24} />
                             </button>
                         </div>
                         <form onSubmit={handleUpdateUsername}>
-                            {updateError && <div className="error-box mb-4">{updateError}</div>}
+                            {updateError && <div className="error-box" style={{ marginBottom: 'var(--spacing-md)' }}>{updateError}</div>}
                             <input
                                 type="text"
                                 value={newUsername}
@@ -839,13 +655,24 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                                 disabled={isUpdating}
                                 required
                             />
-                            <button type="submit" disabled={isUpdating || !newUsername.trim() || newUsername.trim() === profileUser.username} className="w-full">
-                                <div className="btn-primary">
-                                    <div className="btn-primary-shadow" />
-                                    <div className="btn-primary-content">{isUpdating ? 'Mise à jour...' : 'Enregistrer'}</div>
-                                </div>
-                            </button>
+                            <Button type="submit" disabled={isUpdating || !newUsername.trim() || newUsername.trim() === profileUser.username} fullWidth>
+{isUpdating ? 'Mise à jour...' : 'Enregistrer'}
+</Button>
                         </form>
+
+                        {/* La personnalisation vit sur /collection, pas ici.
+                            Deux interfaces pour équiper le même item, ce serait
+                            deux comportements à maintenir en accord.
+                            Masqué tant que la fonctionnalité n'est pas livrée
+                            pour ce joueur (drapeau `collectionV2`). */}
+                        {v2Enabled && (
+                            <button type="button"
+                                className={styles.collectionLink}
+                                onClick={() => router.push('/collection')}
+                            >
+                                Personnaliser mon profil →
+                            </button>
+                        )}
                     </div>
                 </div>
             )}
@@ -860,7 +687,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                     <div className={styles.badgeModalOverlay} onClick={() => setSelectedBadge(null)}>
                         <div className={styles.badgeModal} onClick={e => e.stopPropagation()}>
                             <button className={styles.badgeModalClose} onClick={() => setSelectedBadge(null)}>
-                                <XMarkIcon className="w-5 h-5" />
+                                <XMarkIcon width={20} height={20} />
                             </button>
                             <Icon className={styles.badgeModalIcon} />
                             <h3 className={styles.badgeModalTitle}>{badge.label}</h3>

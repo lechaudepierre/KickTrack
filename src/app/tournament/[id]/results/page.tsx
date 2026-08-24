@@ -106,10 +106,10 @@ export default function TournamentResultsPage() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         margin: '0 auto var(--spacing-md)',
-                        border: '4px solid #333333',
+                        border: '4px solid var(--ink-700)',
                         boxShadow: '0 8px 0 rgba(0,0,0,0.2)'
                     }}>
-                        <TrophyIcon className="h-12 w-12" style={{ color: '#333333' }} />
+                        <TrophyIcon width={48} height={48} style={{ color: 'var(--ink-700)' }} />
                     </div>
 
                     <h1 style={{
@@ -124,7 +124,7 @@ export default function TournamentResultsPage() {
                     {winner && (
                         <div style={{
                             background: '#FFD700',
-                            border: '3px solid #333333',
+                            border: '3px solid var(--ink-700)',
                             borderRadius: 'var(--radius-lg)',
                             padding: 'var(--spacing-lg)',
                             marginTop: 'var(--spacing-lg)'
@@ -141,7 +141,7 @@ export default function TournamentResultsPage() {
                             <p style={{
                                 fontSize: '1.75rem',
                                 fontWeight: 800,
-                                color: '#333333',
+                                color: 'var(--ink-700)',
                                 marginBottom: '8px'
                             }}>
                                 {winner.teamName}
@@ -164,8 +164,8 @@ export default function TournamentResultsPage() {
                     marginBottom: 'var(--spacing-lg)'
                 }}>
                     <div style={{
-                        background: 'var(--color-beige)',
-                        border: '3px solid #333333',
+                        background: 'var(--color-surface)',
+                        border: '3px solid var(--ink-700)',
                         borderRadius: 'var(--radius-md)',
                         padding: 'var(--spacing-md)',
                         textAlign: 'center'
@@ -178,8 +178,8 @@ export default function TournamentResultsPage() {
                         </p>
                     </div>
                     <div style={{
-                        background: 'var(--color-beige)',
-                        border: '3px solid #333333',
+                        background: 'var(--color-surface)',
+                        border: '3px solid var(--ink-700)',
                         borderRadius: 'var(--radius-md)',
                         padding: 'var(--spacing-md)',
                         textAlign: 'center'
@@ -205,14 +205,13 @@ export default function TournamentResultsPage() {
                             Classement final
                         </h2>
                         <div style={{
-                            background: 'var(--color-beige)',
-                            border: '3px solid #333333',
+                            background: 'var(--color-surface)',
+                            border: '3px solid var(--ink-700)',
                             borderRadius: 'var(--radius-md)',
                             overflow: 'hidden'
                         }}>
                             {finalStandings.map((standing, index) => (
-                                <div
-                                    key={standing.teamId}
+                                <div key={standing.teamId}
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
@@ -232,7 +231,7 @@ export default function TournamentResultsPage() {
                                         justifyContent: 'center',
                                         fontSize: '0.875rem',
                                         fontWeight: 800,
-                                        color: index < 3 ? '#333333' : 'rgba(51,51,51,0.5)'
+                                        color: index < 3 ? 'var(--ink-700)' : 'rgba(51,51,51,0.5)'
                                     }}>
                                         {index + 1}
                                     </span>
@@ -290,11 +289,10 @@ export default function TournamentResultsPage() {
                                         gap: '8px'
                                     }}>
                                         {round.matches.map((match) => (
-                                            <div
-                                                key={match.matchId}
+                                            <div key={match.matchId}
                                                 style={{
-                                                    background: match.status === 'bye' ? 'rgba(51,51,51,0.05)' : 'var(--color-beige)',
-                                                    border: '2px solid #333333',
+                                                    background: match.status === 'bye' ? 'rgba(51,51,51,0.05)' : 'var(--color-surface)',
+                                                    border: '2px solid var(--ink-700)',
                                                     borderRadius: 'var(--radius-sm)',
                                                     padding: '8px',
                                                     opacity: match.status === 'bye' ? 0.5 : 1
@@ -345,8 +343,7 @@ export default function TournamentResultsPage() {
                 )}
 
                 {/* Back to Dashboard */}
-                <button
-                    onClick={() => router.push('/dashboard')}
+                <button onClick={() => router.push('/dashboard')}
                     style={{
                         width: '100%',
                         display: 'flex',
@@ -354,8 +351,8 @@ export default function TournamentResultsPage() {
                         justifyContent: 'center',
                         gap: '8px',
                         padding: 'var(--spacing-md) var(--spacing-lg)',
-                        background: 'var(--color-green-medium)',
-                        border: '3px solid #333333',
+                        background: 'var(--green-600)',
+                        border: '3px solid var(--ink-700)',
                         borderRadius: 'var(--radius-md)',
                         color: 'white',
                         fontWeight: 700,
@@ -363,7 +360,7 @@ export default function TournamentResultsPage() {
                         cursor: 'pointer'
                     }}
                 >
-                    <HomeIcon className="h-5 w-5" />
+                    <HomeIcon width={20} height={20} />
                     Retour au tableau de bord
                 </button>
             </div>

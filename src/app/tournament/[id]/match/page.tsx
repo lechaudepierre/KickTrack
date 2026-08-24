@@ -11,6 +11,7 @@ import { Tournament, TournamentTeam } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import { ArrowLeftIcon, PlayIcon } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
+import { Button } from '@/components/common/ui';
 
 function MatchContent() {
     const router = useRouter();
@@ -93,8 +94,7 @@ function MatchContent() {
                     <div className="error-box">
                         Donnees du match invalides
                     </div>
-                    <button
-                        onClick={() => router.push(`/tournament/${tournamentId}/live`)}
+                    <button onClick={() => router.push(`/tournament/${tournamentId}/live`)}
                         style={{ marginTop: 'var(--spacing-lg)' }}
                     >
                         Retour au tournoi
@@ -111,11 +111,10 @@ function MatchContent() {
             <div className={styles.contentWrapper}>
                 {/* Header */}
                 <div className={styles.pageHeader}>
-                    <button
-                        onClick={() => router.push(`/tournament/${tournamentId}/live`)}
+                    <button onClick={() => router.push(`/tournament/${tournamentId}/live`)}
                         className={styles.backButton}
                     >
-                        <ArrowLeftIcon className="h-6 w-6" />
+                        <ArrowLeftIcon width={24} height={24} />
                     </button>
                     <h1 className={styles.pageTitle}>Match</h1>
                 </div>
@@ -128,8 +127,8 @@ function MatchContent() {
 
                 {/* Match Preview */}
                 <div style={{
-                    background: 'var(--color-beige)',
-                    border: '3px solid #333333',
+                    background: 'var(--color-surface)',
+                    border: '3px solid var(--ink-700)',
                     borderRadius: 'var(--radius-lg)',
                     padding: 'var(--spacing-xl)',
                     textAlign: 'center',
@@ -140,13 +139,13 @@ function MatchContent() {
                         <div style={{
                             width: '64px',
                             height: '64px',
-                            background: 'linear-gradient(to bottom right, #E74C3C, #C0392B)',
+                            background: TEAM_GRADIENTS[0],
                             borderRadius: '50%',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             margin: '0 auto var(--spacing-sm)',
-                            border: '3px solid #333333'
+                            border: '3px solid var(--ink-700)'
                         }}>
                             <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'white' }}>
                                 {team1.name.charAt(0).toUpperCase()}
@@ -169,7 +168,7 @@ function MatchContent() {
                     <div style={{
                         fontSize: '1.5rem',
                         fontWeight: 800,
-                        color: '#FFD700',
+                        color: 'var(--color-accent)',
                         marginBottom: 'var(--spacing-lg)'
                     }}>
                         VS
@@ -180,13 +179,13 @@ function MatchContent() {
                         <div style={{
                             width: '64px',
                             height: '64px',
-                            background: 'linear-gradient(to bottom right, #3498DB, #2980B9)',
+                            background: TEAM_GRADIENTS[1],
                             borderRadius: '50%',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             margin: '0 auto var(--spacing-sm)',
-                            border: '3px solid #333333'
+                            border: '3px solid var(--ink-700)'
                         }}>
                             <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'white' }}>
                                 {team2.name.charAt(0).toUpperCase()}
@@ -208,15 +207,15 @@ function MatchContent() {
 
                 {/* Match Info */}
                 <div style={{
-                    background: '#FFD700',
-                    border: '3px solid #333333',
+                    background: 'var(--color-accent)',
+                    border: '3px solid var(--ink-700)',
                     borderRadius: 'var(--radius-md)',
                     padding: 'var(--spacing-md)',
                     marginBottom: 'var(--spacing-xl)',
                     textAlign: 'center'
                 }}>
-                    <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#333333' }}>
-                        Premier a {tournament.targetScore} buts
+                    <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--ink-700)' }}>
+                        L&apos;hôte termine le match quand il le décide
                     </p>
                     {tournament.venueName !== 'Aucun' && (
                         <p style={{ fontSize: '0.75rem', color: 'rgba(51,51,51,0.7)', marginTop: '4px' }}>
@@ -227,29 +226,14 @@ function MatchContent() {
 
                 {/* Start Button - Host only */}
                 {isHost && (
-                    <button
-                        onClick={handleStartGame}
-                        disabled={isStarting}
-                        style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px',
-                            padding: 'var(--spacing-md) var(--spacing-lg)',
-                            background: '#2ECC71',
-                            border: '3px solid #333333',
-                            borderRadius: 'var(--radius-md)',
-                            color: 'white',
-                            fontWeight: 700,
-                            fontSize: '1.125rem',
-                            cursor: isStarting ? 'not-allowed' : 'pointer',
-                            opacity: isStarting ? 0.7 : 1
-                        }}
+                    <Button onClick={handleStartGame}
+                        isLoading={isStarting}
+                        variant="accent"
+                        fullWidth
                     >
-                        <PlayIcon className="h-6 w-6" />
+                        <PlayIcon width={24} height={24} />
                         {isStarting ? 'Lancement...' : 'Lancer le match'}
-                    </button>
+                    </Button>
                 )}
 
                 {/* Non-host message */}
@@ -274,6 +258,16 @@ function LoadingFallback() {
         </div>
     );
 }
+
+/**
+ * Dégradés des deux équipes d'un match.
+ * Couleurs DÉCORATIVES, qui servent à distinguer les équipes entre elles.
+ * Elles ne participent pas à la palette d'interface.
+ */
+const TEAM_GRADIENTS = [
+    'linear-gradient(to bottom right, #E74C3C, #C0392B)',
+    'linear-gradient(to bottom right, #3498DB, #2980B9)',
+];
 
 export default function TournamentMatchPage() {
     return (

@@ -11,13 +11,13 @@ import {
 import { Tournament, TournamentMatch } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import {
-    ArrowLeftIcon,
     PlayIcon,
     CheckCircleIcon,
     ClockIcon,
     TrophyIcon
 } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
+import { PageHeader } from '@/components/common/ui';
 
 export default function TournamentLivePage() {
     const router = useRouter();
@@ -73,7 +73,6 @@ export default function TournamentLivePage() {
                 matchId: match.matchId,
                 team1: JSON.stringify(match.team1),
                 team2: JSON.stringify(match.team2),
-                targetScore: tournament.targetScore.toString(),
                 format: tournament.format,
                 venueId: tournament.venueId,
                 venueName: tournament.venueName
@@ -105,14 +104,7 @@ export default function TournamentLivePage() {
 
             <div className={styles.contentWrapper}>
                 {/* Header */}
-                <div className={styles.pageHeader}>
-                    <button onClick={() => router.push('/dashboard')} className={styles.backButton}>
-                        <ArrowLeftIcon className="h-6 w-6" />
-                    </button>
-                    <h1 className={styles.pageTitle}>
-                        {tournament.mode === 'round_robin' ? 'Classement' : 'Bracket'}
-                    </h1>
-                </div>
+                <PageHeader title={tournament.mode === 'round_robin' ? 'Classement' : 'Bracket'} back={'/dashboard'} />
 
                 {error && (
                     <div className="error-box" style={{ marginBottom: 'var(--spacing-md)' }}>
@@ -122,8 +114,8 @@ export default function TournamentLivePage() {
 
                 {/* Progress */}
                 <div style={{
-                    background: '#FFD700',
-                    border: '3px solid #333333',
+                    background: 'var(--color-accent)',
+                    border: '3px solid var(--ink-700)',
                     borderRadius: 'var(--radius-md)',
                     padding: 'var(--spacing-md)',
                     marginBottom: 'var(--spacing-lg)',
@@ -132,7 +124,7 @@ export default function TournamentLivePage() {
                     <p style={{ fontSize: '0.75rem', color: 'rgba(51,51,51,0.7)', marginBottom: '4px' }}>
                         Progression
                     </p>
-                    <p style={{ fontSize: '1.5rem', fontWeight: 800, color: '#333333' }}>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ink-700)' }}>
                         {completedMatches} / {totalMatches} matchs
                     </p>
                 </div>
@@ -149,8 +141,8 @@ export default function TournamentLivePage() {
                             Classement
                         </h2>
                         <div style={{
-                            background: 'var(--color-beige)',
-                            border: '3px solid #333333',
+                            background: 'var(--color-surface)',
+                            border: '3px solid var(--ink-700)',
                             borderRadius: 'var(--radius-md)',
                             overflow: 'hidden'
                         }}>
@@ -174,8 +166,7 @@ export default function TournamentLivePage() {
                             </div>
                             {/* Rows */}
                             {tournament.standings.map((standing, index) => (
-                                <div
-                                    key={standing.teamId}
+                                <div key={standing.teamId}
                                     style={{
                                         display: 'grid',
                                         gridTemplateColumns: '2fr repeat(5, 1fr)',
@@ -197,7 +188,7 @@ export default function TournamentLivePage() {
                                             width: '20px',
                                             height: '20px',
                                             flexShrink: 0,
-                                            background: index === 0 ? '#FFD700' : 'rgba(51,51,51,0.1)',
+                                            background: index === 0 ? 'var(--color-accent)' : 'rgba(51,51,51,0.1)',
                                             borderRadius: '50%',
                                             display: 'flex',
                                             alignItems: 'center',
@@ -216,8 +207,8 @@ export default function TournamentLivePage() {
                                         </span>
                                     </span>
                                     <span style={{ textAlign: 'center', fontSize: '0.875rem' }}>{standing.played}</span>
-                                    <span style={{ textAlign: 'center', fontSize: '0.875rem', color: '#2ECC71', fontWeight: 600 }}>{standing.wins}</span>
-                                    <span style={{ textAlign: 'center', fontSize: '0.875rem', color: '#E74C3C', fontWeight: 600 }}>{standing.losses}</span>
+                                    <span style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--team-green)', fontWeight: 600 }}>{standing.wins}</span>
+                                    <span style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--color-danger)', fontWeight: 600 }}>{standing.losses}</span>
                                     <span style={{ textAlign: 'center', fontSize: '0.875rem' }}>{standing.goalsFor - standing.goalsAgainst}</span>
                                     <span style={{ textAlign: 'center', fontSize: '0.875rem', fontWeight: 800 }}>{standing.points}</span>
                                 </div>
@@ -290,8 +281,7 @@ export default function TournamentLivePage() {
                                                     const isReady = match.status === 'pending' && match.team1.teamId && match.team2.teamId;
 
                                                     return (
-                                                        <div
-                                                            key={match.matchId}
+                                                        <div key={match.matchId}
                                                             style={{
                                                                 display: 'flex',
                                                                 alignItems: 'center'
@@ -302,7 +292,7 @@ export default function TournamentLivePage() {
                                                                 <div style={{
                                                                     width: '12px',
                                                                     height: '2px',
-                                                                    background: '#333333',
+                                                                    background: 'var(--ink-700)',
                                                                     opacity: 0.3
                                                                 }} />
                                                             )}
@@ -315,9 +305,9 @@ export default function TournamentLivePage() {
                                                                     : isInProgress
                                                                         ? 'rgba(255, 215, 0, 0.15)'
                                                                         : isCompleted
-                                                                            ? 'var(--color-beige)'
+                                                                            ? 'var(--color-surface)'
                                                                             : 'white',
-                                                                border: `2px solid ${isInProgress ? '#FFD700' : isReady ? '#2ECC71' : '#333333'}`,
+                                                                border: `2px solid ${isInProgress ? 'var(--color-accent)' : isReady ? 'var(--team-green)' : 'var(--ink-700)'}`,
                                                                 borderRadius: '6px',
                                                                 overflow: 'hidden',
                                                                 opacity: isBye ? 0.4 : 1,
@@ -354,7 +344,7 @@ export default function TournamentLivePage() {
                                                                             fontSize: '0.65rem',
                                                                             fontWeight: 700,
                                                                             marginLeft: '4px',
-                                                                            color: match.winnerId === match.team1.teamId ? '#27AE60' : '#333'
+                                                                            color: match.winnerId === match.team1.teamId ? '#27AE60' : 'var(--ink-700)'
                                                                         }}>
                                                                             {match.score[0]}
                                                                         </span>
@@ -391,7 +381,7 @@ export default function TournamentLivePage() {
                                                                             fontSize: '0.65rem',
                                                                             fontWeight: 700,
                                                                             marginLeft: '4px',
-                                                                            color: match.winnerId === match.team2.teamId ? '#27AE60' : '#333'
+                                                                            color: match.winnerId === match.team2.teamId ? '#27AE60' : 'var(--ink-700)'
                                                                         }}>
                                                                             {match.score[1]}
                                                                         </span>
@@ -404,7 +394,7 @@ export default function TournamentLivePage() {
                                                                 <div style={{
                                                                     width: '12px',
                                                                     height: '2px',
-                                                                    background: '#333333',
+                                                                    background: 'var(--ink-700)',
                                                                     opacity: 0.3
                                                                 }} />
                                                             )}
@@ -434,11 +424,10 @@ export default function TournamentLivePage() {
                         {tournament.matches
                             .filter(m => m.status !== 'bye')
                             .map((match) => (
-                                <div
-                                    key={match.matchId}
+                                <div key={match.matchId}
                                     style={{
-                                        background: match.status === 'in_progress' ? 'rgba(255, 215, 0, 0.2)' : 'var(--color-beige)',
-                                        border: `3px solid ${match.status === 'in_progress' ? '#FFD700' : '#333333'}`,
+                                        background: match.status === 'in_progress' ? 'rgba(255, 215, 0, 0.2)' : 'var(--color-surface)',
+                                        border: `3px solid ${match.status === 'in_progress' ? 'var(--color-accent)' : 'var(--ink-700)'}`,
                                         borderRadius: 'var(--radius-md)',
                                         padding: 'var(--spacing-md)'
                                     }}
@@ -460,7 +449,7 @@ export default function TournamentLivePage() {
                                                 <span style={{
                                                     fontWeight: 700,
                                                     fontSize: '0.875rem',
-                                                    color: match.winnerId === match.team1.teamId ? '#2ECC71' : 'var(--color-text-dark)',
+                                                    color: match.winnerId === match.team1.teamId ? 'var(--team-green)' : 'var(--color-text-dark)',
                                                     overflow: 'hidden',
                                                     textOverflow: 'ellipsis',
                                                     whiteSpace: 'nowrap',
@@ -482,7 +471,7 @@ export default function TournamentLivePage() {
                                                 <span style={{
                                                     fontWeight: 700,
                                                     fontSize: '0.875rem',
-                                                    color: match.winnerId === match.team2.teamId ? '#2ECC71' : 'var(--color-text-dark)',
+                                                    color: match.winnerId === match.team2.teamId ? 'var(--team-green)' : 'var(--color-text-dark)',
                                                     overflow: 'hidden',
                                                     textOverflow: 'ellipsis',
                                                     whiteSpace: 'nowrap',
@@ -498,23 +487,23 @@ export default function TournamentLivePage() {
                                         </div>
                                         <div style={{ flexShrink: 0 }}>
                                             {match.status === 'completed' && (
-                                                <CheckCircleIcon className="h-6 w-6" style={{ color: '#2ECC71' }} />
+                                                <CheckCircleIcon width={24} height={24} style={{ color: 'var(--team-green)' }} />
                                             )}
                                             {match.status === 'in_progress' && (
                                                 <div style={{
                                                     padding: '4px 8px',
-                                                    background: '#FFD700',
+                                                    background: 'var(--color-accent)',
                                                     borderRadius: 'var(--radius-sm)',
                                                     fontSize: '0.7rem',
                                                     fontWeight: 700,
-                                                    color: '#333333',
+                                                    color: 'var(--ink-700)',
                                                     whiteSpace: 'nowrap'
                                                 }}>
                                                     EN COURS
                                                 </div>
                                             )}
                                             {match.status === 'pending' && (
-                                                <ClockIcon className="h-6 w-6" style={{ color: 'rgba(51,51,51,0.3)' }} />
+                                                <ClockIcon width={24} height={24} style={{ color: 'rgba(51,51,51,0.3)' }} />
                                             )}
                                         </div>
                                     </div>
@@ -525,8 +514,7 @@ export default function TournamentLivePage() {
 
                 {/* Host Actions */}
                 {isHost && nextMatch && (
-                    <button
-                        onClick={() => handleStartMatch(nextMatch)}
+                    <button onClick={() => handleStartMatch(nextMatch)}
                         disabled={isStartingMatch}
                         style={{
                             width: '100%',
@@ -536,8 +524,8 @@ export default function TournamentLivePage() {
                             justifyContent: 'center',
                             gap: '4px',
                             padding: 'var(--spacing-md)',
-                            background: '#2ECC71',
-                            border: '3px solid #333333',
+                            background: 'var(--team-green)',
+                            border: '3px solid var(--ink-700)',
                             borderRadius: 'var(--radius-md)',
                             color: 'white',
                             fontWeight: 700,
@@ -546,7 +534,7 @@ export default function TournamentLivePage() {
                         }}
                     >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <PlayIcon className="h-5 w-5" />
+                            <PlayIcon width={20} height={20} />
                             <span style={{ fontSize: '1rem' }}>
                                 {isStartingMatch ? 'Lancement...' : 'Lancer le match'}
                             </span>
@@ -574,7 +562,7 @@ export default function TournamentLivePage() {
                         padding: 'var(--spacing-lg)',
                         color: 'rgba(51,51,51,0.6)'
                     }}>
-                        <TrophyIcon className="h-12 w-12 mx-auto mb-2" style={{ color: '#FFD700' }} />
+                        <TrophyIcon width={24} height={24} style={{ color: 'var(--color-accent)' }} />
                         <p>Tournoi en cours de finalisation...</p>
                     </div>
                 )}

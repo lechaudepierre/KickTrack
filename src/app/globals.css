@@ -1,13 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-@import "tailwindcss";
 @import '../styles/variables.css';
 @import '../styles/common.css';
-
-@theme inline {
-    --color-background: var(--color-green-dark);
-    --color-foreground: var(--color-text-primary);
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-}
 
 * {
     box-sizing: border-box;
@@ -23,27 +16,69 @@ body {
     touch-action: pan-y;
 }
 
+/* ─── Fond terrain rayé — chantier 5.5 ────────────────────────────────────────
+   Identité de l'app, conservée mais fiabilisée.
+
+   Trois corrections par rapport à l'ancienne version :
+     1. les couleurs viennent des tokens `--field-*`, plus d'hex en dur ici
+     2. `background-attachment: fixed` supprimé — c'est lui qui faisait sauter
+        et se couper le fond sur mobile quand la barre d'URL apparaît
+     3. largeur de rayure RELATIVE (`--field-stripe` en vmax) : à 200px fixes,
+        le grain du terrain n'avait rien à voir entre un téléphone et un écran
+        large
+
+   Une seule définition dans tout le projet. Ne pas la recopier ailleurs.
+   ──────────────────────────────────────────────────────────────────────────── */
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: repeating-linear-gradient(-45deg,
-            #1B5E20,
-            #1B5E20 200px,
-            #2E7D32 200px,
-            #2E7D32 400px);
-    background-attachment: fixed;
+    background-color: var(--field-dark);
     color: var(--color-text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overscroll-behavior-x: none;
 }
 
-/* Phone container - centers content and handles scroll */
+/* Le motif de terrain est porté par un calque FIXE, pas par `body`.
+   Pourquoi pas `background-attachment: fixed` : c'est lui qui faisait sauter et
+   se couper le fond sur mobile quand la barre d'URL apparaît.
+   Pourquoi pas un fond qui défile non plus : le terrain doit rester immobile
+   sous le contenu, sinon les rayures glissent pendant le défilement.
+   Un pseudo-élément en `position: fixed` derrière tout donne le bon résultat
+   sans le bug mobile. */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-color: var(--field-dark);
+    background-image: var(--field-gradient);
+    pointer-events: none;
+}
+
+/* Conteneur de page — centre le contenu et gère le défilement.
+   `100dvh` et non `100vh` : sur mobile, `vh` ignore la barre d'URL et fait
+   déborder la page de la hauteur de celle-ci. */
 .phone-container {
-    max-width: 480px;
-    height: 100vh;
-    height: 100dvh;
+    max-width: var(--page-max-width);
+    min-height: 100dvh;
     margin: 0 auto;
     position: relative;
     overflow-y: auto;
     overflow-x: hidden;
+}
+
+/* ─── Boutons : la couleur ne vient JAMAIS du navigateur ──────────────────────
+   Un `<button>` sans `color` explicite prend la couleur par défaut du système.
+   Sur macOS c'est un gris presque noir, ce qui passe inaperçu — sur **iOS
+   Safari c'est le bleu système**. Résultat : des icônes et des libellés bleus
+   sur un téléphone, et nulle part ailleurs. Trouvé le 22/08 sur la page
+   « Nouvelle partie », mais le défaut était latent partout.
+
+   `inherit` fait descendre la couleur du parent, comme pour n'importe quel
+   autre élément. Les composants qui posent leur propre couleur ne changent pas.
+
+   Idem pour la typographie : un bouton n'hérite pas de la police par défaut. */
+button {
+    color: inherit;
+    font-family: inherit;
 }

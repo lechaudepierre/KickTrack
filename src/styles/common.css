@@ -1,74 +1,28 @@
 /* Common Reusable Styles - Flat Design */
 @import './variables.css';
 
-/* === BUTTONS === */
+/* ═══════════════════════════════════════════════════════════════════════════
+   LES CLASSES DE BOUTON ONT ÉTÉ SUPPRIMÉES — 21 août 2026
+   ═══════════════════════════════════════════════════════════════════════════
+   `.btn-primary`, `.btn-secondary` et leurs variantes `-shadow` / `-content`
+   n'existent plus. Elles constituaient un SECOND système de boutons, en
+   parallèle du composant `<Button>` : ses propres bordures, ses propres
+   ombres, sa propre structure à trois div imbriqués.
 
-/* Primary Button - Beige background, dark text */
-.btn-primary {
-    display: block;
-    width: 100%;
-    background: var(--color-beige);
-    color: var(--color-text-dark);
-    font-weight: 700;
-    font-size: 1rem;
-    padding: 1rem 2rem;
-    text-align: center;
-    border-radius: var(--radius-md);
-    border: 3px solid #333333;
-    cursor: pointer;
-    transition: background var(--transition-fast);
-}
+   Deux systèmes pour la même chose, ce sont deux comportements à maintenir en
+   accord — et ils ne l'étaient pas :
+     - `-shadow` et `-content` étaient utilisées dans 12 endroits du markup
+       sans avoir jamais été définies dans le CSS ;
+     - un `<button>` qui les enveloppait laissait apparaître son fond par
+       défaut, d'où le halo clair autour de plusieurs boutons ;
+     - certains endroits imbriquaient `.btn-secondary` dans `.btn-secondary`,
+       doublant bordure et ombre.
 
-.btn-primary:hover {
-    background: #f5e6c0;
-}
+   Les 46 usages ont été migrés vers `<Button>`.
 
-.btn-primary:active {
-    background: #e8d9b0;
-}
-
-/* Secondary Button - Outlined */
-.btn-secondary {
-    display: block;
-    width: 100%;
-    background: transparent;
-    border: 2px solid var(--color-white);
-    color: var(--color-white);
-    font-weight: 700;
-    font-size: 1rem;
-    padding: 1rem 2rem;
-    text-align: center;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.btn-secondary:active {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Icon Button */
-.btn-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    background: var(--color-surface);
-    border-radius: var(--radius-md);
-    border: none;
-    color: var(--color-white);
-    cursor: pointer;
-    transition: background var(--transition-fast);
-}
-
-.btn-icon:hover {
-    background: var(--color-green-primary);
-}
+   Pour un bouton : `import { Button } from '@/components/common/ui'`.
+   Ne pas réintroduire de classe globale de bouton.
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 /* === CARDS === */
 
@@ -103,7 +57,7 @@
 .input-field:focus {
     outline: none;
     background: rgba(51, 51, 51, 0.1);
-    border-color: var(--color-green-medium);
+    border-color: var(--green-600);
 }
 
 .input-field.error {
@@ -166,10 +120,10 @@
 .submitButton {
     width: 100%;
     padding: var(--spacing-md) var(--spacing-lg);
-    background: var(--color-green-medium);
+    background: var(--green-600);
     border: 3px solid #333333;
     border-radius: var(--radius-md);
-    color: var(--color-white);
+    color: var(--color-text-primary);
     font-size: 1rem;
     font-weight: 800;
     cursor: pointer;
@@ -177,9 +131,11 @@
     margin-top: var(--spacing-lg);
 }
 
-.submitButton:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+    .submitButton:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3);
+    }
 }
 
 .submitButton:active {
@@ -224,4 +180,24 @@
     color: var(--color-error);
     font-weight: 600;
     font-size: 0.875rem;
+}
+
+/* ─── Indicateur de chargement ────────────────────────────────────────────────
+   Remplace `animate-spin` de Tailwind (chantier 5.4). Une seule définition
+   pour toute l'app, au lieu d'une classe utilitaire répétée.
+   ──────────────────────────────────────────────────────────────────────────── */
+.spinner-ring {
+    border-radius: var(--radius-full);
+    border-style: solid;
+    border-color: currentColor;
+    border-top-color: transparent;
+    animation: spinner-rotate 0.7s linear infinite;
+}
+
+@keyframes spinner-rotate {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .spinner-ring { animation-duration: 2.5s; }
 }

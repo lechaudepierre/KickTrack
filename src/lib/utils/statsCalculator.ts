@@ -1,3 +1,4 @@
+import { toDate } from '@/lib/game/dates';
 import { Game, GoalPosition } from '@/types';
 
 export type BadgeId = 'eclair' | 'muraille' | 'buteur' | 'gamelleur' | 'patron' | 'en_feu' | 'mvp';
@@ -49,7 +50,7 @@ export interface AdvancedStats {
     totalGoalsScored: number;
     totalGoalsConceded: number;
     cleanSheets: number; // Matchs sans encaisser de but
-    comebacks: number;   // Victoires après avoir été mené (déficit de 4+)
+    comebacks: number; // Victoires après avoir été mené (déficit de 4+)
 
 
     // Rôles (pour 2v2)
@@ -129,8 +130,8 @@ export function calculateAdvancedStats(
 
     // Trier par date (plus ancien au plus récent pour le winrate history)
     const chronologicalGames = [...filteredGames].sort((a, b) => {
-        const dateA = a.startedAt instanceof Date ? a.startedAt : new Date((a.startedAt as any).seconds * 1000);
-        const dateB = b.startedAt instanceof Date ? b.startedAt : new Date((b.startedAt as any).seconds * 1000);
+        const dateA = toDate(a.startedAt);
+        const dateB = toDate(b.startedAt);
         return dateA.getTime() - dateB.getTime();
     });
 
@@ -187,7 +188,7 @@ export function calculateAdvancedStats(
 
         // Winrate history
         if (isWin) cumulativeWins++;
-        const date = game.startedAt instanceof Date ? game.startedAt : new Date((game.startedAt as any).seconds * 1000);
+        const date = toDate(game.startedAt);
         winRateHistory.push({
             date: date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
             winRate: (cumulativeWins / (i + 1)) * 100
@@ -431,38 +432,40 @@ function computeBadges(data: {
 }): BadgeId[] {
     const badges: BadgeId[] = [];
 
-    // ⚡ Éclair : >5% des buts marqués sont des flashs, min 20 parties
+    // Éclair : >5% des buts marqués sont des flashs, min 20 parties
     if (data.totalGames >= 20 && data.totalGoalsScored > 0 && data.totalFlash / data.totalGoalsScored > 0.05) {
         badges.push('eclair');
     }
 
-    // 🧱 Muraille : en 2v2 en tant que défenseur, ratio concédé/target moyen < 30%, min 25 matchs défenseur
+    // Muraille : en 2v2 en tant que défenseur, ratio concédé/target moyen < 30%, min 25 matchs défenseur
     if (data.murailleGamesCount >= 25 && data.murailleRatioSum / data.murailleGamesCount < 0.30) {
         badges.push('muraille');
     }
 
-    // 🎯 Buteur : moyenne (tes buts / buts équipe) > 50%, min 20 parties
+    // Buteur : moyenne (tes buts / buts équipe) > 50%, min 20 parties
     if (data.totalGames >= 20 && data.buteurGamesCount >= 20 && data.buteurRatioSum / data.buteurGamesCount > 0.50) {
         badges.push('buteur');
     }
 
-    // 💀 Gamelleur : >10% des parties avec au moins une gamelle, min 20 parties
+    // Gamelleur : >10% des parties avec au moins une gamelle, min 20 parties
     if (data.totalGames >= 20 && data.gamesWithGamelle / data.totalGames > 0.10) {
         badges.push('gamelleur');
     }
 
-    // 🏆 Patron : winRate > 65%, min 30 parties
+    // Patron : winRate > 65%, min 30 parties
     if (data.totalGames >= 30 && data.winRate > 65) {
         badges.push('patron');
     }
 
-    // 🔥 En feu : série de victoires actuelle ≥ 5
+    // En feu : série de victoires actuelle ≥ 5
     if (data.currentStreakType === 'win' && data.currentStreakCount >= 5) {
         badges.push('en_feu');
     }
 
-    // 👑 MVP : désigné MVP dans ≥20% des parties, min 20 parties
-    if (data.totalGames >= 20 && data.mvpGames / data.totalGames >= 0.20) {
+    // MVP : désigné MVP dans >=30% des parties, min 20 parties.
+    // Seuil relevé de 20 % à 30 % le 21/08 : à 20 %, en 2v2, le badge tombait
+    // presque au hasard — un joueur sur deux est MVP une partie sur deux.
+    if (data.totalGames >= 20 && data.mvpGames / data.totalGames >= 0.30) {
         badges.push('mvp');
     }
 

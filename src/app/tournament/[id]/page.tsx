@@ -16,7 +16,6 @@ import {
 import { Tournament, Player } from '@/types';
 import { FieldBackground } from '@/components/FieldDecorations';
 import {
-    ArrowLeftIcon,
     UserPlusIcon,
     TrashIcon,
     PlayIcon,
@@ -28,6 +27,26 @@ import {
     PlusIcon
 } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
+import { PageHeader } from '@/components/common/ui';
+
+/**
+ * Dégradés d'avatar d'équipe.
+ *
+ * Ce sont des couleurs DÉCORATIVES : elles servent uniquement à distinguer les
+ * équipes les unes des autres dans un tournoi. Elles ne participent pas à la
+ * palette d'interface et n'ont pas à s'y accorder — d'où des valeurs littérales
+ * plutôt que des tokens.
+ */
+const TEAM_AVATAR_GRADIENTS = [
+    'linear-gradient(135deg, #E74C3C, #C0392B)',
+    'linear-gradient(135deg, #3498DB, #2980B9)',
+    'linear-gradient(135deg, #2ECC71, #27AE60)',
+    'linear-gradient(135deg, #9B59B6, #8E44AD)',
+    'linear-gradient(135deg, #F39C12, #D68910)',
+    'linear-gradient(135deg, #1ABC9C, #16A085)',
+    'linear-gradient(135deg, #E91E63, #C2185B)',
+    'linear-gradient(135deg, #00BCD4, #0097A7)',
+];
 
 export default function TournamentLobbyPage() {
     const router = useRouter();
@@ -221,28 +240,21 @@ export default function TournamentLobbyPage() {
 
             <div className={styles.contentWrapper}>
                 {/* Header */}
-                <div className={styles.pageHeader}>
-                    <button onClick={() => router.push('/dashboard')} className={styles.backButton}>
-                        <ArrowLeftIcon className="h-6 w-6" />
-                    </button>
-                    <h1 className={styles.pageTitle}>
-                        {tournament.status === 'waiting' ? 'Lobby' : 'Equipes'}
-                    </h1>
-                </div>
+                <PageHeader title={tournament.status === 'waiting' ? 'Lobby' : 'Equipes'} back={'/dashboard'} />
 
                 {error && (
                     <div className="error-box" style={{ marginBottom: 'var(--spacing-md)' }}>
                         {error}
                         <button onClick={() => setError('')} style={{ marginLeft: '8px' }}>
-                            <XMarkIcon className="h-4 w-4" />
+                            <XMarkIcon width={16} height={16} />
                         </button>
                     </div>
                 )}
 
                 {/* Tournament Info */}
                 <div style={{
-                    background: 'var(--color-beige)',
-                    border: '3px solid #333333',
+                    background: 'var(--color-surface)',
+                    border: '3px solid var(--ink-700)',
                     borderRadius: 'var(--radius-md)',
                     padding: 'var(--spacing-md)',
                     marginBottom: 'var(--spacing-lg)',
@@ -257,12 +269,11 @@ export default function TournamentLobbyPage() {
                             fontWeight: 800,
                             fontFamily: 'monospace',
                             letterSpacing: '0.1em',
-                            color: '#333333'
+                            color: 'var(--ink-700)'
                         }}>
                             {tournament.pinCode}
                         </span>
-                        <button
-                            onClick={handleCopyCode}
+                        <button onClick={handleCopyCode}
                             style={{
                                 padding: '8px',
                                 background: 'rgba(51,51,51,0.1)',
@@ -272,14 +283,14 @@ export default function TournamentLobbyPage() {
                             }}
                         >
                             {copied ? (
-                                <CheckCircleIcon className="h-5 w-5" style={{ color: '#2ECC71' }} />
+                                <CheckCircleIcon width={20} height={20} style={{ color: 'var(--team-green)' }} />
                             ) : (
-                                <ClipboardDocumentIcon className="h-5 w-5" style={{ color: '#333333' }} />
+                                <ClipboardDocumentIcon width={20} height={20} style={{ color: 'var(--ink-700)' }} />
                             )}
                         </button>
                     </div>
                     <div style={{ marginTop: '8px', fontSize: '0.75rem', color: 'rgba(51,51,51,0.6)' }}>
-                        {tournament.mode === 'round_robin' ? 'Tous contre tous' : 'Eliminatoire'} - {tournament.format} - {tournament.targetScore} buts
+                        {tournament.mode === 'round_robin' ? 'Tous contre tous' : 'Éliminatoire'} · {tournament.format}
                     </div>
                 </div>
 
@@ -297,37 +308,36 @@ export default function TournamentLobbyPage() {
                                 <span style={{ fontSize: '0.875rem', color: 'var(--color-text-dark)', opacity: 0.6, fontWeight: 600 }}>
                                     Joueurs
                                 </span>
-                                <span style={{ fontSize: '0.875rem', color: '#2ECC71', fontWeight: 700 }}>
+                                <span style={{ fontSize: '0.875rem', color: 'var(--team-green)', fontWeight: 700 }}>
                                     {tournament.players.length}/{tournament.maxTeams * (tournament.format === '1v1' ? 1 : 2)}
                                 </span>
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 {tournament.players.map((player) => (
-                                    <div
-                                        key={player.userId}
+                                    <div key={player.userId}
                                         style={{
                                             display: 'flex',
                                             alignItems: 'center',
                                             gap: '12px',
                                             padding: '12px',
-                                            background: player.userId === user?.userId ? '#EAF9F1' : 'var(--color-beige)',
-                                            border: `3px solid ${player.userId === user?.userId ? '#2ECC71' : '#333333'}`,
+                                            background: player.userId === user?.userId ? 'var(--team-green-tint)' : 'var(--color-surface)',
+                                            border: `3px solid ${player.userId === user?.userId ? 'var(--team-green)' : 'var(--ink-700)'}`,
                                             borderRadius: 'var(--radius-md)'
                                         }}
                                     >
                                         <div style={{
                                             width: '40px',
                                             height: '40px',
-                                            background: player.userId.startsWith('guest_') ? 'linear-gradient(to bottom right, #F1C40F, #E67E22)' : 'linear-gradient(to bottom right, #2ECC71, #1abc9c)',
+                                            background: player.userId.startsWith('guest_') ? 'linear-gradient(to bottom right, var(--color-accent), var(--team-orange))' : 'linear-gradient(to bottom right, var(--team-green), var(--team-green))',
                                             borderRadius: '50%',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            color: '#333333',
+                                            color: 'var(--ink-700)',
                                             fontWeight: 700,
                                             fontSize: '0.875rem',
-                                            border: '2px solid #333333'
+                                            border: '2px solid var(--ink-700)'
                                         }}>
                                             {player.username.charAt(0).toUpperCase()}
                                         </div>
@@ -340,19 +350,18 @@ export default function TournamentLobbyPage() {
                                             }}>
                                                 {player.username}
                                                 {player.userId === user?.userId && (
-                                                    <span style={{ color: '#2ECC71', fontSize: '0.75rem', marginLeft: '8px' }}>(vous)</span>
+                                                    <span style={{ color: 'var(--team-green)', fontSize: '0.75rem', marginLeft: '8px' }}>(vous)</span>
                                                 )}
                                                 {player.userId === tournament.hostId && (
-                                                    <span style={{ color: '#E67E22', fontSize: '0.75rem', marginLeft: '8px' }}>(hote)</span>
+                                                    <span style={{ color: 'var(--team-orange)', fontSize: '0.75rem', marginLeft: '8px' }}>(hote)</span>
                                                 )}
                                                 {player.userId.startsWith('guest_') && (
-                                                    <span style={{ color: '#9B59B6', fontSize: '0.75rem', marginLeft: '8px' }}>(guest)</span>
+                                                    <span style={{ color: 'var(--team-purple)', fontSize: '0.75rem', marginLeft: '8px' }}>(guest)</span>
                                                 )}
                                             </p>
                                         </div>
                                         {isHost && player.userId !== tournament.hostId && (
-                                            <button
-                                                onClick={() => handleRemovePlayer(player.userId)}
+                                            <button onClick={() => handleRemovePlayer(player.userId)}
                                                 style={{
                                                     padding: '8px',
                                                     background: 'rgba(231, 76, 60, 0.1)',
@@ -361,7 +370,7 @@ export default function TournamentLobbyPage() {
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                <TrashIcon className="h-4 w-4" style={{ color: '#E74C3C' }} />
+                                                <TrashIcon width={16} height={16} style={{ color: 'var(--color-danger)' }} />
                                             </button>
                                         )}
                                     </div>
@@ -372,28 +381,26 @@ export default function TournamentLobbyPage() {
                         {/* Host Actions */}
                         {isHost && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-                                <button
-                                    onClick={() => setShowGuestModal(true)}
+                                <button onClick={() => setShowGuestModal(true)}
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         gap: '8px',
                                         padding: 'var(--spacing-md)',
-                                        background: 'var(--color-beige)',
-                                        border: '3px solid #333333',
+                                        background: 'var(--color-surface)',
+                                        border: '3px solid var(--ink-700)',
                                         borderRadius: 'var(--radius-md)',
                                         color: 'var(--color-text-dark)',
                                         fontWeight: 700,
                                         cursor: 'pointer'
                                     }}
                                 >
-                                    <UserPlusIcon className="h-5 w-5" />
+                                    <UserPlusIcon width={20} height={20} />
                                     Ajouter un guest
                                 </button>
 
-                                <button
-                                    onClick={handleStartTeamSetup}
+                                <button onClick={handleStartTeamSetup}
                                     disabled={!canStartSetup}
                                     style={{
                                         display: 'flex',
@@ -401,8 +408,8 @@ export default function TournamentLobbyPage() {
                                         justifyContent: 'center',
                                         gap: '8px',
                                         padding: 'var(--spacing-md)',
-                                        background: canStartSetup ? '#2ECC71' : 'rgba(46, 204, 113, 0.3)',
-                                        border: '3px solid #333333',
+                                        background: canStartSetup ? 'var(--team-green)' : 'rgba(46, 204, 113, 0.3)',
+                                        border: '3px solid var(--ink-700)',
                                         borderRadius: 'var(--radius-md)',
                                         color: 'white',
                                         fontWeight: 700,
@@ -410,7 +417,7 @@ export default function TournamentLobbyPage() {
                                         opacity: canStartSetup ? 1 : 0.5
                                     }}
                                 >
-                                    <UsersIcon className="h-5 w-5" />
+                                    <UsersIcon width={20} height={20} />
                                     {tournament.format === '1v1' ? 'Continuer' : 'Former les equipes'}
                                 </button>
 
@@ -420,14 +427,13 @@ export default function TournamentLobbyPage() {
                                     </p>
                                 )}
 
-                                <button
-                                    onClick={handleCancel}
+                                <button onClick={handleCancel}
                                     style={{
                                         marginTop: 'var(--spacing-md)',
                                         padding: 'var(--spacing-sm)',
                                         background: 'transparent',
                                         border: 'none',
-                                        color: '#E74C3C',
+                                        color: 'var(--color-danger)',
                                         fontWeight: 600,
                                         fontSize: '0.875rem',
                                         cursor: 'pointer'
@@ -449,16 +455,15 @@ export default function TournamentLobbyPage() {
                                     color: 'rgba(51,51,51,0.6)',
                                     marginBottom: 'var(--spacing-lg)'
                                 }}>
-                                    <ClockIcon className="h-5 w-5" />
+                                    <ClockIcon width={20} height={20} />
                                     <span>En attente de l'organisateur...</span>
                                 </div>
-                                <button
-                                    onClick={handleLeave}
+                                <button onClick={handleLeave}
                                     style={{
                                         padding: 'var(--spacing-sm)',
                                         background: 'transparent',
                                         border: 'none',
-                                        color: '#E74C3C',
+                                        color: 'var(--color-danger)',
                                         fontWeight: 600,
                                         fontSize: '0.875rem',
                                         cursor: 'pointer'
@@ -488,19 +493,18 @@ export default function TournamentLobbyPage() {
                                         <span style={{ fontSize: '0.875rem', color: 'var(--color-text-dark)', opacity: 0.6, fontWeight: 600 }}>
                                             Participants
                                         </span>
-                                        <span style={{ fontSize: '0.875rem', color: '#2ECC71', fontWeight: 700 }}>
+                                        <span style={{ fontSize: '0.875rem', color: 'var(--team-green)', fontWeight: 700 }}>
                                             {tournament.teams.length} joueur{tournament.teams.length > 1 ? 's' : ''}
                                         </span>
                                     </div>
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         {tournament.teams.map((team) => (
-                                            <div
-                                                key={team.teamId}
+                                            <div key={team.teamId}
                                                 style={{
                                                     padding: '12px',
-                                                    background: 'var(--color-beige)',
-                                                    border: '3px solid #333333',
+                                                    background: 'var(--color-surface)',
+                                                    border: '3px solid var(--ink-700)',
                                                     borderRadius: 'var(--radius-md)',
                                                     display: 'flex',
                                                     alignItems: 'center',
@@ -511,16 +515,16 @@ export default function TournamentLobbyPage() {
                                                     width: '40px',
                                                     height: '40px',
                                                     background: team.players[0]?.userId.startsWith('guest_')
-                                                        ? 'linear-gradient(to bottom right, #F1C40F, #E67E22)'
-                                                        : 'linear-gradient(to bottom right, #2ECC71, #1abc9c)',
+                                                        ? 'linear-gradient(to bottom right, var(--color-accent), var(--team-orange))'
+                                                        : 'linear-gradient(to bottom right, var(--team-green), var(--team-green))',
                                                     borderRadius: '50%',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
-                                                    color: '#333333',
+                                                    color: 'var(--ink-700)',
                                                     fontWeight: 700,
                                                     fontSize: '0.875rem',
-                                                    border: '2px solid #333333'
+                                                    border: '2px solid var(--ink-700)'
                                                 }}>
                                                     {team.name.charAt(0).toUpperCase()}
                                                 </div>
@@ -535,7 +539,7 @@ export default function TournamentLobbyPage() {
                                                     }}>
                                                         {team.name}
                                                         {team.players[0]?.userId.startsWith('guest_') && (
-                                                            <span style={{ color: '#9B59B6', fontSize: '0.75rem', marginLeft: '8px' }}>(guest)</span>
+                                                            <span style={{ color: 'var(--team-purple)', fontSize: '0.75rem', marginLeft: '8px' }}>(guest)</span>
                                                         )}
                                                     </p>
                                                 </div>
@@ -547,8 +551,7 @@ export default function TournamentLobbyPage() {
                                 {/* Host Actions for 1v1 */}
                                 {isHost && (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-                                        <button
-                                            onClick={handleStartTournament}
+                                        <button onClick={handleStartTournament}
                                             disabled={!canStartTournament}
                                             style={{
                                                 display: 'flex',
@@ -556,8 +559,8 @@ export default function TournamentLobbyPage() {
                                                 justifyContent: 'center',
                                                 gap: '8px',
                                                 padding: 'var(--spacing-md)',
-                                                background: canStartTournament ? '#2ECC71' : 'rgba(46, 204, 113, 0.3)',
-                                                border: '3px solid #333333',
+                                                background: canStartTournament ? 'var(--team-green)' : 'rgba(46, 204, 113, 0.3)',
+                                                border: '3px solid var(--ink-700)',
                                                 borderRadius: 'var(--radius-md)',
                                                 color: 'white',
                                                 fontWeight: 700,
@@ -565,7 +568,7 @@ export default function TournamentLobbyPage() {
                                                 opacity: canStartTournament ? 1 : 0.5
                                             }}
                                         >
-                                            <PlayIcon className="h-5 w-5" />
+                                            <PlayIcon width={20} height={20} />
                                             Demarrer le tournoi
                                         </button>
 
@@ -587,7 +590,7 @@ export default function TournamentLobbyPage() {
                                             gap: '8px',
                                             color: 'rgba(51,51,51,0.6)'
                                         }}>
-                                            <ClockIcon className="h-5 w-5" />
+                                            <ClockIcon width={20} height={20} />
                                             <span>En attente du demarrage...</span>
                                         </div>
                                     </div>
@@ -607,7 +610,7 @@ export default function TournamentLobbyPage() {
                                         <span style={{ fontSize: '0.875rem', color: 'var(--color-text-dark)', opacity: 0.6, fontWeight: 600 }}>
                                             Equipes formees
                                         </span>
-                                        <span style={{ fontSize: '0.875rem', color: '#2ECC71', fontWeight: 700 }}>
+                                        <span style={{ fontSize: '0.875rem', color: 'var(--team-green)', fontWeight: 700 }}>
                                             {tournament.teams.length} equipe{tournament.teams.length > 1 ? 's' : ''}
                                         </span>
                                     </div>
@@ -615,8 +618,8 @@ export default function TournamentLobbyPage() {
                                     {tournament.teams.length === 0 ? (
                                         <div style={{
                                             padding: 'var(--spacing-lg)',
-                                            background: 'var(--color-beige)',
-                                            border: '3px solid #333333',
+                                            background: 'var(--color-surface)',
+                                            border: '3px solid var(--ink-700)',
                                             borderRadius: 'var(--radius-md)',
                                             textAlign: 'center',
                                             color: 'rgba(51,51,51,0.6)'
@@ -626,12 +629,11 @@ export default function TournamentLobbyPage() {
                                     ) : (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             {tournament.teams.map((team, index) => (
-                                                <div
-                                                    key={team.teamId}
+                                                <div key={team.teamId}
                                                     style={{
                                                         padding: '12px',
-                                                        background: 'var(--color-beige)',
-                                                        border: '3px solid #333333',
+                                                        background: 'var(--color-surface)',
+                                                        border: '3px solid var(--ink-700)',
                                                         borderRadius: 'var(--radius-md)',
                                                         display: 'flex',
                                                         alignItems: 'center',
@@ -642,7 +644,7 @@ export default function TournamentLobbyPage() {
                                                         width: '40px',
                                                         height: '40px',
                                                         flexShrink: 0,
-                                                        background: `linear-gradient(135deg, ${['#E74C3C', '#3498DB', '#2ECC71', '#9B59B6', '#F39C12', '#1ABC9C', '#E91E63', '#00BCD4'][index % 8]}, ${['#C0392B', '#2980B9', '#27AE60', '#8E44AD', '#D68910', '#16A085', '#C2185B', '#0097A7'][index % 8]})`,
+                                                        background: TEAM_AVATAR_GRADIENTS[index % TEAM_AVATAR_GRADIENTS.length],
                                                         borderRadius: '50%',
                                                         display: 'flex',
                                                         alignItems: 'center',
@@ -650,7 +652,7 @@ export default function TournamentLobbyPage() {
                                                         color: 'white',
                                                         fontWeight: 800,
                                                         fontSize: '1rem',
-                                                        border: '2px solid #333333'
+                                                        border: '2px solid var(--ink-700)'
                                                     }}>
                                                         {index + 1}
                                                     </div>
@@ -668,11 +670,10 @@ export default function TournamentLobbyPage() {
                                                         </p>
                                                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                                                             {team.players.map(player => (
-                                                                <span
-                                                                    key={player.userId}
+                                                                <span key={player.userId}
                                                                     style={{
                                                                         padding: '2px 8px',
-                                                                        background: player.userId.startsWith('guest_') ? '#9B59B6' : '#2ECC71',
+                                                                        background: player.userId.startsWith('guest_') ? 'var(--team-purple)' : 'var(--team-green)',
                                                                         borderRadius: '4px',
                                                                         color: 'white',
                                                                         fontSize: '0.7rem',
@@ -689,8 +690,7 @@ export default function TournamentLobbyPage() {
                                                         </div>
                                                     </div>
                                                     {isHost && (
-                                                        <button
-                                                            onClick={() => handleDeleteTeam(team.teamId)}
+                                                        <button onClick={() => handleDeleteTeam(team.teamId)}
                                                             style={{
                                                                 padding: '8px',
                                                                 flexShrink: 0,
@@ -700,7 +700,7 @@ export default function TournamentLobbyPage() {
                                                                 cursor: 'pointer'
                                                             }}
                                                         >
-                                                            <TrashIcon className="h-4 w-4" style={{ color: '#E74C3C' }} />
+                                                            <TrashIcon width={16} height={16} style={{ color: 'var(--color-danger)' }} />
                                                         </button>
                                                     )}
                                                 </div>
@@ -721,12 +721,11 @@ export default function TournamentLobbyPage() {
                                             gap: '8px'
                                         }}>
                                             {unassignedPlayers.map(player => (
-                                                <div
-                                                    key={player.userId}
+                                                <div key={player.userId}
                                                     style={{
                                                         padding: '12px',
-                                                        background: 'var(--color-beige)',
-                                                        border: '2px dashed #333333',
+                                                        background: 'var(--color-surface)',
+                                                        border: '2px dashed var(--ink-700)',
                                                         borderRadius: 'var(--radius-sm)',
                                                         textAlign: 'center',
                                                         overflow: 'hidden'
@@ -735,7 +734,7 @@ export default function TournamentLobbyPage() {
                                                     <div style={{
                                                         width: '32px',
                                                         height: '32px',
-                                                        background: player.userId.startsWith('guest_') ? '#9B59B6' : '#2ECC71',
+                                                        background: player.userId.startsWith('guest_') ? 'var(--team-purple)' : 'var(--team-green)',
                                                         borderRadius: '50%',
                                                         display: 'flex',
                                                         alignItems: 'center',
@@ -744,7 +743,7 @@ export default function TournamentLobbyPage() {
                                                         fontWeight: 700,
                                                         fontSize: '0.75rem',
                                                         margin: '0 auto 8px',
-                                                        border: '2px solid #333333'
+                                                        border: '2px solid var(--ink-700)'
                                                     }}>
                                                         {player.username.charAt(0).toUpperCase()}
                                                     </div>
@@ -769,8 +768,7 @@ export default function TournamentLobbyPage() {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
                                         {/* Create team button */}
                                         {unassignedPlayers.length >= playersPerTeam && (
-                                            <button
-                                                onClick={() => {
+                                            <button onClick={() => {
                                                     setSelectedPlayers([]);
                                                     setTeamName('');
                                                     setShowTeamModal(true);
@@ -781,21 +779,20 @@ export default function TournamentLobbyPage() {
                                                     justifyContent: 'center',
                                                     gap: '8px',
                                                     padding: 'var(--spacing-md)',
-                                                    background: 'var(--color-beige)',
-                                                    border: '3px solid #333333',
+                                                    background: 'var(--color-surface)',
+                                                    border: '3px solid var(--ink-700)',
                                                     borderRadius: 'var(--radius-md)',
                                                     color: 'var(--color-text-dark)',
                                                     fontWeight: 700,
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                <PlusIcon className="h-5 w-5" />
+                                                <PlusIcon width={20} height={20} />
                                                 Creer une equipe
                                             </button>
                                         )}
 
-                                        <button
-                                            onClick={handleStartTournament}
+                                        <button onClick={handleStartTournament}
                                             disabled={!canStartTournament}
                                             style={{
                                                 display: 'flex',
@@ -803,8 +800,8 @@ export default function TournamentLobbyPage() {
                                                 justifyContent: 'center',
                                                 gap: '8px',
                                                 padding: 'var(--spacing-md)',
-                                                background: canStartTournament ? '#2ECC71' : 'rgba(46, 204, 113, 0.3)',
-                                                border: '3px solid #333333',
+                                                background: canStartTournament ? 'var(--team-green)' : 'rgba(46, 204, 113, 0.3)',
+                                                border: '3px solid var(--ink-700)',
                                                 borderRadius: 'var(--radius-md)',
                                                 color: 'white',
                                                 fontWeight: 700,
@@ -812,7 +809,7 @@ export default function TournamentLobbyPage() {
                                                 opacity: canStartTournament ? 1 : 0.5
                                             }}
                                         >
-                                            <PlayIcon className="h-5 w-5" />
+                                            <PlayIcon width={20} height={20} />
                                             Demarrer le tournoi
                                         </button>
 
@@ -834,7 +831,7 @@ export default function TournamentLobbyPage() {
                                             gap: '8px',
                                             color: 'rgba(51,51,51,0.6)'
                                         }}>
-                                            <ClockIcon className="h-5 w-5" />
+                                            <ClockIcon width={20} height={20} />
                                             <span>L'organisateur forme les equipes...</span>
                                         </div>
                                     </div>
@@ -863,7 +860,7 @@ export default function TournamentLobbyPage() {
                         padding: 'var(--spacing-lg)',
                         width: '100%',
                         maxWidth: '320px',
-                        border: '3px solid #333333'
+                        border: '3px solid var(--ink-700)'
                     }}>
                         <h3 style={{
                             fontSize: '1.125rem',
@@ -883,42 +880,40 @@ export default function TournamentLobbyPage() {
                             style={{
                                 width: '100%',
                                 padding: 'var(--spacing-md)',
-                                border: '2px solid #333333',
+                                border: '2px solid var(--ink-700)',
                                 borderRadius: 'var(--radius-md)',
                                 fontSize: '1rem',
                                 marginBottom: 'var(--spacing-md)',
-                                color: '#333333',
+                                color: 'var(--ink-700)',
                                 background: 'white'
                             }}
                         />
 
                         <div style={{ display: 'flex', gap: '8px' }}>
-                            <button
-                                onClick={() => {
+                            <button onClick={() => {
                                     setShowGuestModal(false);
                                     setGuestName('');
                                 }}
                                 style={{
                                     flex: 1,
                                     padding: 'var(--spacing-sm)',
-                                    background: 'var(--color-beige)',
-                                    border: '2px solid #333333',
+                                    background: 'var(--color-surface)',
+                                    border: '2px solid var(--ink-700)',
                                     borderRadius: 'var(--radius-md)',
                                     fontWeight: 600,
                                     cursor: 'pointer',
-                                    color: '#333333'
+                                    color: 'var(--ink-700)'
                                 }}
                             >
                                 Annuler
                             </button>
-                            <button
-                                onClick={handleAddGuest}
+                            <button onClick={handleAddGuest}
                                 disabled={!guestName.trim() || isAddingGuest}
                                 style={{
                                     flex: 1,
                                     padding: 'var(--spacing-sm)',
-                                    background: '#2ECC71',
-                                    border: '2px solid #333333',
+                                    background: 'var(--team-green)',
+                                    border: '2px solid var(--ink-700)',
                                     borderRadius: 'var(--radius-md)',
                                     fontWeight: 600,
                                     cursor: guestName.trim() && !isAddingGuest ? 'pointer' : 'not-allowed',
@@ -951,7 +946,7 @@ export default function TournamentLobbyPage() {
                         padding: 'var(--spacing-lg)',
                         width: '100%',
                         maxWidth: '360px',
-                        border: '3px solid #333333',
+                        border: '3px solid var(--ink-700)',
                         maxHeight: '80vh',
                         overflowY: 'auto'
                     }}>
@@ -973,11 +968,11 @@ export default function TournamentLobbyPage() {
                             style={{
                                 width: '100%',
                                 padding: 'var(--spacing-md)',
-                                border: '2px solid #333333',
+                                border: '2px solid var(--ink-700)',
                                 borderRadius: 'var(--radius-md)',
                                 fontSize: '1rem',
                                 marginBottom: 'var(--spacing-md)',
-                                color: '#333333',
+                                color: 'var(--ink-700)',
                                 background: 'white'
                             }}
                         />
@@ -999,16 +994,15 @@ export default function TournamentLobbyPage() {
                             {unassignedPlayers.map(player => {
                                 const isSelected = selectedPlayers.includes(player.userId);
                                 return (
-                                    <button
-                                        key={player.userId}
+                                    <button key={player.userId}
                                         onClick={() => togglePlayerSelection(player.userId)}
                                         style={{
                                             display: 'flex',
                                             alignItems: 'center',
                                             gap: '12px',
                                             padding: '12px',
-                                            background: isSelected ? '#2ECC71' : 'var(--color-beige)',
-                                            border: `3px solid ${isSelected ? '#27AE60' : '#333333'}`,
+                                            background: isSelected ? 'var(--team-green)' : 'var(--color-surface)',
+                                            border: `3px solid ${isSelected ? '#27AE60' : 'var(--ink-700)'}`,
                                             borderRadius: 'var(--radius-md)',
                                             cursor: 'pointer',
                                             textAlign: 'left',
@@ -1018,18 +1012,18 @@ export default function TournamentLobbyPage() {
                                         <div style={{
                                             width: '36px',
                                             height: '36px',
-                                            background: player.userId.startsWith('guest_') ? '#9B59B6' : (isSelected ? 'white' : '#2ECC71'),
+                                            background: player.userId.startsWith('guest_') ? 'var(--team-purple)' : (isSelected ? 'white' : 'var(--team-green)'),
                                             borderRadius: '50%',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            color: isSelected ? '#2ECC71' : 'white',
+                                            color: isSelected ? 'var(--team-green)' : 'white',
                                             fontWeight: 700,
                                             fontSize: '0.875rem',
-                                            border: '2px solid #333333'
+                                            border: '2px solid var(--ink-700)'
                                         }}>
                                             {isSelected ? (
-                                                <CheckCircleIcon className="h-5 w-5" />
+                                                <CheckCircleIcon width={20} height={20} />
                                             ) : (
                                                 player.username.charAt(0).toUpperCase()
                                             )}
@@ -1050,8 +1044,7 @@ export default function TournamentLobbyPage() {
                         </div>
 
                         <div style={{ display: 'flex', gap: '8px' }}>
-                            <button
-                                onClick={() => {
+                            <button onClick={() => {
                                     setShowTeamModal(false);
                                     setSelectedPlayers([]);
                                     setTeamName('');
@@ -1059,24 +1052,23 @@ export default function TournamentLobbyPage() {
                                 style={{
                                     flex: 1,
                                     padding: 'var(--spacing-sm)',
-                                    background: 'var(--color-beige)',
-                                    border: '2px solid #333333',
+                                    background: 'var(--color-surface)',
+                                    border: '2px solid var(--ink-700)',
                                     borderRadius: 'var(--radius-md)',
                                     fontWeight: 600,
                                     cursor: 'pointer',
-                                    color: '#333333'
+                                    color: 'var(--ink-700)'
                                 }}
                             >
                                 Annuler
                             </button>
-                            <button
-                                onClick={handleCreateTeam}
+                            <button onClick={handleCreateTeam}
                                 disabled={selectedPlayers.length !== playersPerTeam || isCreatingTeam}
                                 style={{
                                     flex: 1,
                                     padding: 'var(--spacing-sm)',
-                                    background: selectedPlayers.length === playersPerTeam ? '#2ECC71' : 'rgba(46, 204, 113, 0.3)',
-                                    border: '2px solid #333333',
+                                    background: selectedPlayers.length === playersPerTeam ? 'var(--team-green)' : 'rgba(46, 204, 113, 0.3)',
+                                    border: '2px solid var(--ink-700)',
                                     borderRadius: 'var(--radius-md)',
                                     fontWeight: 600,
                                     cursor: selectedPlayers.length === playersPerTeam && !isCreatingTeam ? 'pointer' : 'not-allowed',

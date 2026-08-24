@@ -1,0 +1,96 @@
+/* ─── PageHeader — étage 2 ────────────────────────────────────────────────────
+   Une seule définition d'en-tête de page pour toute l'app.
+
+   Avant ce composant, il existait 17 définitions de `.title` différentes, une
+   par page, chacune avec sa taille, sa graisse et son traitement. Le titre du
+   classement et celui du tableau de bord ne se ressemblaient pas.
+
+   Ne lit QUE des tokens.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    /* Hauteur plancher : sans elle, une page sans bouton retour a un en-tête
+       plus court, et le contenu ne démarre pas à la même hauteur d'une page
+       à l'autre. C'est ce qui se voyait comme un « gap pas propre ». */
+    min-height: 40px;
+}
+
+.back {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-dark);
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-arcade-sm);
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.back:hover {
+    background: var(--color-surface-raised);
+}
+
+.back:active {
+    transform: translateY(2px);
+    box-shadow: none;
+}
+
+.back:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 3px;
+}
+
+.titleBlock {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Le titre. La contre-ombre franche le détache du fond terrain rayé : sans
+   elle, du texte blanc posé sur des rayures vertes perd ses contours. */
+.title {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-black);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--color-text-primary);
+    text-shadow: 0 3px 0 var(--ink-900);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.subtitle {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.action {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+/* Titre long : on réduit plutôt que de tronquer. */
+@media (max-width: 380px) {
+    .title { font-size: var(--text-xl); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .back { transition: none; }
+}

@@ -6,7 +6,6 @@ import { useAuthStore } from '@/lib/stores/authStore';
 import { submitFeedback } from '@/lib/firebase/feedback';
 import { FeedbackType } from '@/types';
 import {
-    ArrowLeftIcon,
     ExclamationTriangleIcon,
     BugAntIcon,
     LightBulbIcon,
@@ -14,6 +13,7 @@ import {
     CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
+import { PageHeader } from '@/components/common/ui';
 
 const feedbackTypes: { type: FeedbackType; label: string; icon: React.ElementType }[] = [
     { type: 'bug', label: 'Bug', icon: BugAntIcon },
@@ -89,14 +89,7 @@ export default function FeedbackPage() {
     return (
         <div className={styles.container}>
             <div className={styles.contentWrapper}>
-                <div className={styles.header}>
-                    <button onClick={() => router.push('/profile')} className={styles.backButton}>
-                        <ArrowLeftIcon className="w-5 h-5" />
-                    </button>
-                    <h1 className={styles.title}>
-                        Ton Avis
-                    </h1>
-                </div>
+                <PageHeader title="Ton Avis" back={'/profile'} />
 
                 <div className={styles.formCard}>
                     {error && (
@@ -113,8 +106,7 @@ export default function FeedbackPage() {
                             </label>
                             <div className={styles.typeGrid}>
                                 {feedbackTypes.map((ft) => (
-                                    <button
-                                        key={ft.type}
+                                    <button key={ft.type}
                                         type="button"
                                         onClick={() => setType(ft.type)}
                                         className={`${styles.typeButton} ${type === ft.type ? styles.typeButtonActive : styles.typeButtonInactive}`}
@@ -147,8 +139,7 @@ export default function FeedbackPage() {
                             </span>
                         </div>
 
-                        <button
-                            type="submit"
+                        <button type="submit"
                             disabled={isLoading || !message.trim()}
                             className={styles.submitButton}
                         >

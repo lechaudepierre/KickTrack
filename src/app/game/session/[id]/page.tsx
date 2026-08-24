@@ -100,30 +100,28 @@ export default function SessionWaitingPage() {
             <div className={styles.contentWrapper}>
                 <div className={styles.pageHeader}>
                     <button onClick={handleLeave} className={styles.backButton}>
-                        <ArrowLeftIcon className="h-6 w-6" />
+                        <ArrowLeftIcon width={24} height={24} />
                     </button>
                     <h1 className={styles.pageTitle}>Salle d'attente</h1>
                 </div>
 
-                <div className="text-center mb-8">
-                    <p className="text-secondary mb-2">Partie de {session.hostName}</p>
-                    <p className="text-sm opacity-60">
+                <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)' }}>
+                    <p className="text-secondary" style={{ marginBottom: 'var(--spacing-sm)' }}>Partie de {session.hostName}</p>
+                    <p style={{ fontSize: 'var(--text-sm)', opacity: '0.6' }}>
                         {isHost ? 'Attendez que les joueurs rejoignent...' : "En attente du lancement par l'hôte..."}
                     </p>
                 </div>
 
-                <PlayerList
-                    players={session.players}
+                <PlayerList players={session.players}
                     maxPlayers={session.maxPlayers}
                     currentUserId={user?.userId}
                     hostId={session.hostId}
                     onKick={isHost ? handleKick : undefined}
                 />
 
-                <div className="mt-12 text-center">
-                    <button
-                        onClick={handleLeave}
-                        className="text-secondary text-sm"
+                <div style={{ marginTop: 'var(--spacing-2xl)', textAlign: 'center' }}>
+                    <button onClick={handleLeave}
+                        className="text-secondary" style={{ fontSize: 'var(--text-sm)' }}
                     >
                         {isHost ? 'Annuler la partie' : 'Quitter la salle'}
                     </button>

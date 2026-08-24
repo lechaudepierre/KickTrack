@@ -1,0 +1,59 @@
+/* La ligne d'un joueur. La FORME vient de `PlayerBanner` : on ne pose ici que
+   la disposition interne, jamais de rembourrage, de contour ni d'arrondi. */
+
+/* `min-width: 0` sur la ligne ET sur son bloc de texte : sans ça, un pseudo
+   long empêche la carte de rétrécir et la fait déborder de son conteneur.
+   C'est le défaut le plus courant des mises en page flex et grille. */
+.row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-width: 0;
+    max-width: 100%;
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 1px;
+    flex: 1;
+}
+
+.name {
+    font-size: 0.95rem;
+    font-weight: var(--weight-black);
+    color: var(--color-text-dark);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* En match, on lit de loin et souvent de travers : le pseudo doit primer. */
+.nameLarge {
+    font-size: 1.35rem;
+    letter-spacing: 0.01em;
+}
+
+.elo {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-dark);
+    opacity: 0.85;
+}
+
+.rank {
+    font-weight: var(--weight-black);
+    color: var(--color-accent);
+    opacity: 1;
+}
+
+/* Sur une bannière, tout suit la couleur de texte qu'elle impose. */
+.onBanner {
+    color: var(--banner-text-color, var(--color-text-primary));
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}

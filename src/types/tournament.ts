@@ -52,8 +52,24 @@ export interface Tournament {
     venueId: string;
     venueName: string;
     format: TournamentFormat;
-    targetScore: 6 | 11;
+    /**
+     * ⚠️ HÉRITÉ — plus écrit depuis le 23/08, jamais lu.
+     *
+     * Le score de victoire n'est plus demandé à la création (retiré le 21/08)
+     * et le moteur ne l'a jamais consulté : une partie se termine quand l'hôte
+     * le décide. Le champ reste déclaré, optionnel, parce que les tournois
+     * déjà enregistrés le portent — mais aucun code ne doit s'y fier.
+     */
+    targetScore?: 6 | 11;
+    /** Format du tournoi : round_robin ou bracket. Rien à voir avec `modeId`. */
     mode: TournamentMode;
+    /**
+     * Mode de jeu appliqué à TOUS les matchs du tournoi (chantier 9.11).
+     * Absent = mode normal.
+     * Choisi une fois à la création : un tournoi où les règles changeraient
+     * d'un match à l'autre n'aurait aucun sens.
+     */
+    modeId?: string;
     players: Player[];
     teams: TournamentTeam[];
     maxTeams: number;

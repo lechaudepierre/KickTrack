@@ -65,7 +65,7 @@ export default function AnnouncementDetailPage() {
                 <div className={styles.contentWrapper}>
                     <div className={styles.header}>
                         <button onClick={() => router.push('/notifications')} className={styles.backButton}>
-                            <ArrowLeftIcon className="w-5 h-5" />
+                            <ArrowLeftIcon width={20} height={20} />
                         </button>
                     </div>
                     <p className={styles.notFound}>Annonce introuvable.</p>
@@ -80,7 +80,7 @@ export default function AnnouncementDetailPage() {
 
                 <div className={styles.header}>
                     <button onClick={() => router.push('/notifications')} className={styles.backButton}>
-                        <ArrowLeftIcon className="w-5 h-5" />
+                        <ArrowLeftIcon width={20} height={20} />
                     </button>
                     <div className={`${styles.typeBadge} ${announcement.type === 'patch' ? styles.typePatch : styles.typeNews}`}>
                         {announcement.type === 'patch'

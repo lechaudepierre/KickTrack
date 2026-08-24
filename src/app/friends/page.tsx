@@ -15,7 +15,6 @@ import {
 import { User } from '@/types';
 import BottomNav from '@/components/common/BottomNav';
 import {
-    ArrowLeftIcon,
     MagnifyingGlassIcon,
     UserPlusIcon,
     CheckIcon,
@@ -26,6 +25,7 @@ import {
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
 import RankAvatar from '@/components/common/RankAvatar';
+import { PageHeader } from '@/components/common/ui';
 
 type Tab = 'friends' | 'requests';
 
@@ -208,7 +208,7 @@ export default function FriendsPage() {
     if (authLoading) {
         return (
             <div className="container-center">
-                <div className="w-16 h-16 border-4 border-[var(--color-field-green)] border-t-transparent rounded-full animate-spin" />
+                <div className="spinner-ring" style={{ width: '64px', height: '64px', borderWidth: '4px', borderTopColor: 'transparent', borderRadius: 'var(--radius-full)' }} />
             </div>
         );
     }
@@ -219,12 +219,7 @@ export default function FriendsPage() {
         <div className={styles.container}>
             <div className={styles.contentWrapper}>
                 {/* Header */}
-                <div className={styles.header}>
-                    <button onClick={() => router.back()} className={styles.backButton}>
-                        <ArrowLeftIcon className="w-5 h-5" />
-                    </button>
-                    <h1 className={styles.title}>Amis</h1>
-                </div>
+                <PageHeader title="Amis" />
 
                 {/* Status Message */}
                 {statusMessage && (
@@ -235,14 +230,12 @@ export default function FriendsPage() {
 
                 {/* Tabs */}
                 <div className={styles.tabs}>
-                    <button
-                        onClick={() => setActiveTab('friends')}
+                    <button onClick={() => setActiveTab('friends')}
                         className={`${styles.tab} ${activeTab === 'friends' ? styles.tabActive : ''}`}
                     >
                         Amis
                     </button>
-                    <button
-                        onClick={() => setActiveTab('requests')}
+                    <button onClick={() => setActiveTab('requests')}
                         className={`${styles.tab} ${activeTab === 'requests' ? styles.tabActive : ''}`}
                     >
                         Ajouts & Demandes
@@ -286,8 +279,7 @@ export default function FriendsPage() {
                                         <div className={styles.userList}>
                                             {filteredFriends.map((friend) => (
                                                 <div key={friend.userId} className={styles.userCard}>
-                                                    <div
-                                                        className={styles.userMainInfo}
+                                                    <div className={styles.userMainInfo}
                                                         onClick={() => router.push(`/profile/${friend.userId}`)}
                                                     >
                                                         <RankAvatar elo={friend.stats.elo} size="md" />
@@ -299,8 +291,7 @@ export default function FriendsPage() {
                                                         </div>
                                                     </div>
                                                     <div className={styles.userActions}>
-                                                        <button
-                                                            onClick={() => handleRemoveFriend(friend.userId)}
+                                                        <button onClick={() => handleRemoveFriend(friend.userId)}
                                                             className={`${styles.actionBtn} ${styles.removeBtn}`}
                                                             disabled={pendingActions.has(friend.userId)}
                                                         >
@@ -373,8 +364,7 @@ export default function FriendsPage() {
                                                 const status = getRelationshipStatus(searchUser.userId);
                                                 return (
                                                     <div key={searchUser.userId} className={styles.userCard}>
-                                                        <div
-                                                            className={styles.userMainInfo}
+                                                        <div className={styles.userMainInfo}
                                                             onClick={() => router.push(`/profile/${searchUser.userId}`)}
                                                         >
                                                             <RankAvatar elo={searchUser.stats.elo} size="md" />
@@ -387,8 +377,7 @@ export default function FriendsPage() {
                                                         </div>
                                                         <div className={styles.userActions}>
                                                             {status === 'none' && (
-                                                                <button
-                                                                    onClick={() => handleSendRequest(searchUser.userId)}
+                                                                <button onClick={() => handleSendRequest(searchUser.userId)}
                                                                     className={`${styles.actionBtn} ${styles.addBtn}`}
                                                                     disabled={pendingActions.has(searchUser.userId)}
                                                                 >
@@ -396,16 +385,14 @@ export default function FriendsPage() {
                                                                 </button>
                                                             )}
                                                             {status === 'pending_sent' && (
-                                                                <button
-                                                                    className={`${styles.actionBtn} ${styles.pendingBtn}`}
+                                                                <button className={`${styles.actionBtn} ${styles.pendingBtn}`}
                                                                     disabled
                                                                 >
                                                                     <ClockIcon className={styles.actionIcon} />
                                                                 </button>
                                                             )}
                                                             {status === 'pending_received' && (
-                                                                <button
-                                                                    onClick={() => handleAcceptRequest(searchUser.userId)}
+                                                                <button onClick={() => handleAcceptRequest(searchUser.userId)}
                                                                     className={`${styles.actionBtn} ${styles.acceptBtn}`}
                                                                     disabled={pendingActions.has(searchUser.userId)}
                                                                 >
@@ -413,8 +400,7 @@ export default function FriendsPage() {
                                                                 </button>
                                                             )}
                                                             {status === 'friend' && (
-                                                                <button
-                                                                    className={`${styles.actionBtn} ${styles.pendingBtn}`}
+                                                                <button className={`${styles.actionBtn} ${styles.pendingBtn}`}
                                                                     disabled
                                                                 >
                                                                     <CheckIcon className={styles.actionIcon} />
@@ -437,8 +423,7 @@ export default function FriendsPage() {
                                 <div className={styles.userList}>
                                     {friendRequests.map((request) => (
                                         <div key={request.userId} className={styles.userCard}>
-                                            <div
-                                                className={styles.userMainInfo}
+                                            <div className={styles.userMainInfo}
                                                 onClick={() => router.push(`/profile/${request.userId}`)}
                                             >
                                                 <RankAvatar elo={request.stats.elo} size="md" />
@@ -450,15 +435,13 @@ export default function FriendsPage() {
                                                 </div>
                                             </div>
                                             <div className={styles.userActions}>
-                                                <button
-                                                    onClick={() => handleAcceptRequest(request.userId)}
+                                                <button onClick={() => handleAcceptRequest(request.userId)}
                                                     className={`${styles.actionBtn} ${styles.acceptBtn}`}
                                                     disabled={pendingActions.has(request.userId)}
                                                 >
                                                     <CheckIcon className={styles.actionIcon} />
                                                 </button>
-                                                <button
-                                                    onClick={() => handleRejectRequest(request.userId)}
+                                                <button onClick={() => handleRejectRequest(request.userId)}
                                                     className={`${styles.actionBtn} ${styles.rejectBtn}`}
                                                     disabled={pendingActions.has(request.userId)}
                                                 >

@@ -1,64 +1,78 @@
-@reference "../../app/globals.css";
-
 /* Themes */
 /* Themes - Vibrant Flat Colors */
 .red {
-    --team-primary: #FF4B4B;
-    --team-text: #FF4B4B;
-    --team-border: #333333;
+    --team-primary: var(--team-red);
+    --team-text: var(--team-red);
+    --team-border: var(--ink-700);
     --team-shadow: rgba(255, 75, 75, 0.3);
-    --team-light: #FFEAEA;
+    --team-light: var(--team-red-tint);
 }
 
 .blue {
-    --team-primary: #4B7BFF;
-    --team-text: #4B7BFF;
-    --team-border: #333333;
+    --team-primary: var(--team-blue);
+    --team-text: var(--team-blue);
+    --team-border: var(--ink-700);
     --team-shadow: rgba(75, 123, 255, 0.3);
-    --team-light: #EAF0FF;
+    --team-light: var(--team-blue-tint);
 }
 
 .green {
-    --team-primary: #2ECC71;
-    --team-text: #2ECC71;
-    --team-border: #333333;
+    --team-primary: var(--team-green);
+    --team-text: var(--team-green);
+    --team-border: var(--ink-700);
     --team-shadow: rgba(46, 204, 113, 0.3);
-    --team-light: #EAF9F1;
+    --team-light: var(--team-green-tint);
 }
 
 .yellow {
-    --team-primary: #F1C40F;
-    --team-text: #F1C40F;
-    --team-border: #333333;
+    --team-primary: var(--team-yellow);
+    --team-text: var(--team-yellow);
+    --team-border: var(--ink-700);
     --team-shadow: rgba(241, 196, 15, 0.3);
-    --team-light: #FEF9E7;
+    --team-light: var(--team-yellow-tint);
 }
 
 .orange {
-    --team-primary: #E67E22;
-    --team-text: #E67E22;
-    --team-border: #333333;
+    --team-primary: var(--team-orange);
+    --team-text: var(--team-orange);
+    --team-border: var(--ink-700);
     --team-shadow: rgba(230, 126, 34, 0.3);
-    --team-light: #FDF2E9;
+    --team-light: var(--team-orange-tint);
 }
 
 .purple {
-    --team-primary: #9B59B6;
-    --team-text: #9B59B6;
-    --team-border: #333333;
+    --team-primary: var(--team-purple);
+    --team-text: var(--team-purple);
+    --team-border: var(--ink-700);
     --team-shadow: rgba(155, 89, 182, 0.3);
-    --team-light: #F5EEF8;
+    --team-light: var(--team-purple-tint);
 }
 
 .slate {
-    --team-primary: #7F8C8D;
-    --team-text: #7F8C8D;
-    --team-border: #333333;
+    --team-primary: var(--color-text-dark-soft);
+    --team-text: var(--color-text-dark-soft);
+    --team-border: var(--ink-700);
     --team-shadow: rgba(127, 140, 141, 0.3);
-    --team-light: #F2F4F4;
+    --team-light: var(--team-slate-tint);
 }
 
-/* Layout */
+/* ─── Layout ─────────────────────────────────────────────────────────────────
+   Chantier 9.10 — la page de match ne doit JAMAIS couper son contenu.
+
+   Le conteneur parent impose une hauteur fixe avec `overflow: hidden` (mode
+   paysage forcé). Sans les règles ci-dessous, tout élément ajouté — le badge
+   de mode, le multiplicateur, un joueur de plus — repoussait le bouton
+   « Terminer » hors de l'écran, sans le moindre signal.
+
+   Trois règles suffisent :
+     - la colonne occupe la hauteur disponible et pas davantage
+     - `min-height: 0` autorise les enfants flex à se compresser (sans ça,
+       un enfant flex refuse de descendre sous sa taille de contenu)
+     - le débordement défile au lieu d'être rogné
+
+   Conséquence : si le contenu ne tient pas, on peut le faire défiler. On ne
+   perd jamais un bouton.
+   ──────────────────────────────────────────────────────────────────────────── */
 .container {
     display: flex;
     flex-direction: column;
@@ -67,17 +81,40 @@
     max-width: 56rem;
     margin-left: auto;
     margin-right: auto;
+    max-height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/* Sur un écran bas — un téléphone en paysage — on resserre avant de défiler. */
+@media (max-height: 560px) {
+    .container {
+        gap: 0.75rem;
+    }
+}
+
+@media (max-height: 420px) {
+    .container {
+        gap: 0.4rem;
+    }
+}
+
+/* La carte de score ne se comprime pas : c'est l'information principale.
+   C'est la zone de commandes en dessous qui absorbe et défile si besoin. */
+.scoreBoardShell {
+    flex-shrink: 0;
 }
 
 /* Score Board */
 .scoreBoard {
     position: relative;
-    background-color: var(--color-beige);
-    border: 3px solid #333333;
+    background-color: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: 1rem;
     padding: 1rem;
     overflow: hidden;
-    box-shadow: 0 6px 0 #333333;
+    box-shadow: var(--shadow-arcade-lg);
 }
 
 @media (min-width: 400px) {
@@ -106,6 +143,9 @@
     flex: 1 1 0%;
     text-align: center;
     min-width: 0;
+    /* Dernier rempart : quoi qu'il arrive, une colonne d'équipe ne pousse pas
+       le tableau au-delà de sa largeur. */
+    overflow: hidden;
 }
 
 .scoreValue {
@@ -154,7 +194,7 @@
     height: 1.5rem;
     border-radius: 9999px;
     border-width: 2px;
-    border-color: #333333;
+    border-color: var(--ink-700);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -173,8 +213,15 @@
     }
 }
 
+/* Les pseudos peuvent être longs : on coupe proprement plutôt que de pousser
+   la colonne hors du tableau. */
 .teamLabel {
-    color: #333333;
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-700);
     font-size: 0.75rem;
     line-height: 1rem;
     font-weight: 700;
@@ -191,13 +238,25 @@
 }
 
 /* Center Info */
+/* Colonne centrale du tableau de score.
+ *
+ * DÉFAUT CORRIGÉ (22/08) : elle était en `flex-shrink: 0` avec un bouton qui
+ * revenait à la ligne. Résultat, la rangée dépassait la largeur du tableau et
+ * `overflow: hidden` coupait ce qui sortait — les scores comme le bouton.
+ *
+ * Désormais : le bouton ne se coupe JAMAIS (`nowrap`), la colonne s'ajuste à
+ * son contenu, et un plafond l'empêche d'avaler les scores. */
 .centerInfo {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    flex-shrink: 0;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+    /* La colonne prend la largeur de son contenu ; ce sont les colonnes
+       d'équipe, en `flex: 1 1 0`, qui cèdent la place. Un plafond fixe
+       coupait le bouton au lieu de le laisser respirer. */
+    flex: 0 0 auto;
+    min-width: 0;
 }
 
 @media (min-width: 400px) {
@@ -238,38 +297,23 @@
     }
 }
 
-.vsLabel {
-    color: #333333;
-    font-weight: 900;
-    font-size: 1rem;
-    line-height: 1.5rem;
-    opacity: 0.4;
-}
-
-@media (min-width: 400px) {
-    .vsLabel {
-        font-size: 1.125rem;
-        line-height: 1.75rem;
-    }
-}
-
-@media (min-width: 500px) {
-    .vsLabel {
-        font-size: 1.25rem;
-        line-height: 1.75rem;
-    }
-}
+/* `.vsLabel` supprimée le 22/08 : « VS » entre deux scores n'apprend rien à
+   personne, et la place profite au chronomètre, qui en manquait. */
 
 .multiplierBadge {
     margin-top: 0.25rem;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
     padding: 0.25rem 0.75rem;
-    background-color: #F1C40F;
-    border: 2px solid #333333;
+    background-color: var(--team-yellow);
+    border: var(--border-arcade-thin);
     border-radius: 0.5rem;
-    color: #333333;
+    color: var(--ink-700);
     font-size: 10px;
     font-weight: 900;
-    box-shadow: 0 3px 0 #333333;
+    box-shadow: var(--shadow-arcade);
     z-index: 10;
 }
 
@@ -287,6 +331,10 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    /* Absorbe l'espace restant et se compresse en premier : les commandes
+       restent atteignables même quand la carte de score grandit. */
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 @media (min-width: 400px) {
@@ -334,30 +382,52 @@
     }
 }
 
+/* Le bouton de but n'est plus qu'une ENVELOPPE.
+ *
+ * Toute la forme — ratio, fond, contour, arrondi, rembourrage — vient de
+ * `PlayerRow`, donc de `PlayerBanner`. C'est ce qui garantit que le format des
+ * bannières est respecté ici comme ailleurs, en 1v1 comme en 2v2, sans qu'on
+ * ait à le recopier. */
 .goalButton {
-    position: relative;
-    overflow: hidden;
-    border-radius: 0.75rem;
-    padding: 1rem;
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
-    border: 3px solid #333333;
-    background-color: var(--color-beige);
-    box-shadow: 0 4px 0 #333333;
+    display: block;
+    width: 100%;
+    padding: 0;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* La carte à l'intérieur porte la couleur de l'équipe.
+ *
+ * PAS de voile teinté par-dessus la bannière : Sacha (22/08) trouvait le fond
+ * bleu « bizarre », et il a raison — ça salit l'image sans rien apprendre.
+ * C'est le CONTOUR qui dit l'équipe, épais et net.
+ *
+ * `background-color` s'applique quand il n'y a pas de bannière ; avec une
+ * bannière, `.wrap.hasBanner` (deux classes) l'emporte et laisse passer
+ * l'image. Un seul jeu de règles couvre les deux cas. */
+.goalButtonRow {
+    background-color: var(--team-primary);
+    border-color: var(--team-primary);
+    border-width: 4px;
 }
 
 @media (hover: hover) {
+@media (hover: hover) {
     .goalButton:hover {
         transform: translateY(-4px);
-        box-shadow: 0 8px 0 #333333;
+        box-shadow: 0 8px 0 var(--ink-700);
         filter: brightness(0.9);
     }
 }
+}
 
 .goalButton:active {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 #333333;
+    transform: translateY(2px);
+    box-shadow: none;
 }
 
 @media (min-width: 400px) {
@@ -380,9 +450,11 @@
 }
 
 @media (hover: hover) {
+@media (hover: hover) {
     .goalButtonInactive:hover {
         transform: scale(1.02);
     }
+}
 }
 
 .goalButtonInactive:active {
@@ -394,61 +466,8 @@
     filter: grayscale(100%);
 }
 
-.buttonContent {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-@media (min-width: 400px) {
-    .buttonContent {
-        gap: 0.75rem;
-    }
-}
-
-.iconWrapper {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 9999px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid #333333;
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
-    background-color: var(--team-primary);
-}
-
-@media (min-width: 400px) {
-    .iconWrapper {
-        width: 3rem;
-        height: 3rem;
-    }
-}
-
-@media (min-width: 500px) {
-    .iconWrapper {
-        width: 4rem;
-        height: 4rem;
-    }
-}
-
 .iconWrapperActive {
     background-color: rgba(255, 255, 255, 0.2);
-}
-
-@media (hover: hover) {
-    .goalButton:hover .iconWrapper {
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    }
-}
-
-.plusIcon {
-    width: 1.25rem;
-    height: 1.25rem;
-    color: white;
 }
 
 @media (min-width: 400px) {
@@ -462,29 +481,6 @@
     .plusIcon {
         width: 2rem;
         height: 2rem;
-    }
-}
-
-.buttonLabel {
-    font-weight: 900;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-text-dark);
-}
-
-@media (min-width: 400px) {
-    .buttonLabel {
-        font-size: 1rem;
-        line-height: 1.5rem;
-    }
-}
-
-@media (min-width: 500px) {
-    .buttonLabel {
-        font-size: 1.25rem;
-        line-height: 1.75rem;
     }
 }
 
@@ -539,8 +535,8 @@
 .modalContent {
     width: 100%;
     max-width: 480px;
-    background-color: var(--color-beige);
-    border: 3px solid #333333;
+    background-color: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: 1.5rem;
     overflow: hidden;
     box-shadow: 0 12px 0 rgba(0, 0, 0, 0.2);
@@ -556,7 +552,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 2px solid #333333;
+    border-bottom: var(--border-arcade-thin);
     background-color: var(--team-light);
 }
 
@@ -589,7 +585,7 @@
 @media (hover: hover) {
     .closeButton:hover {
         background-color: rgba(51, 51, 51, 0.1);
-        color: #333333;
+        color: var(--ink-700);
     }
 }
 
@@ -614,7 +610,11 @@
     align-items: start !important;
 }
 
+/* Le bouton de chaque joueur, dans le choix du buteur.
+   C'est SON bouton : sa bannière y a du sens. */
 .playerButton {
+    position: relative;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -625,24 +625,26 @@
     transition-property: all;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 150ms;
-    border: 3px solid #333333;
-    box-shadow: 0 4px 0 #333333;
+    border: var(--border-arcade);
+    box-shadow: var(--shadow-arcade);
     -webkit-tap-highlight-color: transparent;
 }
 
 @media (hover: hover) {
+@media (hover: hover) {
     .playerButton:hover {
         transform: translateY(-4px);
-        box-shadow: 0 8px 0 #333333;
+        box-shadow: 0 8px 0 var(--ink-700);
         filter: brightness(0.9);
-        background-color: #334155;
+        background-color: var(--ink-900);
         border-color: rgba(255, 255, 255, 0.2);
     }
 }
+}
 
 .playerButton:active {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 #333333;
+    transform: translateY(2px);
+    box-shadow: none;
 }
 
 .playerAvatar {
@@ -657,16 +659,18 @@
 }
 
 @media (hover: hover) {
+@media (hover: hover) {
     .playerButton:hover .playerAvatar {
         transform: scale(1.1);
     }
+}
 }
 
 .playerName {
     font-size: 1rem;
     line-height: 1.5rem;
     font-weight: 900;
-    color: #333333;
+    color: var(--ink-700);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -693,7 +697,7 @@
     min-height: 120px !important;
     border-radius: 0.75rem;
     overflow: hidden;
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     transition-property: all;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 150ms;
@@ -705,7 +709,7 @@
     justify-content: center;
     text-align: center;
     padding: 0.75rem 0.5rem;
-    box-shadow: 0 4px 0 #333333;
+    box-shadow: var(--shadow-arcade);
     background-color: white;
     -webkit-tap-highlight-color: transparent;
 }
@@ -723,67 +727,71 @@
 }
 
 @media (hover: hover) {
+@media (hover: hover) {
     .positionButton:hover {
         transform: translateY(-4px);
-        box-shadow: 0 8px 0 #333333;
+        box-shadow: 0 8px 0 var(--ink-700);
         filter: brightness(0.9);
         transform: scale(1.05);
         border-color: white;
     }
 }
+}
 
 .positionButton:active {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 #333333;
+    transform: translateY(2px);
+    box-shadow: none;
 }
 
 .starButton {
     width: 100%;
     height: 40px !important;
     border-radius: 0.5rem;
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 3px 0 #333333;
+    box-shadow: var(--shadow-arcade);
     transition: all 0.15s ease;
     cursor: pointer;
 }
 
-.starButton:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 0 #333333;
-    filter: brightness(0.9);
+@media (hover: hover) {
+    .starButton:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 0 var(--ink-700);
+        filter: brightness(0.9);
+    }
 }
 
 .starButton:active {
     transform: translateY(0);
-    box-shadow: 0 2px 0 #333333;
+    box-shadow: var(--shadow-arcade-sm);
 }
 
 .starIcon {
     width: 1.25rem;
     height: 1.25rem;
-    color: #333333;
+    color: var(--ink-700);
 }
 
 .bgGreen {
-    background-color: #2ECC71 !important;
+    background-color: var(--team-green) !important;
     color: white !important;
 }
 
 .bgBlue {
-    background-color: #4B7BFF !important;
+    background-color: var(--team-blue) !important;
     color: white !important;
 }
 
 .bgYellow {
-    background-color: #F1C40F !important;
-    color: #333333 !important;
+    background-color: var(--team-yellow) !important;
+    color: var(--ink-700) !important;
 }
 
 .bgRed {
-    background-color: #FF4B4B !important;
+    background-color: var(--team-red) !important;
     color: white !important;
 }
 
@@ -805,7 +813,7 @@
 .typeButton {
     padding: 2rem;
     border-radius: 1rem;
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     transition-property: all;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 150ms;
@@ -816,21 +824,23 @@
     text-align: center;
     gap: 0.5rem;
     min-height: 120px;
-    box-shadow: 0 4px 0 #333333;
+    box-shadow: var(--shadow-arcade);
     background-color: white;
 }
 
 @media (hover: hover) {
+@media (hover: hover) {
     .typeButton:hover {
         transform: translateY(-4px);
-        box-shadow: 0 8px 0 #333333;
+        box-shadow: 0 8px 0 var(--ink-700);
         filter: brightness(0.9);
     }
 }
+}
 
 .typeButton:active {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 #333333;
+    transform: translateY(2px);
+    box-shadow: none;
 }
 
 .fullWidth {
@@ -838,32 +848,44 @@
 }
 
 .bgNormal {
-    background-color: #ECF0F1 !important;
-    color: #333333 !important;
+    background-color: var(--team-slate-tint) !important;
+    color: var(--ink-700) !important;
 }
 
 .bgGamelle {
-    background-color: #E67E22 !important;
+    background-color: var(--team-orange) !important;
     color: white !important;
 }
 
 .bgGamelleRentrante {
-    background-color: #9B59B6 !important;
+    background-color: var(--team-purple) !important;
     color: white !important;
 }
 
 .bgFlash {
-    background-color: #F1C40F !important;
-    color: #333333 !important;
+    background-color: var(--team-yellow) !important;
+    color: var(--ink-700) !important;
 }
 
 /* Flash Animation Overlay */
+/* ─── Superposition plein écran en mode paysage forcé ─────────────────────────
+   BUG CORRIGÉ (21/08) : l'animation apparaissait en bas à gauche, coupée.
+
+   Cause, propre à cette app : la page de match applique
+   `transform: rotate(90deg)` sur un conteneur parent (mode paysage forcé).
+   En CSS, TOUT ancêtre porteur d'un `transform` devient le bloc conteneur des
+   descendants en `position: fixed` — ils cessent d'être calés sur la fenêtre.
+   Or ce conteneur a ses dimensions inversées (`width: 86vh; height: 100vw`).
+   Résultat : `top/left: 0` + `100vw` × `100vh` désignaient une zone qui n'a
+   plus rien à voir avec l'écran.
+
+   Correctif : `inset: 0`, qui suit le bloc conteneur quel qu'il soit, au lieu
+   de coordonnées et de dimensions absolues en unités de fenêtre.
+   Ne jamais utiliser `100vw`/`100vh` sur une superposition de cette app.
+   ──────────────────────────────────────────────────────────────────────────── */
 .flashOverlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    inset: 0;
     z-index: 200;
     pointer-events: none;
     display: flex;
@@ -935,11 +957,6 @@
         padding-right: 0.5rem;
     }
 
-    .vsLabel {
-        font-size: 1rem;
-        line-height: 1.5rem;
-    }
-
     .timerWrapper {
         padding-left: 0.75rem;
         padding-right: 0.75rem;
@@ -963,23 +980,9 @@
         border-radius: 0.75rem;
     }
 
-    .buttonContent {
-        gap: 0.5rem;
-    }
-
-    .iconWrapper {
-        width: 3rem;
-        height: 3rem;
-    }
-
     .plusIcon {
         width: 1.5rem;
         height: 1.5rem;
-    }
-
-    .buttonLabel {
-        font-size: 0.875rem;
-        line-height: 1.25rem;
     }
 
     .inputContent {
@@ -1035,8 +1038,8 @@
     padding: var(--spacing-2xl);
     display: flex;
     align-items: center;
-    background-color: var(--color-beige);
-    border: 4px solid #333333;
+    background-color: var(--color-surface);
+    border: 4px solid var(--ink-700);
     box-shadow: 0 12px 0 rgba(0, 0, 0, 0.2);
 }
 
@@ -1071,12 +1074,6 @@
     align-items: center;
     justify-content: center;
     gap: var(--spacing-lg);
-}
-
-.viewerMode .vsLabel {
-    font-size: 3rem;
-    font-weight: 900;
-    opacity: 0.3;
 }
 
 .viewerMode .timerWrapper {
@@ -1115,8 +1112,8 @@
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;
-    width: 100vh !important;
-    height: 100vw !important;
+    width: 100dvh !important;
+    height: 100dvw !important;
     transform: translate(-50%, -50%) rotate(90deg) !important;
     transform-origin: center center !important;
     z-index: 9999 !important;
@@ -1219,32 +1216,79 @@
 }
 
 /* Host Landscape Mode - Layout optimized for landscape (rotation handled at page level) */
+/* `flex: 1 1 auto`, et surtout PAS `height: 100%`.
+ *
+ * Avec `height: 100%`, ce bloc réclamait toute la hauteur du conteneur — EN
+ * PLUS des 40 px réservés à l'en-tête. Le total dépassait, et le tableau de
+ * score remontait sur les boutons d'options alors qu'il restait de la place
+ * en bas. C'est exactement ce que Sacha voyait.
+ *
+ * `flex: 1 1 auto` + `min-height: 0` : il prend ce qui RESTE après l'en-tête,
+ * ni plus ni moins. C'est la seule formulation qui ne peut pas déborder. */
 .hostLandscapeMode {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    /* Aligné en haut pour réduire l'espace sous le header */
     align-items: center;
     width: 100%;
-    height: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
     padding: 0.25rem;
-    /* Réduit le padding */
     gap: 0.25rem;
-    /* Réduit le gap */
 }
 
+/* En paysage, le tableau de score prend le MINIMUM et rend le reste.
+ *
+ * Il avait `flex: 1` : il réclamait donc toute la place disponible et n'en
+ * laissait aux cartes de joueur que ce qui restait sous son plafond. En 2v2,
+ * quatre cartes au ratio de bannière ne rentraient plus.
+ *
+ * Le score n'a besoin que de sa hauteur de texte. Les cartes, elles, ont un
+ * ratio à respecter : c'est à elles que doit revenir l'espace. */
+/* En paysage, TOUT est réduit pour que les boutons de but tiennent.
+ *
+ * Ce sont eux qu'on touche pendant un match : le reste doit céder. Bordures
+ * fines, marges minces, hauteur au plus juste — Sacha, 22/08 : « les boutons
+ * pour ajouter des goals, c'est un peu les plus importants ». */
+/* ═══════════════════════════════════════════════════════════════════════════
+   PAYSAGE — LA ZONE EST DÉCOUPÉE EN POURCENTAGES, PUIS CHACUN S'Y RANGE
+   ═══════════════════════════════════════════════════════════════════════════
+   Méthode posée par Sacha le 23/08, après six valeurs devinées de ma part :
+   « définis bien la zone totale de contenu dispo, puis affiche chaque truc en
+   pourcentage ».
+
+   1. Le tableau de score prend une PART FIXE de la zone (28 %).
+   2. Les cartes prennent tout le reste.
+   3. Le contenu du tableau se dimensionne sur la part du tableau (`cqh`).
+   4. Les cartes gardent leur ratio ; le cadre de couleur est ce qui reste,
+      borné par un minimum et un maximum.
+
+   Aucune dépendance circulaire : la taille descend toujours du parent vers
+   l'enfant, jamais l'inverse. C'est ce qui manquait à mes tentatives. */
 .hostLandscapeMode .scoreBoard {
+    height: 34%;
+    flex-shrink: 0;
+    container-type: size;
+    /* Aucune marge ici : l'écart avec les boutons d'outils est déjà assuré par
+       le `padding-top` du conteneur (la zone réservée). Les deux se cumulaient,
+       ce qui faisait 92 px de vide au-dessus du tableau. */
+    margin-top: 0;
     width: 100%;
-    flex: 1;
-    max-height: 180px;
-    /* Augmenté pour prendre plus de place */
-    padding: 0.25rem;
+    /* Marge latérale MINIMALE ici. Les 3rem qui laissaient passer la flèche et
+       le menu ne servent qu'en rotation d'APPAREIL, où l'en-tête chevauche le
+       tableau ; en rotation forcée l'en-tête est dans le flux, et ces 3rem ne
+       faisaient que comprimer le contenu jusqu'à le rogner. Ils sont reposés
+       dans `game-page.module.css`, pour le seul mode concerné. */
+    padding: 0.15rem 0.4rem;
+    border-width: 2px;
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--color-beige);
-    border: 2px solid #333333;
+    background-color: var(--color-surface);
+    border: var(--border-arcade-thin);
     box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+    overflow: hidden;
 }
 
 .hostLandscapeMode .scoreBoardContent {
@@ -1283,30 +1327,52 @@
     text-overflow: ellipsis;
 }
 
+/* Le score se mesure sur la HAUTEUR du tableau, qui est une part fixe de la
+   zone. Le sens de la dépendance est le bon : le parent décide, l'enfant suit.
+   Plus aucune boucle, et plus aucune valeur à réajuster par écran. */
 .hostLandscapeMode .scoreValue {
-    font-size: 7rem;
+    font-size: 92cqh;
     line-height: 1;
     font-weight: 900;
 }
 
+/* Chrono, Pause et « Finir le match » sur UNE SEULE LIGNE — c'est ce qui
+   permet au tableau de tenir dans sa part de zone sans rien rogner. */
+/* `flex-shrink: 0` : la colonne centrale ne se laisse pas comprimer par les
+   deux scores. C'est elle qui se faisait rogner — le bouton Pause en sortait
+   à moitié. Les scores, eux, ont de la place de reste. */
+/* GRILLE, et non flex.
+ *
+ * C'est ici que tout coinçait : j'écrivais des `grid-column` et des `grid-row`
+ * dans le composant chrono depuis trois tours, alors que ce conteneur était
+ * resté en `display: flex`. Une propriété de grille sur un enfant de flex ne
+ * fait rien — silencieusement, sans erreur ni avertissement.
+ *
+ *     [PROLONGATION] [TIMER]
+ *     [        PAUSE        ]
+ *     [    FIN DU MATCH     ] */
 .hostLandscapeMode .centerInfo {
-    width: 100px;
-    display: flex;
-    flex-direction: column;
+    width: auto;
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: auto auto auto;
+    grid-template-rows: auto auto;
+    justify-items: center;
     align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
+    gap: var(--spacing-xs) 2px;
 }
 
-.hostLandscapeMode .vsLabel {
-    font-size: 0.875rem;
-    font-weight: 900;
-    opacity: 0.3;
-}
-
+/* `display: contents` ici AUSSI, sinon rien ne marche.
+ *
+ * Le chrono est enveloppé dans `.timerWrapper`. J'avais mis `display: contents`
+ * sur la boîte du chrono, mais ses enfants remontaient alors dans CE wrapper —
+ * pas dans la grille du tableau. Le bouton Pause restait donc sur sa propre
+ * ligne, quoi que je fasse.
+ *
+ * Pour qu'un enfant rejoigne une grille, TOUTES les boîtes intermédiaires
+ * doivent disparaître. Une seule qui subsiste, et la chaîne est rompue. */
 .hostLandscapeMode .timerWrapper {
-    transform: scale(0.8);
-    margin-bottom: 0;
+    display: contents;
 }
 
 .hostLandscapeMode .teamLabel {
@@ -1323,75 +1389,104 @@
 /* Host Landscape Controls - Compact buttons for landscape */
 .hostLandscapeMode .controlsContainer {
     display: flex;
-    /* Make sure it's visible */
     width: 100%;
     max-width: 1000px;
     gap: var(--spacing-md);
+    /* Prend tout ce que le tableau de score a laissé. */
+    flex: 1 1 auto;
+    min-height: 0;
+    /* Plus besoin de défilement : les cartes se dimensionnent pour tenir. */
+    overflow: hidden;
 }
 
 .hostLandscapeMode .buttonsGrid {
-    gap: var(--spacing-md);
+    gap: var(--spacing-xs);
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    /* Keep 2 columns */
+    height: 100%;
+    min-height: 0;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   PAYSAGE : LA PLACE SE CALCULE, ELLE NE SE DEVINE PAS
+   ═══════════════════════════════════════════════════════════════════════════
+   Cette colonne avait `height: 85px`. Une hauteur FIXE ne peut pas être juste :
+   elle est trop grande en 2v2 sur un petit écran, trop petite en 1v1 sur un
+   grand. D'où du contenu coupé, quatre fois de suite.
+
+   Le principe maintenant : le tableau de score prend ce dont il a besoin, les
+   boutons prennent TOUT le reste, et chaque carte se dimensionne à partir de
+   la place qu'on vient de lui donner. Aucun nombre en dur.
+
+   Ça vaut pour 1v1, pour 2v2, pour la rotation forcée comme pour la rotation
+   d'appareil, et pour n'importe quelle taille d'écran. */
 .hostLandscapeMode .teamButtonsColumn {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
-    height: 85px;
-    /* Un peu plus haut pour accommoder le nouveau design */
-}
-
-.hostLandscapeMode .goalButton {
-    padding: 0.75rem 0.5rem;
-    border-radius: 1rem;
-    flex: 1;
-    background-color: var(--team-primary) !important;
-    /* Fond de la couleur de l'équipe */
-    border: 3px solid #333333;
-    box-shadow: 0 4px 0 #333333;
-}
-
-.hostLandscapeMode .buttonContent {
-    gap: 0.25rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     justify-content: center;
+    gap: var(--spacing-xs);
+    height: 100%;
+    min-height: 0;
+    container-type: size;
 }
 
-.hostLandscapeMode .buttonContentFourPlayers {
-    flex-direction: row !important;
-    gap: 0.5rem !important;
+/* Chaque bouton reçoit une part égale de la hauteur disponible, et devient un
+   CONTENEUR DE REQUÊTE : la carte à l'intérieur peut alors se mesurer par
+   rapport à lui, en largeur ET en hauteur. C'est ce qui permet de respecter le
+   ratio de bannière sans jamais déborder. */
+/* Chaque bouton reçoit une part égale de ce qui reste, MAIS jamais plus de
+   30 % de hauteur en plus que sa carte. C'est le MAXIMUM du cadre de couleur
+   demandé par Sacha : au-delà, la couleur mangerait l'écran sans rien dire de
+   plus. Le `padding` en donne le MINIMUM. */
+.hostLandscapeMode .goalButton {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: calc(100cqw / 4.5 * 1.3);
+    container-type: size;
+    display: grid;
+    place-items: center;
+    padding: 3px;
 }
 
-.hostLandscapeMode .iconWrapper {
-    width: auto;
+/* ⚠️ LE RATIO DE BANNIÈRE NE SE NÉGOCIE JAMAIS.
+ *
+ * J'ai essayé de faire remplir toute la place à la carte, en pensant réduire
+ * les aplats de couleur. Résultat : des bannières déformées, presque carrées.
+ * Sacha, 23/08 : « les bannières ne peuvent jamais avoir un ratio différent,
+ * dans tous les cas ». C'est une règle, pas une préférence.
+ *
+ * La carte garde donc son ratio et se centre dans le bouton ; la couleur de
+ * l'équipe occupe ce qui reste autour. C'est exactement la version qu'il avait
+ * validée, et elle a un mérite que je n'avais pas vu : le cadre de couleur est
+ * plus large quand la carte est plus petite, donc l'équipe reste lisible même
+ * quand la bannière prend toute la place. */
+/* La carte prend la plus PETITE des deux contraintes — largeur du bouton, ou
+   largeur autorisée par sa hauteur au ratio de bannière. Le ratio est donc
+   toujours exact, et ce qui reste autour est le cadre de couleur. */
+.hostLandscapeMode .goalButtonRow {
+    width: min(100cqw, calc(100cqh * 4.5));
     height: auto;
-    background: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0;
+    max-height: 100cqh;
+    border-width: 2px;
+}
+
+/* Le cadre de couleur de l'équipe, AUTOUR de la carte. C'est lui qui dit pour
+   qui on marque, et il reste lisible quelle que soit la bannière. */
+.hostLandscapeMode .goalButtonInactive,
+.hostLandscapeMode .goalButtonActive {
+    background-color: var(--team-primary);
+    border: var(--border-arcade-thin);
+    border-radius: var(--radius-md);
+    box-shadow: none;
 }
 
 .hostLandscapeMode .plusIcon {
     width: 1.25rem;
     height: 1.25rem;
-    color: #333333 !important;
+    color: var(--ink-700) !important;
     stroke-width: 3px;
     /* Rend le "+" beaucoup plus gras */
     opacity: 1;
     /* Plus d'opacité pour plus de force */
-}
-
-.hostLandscapeMode .buttonLabel {
-    font-size: 1.25rem;
-    font-weight: 900;
-    color: #333333 !important;
-    /* Nom en gris foncé */
-    text-transform: uppercase;
-    line-height: 1.1;
 }
 
 /* Almost-Fullscreen Modal for Landscape Mode */
@@ -1498,32 +1593,11 @@
     /* S'assurer que la description est visible */
 }
 
-@media (max-width: 800px) {
-    .hostLandscapeMode .scoreValue {
-        font-size: 7rem;
-    }
-
-    .hostLandscapeMode .centerInfo {
-        width: 180px;
-    }
-
-    .hostLandscapeMode .timerWrapper {
-        transform: scale(1.4);
-    }
-}
+/* ATTENTION — ces deux blocs faisaient GROSSIR le score sur les petits écrans :
+   4,5rem par défaut, mais 7rem sous 800 px et 5rem sous 600 px. C'est l'inverse
+   de ce qu'il faut, et c'est ce qui annulait la réduction sur un téléphone. */
 
 @media (max-width: 600px) {
-    .hostLandscapeMode .scoreValue {
-        font-size: 5rem;
-    }
-
-    .hostLandscapeMode .centerInfo {
-        width: 120px;
-    }
-
-    .hostLandscapeMode .timerWrapper {
-        transform: scale(1.2);
-    }
 
     .hostLandscapeMode .teamLabel {
         font-size: 1rem;
@@ -1538,31 +1612,165 @@
 
 .finishMatchButton {
     margin: 0.25rem 0;
-    padding: 0.5rem 1rem;
-    background-color: var(--color-beige);
-    border: 3px solid #333333;
+    /* Sur une seule ligne, toujours. « FINIR LE MATCH » se cassait en trois
+       lignes et faisait gonfler la colonne au point de déborder.
+       
+       DÉFAUT CORRIGÉ (22/08) : `width: 100%` prenait la largeur de la colonne
+       — plafonnée — pendant que le texte, en `nowrap`, la dépassait : le
+       libellé sortait de son propre cadre. Le bouton se dimensionne désormais
+       sur SON CONTENU, et c'est la colonne qui s'adapte. */
+    white-space: nowrap;
+    width: max-content;
+    text-align: center;
+    padding: 0.5rem 0.9rem;
+    background-color: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: 0.75rem;
-    color: #333333;
+    color: var(--ink-700);
     font-weight: 900;
     font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     cursor: pointer;
-    box-shadow: 0 4px 0 #333333;
+    box-shadow: var(--shadow-arcade);
     transition: all 0.2s ease;
     z-index: 20;
 }
 
-.finishMatchButton:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 #333333;
-    background-color: #fcebeb;
-    /* Light red tint */
-    color: var(--color-error);
-    border-color: var(--color-error);
+@media (hover: hover) {
+    .finishMatchButton:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-arcade-lg);
+        background-color: var(--team-red-tint);
+        /* Light red tint */
+        color: var(--color-error);
+        border-color: var(--color-error);
+    }
 }
 
 .finishMatchButton:active {
     transform: translateY(0);
-    box-shadow: 0 2px 0 #333333;
+    box-shadow: var(--shadow-arcade-sm);
+}
+/* ─── Rappel du mode de jeu en cours ──────────────────────────────────────────
+   SUR SA PROPRE LIGNE, au-dessus de la carte de score.
+
+   Historique des deux échecs, pour qu'on ne recommence pas :
+     1. dans la colonne centrale, en flux -> décalait tout et coupait le bouton
+     2. en position absolue -> recouvrait le chrono
+   Cause commune : la carte de score porte des dégradés décoratifs en position
+   absolue, donc un `overflow: hidden` obligatoire. Tout ce qu'on y ajoute est
+   rogné ou superposé. Une information de match n'a rien à faire à l'intérieur
+   de la carte de score.
+   Lit uniquement des tokens (chantier 5.1).
+   ──────────────────────────────────────────────────────────────────────────── */
+.modeBar {
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+    /* Annule l'espacement de 2rem du conteneur : cette ligne colle à la carte. */
+    margin-bottom: -1.6rem;
+}
+
+@media (max-height: 560px) {
+    .modeBar { margin-bottom: -0.5rem; }
+}
+
+@media (max-height: 420px) {
+    .modeBar { margin-bottom: -0.25rem; }
+}
+
+.modeBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    font-size: 0.55rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    line-height: 1.4;
+    color: var(--color-text-dark);
+    background: var(--color-accent);
+    border: var(--border-arcade-thin);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.modeBadgeInfo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 13px;
+    height: 13px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-size: 0.62rem;
+    border: 1.5px solid var(--ink-700);
+    border-radius: var(--radius-full);
+}
+
+/* Téléphones étroits : le bouton reste sur une ligne en réduisant sa taille,
+   plutôt qu'en revenant à la ligne et en cassant la mise en page. */
+@media (max-width: 380px) {
+    .finishMatchButton {
+        font-size: 0.68rem;
+        letter-spacing: 0.02em;
+        padding: 0.45rem 0.4rem;
+    }
+
+    .centerInfo {
+        padding-left: 0.1rem;
+        padding-right: 0.1rem;
+    }
+}
+
+/* Le voile de la bannière, pour que le pseudo tienne sur n'importe quelle image. */
+
+/* Le contenu passe au-dessus du voile. */
+
+/* Le choix du buteur réutilise la même carte : plus aucune forme propre. */
+.playerButton {
+    cursor: pointer;
+}
+
+/* Le « + » à droite de la carte, en match. */
+.plusIcon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    color: var(--color-text-primary);
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7));
+}
+
+.goalButton:active {
+    transform: translateY(2px);
+}
+
+/* Sur la MÊME LIGNE que le chrono et Pause (`.centerInfo` est une rangée en
+   paysage), et mesuré sur le tableau comme tout le reste. */
+.hostLandscapeMode .finishMatchButton {
+    grid-row: 1;
+    grid-column: 3;
+    justify-self: center;
+    padding: 0.3em 0.8em;
+    font-size: 13cqh;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.hostLandscapeMode .buttonsGrid {
+    gap: var(--spacing-xs);
+}
+
+.hostLandscapeMode .teamButtonsColumn {
+    gap: var(--spacing-xs);
+}
+
+/* ─── Paysage : ce qui n'aide pas pendant un match disparaît ─────────────────
+   La pastille « MODE CHRONO BLITZ » prend une ligne entière pour une
+   information qu'on a choisie soi-même trente secondes plus tôt. En portrait
+   elle reste : la place ne manque pas. */
+.hostLandscapeMode .modeBadge {
+    display: none;
 }

@@ -25,7 +25,7 @@ export default function ProfilePage() {
     if (authLoading) {
         return (
             <div className="container-center">
-                <div className="w-16 h-16 border-4 border-[var(--color-field-green)] border-t-transparent rounded-full animate-spin" />
+                <div className="spinner-ring" style={{ width: '64px', height: '64px', borderWidth: '4px', borderTopColor: 'transparent', borderRadius: 'var(--radius-full)' }} />
             </div>
         );
     }

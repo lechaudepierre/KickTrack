@@ -1,8 +1,14 @@
 /* Field Decorations Component Styles */
 
+/* Le décor est FIXE, comme le motif de terrain de `body::before`.
+   En `position: absolute`, il ne couvrait que le cadre visible du conteneur de
+   défilement : dès qu'on faisait défiler, le décor s'arrêtait au bout d'un
+   écran et le bas de la page se retrouvait nu. Signalé par Sacha.
+   `fixed` le garde derrière le contenu quelle que soit la hauteur de la page. */
 .fieldBackground {
-    position: absolute;
+    position: fixed;
     inset: 0;
+    z-index: 0;
     overflow: hidden;
     pointer-events: none;
 }
@@ -12,7 +18,7 @@
     width: 37.5rem;
     height: 37.5rem;
     opacity: 0.2;
-    background: linear-gradient(135deg, var(--color-field-green) 0%, transparent 70%);
+    background: linear-gradient(135deg, var(--field-dark) 0%, transparent 70%);
     top: -12.5rem;
     right: -12.5rem;
     clip-path: polygon(100% 0, 0 0, 100% 100%);
@@ -23,8 +29,45 @@
     width: 25rem;
     height: 25rem;
     opacity: 0.15;
-    background: linear-gradient(45deg, var(--color-field-green) 0%, transparent 70%);
+    background: linear-gradient(45deg, var(--field-dark) 0%, transparent 70%);
     bottom: -6.25rem;
     left: -6.25rem;
     clip-path: polygon(0 100%, 0 0, 100% 100%);
 }
+/* ─── Marquage du terrain ─────────────────────────────────────────────────────
+   Rond central et arcs de coin. Les lignes droites et diagonales ont été
+   retirées : voir le commentaire dans FieldDecorations.tsx.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.fieldLines {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.circle {
+    position: absolute;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-full);
+}
+
+.centerCircle {
+    width: 300px;
+    height: 300px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Arcs de coin : cercles volontairement débordants, seul le quart visible
+   compte — c'est ce qui donne l'arrondi de corner. */
+.cornerArc {
+    width: 100px;
+    height: 100px;
+}
+
+.cornerTopLeft { top: -3rem; left: -3rem; }
+.cornerTopRight { top: -3rem; right: -3rem; }
+.cornerBottomLeft { bottom: -3rem; left: -3rem; }
+.cornerBottomRight { bottom: -3rem; right: -3rem; }

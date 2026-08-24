@@ -1,0 +1,325 @@
+rules_version = '2';
+
+// ═════════════════════════════════════════════════════════════════════════════
+// KickTrack — règles de sécurité Firestore
+//
+// ⚠️ CE FICHIER EST LA SOURCE DE VÉRITÉ. Ne plus éditer les règles dans la
+//    console Firebase : elles seraient écrasées au prochain
+//    `firebase deploy --only firestore:rules`.
+//
+// Base : les règles de production du 20 août 2026, rapatriées telles quelles.
+//
+// ⚠️ EN L'ÉTAT, CE FICHIER EST STRICTEMENT ADDITIF par rapport à la production.
+//    Il n'ajoute que des LECTURES sur des collections qui n'existaient pas
+//    (catalog, users/*/inventory, users/*/grants, users/*/seasons).
+//    Aucune permission existante n'est retirée : les trois durcissements
+//    prévus sont derrière des interrupteurs à `false`.
+//    Le déployer ne peut donc rien casser pour les joueurs actuels.
+//
+// Principe directeur (Doc/v2-refactor/20-socle-collection.md) :
+//   « Le client ne s'attribue jamais rien de valeur. »
+// Le SDK admin (routes Next.js, scripts) contourne ces règles par conception.
+//
+// Chantiers : Doc/v2-refactor/CHANTIERS.md → 0.1, 0.2, 0.5
+// ═════════════════════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Interrupteur de migration (chantier 0.2) ─────────────────────────────
+    //
+    // ⚠️ NE PASSER À `false` QU'APRÈS le chantier 0.4 (fin de partie migrée
+    //    côté serveur). Tant que l'ELO est calculé dans le navigateur, passer
+    //    ce drapeau à false CASSE LA FIN DE PARTIE EN PRODUCTION.
+    //
+    // Tant qu'il vaut true, deux failles restent ouvertes — c'est le statu quo
+    // de la prod, pas une régression introduite ici :
+    //   1. un joueur peut écrire `stats` sur le document de n'importe qui ;
+    //   2. un joueur peut écrire n'importe quel champ sur son propre document,
+    //      donc son propre `stats.elo`.
+    function clientMayWriteStats() {
+      // FERMÉ le 23/08/2026 — chantier 0.2.
+      //
+      // Tant que ce drapeau valait `true`, deux failles restaient ouvertes sur
+      // 141 comptes réels :
+      //   1. n'importe quel joueur connecté pouvait écrire `stats` sur le
+      //      document de N'IMPORTE QUI ;
+      //   2. il pouvait donc s'attribuer l'ELO de son choix depuis la console
+      //      du navigateur, en trois lignes.
+      //
+      // Ce qu'il fallait réunir avant de fermer :
+      //   • tout le calcul de fin de partie côté serveur — fait le 20/08 avec
+      //     POST /api/games/:id/end, qui passe par firebase-admin et ignore
+      //     donc ces règles ;
+      //   • aucun code client n'écrivant `stats` — audité le 23/08 : les seules
+      //     écritures client sur `users` sont le pseudo, l'email, les amis, les
+      //     stades favoris et les annonces lues ;
+      //   • la route serveur réellement active en production — confirmé par
+      //     Sacha le 23/08 : une partie terminée met bien l'ELO à jour.
+      //
+      // POUR REVENIR EN ARRIÈRE : repasser à `true`, puis
+      // `node scripts/deploy-rules.mjs --apply`.
+      return false;
+    }
+
+    // ─── Durcissements différés ───────────────────────────────────────────────
+    //
+    // Ces deux règles RETIRENT une permission qui existe en production. Elles
+    // sont donc désactivées pour le premier déploiement, afin que celui-ci soit
+    // STRICTEMENT ADDITIF : il n'ajoute que des lectures sur des collections
+    // qui n'existaient pas (catalog, inventory, grants, seasons) et ne peut
+    // mathématiquement rien casser pour les joueurs actuels.
+    //
+    // À activer dans un second temps, une fois le premier déploiement vérifié.
+
+    // Réserve la publication d'annonces aux admins.
+    // ⚠️ Avant d'activer : vérifier au Playground que le compte Firebase de
+    //    chaque admin porte bien l'email listé dans isAdmin(). Sinon plus
+    //    personne ne peut publier d'annonce.
+    function adminOnlyAnnouncements() {
+      return false;  // ⚠️ PROVISOIRE — passer à true après vérification
+    }
+
+    // Ferme la suppression de son propre document user.
+    // Vérifié : aucune fonctionnalité de suppression de compte n'existe dans
+    // le code. Surface morte, mais on ne retire rien au premier déploiement.
+    function blockUserSelfDelete() {
+      return false;  // ⚠️ PROVISOIRE — passer à true au chantier 0.5
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Admins identifiés par email (stable, contrairement au pseudo).
+    // Doit rester synchronisé avec src/lib/utils/adminUtils.ts
+    function isAdmin() {
+      return isSignedIn()
+             && request.auth.token.email in [
+                  'sachatheben03@gmail.com',
+                  'r.brantegem@gmail.com',
+                  'lechaudepierre@gmail.com'
+                ];
+    }
+
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    function touchesStats() {
+      return changedKeys().hasAny(['stats']);
+    }
+
+    // ─── users ────────────────────────────────────────────────────────────────
+    match /users/{userId} {
+
+      // [PROD] lisible par tout membre connecté : classements, profils, recherche.
+      allow read: if isSignedIn();
+
+      // [PROD] création de son propre document uniquement.
+      allow create: if isSelf(userId);
+
+      // [PROD] son propre document (tous champs), OU écriture croisée limitée
+      //        aux champs d'amitié et de stats.
+      //        Le système d'amis écrit légitimement chez autrui
+      //        (src/lib/firebase/friends.ts).
+      // [0.2]  la seconde condition retire `stats` des deux branches d'un coup
+      //        quand l'interrupteur bascule.
+      allow update: if isSignedIn()
+                    && (
+                         isSelf(userId)
+                         || changedKeys().hasOnly([
+                              'stats', 'friends',
+                              'friendRequestsReceived', 'friendRequestsSent'
+                            ])
+                       )
+                    && ( clientMayWriteStats() || !touchesStats() );
+
+      // ⚠️ `equipped` passe aujourd'hui par la branche `isSelf` ci-dessus, mais
+      //    le chemin normal est la route serveur POST /api/inventory/equip :
+      //    elle seule vérifie que l'item est réellement possédé et du bon type.
+      //    Une règle Firestore ne peut pas parcourir l'inventaire sans faire
+      //    exploser le quota de `get()` par requête. Le durcissement consistera
+      //    à retirer `equipped` des champs auto-écrivables (chantier 0.5).
+
+      // [DIFFÉRÉ] voir blockUserSelfDelete() en tête de fichier.
+      allow delete: if !blockUserSelfDelete() && isSelf(userId);
+
+      // ─── Sous-collections à venir (Phase 2) ────────────────────────────────
+      // Écrites exclusivement par le SDK admin. Déclarées dès maintenant pour
+      // qu'aucune ne soit accessible par défaut le jour où elle apparaît.
+
+      // Lisible par tout joueur connecté — chantier 4.9.
+      //
+      // On regarde la collection des autres, c'est même tout l'intérêt : voir
+      // une bannière chez quelqu'un donne envie de l'obtenir. Le contenu se
+      // limite à des identifiants d'items cosmétiques et un nombre
+      // d'exemplaires : aucun secret, aucune donnée personnelle. `seasons`
+      // est déjà ouvert de la même façon, et pour la même raison.
+      //
+      // L'écriture reste interdite au client, comme avant : tout passe par
+      // `grantItem` côté serveur.
+      match /inventory/{itemId} {
+        allow read: if isSignedIn();
+        allow write: if false;
+      }
+
+      // Packs non ouverts — chantier 4.7.
+      //
+      // Lecture par le propriétaire seul : savoir combien de packs quelqu'un
+      // n'a pas ouverts ne regarde personne d'autre.
+      //
+      // ÉCRITURE INTERDITE, et c'est le point important : un client qui
+      // pourrait créer un pack s'en donnerait autant qu'il veut, et un client
+      // qui pourrait effacer `openedAt` relancerait le tirage jusqu'au
+      // légendaire. Tout passe par POST /api/packs/open.
+      match /packs/{packId} {
+        allow read: if isSelf(userId);
+        allow write: if false;
+      }
+
+      match /wallet/{docId} {
+        allow read: if isSelf(userId);
+        allow write: if false;
+      }
+
+      match /seasons/{seasonId} {
+        allow read: if isSignedIn();   // affiché sur les profils publics
+        allow write: if false;
+      }
+
+      // Journal d'octrois — c'est le mécanisme d'idempotence de `grantItem`.
+      // Si un client pouvait y écrire, il pourrait effacer la trace d'une
+      // récompense déjà reçue pour la redemander. Lecture seule, toujours.
+      match /grants/{grantId} {
+        allow read: if isSelf(userId);
+        allow write: if false;
+      }
+    }
+
+    // ─── games ────────────────────────────────────────────────────────────────
+    // [PROD] read, write pour tout connecté.
+    // Non durci volontairement : les parties de tournoi peuvent être écrites
+    // par un organisateur qui n'y joue pas. Restreindre demanderait d'auditer
+    // tout lib/firebase/tournaments.ts d'abord → chantier 0.5.
+    // ─── games ────────────────────────────────────────────────────────────────
+    // DURCI le 23/08/2026 — chantier 0.5.
+    //
+    // On ne restreint pas QUI écrit, mais QUOI. C'est ce qui permet de fermer
+    // la faille sans casser les tournois : un organisateur écrit légitimement
+    // des parties auxquelles il ne joue pas, et vérifier ça dans une règle
+    // demanderait de remonter au document de tournoi à chaque écriture.
+    //
+    // Les champs interdits au client sont ceux que SEUL le serveur calcule.
+    // `POST /api/games/:id/end` passe par firebase-admin et ignore ces règles,
+    // il continue donc de les écrire.
+    //
+    // Ce que ça ferme concrètement : s'attribuer de l'ELO en écrivant
+    // `eloChanges` à la main, ou se donner des packs via `packsEarned`.
+    match /games/{gameId} {
+      allow read: if isSignedIn();
+
+      // La création reste ouverte : lancement de partie et génération de
+      // tournoi passent tous deux par là.
+      allow create: if isSignedIn();
+
+      allow update: if isSignedIn()
+                    // Champs réservés au serveur.
+                    && !request.resource.data.diff(resource.data).affectedKeys()
+                         .hasAny([
+                           'eloChanges', 'packsEarned', 'mvpId',
+                           'winner', 'endedAt', 'duration'
+                         ])
+                    // Une partie ne se termine que par la route serveur, qui
+                    // seule calcule l'ELO, le MVP et les packs. `abandoned` et
+                    // les autres statuts restent écrivables par le client.
+                    && request.resource.data.status != 'completed';
+
+      // Une partie terminée est une pièce du classement : on ne l'efface pas.
+      allow delete: if false;
+    }
+
+    // ─── game_sessions ────────────────────────────────────────────────────────
+    // [PROD] read, write pour tout connecté.
+    // La lecture large est nécessaire : rejoindre une partie se fait par
+    // requête sur le code PIN.
+    match /game_sessions/{sessionId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ─── tournaments ──────────────────────────────────────────────────────────
+    // [PROD] read, write pour tout connecté.
+    match /tournaments/{tournamentId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ─── venues ───────────────────────────────────────────────────────────────
+    // [PROD] read, write pour tout connecté.
+    match /venues/{venueId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ─── announcements ────────────────────────────────────────────────────────
+    // [DURCI] la prod autorise TOUT connecté à écrire, avec le commentaire
+    //         « contrôle côté app » — c'est-à-dire aucun contrôle réel :
+    //         n'importe qui peut publier une annonce à tous les joueurs
+    //         depuis la console du navigateur.
+    //         L'app filtre déjà par email via src/lib/utils/adminUtils.ts ;
+    //         on applique la même règle côté serveur.
+    // ⚠️ À TESTER AU PLAYGROUND avant déploiement : vérifier que le compte
+    //    Firebase de chaque admin porte bien l'email listé dans isAdmin().
+    match /announcements/{announcementId} {
+      allow read: if isSignedIn();
+      // [DIFFÉRÉ] voir adminOnlyAnnouncements() en tête de fichier.
+      allow write: if adminOnlyAnnouncements() ? isAdmin() : isSignedIn();
+    }
+
+    // ─── feedbacks ────────────────────────────────────────────────────────────
+    // [PROD] dépôt libre, relecture impossible depuis le client.
+    // Vérifié : aucune lecture de feedbacks dans le code. Les admins les
+    // consultent depuis la console Firebase. Conservé tel quel.
+    match /feedbacks/{feedbackId} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if false;
+    }
+
+    // ─── config ───────────────────────────────────────────────────────────────
+    // Drapeaux de fonctionnalité : quelle nouveauté est visible, et par qui.
+    //
+    // LECTURE PUBLIQUE, SANS AUTHENTIFICATION — volontaire et nécessaire.
+    // L'écran de connexion doit savoir s'il affiche le bouton Google, or
+    // personne n'y est encore connecté. Exiger `isSignedIn()` rendait le
+    // document illisible précisément là où on en a besoin.
+    //
+    // Ce que ça expose : trois mots de configuration d'affichage. Aucune
+    // donnée personnelle, aucun secret. L'écriture reste réservée au SDK admin.
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ─── catalogue (chantier 2.1) ─────────────────────────────────────────────
+    match /catalog/{itemId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // ─── saisons (chantier 3.1) ───────────────────────────────────────────────
+    match /seasons/{seasonId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // ─── Fermeture par défaut ─────────────────────────────────────────────────
+    // Firestore refuse déjà tout chemin non déclaré ; explicite pour la relecture.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

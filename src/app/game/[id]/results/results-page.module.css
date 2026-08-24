@@ -1,5 +1,3 @@
-@reference "../../../globals.css";
-
 .container {
     display: flex;
     flex-direction: column;
@@ -26,7 +24,7 @@
     align-items: center;
     justify-content: center;
     margin-bottom: 1.5rem;
-    border: 4px solid #333333;
+    border: 4px solid var(--ink-700);
     box-shadow: 0 8px 0 rgba(0, 0, 0, 0.1);
 }
 
@@ -35,39 +33,67 @@
     height: 3rem;
 }
 
+/* Le titre était en NOIR sur le fond terrain vert foncé : illisible.
+   Blanc avec une contre-ombre franche, comme les titres de page — c'est le
+   traitement qu'on applique partout quand du texte se pose sur le terrain. */
 .winnerTitle {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
-    font-weight: 900;
-    color: var(--color-text-dark);
-    margin-bottom: 0.5rem;
+    font-size: var(--text-3xl);
+    line-height: 1.05;
+    font-weight: var(--weight-black);
+    color: var(--color-text-primary);
+    text-shadow: 0 4px 0 var(--ink-900);
+    margin-bottom: var(--spacing-md);
     text-transform: uppercase;
     letter-spacing: -0.025em;
 }
 
+/* Le score prend une pastille beige : c'est le chiffre qu'on cherche des yeux
+   en arrivant sur l'écran, il mérite son propre support plutôt que d'être un
+   texte gris à 60 % d'opacité posé sur des rayures. */
 .finalScore {
-    font-size: 1.5rem;
-    line-height: 2rem;
-    font-weight: 800;
+    display: inline-block;
+    font-size: var(--text-xl);
+    line-height: 1;
+    font-weight: var(--weight-black);
     color: var(--color-text-dark);
-    opacity: 0.6;
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-full);
+    box-shadow: var(--shadow-arcade-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-variant-numeric: tabular-nums;
 }
 
 .statsGrid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 1rem;
     width: 100%;
     max-width: 28rem;
 }
 
+/* La carte n'est plus qu'un empilement : la bannière, puis le bloc crème.
+   Aucune forme propre — elle laisse ses deux enfants porter la leur. */
+/* `min-width: 0` est OBLIGATOIRE sur un enfant de grille.
+ *
+ * Par défaut un élément de grille vaut `min-width: auto` : il refuse de
+ * rétrécir sous la largeur minimale de son contenu. Un pseudo long, un badge
+ * MVP, et la colonne déborde de l'écran — c'est ce que Sacha voyait, la carte
+ * coupée à droite. Même piège que `min-height: 0` en flex. */
 .statCard {
-    background-color: var(--color-beige);
-    border: 3px solid #333333;
-    border-radius: 1rem;
-    padding: 1.25rem;
-    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
     text-align: left;
+    min-width: 0;
+}
+
+/* Le bloc crème des chiffres, sous la bannière. */
+.statBody {
+    background-color: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.1);
 }
 
 .statHeader {
@@ -88,7 +114,7 @@
     line-height: 1.75rem;
     font-weight: 700;
     color: var(--color-text-dark);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
 }
 
 .playerInfo {
@@ -103,7 +129,7 @@
 }
 
 .playerGoals {
-    color: var(--color-green-medium);
+    color: var(--green-600);
     font-weight: 700;
     font-size: 0.875rem;
 }
@@ -117,7 +143,7 @@
 .positionPill {
     padding: 0.25rem 0.75rem;
     background-color: rgba(51, 51, 51, 0.05);
-    border: 2px solid #333333;
+    border: var(--border-arcade-thin);
     border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 700;
@@ -138,15 +164,15 @@
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    background-color: #F1C40F;
-    color: #333333;
+    background-color: var(--team-yellow);
+    color: var(--ink-700);
     padding: 0.125rem 0.5rem;
     border-radius: 0.25rem;
     font-size: 0.625rem;
     font-weight: 900;
     text-transform: uppercase;
     margin-top: 0.25rem;
-    border: 1px solid #333333;
+    border: 1px solid var(--ink-700);
 }
 
 @keyframes zoomIn {
@@ -163,37 +189,37 @@
 
 /* Team Colors for Trophy */
 .redTrophy {
-    background-color: #FF4B4B;
+    background-color: var(--team-red);
     color: white;
 }
 
 .blueTrophy {
-    background-color: #4B7BFF;
+    background-color: var(--team-blue);
     color: white;
 }
 
 .greenTrophy {
-    background-color: #2ECC71;
+    background-color: var(--team-green);
     color: white;
 }
 
 .yellowTrophy {
-    background-color: #F1C40F;
-    color: #333333;
+    background-color: var(--team-yellow);
+    color: var(--ink-700);
 }
 
 .orangeTrophy {
-    background-color: #E67E22;
+    background-color: var(--team-orange);
     color: white;
 }
 
 .purpleTrophy {
-    background-color: #9B59B6;
+    background-color: var(--team-purple);
     color: white;
 }
 
 .drawTrophy {
-    background-color: var(--color-beige);
+    background-color: var(--color-surface);
     color: var(--color-text-dark);
 }
 
@@ -226,7 +252,7 @@
     border-radius: 9999px;
     overflow: hidden;
     display: flex;
-    border: 2px solid #333333;
+    border: var(--border-arcade-thin);
 }
 
 .h2hFill {
@@ -278,13 +304,13 @@
 }
 
 .eloBadgeGain {
-    color: #1B8A2A;
+    color: var(--color-primary-strong);
     background-color: rgba(46, 204, 113, 0.15);
     border: 1.5px solid rgba(46, 204, 113, 0.3);
 }
 
 .eloBadgeLoss {
-    color: #C0392B;
+    color: var(--color-danger);
     background-color: rgba(231, 76, 60, 0.1);
     border: 1.5px solid rgba(231, 76, 60, 0.2);
 }
@@ -298,15 +324,18 @@
 
 .rankBanner {
     width: 100%;
-    background: var(--color-beige);
-    border: 3px solid #333333;
-    border-radius: var(--radius-md);
-    padding: var(--spacing-md);
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-arcade);
+    padding: var(--spacing-lg) var(--spacing-md);
     position: relative;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-sm);
+    /* `stretch` et non `center` : les enfants remplissent la carte au lieu de
+       se tasser au milieu. */
+    align-items: stretch;
+    gap: var(--spacing-md);
     animation: zoomIn 0.4s ease-out;
 }
 
@@ -322,20 +351,24 @@
 
 .rankPromoted {
     background: rgba(46, 204, 113, 0.15);
-    color: #1a8a4a;
-    border-color: #2ECC71;
+    color: var(--color-primary-strong);
+    border-color: var(--team-green);
 }
 
 .rankDemoted {
     background: rgba(255, 75, 75, 0.12);
-    color: #c0392b;
-    border-color: #FF4B4B;
+    color: var(--color-danger);
+    border-color: var(--team-red);
 }
 
+/* La carte prenait toute la largeur, mais son contenu restait groupé au
+   centre : la carte paraissait à moitié vide. Le bloc occupe désormais toute
+   la largeur disponible, l'avatar à gauche, l'information qui s'étale. */
 .rankBannerContent {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
+    width: 100%;
 }
 
 .rankBannerInfo {
@@ -343,6 +376,8 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
+    flex: 1;
+    min-width: 0;
 }
 
 .rankBannerLabel {
@@ -367,11 +402,11 @@
 }
 
 .eloGain {
-    color: #1a8a4a;
+    color: var(--color-primary-strong);
 }
 
 .eloLoss {
-    color: #c0392b;
+    color: var(--color-danger);
 }
 
 @keyframes popIn {
@@ -383,4 +418,113 @@
         opacity: 1;
         transform: scale(1);
     }
+}
+/* ─── Gages de fin de partie ──────────────────────────────────────────────────
+   Lit uniquement des tokens (chantier 5.1).
+   ──────────────────────────────────────────────────────────────────────────── */
+.gageCard {
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-arcade);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.gageHeader {
+    font-size: 0.65rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-dark-soft);
+    margin-bottom: var(--spacing-sm);
+}
+
+.gageList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.gageItem {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-left: var(--spacing-sm);
+    border-left: 4px solid var(--ink-700);
+}
+
+.gageTitle {
+    font-size: 0.88rem;
+    font-weight: 900;
+    color: var(--color-text-dark);
+}
+
+.gageText {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: rgba(0, 0, 0, 0.72);
+}
+
+.gageEmpty {
+    font-size: 0.85rem;
+    color: rgba(0, 0, 0, 0.55);
+}
+
+/* ─── Pack débloqué (chantier 4.7) ────────────────────────────────────────────
+   Traité comme une ACTION, pas comme une information : c'est la seule chose de
+   cette page sur laquelle le joueur peut agir tout de suite. D'où le bouton
+   pleine largeur et l'accent jaune, réservé par la charte à « important ». */
+.packUnlocked {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    text-align: left;
+    font-family: inherit;
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-left-width: 6px;
+    border-left-color: var(--color-accent);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-arcade);
+    cursor: pointer;
+}
+
+.packUnlockedTitle {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-black);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-dark);
+}
+
+.packUnlockedText {
+    font-size: var(--text-sm);
+    color: var(--color-text-dark-soft);
+}
+
+@media (hover: hover) {
+    .packUnlocked:hover {
+        background: var(--color-surface-raised);
+    }
+}
+
+/* ─── Carte de statistiques de fin de match (22/08) ───────────────────────────
+   La bannière du joueur en tête, puis un bloc CRÈME qui porte ses chiffres.
+   Sacha : « juste en dessous de chaque bannière, un rectangle beige où il y a
+   les stats direct dedans ».
+
+   La séparation est volontaire : la bannière est de l'identité, le bloc crème
+   est de la donnée. Mélanger les deux, c'est remettre des chiffres sur une
+   image — le défaut qu'on passe notre temps à corriger. */
+.statBanner {
+    border-width: 4px;
+    margin-bottom: var(--spacing-xs);
+    max-width: 100%;
 }

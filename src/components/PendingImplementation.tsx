@@ -15,7 +15,7 @@ export default function PendingImplementation({
     description = "Cette fonctionnalité est en cours de développement et sera bientôt disponible."
 }: PendingImplementationProps) {
     return (
-        <div className="min-h-screen relative flex flex-col items-center justify-center p-6">
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-lg)' }}>
             <FieldBackground />
 
             <div className={styles.container}>
@@ -51,14 +51,11 @@ export default function PendingImplementation({
 
                 {/* Back Button */}
                 <div className={styles.backButton}>
-                    <Link href="/dashboard">
-                        <div className="btn-secondary">
-                            <div className="btn-secondary-shadow" />
-                            <div className="btn-secondary-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
-                                <ArrowLeftIcon className="w-5 h-5" />
-                                <span>Retour au tableau de bord</span>
-                            </div>
-                        </div>
+                    {/* Le bouton est rendu ici comme un lien : un <button> dans
+                        un <a> est du HTML invalide. Même apparence, bon élément. */}
+                    <Link href="/dashboard" className={styles.backLink}>
+                        <ArrowLeftIcon width={20} height={20} />
+                        <span>Retour au tableau de bord</span>
                     </Link>
                 </div>
 

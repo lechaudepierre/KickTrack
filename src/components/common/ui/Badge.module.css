@@ -1,0 +1,46 @@
+/* ─── Badge — étage 2 ─────────────────────────────────────────────────────────
+   La pastille arrondie, écrite jusqu'ici tantôt en 9999px, tantôt en 999px,
+   tantôt via une variable. Une seule définition désormais.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 3px var(--spacing-sm);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    line-height: 1.4;
+    white-space: nowrap;
+    border: var(--border-arcade-thin);
+    border-radius: var(--radius-full);
+}
+
+.neutral {
+    background: var(--color-surface-sunken);
+    color: var(--color-text-dark);
+}
+
+/* Jaune = premier, important. Réservé. */
+.accent {
+    background: var(--color-accent);
+    color: var(--color-text-on-accent);
+}
+
+.success {
+    background: var(--color-success);
+    color: var(--color-text-primary);
+}
+
+.danger {
+    background: var(--color-danger);
+    color: var(--color-text-primary);
+}
+
+.outline {
+    background: transparent;
+    color: var(--color-text-secondary);
+    border-color: currentColor;
+}

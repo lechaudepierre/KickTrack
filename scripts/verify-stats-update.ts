@@ -24,7 +24,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 async function verifyStatsUpdate() {
-    console.log('🚀 Starting stats update verification...');
+    console.log(' Starting stats update verification...');
 
     // Sign in anonymously
     await signInAnonymously(auth);
@@ -109,7 +109,7 @@ async function verifyStatsUpdate() {
     const userData = userDoc.data();
 
     if (!userData) {
-        console.error('❌ User not found!');
+        console.error('[echec] User not found!');
         return;
     }
 
@@ -117,25 +117,25 @@ async function verifyStatsUpdate() {
     console.log('Updated Stats:', JSON.stringify(stats, null, 2));
 
     // Check lifetime stats
-    if (stats.totalGames !== 11) console.error('❌ Total games incorrect');
-    if (stats.wins !== 6) console.error('❌ Wins incorrect');
-    if (stats.goalsScored !== 21) console.error('❌ Goals scored incorrect');
+    if (stats.totalGames !== 11) console.error('[echec] Total games incorrect');
+    if (stats.wins !== 6) console.error('[echec] Wins incorrect');
+    if (stats.goalsScored !== 21) console.error('[echec] Goals scored incorrect');
 
     // Check daily stats
     if (!stats.history) {
-        console.error('❌ History field missing!');
+        console.error('[echec] History field missing!');
     } else {
         const daily = stats.history[today];
         if (!daily) {
-            console.error(`❌ Daily stats for ${today} missing!`);
+            console.error(`[echec] Daily stats for ${today} missing!`);
         } else {
             console.log(`Daily stats for ${today}:`, daily);
-            if (daily.gamesPlayed !== 1) console.error('❌ Daily games played incorrect');
-            if (daily.wins !== 1) console.error('❌ Daily wins incorrect');
-            if (daily.goalsScored !== 1) console.error('❌ Daily goals scored incorrect');
+            if (daily.gamesPlayed !== 1) console.error('[echec] Daily games played incorrect');
+            if (daily.wins !== 1) console.error('[echec] Daily wins incorrect');
+            if (daily.goalsScored !== 1) console.error('[echec] Daily goals scored incorrect');
 
             if (daily.gamesPlayed === 1 && daily.wins === 1 && daily.goalsScored === 1) {
-                console.log('✅ Daily stats verified successfully!');
+                console.log('[ok] Daily stats verified successfully!');
             }
         }
     }

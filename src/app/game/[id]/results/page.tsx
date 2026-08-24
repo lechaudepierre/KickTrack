@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import PlayerRow from '@/components/common/PlayerRow';
+import { usePlayerProfiles } from '@/lib/firebase/usePlayerProfiles';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getGame, getUserGames, subscribeToGame } from '@/lib/firebase/games';
@@ -14,6 +16,11 @@ import RankAvatar from '@/components/common/RankAvatar';
 import { getRankInfo } from '@/lib/utils/rankUtils';
 import styles from '@/styles/content-page.module.css';
 import resultsStyles from './results-page.module.css';
+import { getMode, isNormalMode } from '@/lib/gamemodes/modes';
+import { evaluate } from '@/lib/gamemodes/engine';
+import CelebrationList from '@/components/game/CelebrationList';
+import { computeCelebrations, pickAnimation } from '@/lib/game/celebrations';
+import { RankProgressBar, Button } from '@/components/common/ui';
 
 interface PlayerStats {
     player: Player;
@@ -22,6 +29,15 @@ interface PlayerStats {
     teamColor: string;
 }
 
+/**
+ * Gages de fin de partie — correctif du chantier 7.3.
+ *
+ * BUG CORRIGÉ : les règles de type `end` n'étaient jamais évaluées. Le moteur
+ * n'était branché que sur les buts, dans GameBoard — or GameBoard disparaît
+ * dès que la partie est terminée, puisque la page redirige vers les résultats.
+ * Les gages de fin sont donc affichés ICI, de façon permanente : on les lit
+ * après le match, au moment où on les exécute.
+ */
 export default function GameResultsPage() {
     const router = useRouter();
     const params = useParams();
@@ -31,6 +47,12 @@ export default function GameResultsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isRematching, setIsRematching] = useState(false);
     const [h2hStats, setH2HStats] = useState<{ team0Wins: number; team1Wins: number } | null>(null);
+    // La même source que le lobby et le match : une seule façon d'afficher un
+    // joueur dans toute l'application.
+    const profils = usePlayerProfiles(
+        game?.teams.flatMap(t => t.players.map(p => p.userId)) ?? [],
+        { withRank: true },
+    );
     const [tournamentUpdated, setTournamentUpdated] = useState(false);
 
     useEffect(() => {
@@ -177,13 +199,24 @@ export default function GameResultsPage() {
 
     // Rank change for current user
     const userEloChange = user?.userId ? game.eloChanges?.[user.userId] : null;
-    const previousRank = userEloChange ? getRankInfo(userEloChange.previousElo) : null;
+    const monPack = (user?.userId ? game.packsEarned?.[user.userId] : 0) ?? 0;
     const displayElo = userEloChange?.newElo ?? user?.stats?.elo ?? 1000;
     const newRank = getRankInfo(displayElo);
-    const RANK_ORDER: Record<string, number> = { argent: 0, or: 1, diamant: 2, master: 3, grandmaster: 4 };
-    const rankScore = (r: ReturnType<typeof getRankInfo>) => RANK_ORDER[r.rank] * 10 + (4 - r.level);
-    const rankChanged = previousRank && rankScore(previousRank) !== rankScore(newRank);
-    const rankPromoted = rankChanged && previousRank && rankScore(newRank) > rankScore(previousRank);
+
+    // Les célébrations viennent du module partagé (lib/game/celebrations).
+    // Cette page dupliquait sa propre table d'ordre des rangs pour détecter
+    // une promotion — exactement le même calcul, écrit deux fois.
+    const celebrations = userEloChange
+        ? computeCelebrations({
+            previousElo: userEloChange.previousElo,
+            newElo: userEloChange.newElo,
+            isRecord: userEloChange.isRecord,
+            isMVP: userEloChange.isMVP,
+            winStreak: userEloChange.winStreak,
+        })
+        : [];
+    const rankChanged = celebrations.some(c => c.kind === 'grade_up' || c.kind === 'grade_down');
+    const rankPromoted = celebrations.some(c => c.kind === 'grade_up');
     // Show rank banner if user is a participant
     const showRankBanner = currentUserTeamIndex !== -1;
 
@@ -213,7 +246,19 @@ export default function GameResultsPage() {
     });
 
     const sortedStats = Object.values(stats).sort((a, b) => b.totalGoals - a.totalGoals);
-    const mvpId = sortedStats[0]?.player.userId;
+
+    // MVP : on lit celui calculé et stocké côté serveur (chantier 1.2).
+    // Cette page recalculait auparavant son PROPRE MVP (« celui qui a marqué le
+    // plus de buts »), 3e définition concurrente dans le projet — elle pouvait
+    // donc désigner un joueur différent de celui qui a réellement reçu le
+    // bonus d'ELO. Le repli sur le meilleur buteur ne sert que pour les
+    // anciennes parties enregistrées avant l'existence de `mvpId`.
+    const mvpId = game.mvpId ?? sortedStats[0]?.player.userId;
+
+    const mode = getMode(game.modeId);
+    const endGages = game.winner !== undefined
+        ? evaluate(mode, { kind: 'end', teams: game.teams, winner: game.winner })
+        : [];
 
     const positionLabels: Record<GoalPosition, string> = {
         attack: 'Attaque',
@@ -239,11 +284,51 @@ export default function GameResultsPage() {
 
             {/* Full-screen Lottie animation overlay */}
             {!isDraw && hasEloChanges && currentUserTeamIndex !== -1 && (
-                <EloChangeDisplay isWinner={currentUserIsWinner} />
+                <EloChangeDisplay isWinner={currentUserIsWinner} override={pickAnimation(celebrations)} />
             )}
 
             <div className={styles.contentWrapper}>
                 <div className={resultsStyles.container}>
+
+                    {/* Pack débloqué — chantier 4.7.
+                        En tête de page, avant les gages et les stats : c'est la
+                        seule chose ici sur laquelle le joueur peut AGIR tout de
+                        suite. Lu sur la partie et non sur la réponse de la
+                        route, donc toujours là après un rafraîchissement. */}
+                    {monPack > 0 && (
+                        <button type="button"
+                            className={resultsStyles.packUnlocked}
+                            onClick={() => router.push('/collection')}
+                        >
+                            <span className={resultsStyles.packUnlockedTitle}>
+                                {monPack > 1 ? `${monPack} packs débloqués` : 'Pack débloqué'}
+                            </span>
+                            <span className={resultsStyles.packUnlockedText}>
+                                Ouvre-le depuis ta collection →
+                            </span>
+                        </button>
+                    )}
+
+                    {/* Gages de fin de partie — chantier 7.3.
+                        Affichés de façon permanente, pas en notification : on les
+                        lit après le match, au moment où on les exécute. */}
+                    {!isNormalMode(game.modeId) && (
+                        <div className={resultsStyles.gageCard}>
+                            <div className={resultsStyles.gageHeader}>Mode {mode.name}</div>
+                            {endGages.length === 0 ? (
+                                <p className={resultsStyles.gageEmpty}>Aucun gage de fin de partie.</p>
+                            ) : (
+                                <ul className={resultsStyles.gageList}>
+                                    {endGages.map(gage => (
+                                        <li key={gage.ruleId} className={resultsStyles.gageItem}>
+                                            <span className={resultsStyles.gageTitle}>{gage.title}</span>
+                                            <span className={resultsStyles.gageText}>{gage.text}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    )}
 
                     {/* Trophy & Winner */}
                     <div className={resultsStyles.trophyContainer}>
@@ -271,12 +356,17 @@ export default function GameResultsPage() {
                         </p>
                     </div>
 
+                    {/* Annonces : montée de grade, record battu, série en cours.
+                        Placées avant la bannière de rang : ce sont les nouvelles,
+                        la bannière n'est que l'état courant. */}
+                    <CelebrationList celebrations={celebrations} />
+
                     {/* Rank banner for current user */}
                     {showRankBanner && (
                         <div className={resultsStyles.rankBanner}>
                             {rankChanged && (
                                 <div className={`${resultsStyles.rankChangeBadge} ${rankPromoted ? resultsStyles.rankPromoted : resultsStyles.rankDemoted}`}>
-                                    {rankPromoted ? '⬆ PROMOTION' : '⬇ RÉGRESSION'}
+                                    {rankPromoted ? 'PROMOTION' : 'RÉGRESSION'}
                                 </div>
                             )}
                             <div className={resultsStyles.rankBannerContent}>
@@ -298,6 +388,13 @@ export default function GameResultsPage() {
                                     )}
                                 </div>
                             </div>
+
+                            {/* Progression vers le grade suivant.
+                                Sa place la plus utile est ICI, pas seulement sur le
+                                profil : c'est juste après une partie qu'on se demande
+                                « il me reste combien ? », et c'est cette réponse qui
+                                fait relancer une partie. */}
+                            <RankProgressBar elo={displayElo} />
                         </div>
                     )}
 
@@ -310,15 +407,13 @@ export default function GameResultsPage() {
                                 <span style={{ color: `var(--team-${game.teams[1].color})` }}>{h2hStats.team1Wins}</span>
                             </div>
                             <div className={resultsStyles.h2hBar}>
-                                <div
-                                    className={resultsStyles.h2hFill}
+                                <div className={resultsStyles.h2hFill}
                                     style={{
                                         width: `${(h2hStats.team0Wins / (h2hStats.team0Wins + h2hStats.team1Wins)) * 100}%`,
                                         backgroundColor: `var(--team-${game.teams[0].color})`
                                     }}
                                 />
-                                <div
-                                    className={resultsStyles.h2hFill}
+                                <div className={resultsStyles.h2hFill}
                                     style={{
                                         width: `${(h2hStats.team1Wins / (h2hStats.team0Wins + h2hStats.team1Wins)) * 100}%`,
                                         backgroundColor: `var(--team-${game.teams[1].color})`
@@ -336,27 +431,30 @@ export default function GameResultsPage() {
 
                             return (
                                 <div key={stat.player.userId} className={resultsStyles.statCard}>
-                                    <div className={resultsStyles.statHeader}>
-                                        <div
-                                            className={resultsStyles.playerAvatar}
-                                            style={{ backgroundColor: `var(--team-${stat.teamColor})`, borderColor: '#333333' }}
-                                        >
-                                            {stat.player.username.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div className={resultsStyles.playerInfo}>
-                                            <div className="flex items-center gap-2">
-                                                <p className={resultsStyles.playerName}>{stat.player.username}</p>
-                                                {stat.player.userId === mvpId && stat.totalGoals > 0 && (
-                                                    <span className={resultsStyles.mvpBadge}>
-                                                        <StarIcon className="w-2 h-2" /> MVP
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <p className={resultsStyles.playerGoals}>
-                                                {stat.totalGoals} {stat.totalGoals > 1 ? 'buts' : 'but'}
-                                            </p>
-                                        </div>
-                                    </div>
+                                    {/* La MÊME carte que le lobby et le match.
+                                        C'est ici qu'on a le plus de temps pour la
+                                        regarder — et le plus de place. */}
+                                    <PlayerRow username={stat.player.username}
+                                        profile={profils[stat.player.userId]}
+                                        className={resultsStyles.statBanner}
+                                        style={{ borderColor: `var(--team-${stat.teamColor})` }}
+                                        trailing={stat.player.userId === mvpId ? (
+                                            /* Pas de condition sur les buts : le MVP peut être un
+                                               défenseur qui n'a pas marqué. */
+                                            <span className={resultsStyles.mvpBadge}>
+                                                <StarIcon width={8} height={8} /> MVP
+                                            </span>
+                                        ) : undefined}
+                                    />
+
+                                    {/* Le bloc crème porte les CHIFFRES, la
+                                        bannière porte l'identité. Séparés
+                                        volontairement : mélanger les deux, c'est
+                                        remettre des chiffres sur une image. */}
+                                    <div className={resultsStyles.statBody}>
+                                    <p className={resultsStyles.playerGoals}>
+                                        {stat.totalGoals} {stat.totalGoals > 1 ? 'buts' : 'but'}
+                                    </p>
 
                                     {stat.totalGoals > 0 && (
                                         <div className={resultsStyles.positionBreakdown}>
@@ -385,6 +483,7 @@ export default function GameResultsPage() {
                                             </div>
                                         </div>
                                     )}
+                                    </div>
                                 </div>
                             );
                         })}
@@ -394,51 +493,27 @@ export default function GameResultsPage() {
                     <div className={resultsStyles.actions}>
                         {game.tournamentId ? (
                             // Tournament match - show return to tournament
-                            <button
-                                onClick={() => router.push(`/tournament/${game.tournamentId}/live`)}
-                                className="btn-primary"
-                                style={{ border: 'none', background: 'none', padding: 0, width: '100%' }}
-                            >
-                                <div className="btn-primary">
-                                    <div className="btn-primary-shadow" />
-                                    <div className="btn-primary-content flex items-center justify-center gap-2">
-                                        <TrophyIcon className="w-5 h-5" />
-                                        <span>Retour au tournoi</span>
-                                    </div>
-                                </div>
-                            </button>
+                            <Button onClick={() => router.push(`/tournament/${game.tournamentId}/live`)} fullWidth>
+                                <TrophyIcon width={20} height={20} />
+                                <span>Retour au tournoi</span>
+                            </Button>
                         ) : user?.userId === game.hostId ? (
-                            <button
-                                onClick={handleRematch}
-                                disabled={isRematching}
-                                className="btn-primary"
-                                style={{ border: 'none', background: 'none', padding: 0, width: '100%' }}
-                            >
-                                <div className="btn-primary">
-                                    <div className="btn-primary-shadow" />
-                                    <div className="btn-primary-content flex items-center justify-center gap-2">
-                                        <ArrowPathIcon className={`w-5 h-5 ${isRematching ? 'animate-spin' : ''}`} />
+                            <Button onClick={handleRematch} disabled={isRematching} fullWidth>
+<ArrowPathIcon width={20} height={20} className={isRematching ? 'spinner-ring' : undefined} />
                                         <span>{isRematching ? 'Lancement...' : 'Rejouer'}</span>
-                                    </div>
-                                </div>
-                            </button>
+</Button>
                         ) : (
-                            <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10 w-full">
-                                <p className="text-sm font-bold opacity-60 uppercase tracking-widest">
+                            <div style={{ textAlign: 'center', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-lg)', width: '100%' }}>
+                                <p style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-bold)', opacity: '0.6', textTransform: 'uppercase' }}>
                                     En attente de l&apos;hôte...
                                 </p>
                             </div>
                         )}
 
-                        <button onClick={() => router.push('/dashboard')} className="btn-secondary" style={{ border: 'none', background: 'none', padding: 0, width: '100%' }}>
-                            <div className="btn-secondary">
-                                <div className="btn-secondary-shadow" />
-                                <div className="btn-secondary-content flex items-center justify-center gap-2" style={{ color: 'white' }}>
-                                    <HomeIcon className="w-5 h-5" />
-                                    <span>Tableau de bord</span>
-                                </div>
-                            </div>
-                        </button>
+                        <Button onClick={() => router.push('/dashboard')} variant="secondary" fullWidth>
+                            <HomeIcon width={20} height={20} />
+                            <span>Tableau de bord</span>
+                        </Button>
                     </div>
                 </div>
             </div>

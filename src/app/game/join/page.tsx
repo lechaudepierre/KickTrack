@@ -6,14 +6,15 @@ import { useAuthStore } from '@/lib/stores/authStore';
 import { getSessionByPinCode, joinGameSession, subscribeToActiveSessions } from '@/lib/firebase/game-sessions';
 import { getTournamentByPinCode, joinTournament } from '@/lib/firebase/tournaments';
 import { formatPinCode, validatePinCode } from '@/lib/utils/code-generator';
+import { getMode, isNormalMode } from '@/lib/gamemodes/modes';
 import { FieldBackground } from '@/components/FieldDecorations';
 import { GameSession } from '@/types';
 import RankAvatar from '@/components/common/RankAvatar';
 import {
-    ArrowLeftIcon,
     MapPinIcon,
 } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
+import { PageHeader, Button } from '@/components/common/ui';
 
 
 function JoinGameContent() {
@@ -171,15 +172,7 @@ function JoinGameContent() {
 
             <div className={styles.contentWrapper}>
                 {/* Header */}
-                <div className={styles.pageHeader}>
-                    <button
-                        onClick={() => router.back()}
-                        className={styles.backButton}
-                    >
-                        <ArrowLeftIcon className="h-6 w-6" />
-                    </button>
-                    <h1 className={styles.pageTitle}>Rejoindre</h1>
-                </div>
+                <PageHeader title="Rejoindre" />
 
 
                 {error && (
@@ -189,12 +182,12 @@ function JoinGameContent() {
                 )}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)' }}>
-                    <div className="text-center">
+                    <div style={{ textAlign: 'center' }}>
                         <p className="text-secondary" style={{ marginBottom: 'var(--spacing-lg)' }}>
                             Entrez le code fourni par l&apos;hote
                         </p>
 
-                        <div className="relative">
+                        <div style={{ position: 'relative' }}>
                             <input
                                 type="text"
                                 value={pinCode}
@@ -209,10 +202,10 @@ function JoinGameContent() {
                                     fontWeight: 700,
                                     letterSpacing: '0.3em',
                                     padding: '1.5rem',
-                                    background: 'var(--color-pitch-medium)',
+                                    background: 'var(--field-light)',
                                     border: '2px solid rgba(255,255,255,0.1)',
                                     borderRadius: 'var(--radius-lg)',
-                                    color: 'var(--color-field-green)',
+                                    color: 'var(--field-dark)',
                                     textTransform: 'uppercase',
                                     outline: 'none'
                                 }}
@@ -220,18 +213,13 @@ function JoinGameContent() {
                         </div>
                     </div>
 
-                    <button
-                        onClick={() => handleJoin()}
-                        disabled={pinCode.length < 7 || isLoading}
-                        style={{ width: '100%' }}
+                    <Button onClick={() => handleJoin()}
+                        disabled={pinCode.length < 7}
+                        isLoading={isLoading}
+                        fullWidth
                     >
-                        <div className="btn-primary">
-                            <div className="btn-primary-shadow" />
-                            <div className="btn-primary-content">
-                                {isLoading ? 'Connexion...' : 'Rejoindre'}
-                            </div>
-                        </div>
-                    </button>
+                        {isLoading ? 'Connexion...' : 'Rejoindre'}
+                    </Button>
                 </div>
 
                 {/* Active sessions list */}
@@ -254,11 +242,10 @@ function JoinGameContent() {
                                 const isJoining = joiningSessionId === session.sessionId;
 
                                 return (
-                                    <div
-                                        key={session.sessionId}
+                                    <div key={session.sessionId}
                                         style={{
-                                            background: 'var(--color-beige)',
-                                            border: '3px solid #333333',
+                                            background: 'var(--color-surface)',
+                                            border: '3px solid var(--ink-700)',
                                             borderRadius: 'var(--radius-lg)',
                                             padding: 'var(--spacing-md)',
                                             boxShadow: '0 4px 0 rgba(0,0,0,0.2)',
@@ -280,14 +267,36 @@ function JoinGameContent() {
                                                 fontWeight: 900,
                                                 padding: '2px 8px',
                                                 borderRadius: '99px',
-                                                border: '2px solid #333',
+                                                border: '2px solid var(--ink-700)',
                                                 background: session.format === '2v2' ? 'rgba(75,123,255,0.12)' : 'rgba(46,204,113,0.12)',
-                                                color: session.format === '2v2' ? '#4B7BFF' : '#2ECC71',
+                                                color: session.format === '2v2' ? 'var(--team-blue)' : 'var(--team-green)',
                                                 textTransform: 'uppercase',
                                             }}>
                                                 {session.format}
                                             </span>
                                         </div>
+
+                                        {/* Mode de jeu — doc 33 / chantier 7.2.
+                                            Rejoindre sans savoir qu'on joue en bibitif serait
+                                            déloyal : le mode doit être lisible AVANT d'accepter.
+                                            Le mode normal n'affiche rien, c'est le défaut. */}
+                                        {!isNormalMode(session.modeId) && (
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.4rem',
+                                                marginBottom: 'var(--spacing-sm)',
+                                                padding: '4px 10px',
+                                                borderRadius: '99px',
+                                                border: '2px solid var(--ink-700)',
+                                                background: 'rgba(241,196,15,0.18)',
+                                                alignSelf: 'flex-start',
+                                            }}>
+                                                <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--color-text-dark)', textTransform: 'uppercase' }}>
+                                                    Mode {getMode(session.modeId).name}
+                                                </span>
+                                            </div>
+                                        )}
 
                                         {/* Players row */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
@@ -301,29 +310,28 @@ function JoinGameContent() {
                                             ))}
                                             {Array.from({ length: session.maxPlayers - session.players.length }).map((_, i) => (
                                                 <div key={`empty-${i}`} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', opacity: 0.3 }}>
-                                                    <div style={{ width: '1.5rem', height: '1.5rem', borderRadius: '50%', border: '2px dashed #333' }} />
+                                                    <div style={{ width: '1.5rem', height: '1.5rem', borderRadius: '50%', border: '2px dashed var(--ink-700)' }} />
                                                     <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-dark)' }}>libre</span>
                                                 </div>
                                             ))}
                                         </div>
 
                                         {/* Join button */}
-                                        <button
-                                            onClick={() => handleJoinBySession(session)}
+                                        <button onClick={() => handleJoinBySession(session)}
                                             disabled={isFull || isAlreadyIn || !!joiningSessionId}
                                             style={{
                                                 width: '100%',
                                                 padding: '0.6rem',
                                                 borderRadius: 'var(--radius-md)',
-                                                border: '3px solid #333',
+                                                border: '3px solid var(--ink-700)',
                                                 fontWeight: 900,
                                                 fontSize: '0.8rem',
                                                 textTransform: 'uppercase',
                                                 letterSpacing: '0.05em',
                                                 cursor: isFull || isAlreadyIn ? 'not-allowed' : 'pointer',
-                                                background: isAlreadyIn ? 'rgba(46,204,113,0.15)' : isFull ? 'rgba(51,51,51,0.08)' : 'var(--color-green-medium)',
-                                                color: isAlreadyIn ? '#2ECC71' : isFull ? 'rgba(51,51,51,0.4)' : 'white',
-                                                boxShadow: isFull || isAlreadyIn ? 'none' : '0 3px 0 #333',
+                                                background: isAlreadyIn ? 'rgba(46,204,113,0.15)' : isFull ? 'rgba(51,51,51,0.08)' : 'var(--green-600)',
+                                                color: isAlreadyIn ? 'var(--team-green)' : isFull ? 'rgba(51,51,51,0.4)' : 'white',
+                                                boxShadow: isFull || isAlreadyIn ? 'none' : '0 3px 0 var(--ink-700)',
                                                 transition: 'all 0.15s ease',
                                             }}
                                         >
@@ -338,12 +346,9 @@ function JoinGameContent() {
 
                 {/* Back link */}
                 <div style={{ marginTop: 'var(--spacing-2xl)', textAlign: 'center' }}>
-                    <button
-                        onClick={() => router.push('/dashboard')}
-                        style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', transition: 'color 0.2s' }}
-                    >
+                    <Button onClick={() => router.push('/dashboard')} variant="ghost" size="sm">
                         Retour au tableau de bord
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

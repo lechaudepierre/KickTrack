@@ -13,8 +13,8 @@
     width: 100%;
     max-width: 480px;
     height: var(--nav-height);
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-bottom: none;
     border-radius: var(--radius-md) var(--radius-md) 0 0;
     display: flex;
@@ -31,9 +31,12 @@
     gap: 4px;
     color: rgba(51, 51, 51, 0.5);
     text-decoration: none;
-    padding: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-xs);
     transition: color var(--transition-fast);
     flex: 1;
+    /* Quatre destinations tiennent dans 480 px : sans ce minimum à zéro, un
+       libellé long empêcherait la case de rétrécir et déséquilibrerait la barre. */
+    min-width: 0;
 }
 
 .navItem:hover,
@@ -46,14 +49,48 @@
     height: 24px;
 }
 
+/* Enveloppe l'icône pour ancrer la pastille dessus, sans toucher à la
+   disposition en colonne de l'onglet. */
+.iconWrap {
+    position: relative;
+    display: inline-flex;
+}
+
+/* Pastille de packs à ouvrir. Le jaune est réservé à « premier / important »
+   dans la charte : un pack qui attend, c'est exactement ça. */
+.badge {
+    position: absolute;
+    top: -5px;
+    right: -8px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: var(--weight-black);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-900);
+    background: var(--color-accent);
+    border: 2px solid var(--color-surface);
+    border-radius: var(--radius-full);
+    pointer-events: none;
+}
+
 .label {
     font-size: 0.625rem;
+    /* Un libellé ne passe jamais à la ligne : la barre a une hauteur fixe. */
+    white-space: nowrap;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
-/* Main center button */
+/* Le bouton d'action, en deuxième case sur quatre (choix de Sacha, 21/08).
+ *
+ * Il tombe donc à 37,5 % de la largeur : à portée de pouce sur un téléphone
+ * tenu à droite, et devant les deux onglets de consultation. */
 .mainButton {
     display: flex;
     align-items: center;
@@ -64,9 +101,11 @@
 .mainButtonInner {
     width: 56px;
     height: 56px;
-    background: var(--color-green-medium);
+    /* Le vert PRINCIPAL, pas un vert de fond. `--green-600` est un ton de
+       surface : sur le fond terrain, le bouton disparaissait presque. */
+    background: var(--color-primary);
     border-radius: var(--radius-full);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -74,23 +113,33 @@
     box-shadow: none;
 }
 
-.mainButtonInner:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+    .mainButtonInner:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-arcade);
+    }
 }
 
+/* À l'appui, le bouton s'enfonce et son ombre disparaît — l'inverse du survol.
+   L'ancienne règle reprenait le MÊME décalage vers le haut que `:hover` : après
+   un tap sur mobile, le bouton semblait rester appuyé. */
 .mainButtonInner:active {
-    transform: translateY(-2px);
-    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
+    transform: translateY(2px);
+    box-shadow: none;
 }
 
 .mainIcon {
     width: 28px;
     height: 28px;
-    color: var(--color-white);
+    color: var(--color-text-primary);
 }
 
+/* Sur la page d'accueil, le bouton central est déjà « à destination ».
+   Il ne s'enfonce PAS : j'avais repris l'enfoncement des onglets, mais un
+   bouton d'action figé en position basse donne l'impression d'être resté
+   appuyé — c'est exactement ce que Sacha a constaté. L'état actif se signale
+   par un vert plus profond et un anneau, pas par un déplacement. */
 .mainButtonActive {
-    background: var(--color-green-dark);
-
+    background: var(--color-primary-strong);
+    box-shadow: 0 0 0 3px rgba(241, 196, 15, 0.4);
 }

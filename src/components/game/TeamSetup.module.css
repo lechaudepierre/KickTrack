@@ -1,28 +1,26 @@
-@reference "../../app/globals.css";
-
 /* Team Colors */
 .red {
-    --team-color: #FF4B4B;
+    --team-color: var(--team-red);
 }
 
 .blue {
-    --team-color: #4B7BFF;
+    --team-color: var(--team-blue);
 }
 
 .green {
-    --team-color: #2ECC71;
+    --team-color: var(--team-green);
 }
 
 .yellow {
-    --team-color: #F1C40F;
+    --team-color: var(--team-yellow);
 }
 
 .orange {
-    --team-color: #E67E22;
+    --team-color: var(--team-orange);
 }
 
 .purple {
-    --team-color: #9B59B6;
+    --team-color: var(--team-purple);
 }
 
 .container {
@@ -35,19 +33,24 @@
     text-align: center;
 }
 
+/* Titre et sous-titre se posent directement sur le fond terrain, pas sur une
+   carte : ils étaient en NOIR sur du vert foncé, donc illisibles. Même
+   traitement que les titres de page — blanc avec contre-ombre franche. */
 .title {
-    font-size: 1.5rem;
-    line-height: 2rem;
-    font-weight: 900;
-    color: var(--color-text-dark);
-    margin-bottom: 0.5rem;
+    font-size: var(--text-2xl);
+    line-height: 1.1;
+    font-weight: var(--weight-black);
+    color: var(--color-text-primary);
+    text-shadow: 0 3px 0 var(--ink-900);
+    margin-bottom: var(--spacing-xs);
     text-transform: uppercase;
+    letter-spacing: -0.02em;
 }
 
 .subtitle {
-    color: var(--color-text-dark);
-    opacity: 0.6;
-    font-weight: 600;
+    color: var(--color-text-secondary);
+    font-weight: var(--weight-medium);
+    font-size: var(--text-sm);
 }
 
 .grid {
@@ -56,12 +59,12 @@
 }
 
 .teamCard {
-    background-color: var(--color-beige);
+    background-color: var(--color-surface);
     border: 4px solid var(--team-color);
     border-radius: 0.75rem;
     padding: 1rem;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 0 #333333;
+    box-shadow: var(--shadow-arcade);
 }
 
 .cardHeader {
@@ -99,7 +102,7 @@
 
 .colorButtonActive {
     transform: scale(1.1);
-    border-color: #333333;
+    border-color: var(--ink-700);
     opacity: 1;
 }
 
@@ -109,42 +112,40 @@
     gap: 0.5rem;
 }
 
+/* PLUS AUCUNE RÈGLE DE FORME ICI.
+ *
+ * La forme d'une ligne de joueur — ratio, fond, contour, arrondi, rembourrage —
+ * appartient à `PlayerBanner`, et à lui seul. Cette classe posait son propre
+ * rembourrage et son propre arrondi : la carte était donc plus courte que la
+ * ligne du classement, alors que c'est censé être le même objet.
+ *
+ * Même défaut, même correction que pour `.listItem` du classement le 21/08. */
 .playerItem {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    background-color: white;
-    border-radius: 0.75rem;
-    border: 3px solid #333333;
-    box-shadow: 0 4px 0 #333333;
+    gap: var(--spacing-sm);
     cursor: pointer;
-    transition: all 0.15s ease;
     user-select: none;
-    overflow: hidden;
+}
+
+/* Le pseudo, le titre et l'ELO forment un bloc, comme au classement. */
+.playerInfo {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 1px;
+}
+
+.playerElo {
+    font-size: 0.68rem;
+    font-weight: var(--weight-bold);
+    font-variant-numeric: tabular-nums;
+    opacity: 0.8;
 }
 
 /* Banner active: transparent bg so image shows through */
-.playerItemBanner {
-    background-color: transparent;
-    position: relative;
-}
 
 /* Same dark scrim as PlayerBanner component */
-.playerItemBanner::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--banner-scrim-color, rgba(0, 0, 0, 0.30));
-    pointer-events: none;
-    z-index: 0;
-    border-radius: inherit;
-}
-
-.playerItemBanner > * {
-    position: relative;
-    z-index: 1;
-}
 
 .playerNameOnBanner {
     color: var(--banner-text-color, inherit) !important;
@@ -154,9 +155,11 @@
     transform: scale(0.98);
 }
 
-.playerItem:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 #333333;
+@media (hover: hover) {
+    .playerItem:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-arcade-lg);
+    }
 }
 
 .playerAvatar {
@@ -184,7 +187,7 @@
     font-size: 0.875rem;
     line-height: 1.25rem;
     font-style: italic;
-    border: 2px dashed rgba(51, 51, 51, 0.2);
+    border: 2px dashed rgba(26, 33, 24, 0.2);
     border-radius: 0.5rem;
 }
 
@@ -198,8 +201,8 @@
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 9999px;
-    background-color: var(--color-beige);
-    border: 2px solid #333333;
+    background-color: var(--color-surface);
+    border: var(--border-arcade-thin);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -213,15 +216,15 @@
 
 .startButtonWrapper {
     width: 100%;
-    margin-top: 1rem;
+    margin-top: var(--spacing-md);
 }
 
 .waitingListContainer {
-    background-color: var(--color-beige);
-    border: 3px solid #333333;
+    background-color: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: 1rem;
     padding: 1.5rem;
-    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-arcade);
     transition: all 0.2s ease;
     margin-bottom: 1.5rem;
 }
@@ -257,9 +260,9 @@
 }
 
 .selected {
-    background-color: #FFF3CD;
-    border-color: #F59E0B;
-    box-shadow: 0 4px 0 #D97706, 0 0 0 3px rgba(245, 158, 11, 0.3);
+    background-color: var(--team-yellow-tint);
+    border-color: var(--color-accent);
+    box-shadow: 0 4px 0 var(--color-warning), 0 0 0 3px rgba(245, 158, 11, 0.3);
     transform: translateY(-2px);
 }
 
@@ -273,10 +276,10 @@
 
 @keyframes pulse {
     0%, 100% {
-        box-shadow: 0 4px 0 #333333;
+        box-shadow: var(--shadow-arcade);
     }
     50% {
-        box-shadow: 0 4px 0 #333333, 0 0 0 4px rgba(245, 158, 11, 0.3);
+        box-shadow: var(--shadow-arcade), 0 0 0 4px rgba(245, 158, 11, 0.3);
     }
 }
 

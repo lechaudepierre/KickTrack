@@ -1,0 +1,50 @@
+/* ─── Onglets du profil ───────────────────────────────────────────────────────
+   Le profil empilait 11 sections de même poids visuel : on faisait défiler
+   sans fin et rien ne ressortait. Les onglets ne suppriment aucune donnée,
+   ils cessent de tout imposer d'un coup.
+   Lit uniquement des tokens (chantier 5.1).
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.tabs {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-lg) 0 var(--spacing-md);
+}
+
+.tab {
+    flex: 1;
+    padding: var(--spacing-sm) var(--spacing-xs);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
+    color: var(--color-text-dark);
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-arcade-sm);
+    cursor: pointer;
+    transition: background var(--transition-fast), transform var(--transition-fast),
+                box-shadow var(--transition-fast);
+}
+
+.tab:hover:not(.active) {
+    background: var(--color-surface-raised);
+}
+
+/* L'onglet actif s'enfonce. Même grammaire que les onglets du classement :
+   un onglet sélectionné est un bouton pressé. */
+.active {
+    background: var(--color-primary);
+    color: var(--color-text-primary);
+    transform: translateY(2px);
+    box-shadow: none;
+}
+
+.tab:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tab { transition: none; }
+}

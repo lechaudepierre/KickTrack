@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { subscribeToGame, addGoal, removeLastGoal, endGame, abandonGame, forfeitGame } from '@/lib/firebase/games';
-import { doc, getDoc } from 'firebase/firestore';
-import { getFirebaseDb } from '@/lib/firebase/config';
 import { Game, GoalPosition, GoalType } from '@/types';
 import { Button } from '@/components/common/ui';
 import GameBoard from '@/components/game/GameBoard';
@@ -26,8 +24,6 @@ export default function GamePage() {
 
     const [game, setGame] = useState<Game | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [playerEloMap, setPlayerEloMap] = useState<Record<string, number>>({});
-    const hasFetchedElos = useRef(false);;
     const [showMenu, setShowMenu] = useState(false);
     const [showTimeLimitModal, setShowTimeLimitModal] = useState(false);
     const [isPortrait, setIsPortrait] = useState(true);
@@ -58,17 +54,6 @@ export default function GamePage() {
             setGame(updatedGame);
             setIsLoading(false);
 
-            // Fetch player elos once when game first loads
-            if (updatedGame && !hasFetchedElos.current) {
-                hasFetchedElos.current = true;
-                const db = getFirebaseDb();
-                const playerIds = updatedGame.teams.flatMap(t => t.players.map(p => p.userId)).filter(id => !id.startsWith('guest_'));
-                Promise.all(playerIds.map(id => getDoc(doc(db, 'users', id)))).then(docs => {
-                    const map: Record<string, number> = {};
-                    docs.forEach(d => { if (d.exists()) map[d.id] = d.data()?.stats?.elo ?? 1000; });
-                    setPlayerEloMap(map);
-                });
-            }
 
             // Check if game is completed
             if (updatedGame?.status === 'completed') {
@@ -182,6 +167,26 @@ export default function GamePage() {
         }
     };
 
+    /**
+     * Fin déclenchée par le CHRONOMÈTRE — chantier 7.10.
+     *
+     * Pas de fenêtre de confirmation : le coup de sifflet a déjà eu lieu, il
+     * n'y a plus rien à confirmer. Et pas de garde anti-égalité non plus —
+     * `outcomeAtZero` ne renvoie « vainqueur » que si les scores diffèrent,
+     * une égalité part en but en or ou en prolongation.
+     */
+    const handleChronoEnd = async () => {
+        if (!game || isEndingGame) return;
+        setIsEndingGame(true);
+        try {
+            await endGame(game.gameId);
+            router.push(`/game/${gameId}/results`);
+        } catch (error) {
+            console.error('[chrono] fin de partie impossible', error);
+            setIsEndingGame(false);
+        }
+    };
+
     const handleTimeLimitReached = async () => {
         if (!game || showTimeLimitModal) return;
         setShowTimeLimitModal(true);
@@ -203,8 +208,8 @@ export default function GamePage() {
     if (!game) {
         return (
             <div className="container-center">
-                <div className="text-center">
-                    <p className="text-secondary mb-4">Partie introuvable</p>
+                <div style={{ textAlign: 'center' }}>
+                    <p className="text-secondary" style={{ marginBottom: 'var(--spacing-md)' }}>Partie introuvable</p>
                     <Button onClick={() => router.push('/dashboard')}>
                         Retour au tableau de bord
                     </Button>
@@ -219,9 +224,8 @@ export default function GamePage() {
                 <FieldBackground />
                 {/* Header */}
                 <div className={`${styles.pageHeader} ${!isPortrait || isPortrait ? gameStyles.landscapeHeader : ''} justify-between`}>
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => {
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+                        <button onClick={() => {
                                 if (user?.userId === game.hostId) {
                                     setShowBackModal(true);
                                 } else {
@@ -230,44 +234,43 @@ export default function GamePage() {
                             }}
                             className={styles.backButton}
                         >
-                            <ArrowLeftIcon className="h-6 w-6" />
+                            <ArrowLeftIcon width={24} height={24} />
                         </button>
-                        <div>
-                            <p className="text-sm font-black uppercase tracking-widest opacity-40">{game.venueName}</p>
+                        {/* Le nom du stade est masqué en paysage : l'en-tête y
+                            chevauche le tableau de score, et c'est
+                            l'information la moins utile pendant un match — on
+                            sait où on joue, on est dessus. */}
+                        <div className={gameStyles.venueName}>
+                            <p style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-black)', textTransform: 'uppercase', opacity: '0.4' }}>{game.venueName}</p>
                         </div>
                     </div>
 
                     {/* Menu - Only for Host */}
                     {user?.userId === game.hostId && (
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowMenu(!showMenu)}
+                        <div style={{ position: 'relative' }}>
+                            <button onClick={() => setShowMenu(!showMenu)}
                                 className={gameStyles.menuButton}
                             >
-                                <EllipsisVerticalIcon className="h-6 w-6" />
+                                <EllipsisVerticalIcon width={24} height={24} />
                             </button>
 
                             {showMenu && (
                                 <>
-                                    <div
-                                        className="fixed inset-0 z-40"
-                                        onClick={() => setShowMenu(false)}
+                                    <div onClick={() => setShowMenu(false)}
                                     />
                                     <div className={gameStyles.dropdownMenu}>
-                                        <button
-                                            onClick={() => { handleRemoveLastGoal(); setShowMenu(false); }}
+                                        <button onClick={() => { handleRemoveLastGoal(); setShowMenu(false); }}
                                             className={gameStyles.menuItem}
                                             disabled={game.goals.length === 0}
                                         >
                                             <span>Annuler le dernier but</span>
-                                            <span className="opacity-40 text-xs font-bold tracking-wider">UNDO</span>
+                                            <span style={{ opacity: '0.4', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-bold)' }}>UNDO</span>
                                         </button>
-                                        <button
-                                            onClick={() => { handleEndGame(); setShowMenu(false); }}
+                                        <button onClick={() => { handleEndGame(); setShowMenu(false); }}
                                             className={gameStyles.menuItem}
                                         >
                                             <span>Terminer la partie</span>
-                                            <span className="opacity-40 text-xs font-bold tracking-wider">FINISH</span>
+                                            <span style={{ opacity: '0.4', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-bold)' }}>FINISH</span>
                                         </button>
                                     </div>
                                 </>
@@ -279,8 +282,8 @@ export default function GamePage() {
                 {error && (
                     <div className="error-box" style={{ marginBottom: 'var(--spacing-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span>{error}</span>
-                        <button onClick={() => setError('')} className="ml-4 opacity-50 hover:opacity-100">
-                            <XMarkIcon className="h-5 w-5" />
+                        <button onClick={() => setError('')}  style={{ marginLeft: 'var(--spacing-md)', opacity: '0.5' }}>
+                            <XMarkIcon width={20} height={20} />
                         </button>
                     </div>
                 )}
@@ -292,42 +295,38 @@ export default function GamePage() {
                             <div className={gameStyles.modalHeader}>
                                 <h3 className={gameStyles.modalTitle}>Terminer la partie</h3>
                                 <button onClick={() => setShowEndModal(false)} className={gameStyles.closeButton}>
-                                    <XMarkIcon className="w-6 h-6" />
+                                    <XMarkIcon width={24} height={24} />
                                 </button>
                             </div>
 
                             <div className={gameStyles.modalBody}>
-                                <button
-                                    onClick={confirmEndGame}
+                                <button onClick={confirmEndGame}
                                     disabled={isEndingGame}
                                     className={`${gameStyles.optionButton} ${gameStyles.confirmButton}`}
-                                    style={{ border: '3px solid var(--color-green-dark)', backgroundColor: 'var(--color-green-medium)', color: 'white', marginBottom: 'var(--spacing-lg)', opacity: isEndingGame ? 0.6 : 1 }}
+                                    style={{ border: '3px solid var(--color-background)', backgroundColor: 'var(--green-600)', color: 'white', marginBottom: 'var(--spacing-lg)', opacity: isEndingGame ? 0.6 : 1 }}
                                 >
                                     <span className={gameStyles.optionTitle}>{isEndingGame ? 'Enregistrement...' : 'Finir le match normalement'}</span>
                                     <span className={gameStyles.optionDesc} style={{ color: 'rgba(255,255,255,0.8)' }}>Valider les scores actuels</span>
                                 </button>
 
-                                <div style={{ color: '#333333', opacity: 0.6, fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase', marginBottom: 'var(--spacing-sm)' }}>Autres options</div>
+                                <div style={{ color: 'var(--ink-700)', opacity: 0.6, fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase', marginBottom: 'var(--spacing-sm)' }}>Autres options</div>
 
-                                <button
-                                    onClick={() => handleForfeit(0)}
+                                <button onClick={() => handleForfeit(0)}
                                     className={`${gameStyles.optionButton} ${gameStyles.forfeitButton}`}
                                 >
                                     <span className={gameStyles.optionTitle}>{getTeamNames(0)} abandonne</span>
                                     <span className={gameStyles.optionDesc}>Défaite par forfait pour votre équipe</span>
                                 </button>
 
-                                <button
-                                    onClick={() => handleForfeit(1)}
+                                <button onClick={() => handleForfeit(1)}
                                     className={`${gameStyles.optionButton} ${gameStyles.forfeitButton}`}
                                 >
                                     <span className={gameStyles.optionTitle}>{getTeamNames(1)} abandonne</span>
                                     <span className={gameStyles.optionDesc}>Victoire par forfait pour votre équipe</span>
                                 </button>
 
-                                <div className="pt-4">
-                                    <button
-                                        onClick={handleCancelGame}
+                                <div style={{ paddingTop: 'var(--spacing-md)' }}>
+                                    <button onClick={handleCancelGame}
                                         className={`${gameStyles.optionButton} ${gameStyles.cancelButton}`}
                                     >
                                         <span className={gameStyles.optionTitle}>Annuler la partie</span>
@@ -346,27 +345,25 @@ export default function GamePage() {
                             <div className={gameStyles.modalHeader}>
                                 <h3 className={gameStyles.modalTitle}>Quitter la partie ?</h3>
                                 <button onClick={() => setShowBackModal(false)} className={gameStyles.closeButton}>
-                                    <XMarkIcon className="w-6 h-6" />
+                                    <XMarkIcon width={24} height={24} />
                                 </button>
                             </div>
 
                             <div className={gameStyles.modalBody}>
-                                <p className="text-dark mb-6 text-center">
+                                <p style={{ marginBottom: 'var(--spacing-lg)', textAlign: 'center' }}>
                                     Êtes-vous sûr de vouloir revenir en arrière ? Cela annulera toute la partie.
                                 </p>
 
-                                <div className="flex flex-col gap-3">
-                                    <button
-                                        onClick={handleCancelGame}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    <button onClick={handleCancelGame}
                                         className={`${gameStyles.optionButton} ${gameStyles.cancelButton}`}
                                     >
                                         <span className={gameStyles.optionTitle}>Oui, annuler la partie</span>
                                     </button>
 
-                                    <button
-                                        onClick={() => setShowBackModal(false)}
+                                    <button onClick={() => setShowBackModal(false)}
                                         className={gameStyles.optionButton}
-                                        style={{ background: 'var(--color-beige)', color: 'var(--color-text-dark)' }}
+                                        style={{ background: 'var(--color-surface)', color: 'var(--color-text-dark)' }}
                                     >
                                         <span className={gameStyles.optionTitle}>Non, continuer</span>
                                     </button>
@@ -384,14 +381,13 @@ export default function GamePage() {
                             </div>
 
                             <div className={gameStyles.modalBody}>
-                                <p className="text-center mb-6" style={{ color: 'var(--color-text-dark)' }}>
+                                <p style={{ color: 'var(--color-text-dark)' }}>
                                     La partie a dépassé la limite de 1 heure et a été annulée.
                                     Aucune statistique ne sera enregistrée.
                                 </p>
-                                <button
-                                    onClick={() => router.push('/dashboard')}
+                                <button onClick={() => router.push('/dashboard')}
                                     className={gameStyles.optionButton}
-                                    style={{ background: '#333333', color: 'white' }}
+                                    style={{ background: 'var(--ink-700)', color: 'white' }}
                                 >
                                     <span className={gameStyles.optionTitle}>Retour au tableau de bord</span>
                                 </button>
@@ -401,14 +397,13 @@ export default function GamePage() {
                 )}
 
                 {/* Game Board */}
-                <GameBoard
-                    game={game}
+                <GameBoard game={game}
                     onAddGoal={handleAddGoal}
                     onTimeLimitReached={handleTimeLimitReached}
                     onEndGame={handleEndGame}
+                    onChronoEnd={handleChronoEnd}
                     isViewer={user?.userId !== game.hostId}
                     isPortrait={isPortrait}
-                    playerEloMap={playerEloMap}
                 />
             </div>
         </div>

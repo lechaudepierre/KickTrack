@@ -1,5 +1,3 @@
-@reference "../../../app/globals.css";
-
 .container {
     min-height: 100vh;
     min-height: 100dvh;
@@ -50,7 +48,7 @@
 }
 
 .titleAccent {
-    color: var(--color-green-medium);
+    color: var(--green-600);
 }
 
 .subtitle {
@@ -62,12 +60,12 @@
 
 /* Form Card */
 .formCard {
-    background: var(--color-beige);
-    border: 4px solid #333333;
+    background: var(--color-surface);
+    border: 4px solid var(--ink-700);
     border-radius: 1rem;
     padding: var(--spacing-xl);
     position: relative;
-    box-shadow: 0 8px 0 #333333;
+    box-shadow: 0 8px 0 var(--ink-700);
 }
 
 .cardAccent {
@@ -109,26 +107,28 @@
     justify-content: center;
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     transition: all 0.2s ease;
     cursor: pointer;
     background: white;
 }
 
 .typeButtonActive {
-    background: var(--color-green-light);
+    background: var(--color-success);
     transform: translateY(-2px);
-    box-shadow: 0 4px 0 #333333;
+    box-shadow: var(--shadow-arcade);
 }
 
 .typeButtonInactive {
     background: white;
-    box-shadow: 0 2px 0 #333333;
+    box-shadow: var(--shadow-arcade-sm);
 }
 
-.typeButtonInactive:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 3px 0 #333333;
+@media (hover: hover) {
+    .typeButtonInactive:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-arcade);
+    }
 }
 
 .typeIcon {
@@ -150,10 +150,10 @@
 .errorBox {
     margin-bottom: var(--spacing-lg);
     padding: var(--spacing-md);
-    background: #fee2e2;
-    border: 3px solid #ef4444;
+    background: var(--tint-danger);
+    border: 3px solid var(--color-danger);
     border-radius: var(--radius-md);
-    color: #b91c1c;
+    color: var(--color-danger);
     font-size: 0.875rem;
     font-weight: 700;
     display: flex;

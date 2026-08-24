@@ -18,11 +18,11 @@
     bottom: 0;
     border: 8px solid;
     border-image: linear-gradient(45deg,
-            #FF6B35,
-            #FFA500,
-            #FFD700,
-            #FFA500,
-            #FF6B35) 1;
+            var(--color-warning),
+            var(--medal-gold-deep),
+            var(--medal-gold),
+            var(--medal-gold-deep),
+            var(--color-warning)) 1;
     animation: pulse 1s ease-in-out infinite alternate;
 }
 

@@ -11,8 +11,8 @@
     align-items: center;
     gap: var(--spacing-sm);
     padding: var(--spacing-md) var(--spacing-lg);
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     color: var(--color-text-dark);
     font-weight: 600;
@@ -21,10 +21,12 @@
     transition: all 0.2s ease;
 }
 
-.button:hover {
-    background: #f5e6c0;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+    .button:hover {
+        background: var(--color-surface-raised);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+    }
 }
 
 .icon {
@@ -58,8 +60,8 @@
     top: calc(100% + var(--spacing-xs));
     left: 0;
     right: 0;
-    background: var(--color-beige);
-    border: 3px solid #333333;
+    background: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: var(--radius-md);
     overflow: hidden;
     z-index: 100;
@@ -101,7 +103,7 @@
 
 .searchInput:focus {
     outline: none;
-    border-color: var(--color-field-green);
+    border-color: var(--field-dark);
     background: white;
 }
 
@@ -138,13 +140,13 @@
 }
 
 .optionActive {
-    background: var(--color-green-medium);
+    background: var(--color-primary);
     color: white;
     font-weight: 600;
 }
 
 .optionActive:hover {
-    background: var(--color-green-light);
+    background: var(--color-success);
 }
 
 .venueName {
@@ -166,14 +168,16 @@
     transition: transform 0.2s ease;
 }
 
-.favoriteButton:hover {
-    transform: scale(1.2);
+@media (hover: hover) {
+    .favoriteButton:hover {
+        transform: scale(1.2);
+    }
 }
 
 .starFilled {
     width: 1.25rem;
     height: 1.25rem;
-    color: #F1C40F;
+    color: var(--team-yellow);
 }
 
 .starEmpty {

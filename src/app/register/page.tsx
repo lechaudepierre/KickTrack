@@ -7,11 +7,14 @@ import { registerComplete } from '@/lib/firebase/auth';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { FieldBackground } from '@/components/FieldDecorations';
 import styles from './page.module.css';
+import GoogleSignInButton from '@/components/common/GoogleSignInButton';
+import { useFeaturePreAuth } from '@/lib/features';
 
 export default function RegisterPage() {
     const router = useRouter();
     const { setUser } = useAuthStore();
 
+    const v2Enabled = useFeaturePreAuth('v2');
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -145,14 +148,15 @@ export default function RegisterPage() {
                             )}
                         </div>
 
-                        <button
-                            type="submit"
+                        <button type="submit"
                             disabled={isLoading}
                             className={styles.submitButton}
                         >
                             {isLoading ? 'CRÉATION...' : 'CRÉER MON COMPTE'}
                         </button>
                     </form>
+
+                    {v2Enabled && <GoogleSignInButton label="S'inscrire avec Google" />}
 
                     <div className={styles.divider}>
                         <p className={styles.dividerText}>

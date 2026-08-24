@@ -1,0 +1,26 @@
+/* Le titre suit la couleur de texte de la bannière, posée par `PlayerBanner`
+   dans `--banner-text-color`. Sans bannière, il retombe sur la couleur de
+   texte foncée du thème clair.
+
+   AUCUNE couleur de rareté ici : un titre n'est qu'un texte, il doit rester
+   lisible sur le fond où il se trouve. Le colorer selon sa rareté le rendrait
+   illisible sur la moitié des bannières. */
+.title {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: var(--weight-bold);
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    color: var(--banner-text-color, var(--color-text-dark));
+    opacity: 0.85;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Ligne de classement : encore plus discret, la place y est comptée. */
+.compact {
+    font-size: 0.62rem;
+    letter-spacing: 0.03em;
+}

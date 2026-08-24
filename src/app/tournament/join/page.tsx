@@ -6,8 +6,8 @@ import { useAuthStore } from '@/lib/stores/authStore';
 import { getTournamentByPinCode, joinTournament } from '@/lib/firebase/tournaments';
 import { formatPinCode, validatePinCode } from '@/lib/utils/code-generator';
 import { FieldBackground } from '@/components/FieldDecorations';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
+import { PageHeader, Button } from '@/components/common/ui';
 
 function JoinTournamentContent() {
     const router = useRouter();
@@ -108,15 +108,7 @@ function JoinTournamentContent() {
 
             <div className={styles.contentWrapper}>
                 {/* Header */}
-                <div className={styles.pageHeader}>
-                    <button
-                        onClick={() => router.back()}
-                        className={styles.backButton}
-                    >
-                        <ArrowLeftIcon className="h-6 w-6" />
-                    </button>
-                    <h1 className={styles.pageTitle}>Rejoindre Tournoi</h1>
-                </div>
+                <PageHeader title="Rejoindre Tournoi" />
 
                 {error && (
                     <div className="error-box" style={{ marginBottom: 'var(--spacing-md)' }}>
@@ -125,12 +117,12 @@ function JoinTournamentContent() {
                 )}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)' }}>
-                    <div className="text-center">
+                    <div style={{ textAlign: 'center' }}>
                         <p className="text-secondary" style={{ marginBottom: 'var(--spacing-lg)' }}>
                             Entrez le code fourni par l&apos;organisateur du tournoi
                         </p>
 
-                        <div className="relative">
+                        <div style={{ position: 'relative' }}>
                             <input
                                 type="text"
                                 value={pinCode}
@@ -145,10 +137,10 @@ function JoinTournamentContent() {
                                     fontWeight: 700,
                                     letterSpacing: '0.3em',
                                     padding: '1.5rem',
-                                    background: 'var(--color-pitch-medium)',
+                                    background: 'var(--field-light)',
                                     border: '2px solid rgba(255,255,255,0.1)',
                                     borderRadius: 'var(--radius-lg)',
-                                    color: 'var(--color-field-green)',
+                                    color: 'var(--field-dark)',
                                     textTransform: 'uppercase',
                                     outline: 'none'
                                 }}
@@ -156,45 +148,21 @@ function JoinTournamentContent() {
                         </div>
                     </div>
 
-                    <button
-                        onClick={() => handleJoin()}
-                        disabled={pinCode.length < 7 || isLoading}
-                        style={{
-                            width: '100%',
-                            padding: 'var(--spacing-md) var(--spacing-lg)',
-                            background: '#FFD700',
-                            border: '3px solid #333333',
-                            borderRadius: 'var(--radius-md)',
-                            color: 'var(--color-text-dark)',
-                            fontWeight: 700,
-                            fontSize: '1rem',
-                            cursor: pinCode.length < 7 || isLoading ? 'not-allowed' : 'pointer',
-                            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                            opacity: pinCode.length < 7 || isLoading ? 0.5 : 1
-                        }}
-                        onMouseEnter={(e) => {
-                            if (pinCode.length >= 7 && !isLoading) {
-                                e.currentTarget.style.transform = 'translateY(-4px)';
-                                e.currentTarget.style.boxShadow = '0 6px 0 rgba(0, 0, 0, 0.3)';
-                            }
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = 'none';
-                        }}
+                    <Button onClick={() => handleJoin()}
+                        disabled={pinCode.length < 7}
+                        isLoading={isLoading}
+                        variant="accent"
+                        fullWidth
                     >
                         {isLoading ? 'Connexion...' : 'Rejoindre le tournoi'}
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Back link */}
                 <div style={{ marginTop: 'var(--spacing-2xl)', textAlign: 'center' }}>
-                    <button
-                        onClick={() => router.push('/dashboard')}
-                        style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', transition: 'color 0.2s' }}
-                    >
+                    <Button onClick={() => router.push('/dashboard')} variant="ghost" size="sm">
                         Retour au tableau de bord
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

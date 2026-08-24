@@ -6,13 +6,13 @@ import { useAuthStore } from '@/lib/stores/authStore';
 import { getAnnouncements } from '@/lib/firebase/announcements';
 import { Announcement } from '@/types';
 import {
-    ArrowLeftIcon,
     ChatBubbleLeftEllipsisIcon,
     WrenchScrewdriverIcon,
     MegaphoneIcon,
     ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
+import { PageHeader } from '@/components/common/ui';
 
 export default function NotificationsPage() {
     const router = useRouter();
@@ -44,12 +44,7 @@ export default function NotificationsPage() {
         <div className={styles.container}>
             <div className={styles.contentWrapper}>
 
-                <div className={styles.header}>
-                    <button onClick={() => router.push('/profile')} className={styles.backButton}>
-                        <ArrowLeftIcon className="w-5 h-5" />
-                    </button>
-                    <h1 className={styles.title}>Nouveautés</h1>
-                </div>
+                <PageHeader title="Nouveautés" back={'/profile'} />
 
                 {isLoading ? (
                     <div className={styles.loadingState}>
@@ -68,8 +63,7 @@ export default function NotificationsPage() {
                         {announcements.map((item) => {
                             const isUnread = !readIds.has(item.announcementId);
                             return (
-                                <button
-                                    key={item.announcementId}
+                                <button key={item.announcementId}
                                     className={`${styles.card} ${isUnread ? styles.cardUnread : ''}`}
                                     onClick={() => router.push(`/notifications/${item.announcementId}`)}
                                 >
@@ -101,8 +95,7 @@ export default function NotificationsPage() {
 
                 <div className={styles.feedbackSection}>
                     <p className={styles.feedbackPrompt}>Une idée ? Un bug à signaler ?</p>
-                    <button
-                        onClick={() => router.push('/feedback')}
+                    <button onClick={() => router.push('/feedback')}
                         className={styles.feedbackButton}
                     >
                         <ChatBubbleLeftEllipsisIcon className={styles.feedbackIcon} />

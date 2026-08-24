@@ -354,83 +354,84 @@ Tu peux maintenant aller voir tes stats.`);
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="w-16 h-16 border-4 border-[var(--color-field-green)] border-t-transparent rounded-full animate-spin" />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="spinner-ring" style={{ width: '64px', height: '64px', borderWidth: '4px', borderTopColor: 'transparent', borderRadius: 'var(--radius-full)' }} />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen relative">
+        <div style={{ position: 'relative' }}>
             <FieldBackground />
 
-            <div className="relative z-10 max-w-md mx-auto p-6">
-                <div className="flex items-center gap-4 mb-8">
-                    <button
-                        onClick={() => router.back()}
-                        className="p-2 text-gray-400 hover:text-white transition-colors"
+            <div style={{ position: 'relative', margin: '0 auto', padding: 'var(--spacing-lg)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-xl)' }}>
+                    <button onClick={() => router.back()}
+                         style={{ padding: 'var(--spacing-sm)', transition: 'color var(--transition-fast), background-color var(--transition-fast)' }}
                     >
-                        <ArrowLeftIcon className="h-6 w-6" />
+                        <ArrowLeftIcon width={24} height={24} />
                     </button>
-                    <h1 className="text-2xl font-bold text-white">Seed Test Data</h1>
+                    <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 'var(--weight-bold)', color: 'var(--color-text-primary)' }}>Seed Test Data</h1>
                 </div>
 
-                <div className="bg-[var(--color-pitch-medium)] rounded-2xl p-6 border border-white/10">
-                    <p className="text-gray-300 mb-6">
+                <div style={{ padding: 'var(--spacing-lg)' }}>
+                    <p style={{ marginBottom: 'var(--spacing-lg)' }}>
                         Cette page crée des parties fictives pour tester l'affichage des statistiques avancées.
                     </p>
 
                     {user && (
-                        <div className="bg-black/20 rounded-xl p-4 mb-4">
-                            <p className="text-white font-semibold">Connecté en tant que: {user.username}</p>
+                        <div style={{ borderRadius: 'var(--radius-lg)', padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)' }}>
+                            <p style={{ color: 'var(--color-text-primary)', fontWeight: 'var(--weight-medium)' }}>Connecté en tant que: {user.username}</p>
                         </div>
                     )}
 
-                    <div className="space-y-4">
-                        <div className="bg-black/20 rounded-xl p-4">
-                            <h3 className="text-white font-semibold mb-2">Données qui seront créées:</h3>
-                            <ul className="text-gray-400 text-sm space-y-1">
+                    <div >
+                        <div style={{ borderRadius: 'var(--radius-lg)', padding: 'var(--spacing-md)' }}>
+                            <h3 style={{ color: 'var(--color-text-primary)', fontWeight: 'var(--weight-medium)', marginBottom: 'var(--spacing-sm)' }}>Données qui seront créées:</h3>
+                            <ul  style={{ fontSize: 'var(--text-sm)' }}>
                                 <li>• 4 adversaires fictifs</li>
                                 <li>• 3 stades de jeu</li>
                                 <li>• 6 parties avec différents résultats:</li>
-                                <li className="ml-4">- 4 victoires, 2 défaites</li>
-                                <li className="ml-4">- 1 perfect game infligé (6-0)</li>
-                                <li className="ml-4">- 1 perfect game concédé (0-6)</li>
-                                <li className="ml-4">- 1 match en 11 points</li>
-                                <li className="ml-4">- 3 matchs vs le même adversaire (MaxFoot)</li>
+                                <li style={{ marginLeft: 'var(--spacing-md)' }}>- 4 victoires, 2 défaites</li>
+                                <li style={{ marginLeft: 'var(--spacing-md)' }}>- 1 perfect game infligé (6-0)</li>
+                                <li style={{ marginLeft: 'var(--spacing-md)' }}>- 1 perfect game concédé (0-6)</li>
+                                <li style={{ marginLeft: 'var(--spacing-md)' }}>- 1 match en 11 points</li>
+                                <li style={{ marginLeft: 'var(--spacing-md)' }}>- 3 matchs vs le même adversaire (MaxFoot)</li>
                             </ul>
                         </div>
 
                         {status !== 'idle' && (
-                            <div className={`rounded-xl p-4 ${status === 'success' ? 'bg-green-500/20 border border-green-500/50' :
-                                status === 'error' ? 'bg-red-500/20 border border-red-500/50' :
-                                    'bg-blue-500/20 border border-blue-500/50'
-                                }`}>
-                                <p className="text-white whitespace-pre-line">{message}</p>
+                            <div style={{
+                                borderRadius: 'var(--radius-lg)',
+                                padding: 'var(--spacing-md)',
+                                border: 'var(--border-arcade-thin)',
+                                background: status === 'success' ? 'var(--tint-success)'
+                                    : status === 'error' ? 'var(--tint-danger)'
+                                        : 'var(--color-surface-sunken)',
+                                color: 'var(--color-text-dark)',
+                            }}>
+                                <p>{message}</p>
                             </div>
                         )}
 
-                        <button
-                            onClick={handleSeed}
+                        <button onClick={handleSeed}
                             disabled={status === 'loading' || !user}
-                            className="w-full py-3 px-4 bg-[var(--color-field-green)] hover:bg-[var(--color-field-light)] text-white font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                             style={{ width: '100%', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: 'var(--spacing-md)', paddingRight: 'var(--spacing-md)', color: 'var(--color-text-primary)', fontWeight: 'var(--weight-bold)', borderRadius: 'var(--radius-lg)', transition: 'color var(--transition-fast), background-color var(--transition-fast)' }}
                         >
                             {status === 'loading' ? 'Création en cours...' : 'Créer les données de test'}
                         </button>
 
                         {status === 'success' && (
-                            <button
-                                onClick={() => router.push('/profile')}
-                                className="w-full py-3 px-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-colors"
+                            <button onClick={() => router.push('/profile')}
+                                 style={{ width: '100%', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: 'var(--spacing-md)', paddingRight: 'var(--spacing-md)', color: 'var(--color-text-primary)', fontWeight: 'var(--weight-bold)', borderRadius: 'var(--radius-lg)', transition: 'color var(--transition-fast), background-color var(--transition-fast)' }}
                             >
                                 Voir mes stats
                             </button>
                         )}
 
-                        <div className="border-t border-white/10 pt-4 mt-4">
-                            <h3 className="text-white font-semibold mb-3">Outils de maintenance</h3>
-                            <button
-                                onClick={async () => {
+                        <div style={{ paddingTop: 'var(--spacing-md)', marginTop: 'var(--spacing-md)' }}>
+                            <h3 style={{ color: 'var(--color-text-primary)', fontWeight: 'var(--weight-medium)', marginBottom: '0.75rem' }}>Outils de maintenance</h3>
+                            <button onClick={async () => {
                                     setStatus('loading');
                                     setMessage('Recalcul des stats des stades...');
                                     try {
@@ -443,7 +444,7 @@ Tu peux maintenant aller voir tes stats.`);
                                     }
                                 }}
                                 disabled={status === 'loading'}
-                                className="w-full py-3 px-4 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-amber-500/50"
+                                 style={{ width: '100%', paddingTop: '0.75rem', paddingBottom: '0.75rem', paddingLeft: 'var(--spacing-md)', paddingRight: 'var(--spacing-md)', fontWeight: 'var(--weight-bold)', borderRadius: 'var(--radius-lg)', transition: 'color var(--transition-fast), background-color var(--transition-fast)' }}
                             >
                                 Recalculer les stats des stades
                             </button>

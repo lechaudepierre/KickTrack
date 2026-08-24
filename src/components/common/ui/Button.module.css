@@ -1,0 +1,146 @@
+/* ─── Button — étage 2 ────────────────────────────────────────────────────────
+   Ne lit QUE des tokens. Aucune couleur, aucun arrondi, aucune ombre en dur.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    font-family: inherit;
+    font-weight: var(--weight-bold);
+    line-height: 1.2;
+    text-align: center;
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-arcade);
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast),
+                background-color var(--transition-fast);
+}
+
+/* Le mouvement caractéristique : l'élément se soulève, l'ombre s'allonge. */
+@media (hover: hover) {
+    .button:hover:not(:disabled) {
+        transform: var(--lift-arcade);
+        box-shadow: var(--shadow-arcade-lifted);
+    }
+}
+
+/* Et s'enfonce au clic : l'ombre disparaît sous l'élément. */
+.button:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: var(--shadow-arcade-sm);
+}
+
+.button:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 3px;
+}
+
+.button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: var(--shadow-arcade);
+}
+
+/* ─── Variantes ──────────────────────────────────────────────────────────── */
+
+.primary {
+    background: var(--color-primary);
+    color: var(--color-text-primary);
+}
+
+.primary:hover:not(:disabled) {
+    background: var(--color-primary-strong);
+}
+
+.secondary {
+    background: var(--color-surface);
+    color: var(--color-text-dark);
+}
+
+.secondary:hover:not(:disabled) {
+    background: var(--color-surface-raised);
+}
+
+.danger {
+    background: var(--color-danger);
+    color: var(--color-text-primary);
+}
+
+/* Le jaune est réservé à « premier / important ». À n'utiliser que pour
+   l'action principale d'un écran, jamais pour un bouton ordinaire. */
+.accent {
+    background: var(--color-accent);
+    color: var(--color-text-on-accent);
+}
+
+.ghost {
+    background: transparent;
+    color: var(--color-text-secondary);
+    border-color: transparent;
+    box-shadow: none;
+}
+
+@media (hover: hover) {
+    .ghost:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--color-text-primary);
+        transform: none;
+        box-shadow: none;
+    }
+}
+
+/* ─── Tailles ──────────────────────────────────────────────────────────────
+   Recalibrées le 21/08 : l'échelle précédente était trop généreuse, tous les
+   boutons paraissaient surdimensionnés sur un écran de téléphone.
+   `md` est la taille de référence — la plupart des boutons doivent la garder. */
+
+.sm {
+    padding: 6px var(--spacing-md);
+    font-size: var(--text-xs);
+    min-height: 32px;
+}
+
+.md {
+    padding: 10px var(--spacing-lg);
+    font-size: var(--text-sm);
+    min-height: 40px;
+}
+
+.lg {
+    padding: var(--spacing-sm) var(--spacing-xl);
+    font-size: var(--text-base);
+    min-height: 48px;
+}
+
+.fullWidth {
+    width: 100%;
+}
+
+/* ─── Chargement ─────────────────────────────────────────────────────────── */
+
+.spinner {
+    width: 1em;
+    height: 1em;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: var(--radius-full);
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .button { transition: none; }
+@media (hover: hover) {
+    .button:hover:not(:disabled) {
+        transform: none;
+    }
+}
+    .spinner { animation-duration: 2s; }
+}

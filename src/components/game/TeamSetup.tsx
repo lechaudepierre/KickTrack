@@ -3,25 +3,23 @@
 import { useState, useEffect } from 'react';
 import { Player, Team, TeamColor } from '@/types';
 import styles from './TeamSetup.module.css';
-import RankAvatar from '@/components/common/RankAvatar';
-import { resolveBannerId, getBannerConfig, getBannerScrimColor } from '@/lib/utils/bannerUtils';
+import PlayerRow from '@/components/common/PlayerRow';
+import { usePlayerProfiles } from '@/lib/firebase/usePlayerProfiles';
+import { Button } from '@/components/common/ui';
 
-/** Returns inline style + extra className for a player card when a banner is active */
-function bannerStyle(username: string): { style?: React.CSSProperties; hasBanner: boolean } {
-    const config = getBannerConfig(resolveBannerId(username));
-    if (!config) return { hasBanner: false };
-    const scrimColor = getBannerScrimColor(config.textColor);
-    return {
-        hasBanner: true,
-        style: {
-            backgroundImage: `url('${config.path}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            ['--banner-text-color' as string]: config.textColor,
-            ['--banner-scrim-color' as string]: scrimColor,
-        },
-    };
-}
+/* ═══════════════════════════════════════════════════════════════════════════
+ * PRÉPARATION DES ÉQUIPES — unifiée sur la ligne du classement (22/08)
+ * ═══════════════════════════════════════════════════════════════════════════
+ * Cet écran passait par `bannerUtils`, l'ANCIEN chemin statique : attribution
+ * de bannière par pseudo, sans catalogue, sans `equipped`. Trois conséquences,
+ * toutes signalées par Sacha :
+ *
+ *   - ce n'était pas sa bannière ÉQUIPÉE mais l'attribution historique ;
+ *   - `<RankAvatar size="sm" />` sans ELO affichait le même grade pour tous ;
+ *   - la carte avait sa propre forme, plus courte que la ligne du classement.
+ *
+ * Tout passe désormais par `PlayerBanner`, comme le classement, le lobby et le
+ * profil. Une ligne de joueur, un seul composant. */
 
 interface TeamSetupProps {
     players: Player[];
@@ -39,6 +37,9 @@ const TEAM_COLORS: { id: TeamColor; label: string; name: string }[] = [
 ];
 
 export default function TeamSetup({ players, format, onStartGame }: TeamSetupProps) {
+    // L'ELO, la bannière équipée et le titre vivent sur le PROFIL des joueurs :
+    // une partie ne stocke que leur identité.
+    const profils = usePlayerProfiles(players.map(p => p.userId), { withRank: true });
     const [waitingPlayers, setWaitingPlayers] = useState<Player[]>([]);
     const [team1Players, setTeam1Players] = useState<Player[]>([]);
     const [team2Players, setTeam2Players] = useState<Player[]>([]);
@@ -137,8 +138,7 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
         const canReceivePlayer = selectedPlayer && selectedSource !== target && !isFull;
 
         return (
-            <div
-                className={`${styles.teamCard} ${styles[color]} ${canReceivePlayer ? styles.dropZoneActive : ''}`}
+            <div className={`${styles.teamCard} ${styles[color]} ${canReceivePlayer ? styles.dropZoneActive : ''}`}
                 onClick={() => handleZoneClick(target)}
             >
                 <div className={styles.cardHeader}>
@@ -147,8 +147,7 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
                     {/* Color Picker */}
                     <div className={styles.colorPicker}>
                         {TEAM_COLORS.map((c) => (
-                            <button
-                                key={c.id}
+                            <button key={c.id}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setColor(c.id);
@@ -162,22 +161,13 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
 
                 <div className={styles.playerList}>
                     {currentPlayers.map((player) => {
-                        const { style, hasBanner } = bannerStyle(player.username);
                         return (
-                        <div
-                            key={player.userId}
-                            className={`${styles.playerItem} ${hasBanner ? styles.playerItemBanner : ''} ${selectedPlayer?.userId === player.userId ? styles.selected : ''}`}
-                            style={style}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handlePlayerClick(player, target);
-                            }}
-                        >
-                            <div className={styles.playerAvatar}>
-                                <RankAvatar size="sm" />
-                            </div>
-                            <span className={`${styles.playerName} ${hasBanner ? styles.playerNameOnBanner : ''}`}>{player.username}</span>
-                        </div>
+                        <PlayerRow key={player.userId}
+                            username={player.username}
+                            profile={profils[player.userId]}
+                            className={selectedPlayer?.userId === player.userId ? styles.selected : ''}
+                            onClick={() => handlePlayerClick(player, target)}
+                        />
                         );
                     })}
                     {currentPlayers.length === 0 && (
@@ -211,29 +201,19 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
             </div>
 
             {/* Waiting List */}
-            <div
-                className={`${styles.waitingListContainer} ${canWaitingReceive ? styles.dropZoneActive : ''}`}
+            <div className={`${styles.waitingListContainer} ${canWaitingReceive ? styles.dropZoneActive : ''}`}
                 onClick={() => handleZoneClick('waiting')}
             >
                 <h3 className={styles.waitingListTitle}>Joueurs à assigner</h3>
                 <div className={styles.waitingPlayerList}>
                     {waitingPlayers.map(player => {
-                        const { style, hasBanner } = bannerStyle(player.username);
                         return (
-                        <div
-                            key={player.userId}
-                            className={`${styles.playerItem} ${hasBanner ? styles.playerItemBanner : ''} ${selectedPlayer?.userId === player.userId ? styles.selected : ''}`}
-                            style={style}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handlePlayerClick(player, 'waiting');
-                            }}
-                        >
-                            <div className={styles.playerAvatar}>
-                                <RankAvatar size="sm" />
-                            </div>
-                            <span className={`${styles.playerName} ${hasBanner ? styles.playerNameOnBanner : ''}`}>{player.username}</span>
-                        </div>
+                        <PlayerRow key={player.userId}
+                            username={player.username}
+                            profile={profils[player.userId]}
+                            className={selectedPlayer?.userId === player.userId ? styles.selected : ''}
+                            onClick={() => handlePlayerClick(player, 'waiting')}
+                        />
                         );
                     })}
                     {waitingPlayers.length === 0 && (
@@ -247,20 +227,11 @@ export default function TeamSetup({ players, format, onStartGame }: TeamSetupPro
                 {renderTeamCard(2, team2Players, team2Color, setTeam2Color)}
             </div>
 
-            <button
-                onClick={handleStart}
-                disabled={isStartDisabled()}
-                className={styles.startButtonWrapper}
-            >
-                <div className={`btn-primary ${isStartDisabled() ? 'opacity-50' : ''}`}>
-                    <div className="btn-primary-shadow" />
-                    <div className="btn-primary-content">
-                        {team1Color === team2Color ? 'Mêmes couleurs impossibles' :
+            <Button onClick={handleStart} disabled={isStartDisabled()} fullWidth>
+{team1Color === team2Color ? 'Mêmes couleurs impossibles' :
                             (team1Players.length === 0 || team2Players.length === 0) ? 'Équipes incomplètes' :
                                 'Lancer le match'}
-                    </div>
-                </div>
-            </button>
+</Button>
         </div>
     );
 }

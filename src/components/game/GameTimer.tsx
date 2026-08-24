@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { formatTime } from '@/lib/utils/code-generator';
+import { toMillis } from '@/lib/game/dates';
 import styles from './GameTimer.module.css';
 
 interface GameTimerProps {
@@ -15,23 +15,10 @@ export default function GameTimer({ startedAt, isRunning = true }: GameTimerProp
     useEffect(() => {
         if (!isRunning || !startedAt) return;
 
-        let start: Date;
-        // Handle Firestore Timestamp (has toDate method)
-        if (startedAt && typeof (startedAt as any).toDate === 'function') {
-            start = (startedAt as any).toDate();
-        } else {
-            start = startedAt instanceof Date ? startedAt : new Date(startedAt);
-        }
+        const debut = toMillis(startedAt);
+        if (debut === 0) return;
 
-        if (isNaN(start.getTime())) {
-            setElapsed(0);
-            return;
-        }
-
-        const updateTimer = () => {
-            const now = new Date();
-            setElapsed(Math.floor((now.getTime() - start.getTime()) / 1000));
-        };
+        const updateTimer = () => setElapsed(Math.floor((Date.now() - debut) / 1000));
 
         updateTimer();
         const interval = setInterval(updateTimer, 1000);

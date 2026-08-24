@@ -12,7 +12,6 @@ import { isAdmin } from '@/lib/utils/adminUtils';
 import { Announcement, AnnouncementType } from '@/types';
 import ReactMarkdown from 'react-markdown';
 import {
-    ArrowLeftIcon,
     WrenchScrewdriverIcon,
     MegaphoneIcon,
     TrashIcon,
@@ -20,6 +19,7 @@ import {
     PencilIcon,
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
+import { PageHeader } from '@/components/common/ui';
 
 export default function AdminAnnouncementsPage() {
     const router = useRouter();
@@ -123,15 +123,10 @@ export default function AdminAnnouncementsPage() {
             <div className={styles.contentWrapper}>
 
                 {/* Header */}
-                <div className={styles.header}>
-                    <button onClick={() => router.push('/profile')} className={styles.backButton}>
-                        <ArrowLeftIcon className="w-5 h-5" />
-                    </button>
-                    <div>
-                        <h1 className={styles.title}>Admin — Annonces</h1>
-                        <p className={styles.subtitle}>Visible uniquement par les créateurs</p>
-                    </div>
-                </div>
+                <PageHeader title="Admin — Annonces"
+                    subtitle="Visible uniquement par les créateurs"
+                    back={'/profile'}
+                />
 
                 {/* Form */}
                 <div className={styles.formCard}>
@@ -139,18 +134,16 @@ export default function AdminAnnouncementsPage() {
 
                     {/* Type */}
                     <div className={styles.typeRow}>
-                        <button
-                            onClick={() => setType('patch')}
+                        <button onClick={() => setType('patch')}
                             className={`${styles.typeBtn} ${type === 'patch' ? styles.typeBtnActive : ''}`}
                         >
-                            <WrenchScrewdriverIcon className="w-4 h-4" />
+                            <WrenchScrewdriverIcon width={16} height={16} />
                             Mise à jour
                         </button>
-                        <button
-                            onClick={() => setType('news')}
+                        <button onClick={() => setType('news')}
                             className={`${styles.typeBtn} ${type === 'news' ? styles.typeBtnActiveNews : ''}`}
                         >
-                            <MegaphoneIcon className="w-4 h-4" />
+                            <MegaphoneIcon width={16} height={16} />
                             Annonce
                         </button>
                     </div>
@@ -183,13 +176,12 @@ export default function AdminAnnouncementsPage() {
                     <div className={styles.fieldGroup}>
                         <div className={styles.editorHeader}>
                             <label className={styles.label}>Contenu (Markdown) *</label>
-                            <button
-                                onClick={() => setShowPreview(p => !p)}
+                            <button onClick={() => setShowPreview(p => !p)}
                                 className={styles.previewToggle}
                             >
                                 {showPreview
-                                    ? <><PencilIcon className="w-4 h-4" /> Éditer</>
-                                    : <><EyeIcon className="w-4 h-4" /> Aperçu</>
+                                    ? <><PencilIcon width={16} height={16} /> Éditer</>
+                                    : <><EyeIcon width={16} height={16} /> Aperçu</>
                                 }
                             </button>
                         </div>
@@ -214,8 +206,7 @@ export default function AdminAnnouncementsPage() {
                     {errorMsg && <p className={styles.error}>{errorMsg}</p>}
                     {successMsg && <p className={styles.success}>{successMsg}</p>}
 
-                    <button
-                        onClick={handlePublish}
+                    <button onClick={handlePublish}
                         disabled={isPublishing || !title.trim() || !content.trim()}
                         className={styles.publishBtn}
                     >
@@ -243,12 +234,11 @@ export default function AdminAnnouncementsPage() {
                                         </div>
                                         <p className={styles.announcementTitle}>{item.title}</p>
                                     </div>
-                                    <button
-                                        onClick={() => handleDelete(item.announcementId)}
+                                    <button onClick={() => handleDelete(item.announcementId)}
                                         className={styles.deleteBtn}
                                         title="Supprimer"
                                     >
-                                        <TrashIcon className="w-4 h-4" />
+                                        <TrashIcon width={16} height={16} />
                                     </button>
                                 </div>
                             ))}

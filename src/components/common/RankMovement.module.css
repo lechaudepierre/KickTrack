@@ -1,0 +1,33 @@
+/* ─── Évolution au classement ─────────────────────────────────────────────────
+   Une flèche et un nombre, à côté du rang. Assez discret pour ne pas
+   concurrencer la position elle-même, assez lisible pour se voir d'un coup.
+   Lit uniquement des tokens.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.movement {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+    font-size: 0.6rem;
+    font-weight: var(--weight-black);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.up { color: var(--color-success); }
+.down { color: var(--color-danger); }
+
+/* Stable et nouveau restent volontairement muets : ce sont les mouvements
+   qui méritent l'attention, pas leur absence. */
+.same,
+.new {
+    color: var(--color-text-dark-soft);
+    opacity: 0.5;
+}
+
+.arrow {
+    width: 9px;
+    height: 9px;
+    flex-shrink: 0;
+}

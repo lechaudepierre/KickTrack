@@ -1,31 +1,30 @@
-@reference "../../../app/globals.css";
-
 .menuButton {
     padding: 0.5rem;
     border-radius: 0.75rem;
-    background-color: var(--color-beige);
-    border: 3px solid #333333;
-    color: #333333;
+    background-color: var(--color-surface);
+    border: var(--border-arcade);
+    color: var(--ink-700);
     transition-property: all;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 150ms;
-    box-shadow: 0 3px 0 #333333;
+    box-shadow: var(--shadow-arcade);
     -webkit-tap-highlight-color: transparent;
 }
 
 @media (hover: hover) {
+@media (hover: hover) {
     .menuButton:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 0 #333333;
+        box-shadow: 0 5px 0 var(--ink-700);
         filter: brightness(0.9);
     }
 }
-
-.menuButton:active {
-    transform: translateY(-1px);
-    box-shadow: 0 3px 0 #333333;
 }
 
+.menuButton:active {
+    transform: translateY(2px);
+    box-shadow: none;
+}
 
 .dropdownMenu {
     position: absolute;
@@ -33,15 +32,14 @@
     top: 100%;
     margin-top: 0.75rem;
     width: 16rem;
-    background-color: var(--color-beige);
-    border: 3px solid #333333;
+    background-color: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: 1rem;
     z-index: 50;
     overflow: hidden;
     box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2);
     animation: slideInDown 0.2s ease-out;
 }
-
 
 .menuItem {
     width: 100%;
@@ -53,7 +51,7 @@
     font-size: 0.875rem;
     line-height: 1.25rem;
     font-weight: 900;
-    color: #333333;
+    color: var(--ink-700);
     transition-property: all;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 150ms;
@@ -81,7 +79,7 @@
 }
 
 .menuItemDanger {
-    color: #FF4B4B;
+    color: var(--team-red);
 }
 
 @media (hover: hover) {
@@ -104,13 +102,12 @@
     animation: fadeIn 0.3s ease-out;
 }
 
-
 .modalContent {
     position: relative;
     width: 100%;
     max-width: 480px;
-    background-color: var(--color-beige);
-    border: 3px solid #333333;
+    background-color: var(--color-surface);
+    border: var(--border-arcade);
     border-radius: 2rem;
     overflow: hidden;
     box-shadow: 0 12px 0 rgba(0, 0, 0, 0.2);
@@ -151,10 +148,9 @@
     }
 }
 
-
 .modalHeader {
     padding: 2rem;
-    border-bottom: 3px solid #333333;
+    border-bottom: var(--border-arcade);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -165,13 +161,17 @@
     font-size: 1.5rem;
     line-height: 2rem;
     font-weight: 900;
-    color: #333333;
+    color: var(--ink-700);
     text-transform: uppercase;
     letter-spacing: -0.025em;
 }
 
-
 .modalBody {
+    /* La fenêtre est CRÈME, la page est sur le fond terrain. Sans couleur
+       explicite, le texte héritait du blanc de la page et devenait invisible.
+       Même défaut que le chronomètre le 22/08 : un bloc clair posé sur une
+       page sombre doit reposer sa couleur de texte. */
+    color: var(--color-text-dark);
     padding: 2rem;
 }
 
@@ -183,7 +183,7 @@
     width: 100%;
     padding: 1.5rem;
     border-radius: 1rem;
-    border: 3px solid #333333;
+    border: var(--border-arcade);
     transition-property: all;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 150ms;
@@ -192,7 +192,7 @@
     flex-direction: column;
     gap: 0.25rem;
     background-color: white;
-    box-shadow: 0 4px 0 #333333;
+    box-shadow: var(--shadow-arcade);
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -202,11 +202,13 @@
 }
 
 @media (hover: hover) {
+@media (hover: hover) {
     .optionButton:hover {
         transform: translateY(-4px);
-        box-shadow: 0 8px 0 #333333;
+        box-shadow: 0 8px 0 var(--ink-700);
         filter: brightness(0.9);
     }
+}
 }
 
 .optionTitle {
@@ -238,15 +240,9 @@
     font-weight: 500;
 }
 
-.hostLandscapeMode .vsLabel {
-    font-size: 0.875rem;
-    font-weight: 900;
-    opacity: 0.3;
-}
-
 .forfeitButton {
-    color: #FF4B4B;
-    background-color: #FFEAEA;
+    color: var(--team-red);
+    background-color: var(--team-red-tint);
 }
 
 @media (hover: hover) {
@@ -257,8 +253,8 @@
 }
 
 .cancelButton {
-    color: #7F8C8D;
-    background-color: #F2F4F4;
+    color: var(--color-text-dark-soft);
+    background-color: var(--team-slate-tint);
 }
 
 @media (hover: hover) {
@@ -281,7 +277,7 @@
 @media (hover: hover) {
     .closeButton:hover {
         background-color: rgba(51, 51, 51, 0.1);
-        color: #333333;
+        color: var(--ink-700);
     }
 }
 
@@ -290,27 +286,35 @@
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;
-    width: 86vh !important;
-    height: 100vw !important;
+    /* `dvh` et non `vh` : sur un téléphone, `vh` compte la hauteur SANS les
+       barres du navigateur, qui sont pourtant bien là. Le conteneur pivoté
+       dépassait donc par le bas — c'est ce que Sacha voyait comme un problème
+       de largeur, puisque tout est tourné à 90°.
+       `dvh` suit la hauteur réellement visible, barres comprises. */
+    width: 100dvh !important;
+    height: 100dvw !important;
     transform: translate(-50%, -50%) rotate(90deg) !important;
     transform-origin: center center !important;
     z-index: 9999 !important;
     overflow: hidden !important;
     padding: 0.5rem !important;
-    background: repeating-linear-gradient(-45deg, #1B5E20, #1B5E20 200px, #2E7D32 200px, #2E7D32 400px) !important;
+    background: var(--field-gradient) !important;
     background-attachment: scroll !important;
-    background-color: #2E7D32 !important;
+    background-color: var(--field-light) !important;
     display: flex !important;
     flex-direction: column !important;
     margin: 0 !important;
     max-width: none !important;
+    /* Écart explicite entre l'en-tête et le tableau de score : les boutons
+       portent une ombre qui dépasse de leur boîte, et venaient mordre dessus. */
+    row-gap: 6px !important;
 }
 
 /* Ensure the whole screen is green in match mode to cover gaps */
 :global(.page-match) {
-    background-color: #2E7D32 !important;
-    background-image: repeating-linear-gradient(-45deg, #1B5E20, #1B5E20 200px, #2E7D32 200px, #2E7D32 400px) !important;
-    min-height: 100vh !important;
+    background-color: var(--field-light) !important;
+    background-image: var(--field-gradient) !important;
+    min-height: 100dvh !important;
 }
 
 :global(.page-match) .pageContainer {
@@ -324,7 +328,6 @@
     top: 0 !important;
     left: 0 !important;
     width: 100vw !important;
-    height: 100vh !important;
     height: 100dvh !important;
     max-width: none !important;
     margin: 0 !important;
@@ -335,27 +338,115 @@
     flex-direction: column !important;
     overflow: hidden !important;
     z-index: 9999 !important;
-    background: repeating-linear-gradient(-45deg, #1B5E20, #1B5E20 200px, #2E7D32 200px, #2E7D32 400px) !important;
+    background: var(--field-gradient) !important;
     background-attachment: scroll !important;
-    background-color: #2E7D32 !important;
+    background-color: var(--field-light) !important;
+    /* Écart explicite entre l'en-tête et le tableau de score : les boutons
+       portent une ombre qui dépasse de leur boîte, et venaient mordre dessus. */
+    row-gap: 6px !important;
 }
 
+/* `.landscapeHeader` ne porte plus rien : tout est dans le bloc à deux
+   sélecteurs plus bas, le seul qui gagne. Conservée parce qu'elle est encore
+   posée par le composant. */
 .landscapeHeader {
-    margin-bottom: 0 !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
     flex-shrink: 0 !important;
-    min-height: 25px !important;
 }
 
-/* Optimize layout for rotated view */
-.forcedLandscape [class*="pageHeader"],
-.nativeLandscape [class*="pageHeader"] {
-    flex-shrink: 0 !important;
+/* Mode ROTATION FORCÉE — téléphone tenu droit, écran pivoté par l'app.
+ *
+ * ⚠️ ON N'Y TOUCHE PAS. Sacha, 22/08 : « tu l'as changé dans le mode par
+ * défaut, ce n'était pas ça que je voulais, remets ce qu'il y avait avant
+ * parce que ça fonctionnait très bien ».
+ *
+ * Le chevauchement d'en-tête ne vaut QUE pour la rotation d'appareil, plus bas. */
+/* `min-height: 25px` alors que les boutons en font 30 : ils débordaient de la
+   bande et se posaient sur le tableau de score. Une bande doit contenir ce
+   qu'elle porte — `fit-content` ne peut pas se tromper. */
+/* ZONE RÉSERVÉE, garantie par un `padding` et non par un voisin.
+ *
+ * J'ai essayé quatre fois de réserver cette bande en la laissant dans le flux :
+ * `min-height`, `fit-content`, `height: 40px`, un `row-gap`. À chaque fois le
+ * tableau de score remontait dessus.
+ *
+ * Un élément frère peut toujours déborder sur un autre — il suffit d'une marge
+ * négative, d'une ombre, d'un `height: 100%` mal placé. Un `padding` sur le
+ * PARENT, lui, est une zone dans laquelle aucun enfant ne peut entrer. C'est
+ * une garantie, pas un arrangement.
+ *
+ * L'en-tête est donc sorti du flux et posé DANS ce padding. */
+.forcedLandscape [class*="pageHeader"] {
+    position: absolute !important;
+    /* Un écart franc avec le bord de l'écran : collés dessus, les boutons
+       paraissent tomber hors du cadre. */
+    top: 8px !important;
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    height: 40px !important;
+    min-height: 0 !important;
+    width: auto !important;
     padding: 0 !important;
-    margin-bottom: 0 !important;
-    width: 100% !important;
-    min-height: 25px !important;
+    margin: 0 !important;
+    z-index: 20 !important;
+    align-items: center !important;
+    pointer-events: none !important;
+}
+
+.forcedLandscape [class*="pageHeader"] button {
+    pointer-events: auto !important;
+}
+
+/* Le contenu du match commence APRÈS la zone réservée. Aucun enfant ne peut
+   remonter dedans, quelle que soit sa hauteur.
+   
+   Les marges latérales décollent le tableau de score du bord de l'écran :
+   en paysage, il touchait le haut. */
+.forcedLandscape [class*="hostLandscapeMode"] {
+    padding-top: 52px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
+
+/* Mode ROTATION D'APPAREIL — l'en-tête CHEVAUCHE le tableau de score.
+ *
+ * DEUX TENTATIVES RATÉES AVANT CELLE-CI. J'avais posé le positionnement absolu
+ * sur `.landscapeHeader`, une classe à UN sélecteur — alors que ce bloc-ci en
+ * a DEUX et est déclaré plus bas. Son `min-height: 25px !important` gagnait, et
+ * la bande gardait sa hauteur.
+ *
+ * Leçon : quand une règle `!important` ne prend pas, ce n'est pas qu'elle est
+ * trop faible — c'est qu'une autre, plus spécifique, dit le contraire.
+ *
+ * Cette bande ne porte qu'une flèche et un menu, et coûtait ~35 px sur un
+ * écran qui en fait 390. Ces pixels reviennent aux boutons de but. */
+.nativeLandscape [class*="pageHeader"] {
+    position: absolute !important;
+    top: env(safe-area-inset-top) !important;
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    width: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    z-index: 20 !important;
+    pointer-events: none !important;
+}
+
+/* En rotation d'appareil, l'en-tête chevauche le tableau de score : il faut
+   donc lui laisser de la marge à gauche et à droite pour que la flèche et le
+   menu ne se posent pas sur un chiffre. En rotation forcée, l'en-tête est dans
+   le flux et cette marge n'a pas lieu d'être. */
+.nativeLandscape [class*="scoreBoard"] {
+    padding-left: 2.6rem !important;
+    padding-right: 2.6rem !important;
+}
+
+.nativeLandscape [class*="pageHeader"] button {
+    pointer-events: auto !important;
+}
+
+.nativeLandscape .venueName {
+    display: none !important;
 }
 
 .forcedLandscape .backButton,
@@ -381,8 +472,8 @@
     position: absolute !important;
     top: 50% !important;
     left: 50% !important;
-    width: 100vh !important;
-    height: 100vw !important;
+    width: 100dvh !important;
+    height: 100dvw !important;
     transform: translate(-50%, -50%) !important;
     background-color: rgba(0, 0, 0, 0.7) !important;
     display: flex !important;
@@ -392,11 +483,13 @@
     padding: 0 !important;
 }
 
+/* `dvh` : avec `vh`, la fenêtre est calculée sur une hauteur qui ignore les
+   barres du navigateur, et se fait couper par le bas. */
 .nativeLandscape .modalOverlay {
     position: fixed !important;
     inset: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
+    width: 100dvw !important;
+    height: 100dvh !important;
     background-color: rgba(0, 0, 0, 0.7) !important;
     display: flex !important;
     align-items: center !important;
@@ -405,19 +498,26 @@
     padding: 0 !important;
 }
 
+/* Le conteneur est PIVOTÉ : sa largeur visible est la HAUTEUR du viewport, et
+   inversement. `max-width: 95vw` mesurait donc la mauvaise dimension.
+   
+   Et surtout : la fenêtre se dimensionne sur SON PARENT, pas sur le viewport.
+   Le parent est déjà pivoté, donc `%` fait le bon calcul quelle que soit
+   l'orientation — et il n'y a plus d'unité à choisir, donc plus d'erreur
+   possible. */
 .forcedLandscape .modalContent {
-    max-width: 95vw !important;
+    max-width: 95% !important;
     width: 800px !important;
-    max-height: 85vw !important;
+    max-height: 90% !important;
     border-radius: 1.5rem !important;
     display: flex !important;
     flex-direction: column !important;
 }
 
 .nativeLandscape .modalContent {
-    max-width: 95vw !important;
+    max-width: 95% !important;
     width: 800px !important;
-    max-height: 85vh !important;
+    max-height: 90% !important;
     border-radius: 1.5rem !important;
     display: flex !important;
     flex-direction: column !important;
@@ -438,7 +538,11 @@
 .nativeLandscape .modalBody {
     padding: 0.5rem !important;
     overflow-y: auto !important;
-    flex: 1 !important;
+    flex: 1 1 auto !important;
+    /* Sans ça, un enfant flex refuse de rétrécir sous sa taille de contenu et
+       déborde en silence : c'est la cause la plus fréquente d'une fenêtre
+       coupée. */
+    min-height: 0 !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important;

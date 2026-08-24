@@ -48,6 +48,6 @@ export const BADGE_CONFIG: Record<BadgeId, BadgeConfig> = {
         id: 'mvp',
         label: 'MVP',
         description: 'Tu es régulièrement le meilleur joueur en jeu.',
-        rule: 'Tu es désigné MVP dans au moins 20% de tes parties. Minimum 20 parties.',
+        rule: 'Tu es désigné MVP dans au moins 30% de tes parties. Minimum 20 parties.',
     },
 };

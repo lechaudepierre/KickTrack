@@ -1,37 +1,117 @@
-/* ─── PlayerBanner ───────────────────────────────────────────────────────────
-   Background-only skin.
+/* ─── PlayerBanner — la ligne d'un joueur ─────────────────────────────────────
+   UN SEUL COMPOSANT POUR TOUTES LES LISTES DE JOUEURS : classement, lancement
+   de partie, liste d'amis, en-tête de profil.
 
-   No banner   → plain wrapper, zero layout change.
-   Banner active →
-     • background image fills the container (cover / crop — no forced ratio)
-     • overflow: hidden clips the image to the card's border-radius
-     • golden border
-     • ::before pseudo-element: very subtle white overlay to soften the image
-     • children render in normal flow — their grid/flex layout is unaffected
-   ──────────────────────────────────────────────────────────────────────────── */
+   ═══════════════════════════════════════════════════════════════════════════
+   LE DÉFAUT QU'IL CORRIGE
+   ═══════════════════════════════════════════════════════════════════════════
+   Le composant n'imposait un `aspect-ratio` QUE lorsqu'une bannière était
+   présente. Conséquence : une ligne avec bannière faisait ~108 px et une ligne
+   sans en faisait 60. Dans une même liste, les hauteurs alternaient selon que
+   le joueur possédait ou non un cosmétique.
 
+   Désormais : **le même ratio pour tout le monde, partout, bannière ou pas.**
+   C'est le ratio du profil (`--banner-aspect-ratio`, 4:1) qui fait référence,
+   puisque c'est là que la bannière s'affiche en entier. Le classement, la
+   liste de lancement de partie et l'en-tête de profil ont donc exactement la
+   même forme, et un joueur qui équipe une bannière ne change que le fond de sa
+   ligne — jamais sa taille.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ATTENTION : cette classe est posée sur LE MÊME élément que celle de la page
+   appelante (`.listItem` du classement, `.playerItem` de la liste de joueurs…).
+   On ne fixe donc NI `display` NI la disposition interne — ce serait entrer en
+   conflit avec la grille ou le flex de l'appelant, et le gagnant dépendrait de
+   l'ordre des feuilles de style. On ne pose que ce qui est propre à la
+   bannière : la hauteur commune, le fond, et le rognage. */
 .wrap {
     position: relative;
-}
+    box-sizing: border-box;
 
-.hasBanner {
+    /* ── LA RÉFÉRENCE, ET ELLE EST ICI, UNE SEULE FOIS ────────────────────
+       Tout ce qui donne sa FORME à une ligne de joueur est défini dans ce
+       bloc, et nulle part ailleurs : ratio, fond, contour, arrondi,
+       rembourrage.
+
+       Auparavant, `.profileHeader` et `.listItem` ajoutaient chacun leur
+       propre rembourrage, leur propre contour et leur propre arrondi
+       par-dessus le composant. Même ratio, mais pas la même boîte — d'où
+       deux rendus différents pour un composant censé être unique.
+
+       Les pages appelantes ne décrivent plus que leur DISPOSITION INTERNE
+       (grille ou flex, colonnes, espacement entre enfants). Jamais la forme.
+       ──────────────────────────────────────────────────────────────────── */
+    aspect-ratio: var(--banner-aspect-ratio);
+    padding: var(--spacing-md);
+    background: var(--color-surface);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
     overflow: hidden;
-    aspect-ratio: 5 / 1;
 }
 
-/* Dark scrim so text pops against the banner image */
-.hasBanner::before {
+/* Avec bannière : seul le fond change. Aucune règle de forme ici.
+ *
+ * BUG CORRIGÉ (21/08) : par défaut, une image de fond est positionnée et
+ * dimensionnée par rapport à la BOÎTE DE REMBOURRAGE, pas à la boîte de
+ * bordure. Comme `.wrap` a 16 px de rembourrage, l'image s'arrêtait 16 px
+ * avant le bord — d'où la bande vide autour, visible surtout à gauche où le
+ * rang se pose par-dessus. `background-origin: border-box` étend la zone de
+ * l'image à toute la boîte. */
+/* DEUX classes volontairement (`.wrap.hasBanner`), pas une.
+ *
+ * BUG CORRIGÉ (21/08) — celui que Sacha a signalé quatre fois.
+ * La page appelante posait `background: var(--tint-primary)` sur sa ligne
+ * « c'est moi ». C'est la forme RACCOURCIE : elle ne change pas seulement la
+ * couleur, elle REMET À ZÉRO toutes les autres propriétés de fond non citées,
+ * dont `background-origin`. Le correctif `border-box` de la veille était donc
+ * annulé sur cette ligne précise, et l'image se repliait dans la boîte de
+ * rembourrage : 16 px de vert pâle apparaissaient tout autour, à gauche
+ * surtout, là où le rang se pose.
+ *
+ * Pourquoi ça n'arrivait que là : c'est la SEULE ligne du classement qui
+ * portait cette classe — sa propre ligne. Le profil ne l'a pas, d'où
+ * « je ne le vois pas dans le profil ».
+ *
+ * Avec deux classes, la règle l'emporte sur toute classe unique de page,
+ * quel que soit l'ordre des feuilles de style — et l'ordre des modules CSS
+ * n'est pas garanti, donc s'en remettre à lui n'était pas une option. */
+.wrap.hasBanner {
+    background-color: transparent;
+    background-origin: border-box;
+}
+
+/* Voile sombre, pour que le texte tienne quelle que soit l'image. */
+.wrap.hasBanner::before {
     content: '';
     position: absolute;
     inset: 0;
     background: var(--banner-scrim-color, rgba(0, 0, 0, 0.30));
     pointer-events: none;
     z-index: 0;
-    border-radius: inherit;
 }
 
-/* Lift children above the pseudo overlay */
-.hasBanner>* {
+/* Le contenu passe au-dessus du voile. */
+.wrap.hasBanner > * {
     position: relative;
     z-index: 1;
+}
+
+/* Au survol, c'est le VOILE qui s'approfondit : sur une ligne à bannière, une
+   couleur de fond ne se verrait pas, l'image la recouvre. */
+@media (hover: hover) {
+    .wrap.hasBanner:hover::before {
+        background: rgba(0, 0, 0, 0.45);
+    }
+}
+
+/* Survol d'une ligne SANS bannière.
+ *
+ * BUG CORRIGÉ (21/08) : j'avais posé `background-color: rgba(...)`, en croyant
+ * superposer un voile. Une couleur de fond ne se superpose pas, elle REMPLACE :
+ * la ligne perdait son crème et devenait quasi transparente, laissant voir le
+ * fond terrain à travers. Il faut une couleur OPAQUE, simplement plus sombre. */
+@media (hover: hover) {
+    .wrap:not(.hasBanner):hover {
+        background: var(--color-surface-sunken);
+    }
 }

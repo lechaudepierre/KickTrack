@@ -1,0 +1,72 @@
+/* ─── Card — étage 2 ──────────────────────────────────────────────────────────
+   Remplace les 59 définitions de « card » faites à la main dans les pages.
+   Ne lit QUE des tokens.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+.card {
+    background: var(--color-surface);
+    color: var(--color-text-dark);
+    border: var(--border-arcade);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-arcade);
+}
+
+/* Sans relief : pour les cartes empilées en liste, où 40 ombres feraient du bruit. */
+.flat {
+    box-shadow: none;
+}
+
+/* Discrète : sur fond terrain, quand la carte n'est pas le sujet. */
+.subtle {
+    background: rgba(0, 0, 0, 0.22);
+    color: var(--color-text-primary);
+    border-color: var(--ink-700);
+}
+
+/* Mise en avant : l'unique carte importante d'un écran. Jaune = important. */
+.highlighted {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-arcade), 0 0 0 3px rgba(241, 196, 15, 0.3);
+}
+
+.interactive {
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    text-align: left;
+    width: 100%;
+    font: inherit;
+}
+
+@media (hover: hover) {
+    .interactive:hover {
+        transform: var(--lift-arcade);
+        box-shadow: var(--shadow-arcade-lifted);
+    }
+}
+
+.interactive:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 3px;
+}
+
+/* ─── Rembourrage ────────────────────────────────────────────────────────── */
+
+.padNone { padding: 0; }
+.padSm { padding: var(--spacing-sm); }
+.padMd { padding: var(--spacing-md); }
+.padLg { padding: var(--spacing-lg); }
+
+/* Une carte qui contient une image pleine largeur ne doit pas la laisser
+   dépasser de ses coins arrondis. */
+.clipped {
+    overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .interactive { transition: none; }
+@media (hover: hover) {
+    .interactive:hover {
+        transform: none;
+    }
+}
+}

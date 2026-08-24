@@ -6,9 +6,9 @@
  * L'ELO et eloHistory ne sont PAS modifiés (calculés à la volée pendant les parties).
  *
  * Usage :
- *   npx ts-node --project tsconfig.scripts.json scripts/recalculate-all-stats.ts
- *   ou (si firebase-admin est dispo) :
- *   npx tsx scripts/recalculate-all-stats.ts
+ * npx ts-node --project tsconfig.scripts.json scripts/recalculate-all-stats.ts
+ * ou (si firebase-admin est dispo) :
+ * npx tsx scripts/recalculate-all-stats.ts
  */
 
 import * as admin from 'firebase-admin';
@@ -19,8 +19,8 @@ import * as fs from 'fs';
 const serviceAccountPath = path.resolve(__dirname, '../serviceAccountKey.json');
 
 if (!fs.existsSync(serviceAccountPath)) {
-    console.error('❌ serviceAccountKey.json introuvable à la racine du projet.');
-    console.error('   Télécharge-le depuis Firebase Console > Project Settings > Service Accounts');
+    console.error('[echec] serviceAccountKey.json introuvable à la racine du projet.');
+    console.error(' Télécharge-le depuis Firebase Console > Project Settings > Service Accounts');
     process.exit(1);
 }
 
@@ -66,14 +66,14 @@ interface GameData {
 // ─── Logic ────────────────────────────────────────────────────────────────────
 
 async function main() {
-    console.log('🔄 Chargement de toutes les parties complétées...');
+    console.log(' Chargement de toutes les parties complétées...');
 
     const gamesSnap = await db
         .collection('games')
         .where('status', '==', 'completed')
         .get();
 
-    console.log(`   ${gamesSnap.size} parties trouvées.`);
+    console.log(` ${gamesSnap.size} parties trouvées.`);
 
     // Accumulate stats per userId
     const statsMap: Record<string, {
@@ -126,8 +126,8 @@ async function main() {
         }
     }
 
-    console.log(`   ${skipped} parties ignorées (guests / pas de winner).`);
-    console.log(`   ${Object.keys(statsMap).length} joueurs à mettre à jour.`);
+    console.log(` ${skipped} parties ignorées (guests / pas de winner).`);
+    console.log(` ${Object.keys(statsMap).length} joueurs à mettre à jour.`);
 
     // Now update each user in Firestore
     const batch = db.batch();
@@ -137,7 +137,7 @@ async function main() {
         const userRef = db.collection('users').doc(userId);
         const userSnap = await userRef.get();
         if (!userSnap.exists) {
-            console.warn(`   ⚠️  User ${userId} introuvable dans Firestore, ignoré.`);
+            console.warn(` ⚠️ User ${userId} introuvable dans Firestore, ignoré.`);
             continue;
         }
 
@@ -161,7 +161,7 @@ async function main() {
         if (count % 400 === 0) {
             // Firestore batch limit is 500 — commit and start a new one
             await batch.commit();
-            console.log(`   ✅ ${count} users mis à jour...`);
+            console.log(` [ok] ${count} users mis à jour...`);
         }
     }
 
@@ -170,10 +170,10 @@ async function main() {
         await batch.commit();
     }
 
-    console.log(`\n✅ Migration terminée. ${count} joueurs mis à jour.`);
+    console.log(`\n[ok] Migration terminée. ${count} joueurs mis à jour.`);
 }
 
 main().catch(err => {
-    console.error('❌ Erreur :', err);
+    console.error('[echec] Erreur :', err);
     process.exit(1);
 });

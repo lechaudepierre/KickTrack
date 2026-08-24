@@ -1,0 +1,674 @@
+<title>Bannières KickTracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@110,600;110,900&family=Chivo:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap">
+
+<style>
+:root {
+  --ground:      #F4ECD6;
+  --surface:     #FFFAEB;
+  --surface-alt: #EBE0C4;
+  --ink:         #17200F;
+  --ink-soft:    #55604A;
+  --ink-faint:   #8C9682;
+  --line:        #17200F;
+  --accent:      #C99400;
+  --accent-soft: #F6E7B0;
+  --danger:      #B23A2B;
+  --field-dark:  #16410F;
+  --field-light: #2A6B24;
+  --shadow:      rgba(23, 32, 15, 0.28);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:      #0D1709;
+    --surface:     #16250F;
+    --surface-alt: #1E3116;
+    --ink:         #F2E9D0;
+    --ink-soft:    #A9B79B;
+    --ink-faint:   #6E7B62;
+    --line:        #050A03;
+    --accent:      #F2C511;
+    --accent-soft: #3A3410;
+    --danger:      #E9705C;
+    --field-dark:  #16410F;
+    --field-light: #2A6B24;
+    --shadow:      rgba(0, 0, 0, 0.55);
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:      #0D1709;
+  --surface:     #16250F;
+  --surface-alt: #1E3116;
+  --ink:         #F2E9D0;
+  --ink-soft:    #A9B79B;
+  --ink-faint:   #6E7B62;
+  --line:        #050A03;
+  --accent:      #F2C511;
+  --accent-soft: #3A3410;
+  --danger:      #E9705C;
+  --field-dark:  #16410F;
+  --field-light: #2A6B24;
+  --shadow:      rgba(0, 0, 0, 0.55);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: 'Chivo', system-ui, -apple-system, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  margin: 0;
+  padding: clamp(1.5rem, 4vw, 4rem) clamp(1rem, 4vw, 2rem) 6rem;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+
+.masthead { display: flex; flex-direction: column; gap: 1rem; }
+
+.eyebrow {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+h1 {
+  font-family: 'Archivo', system-ui, sans-serif;
+  font-weight: 900;
+  font-stretch: 110%;
+  font-size: clamp(2.2rem, 7vw, 3.6rem);
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  margin: 0;
+}
+
+.standfirst {
+  font-size: 1.08rem;
+  color: var(--ink-soft);
+  max-width: 60ch;
+  margin: 0;
+}
+
+/* ── Sections ───────────────────────────────────────────── */
+
+section { display: flex; flex-direction: column; gap: 1.25rem; }
+
+h2 {
+  font-family: 'Archivo', system-ui, sans-serif;
+  font-weight: 900;
+  font-stretch: 110%;
+  font-size: 1.6rem;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  margin: 0;
+  padding-bottom: 0.6rem;
+  border-bottom: 3px solid var(--line);
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+}
+
+h2 .step {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+h3 {
+  font-family: 'Archivo', system-ui, sans-serif;
+  font-weight: 600;
+  font-stretch: 110%;
+  font-size: 1.05rem;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+p { margin: 0; max-width: 66ch; }
+p + p { margin-top: 0.8rem; }
+
+strong { font-weight: 700; }
+
+code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.86em;
+  background: var(--surface-alt);
+  padding: 0.12em 0.4em;
+  border-radius: 3px;
+}
+
+/* ── Arcade card ────────────────────────────────────────── */
+
+.card {
+  background: var(--surface);
+  border: 3px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 4px 0 var(--shadow);
+  padding: 1.4rem;
+}
+
+/* ── Spec table ─────────────────────────────────────────── */
+
+.table-wrap { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+
+th {
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 0 0.9rem 0.5rem 0;
+  border-bottom: 2px solid var(--line);
+  white-space: nowrap;
+}
+
+td {
+  padding: 0.65rem 0.9rem 0.65rem 0;
+  border-bottom: 1px solid var(--surface-alt);
+  vertical-align: top;
+}
+
+tr:last-child td { border-bottom: none; }
+
+td.val {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+td.note { color: var(--ink-soft); font-size: 0.88rem; }
+
+/* ── Diagram ────────────────────────────────────────────── */
+
+figure { margin: 0; display: flex; flex-direction: column; gap: 0.7rem; }
+
+.diagram {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 3px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 4px 0 var(--shadow);
+}
+
+figcaption {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  max-width: 66ch;
+}
+
+.svg-canvas   { fill: var(--field-dark); }
+.svg-stripe   { fill: var(--field-light); }
+.svg-crop     { fill: none; stroke: var(--accent); stroke-width: 5; stroke-dasharray: 18 12; }
+.svg-cut      { fill: var(--danger); opacity: 0.28; }
+.svg-calm     { fill: #000; opacity: 0.34; }
+.svg-guide    { stroke: var(--accent); stroke-width: 3; }
+.svg-label    { font-family: 'JetBrains Mono', monospace; font-size: 21px; font-weight: 700; fill: #FFF6DC; }
+.svg-label-sm { font-family: 'JetBrains Mono', monospace; font-size: 17px; fill: #FFF6DC; opacity: 0.85; }
+.svg-dim      { font-family: 'JetBrains Mono', monospace; font-size: 19px; font-weight: 700; fill: var(--ink); }
+.svg-tick     { stroke: var(--ink); stroke-width: 2.5; }
+
+/* ── Zone legend ────────────────────────────────────────── */
+
+.legend { display: flex; flex-wrap: wrap; gap: 1.2rem; font-size: 0.86rem; }
+.legend-item { display: flex; align-items: center; gap: 0.5rem; }
+.swatch { width: 18px; height: 18px; border: 2px solid var(--line); border-radius: 3px; flex-shrink: 0; }
+
+/* ── Callout ────────────────────────────────────────────── */
+
+.callout {
+  background: var(--accent-soft);
+  border: 3px solid var(--line);
+  border-left-width: 10px;
+  border-radius: 8px;
+  padding: 1.1rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.callout h3 { font-size: 0.98rem; }
+
+/* ── Steps list ─────────────────────────────────────────── */
+
+ol.steps { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 1.1rem; counter-reset: s; }
+
+ol.steps > li {
+  counter-increment: s;
+  display: grid;
+  grid-template-columns: 2.1rem 1fr;
+  gap: 0.9rem;
+  align-items: start;
+}
+
+ol.steps > li::before {
+  content: counter(s);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1.75rem;
+  text-align: center;
+  background: var(--ink);
+  color: var(--ground);
+  border-radius: 5px;
+  height: 1.75rem;
+}
+
+ol.steps .body { display: flex; flex-direction: column; gap: 0.35rem; }
+
+ul.plain { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.4rem; }
+ul.plain li { padding-left: 0.2rem; }
+
+/* ── Grade progression ──────────────────────────────────── */
+
+.grades { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.8rem; }
+
+.grade {
+  border: 3px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 3px 0 var(--shadow);
+}
+
+.grade .chip { height: 52px; }
+.grade .name {
+  background: var(--surface);
+  padding: 0.45rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+.grade .file {
+  background: var(--surface);
+  padding: 0 0.6rem 0.5rem;
+  font-size: 0.68rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--ink-faint);
+  word-break: break-all;
+}
+
+/* ── Checklist ──────────────────────────────────────────── */
+
+ul.check { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.65rem; }
+ul.check li { display: grid; grid-template-columns: 1.5rem 1fr; gap: 0.7rem; align-items: start; }
+ul.check li::before {
+  content: "";
+  width: 1.15rem; height: 1.15rem;
+  border: 3px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  margin-top: 0.2rem;
+}
+
+footer {
+  border-top: 3px solid var(--line);
+  padding-top: 1.2rem;
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+  max-width: 66ch;
+}
+
+a { color: var(--accent); text-decoration-thickness: 2px; text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="eyebrow">KickTracker · spécification d'asset</div>
+    <h1>Bannières</h1>
+    <p class="standfirst">
+      Un seul format, affiché en entier partout. Ce document contient tout ce qu'il faut pour
+      produire les six bannières de récompense dans Affinity Designer — et les pièges que seul
+      le code révèle.
+    </p>
+  </header>
+
+  <!-- ─── Le format ─────────────────────────────────────── -->
+  <section>
+    <h2><span class="step">01</span> Le document Affinity</h2>
+
+    <p>
+      Fichier → Nouveau. Ces réglages ne sont pas indicatifs : le premier recadrage de l'app
+      dépend du ratio exact.
+    </p>
+
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr><th>Réglage</th><th>Valeur</th><th>Pourquoi</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Type</td><td class="val">Web</td>
+            <td class="note">Fixe le DPI et le profil colorimétrique corrects d'office.</td>
+          </tr>
+          <tr>
+            <td>Largeur × Hauteur</td><td class="val">1800 × 400 px</td>
+            <td class="note">Ratio 4,5:1. Le même partout : profil, classement, lancement de partie.</td>
+          </tr>
+          <tr>
+            <td>DPI</td><td class="val">72</td>
+            <td class="note">Écran uniquement. 300 ne ferait que quadrupler le poids.</td>
+          </tr>
+          <tr>
+            <td>Format de couleur</td><td class="val">RVB/8</td>
+            <td class="note">Surtout pas CMJN : les couleurs se délaveraient à l'export.</td>
+          </tr>
+          <tr>
+            <td>Profil colorimétrique</td><td class="val">sRGB IEC61966-2.1</td>
+            <td class="note">Le seul profil que les navigateurs interprètent sans surprise.</td>
+          </tr>
+          <tr>
+            <td>Arrière-plan transparent</td><td class="val">Non</td>
+            <td class="note">La bannière est un fond plein. Une transparence laisserait passer le noir de la carte.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─── La zone calme ─────────────────────────────────── -->
+  <section>
+    <h2><span class="step">02</span> La seule zone à respecter</h2>
+
+    <p>
+      Bonne nouvelle : <strong>l'image est affichée en entier partout</strong> — profil, classement,
+      liste de joueurs, collection. Tous les conteneurs sont au ratio 4,5:1, comme ton fichier.
+      Rien n'est jamais rogné, il n'y a pas de marge à sacrifier.
+    </p>
+
+    <p>
+      Il reste une seule contrainte de composition : dans les listes de joueurs, <strong>le pseudo et
+      le grade s'affichent par-dessus la bannière</strong>. Le tiers gauche doit rester calme.
+    </p>
+
+    <figure>
+      <svg class="diagram" viewBox="-70 -70 1940 540" role="img"
+           aria-label="Canevas 1600 sur 400 pixels affiché en entier. Le tiers gauche, jusqu'à x égale 520, est assombri : c'est là que s'affiche le pseudo du joueur.">
+
+        <rect x="0" y="0" width="1800" height="400" class="svg-canvas"/>
+        <g class="svg-stripe">
+          <rect x="0"    y="0" width="200" height="400"/>
+          <rect x="400"  y="0" width="200" height="400"/>
+          <rect x="800"  y="0" width="200" height="400"/>
+          <rect x="1200" y="0" width="200" height="400"/>
+        </g>
+
+        <rect x="0" y="0" width="520" height="400" class="svg-calm"/>
+        <line x1="520" y1="0" x2="520" y2="400" class="svg-guide" stroke-dasharray="14 10"/>
+
+        <text x="260" y="186" class="svg-label" text-anchor="middle">ZONE CALME</text>
+        <text x="260" y="216" class="svg-label-sm" text-anchor="middle">le pseudo s'affiche ici</text>
+        <text x="260" y="242" class="svg-label-sm" text-anchor="middle">pas de texte, pas de détail fin</text>
+        <text x="1160" y="196" class="svg-label" text-anchor="middle">LIBRE</text>
+        <text x="1160" y="226" class="svg-label-sm" text-anchor="middle">rien n'est rogné</text>
+
+        <line x1="0" y1="-30" x2="1800" y2="-30" class="svg-tick"/>
+        <line x1="0" y1="-38" x2="0" y2="-22" class="svg-tick"/>
+        <line x1="1800" y1="-38" x2="1800" y2="-22" class="svg-tick"/>
+        <text x="900" y="-42" class="svg-dim" text-anchor="middle">1800 px</text>
+
+        <line x1="1850" y1="0" x2="1850" y2="400" class="svg-tick"/>
+        <line x1="1842" y1="0" x2="1858" y2="0" class="svg-tick"/>
+        <line x1="1842" y1="400" x2="1858" y2="400" class="svg-tick"/>
+        <text x="1868" y="206" class="svg-dim">400</text>
+
+        <text x="440" y="440" class="svg-dim">x = 520</text>
+      </svg>
+      <figcaption>
+        Le canevas entier est visible sur tous les écrans. Seule la zone assombrie est recouverte
+        par le pseudo et le grade du joueur.
+      </figcaption>
+    </figure>
+
+    <div class="legend">
+      <span class="legend-item"><span class="swatch" style="background:#3a4a35"></span> Recouvert par le texte — décor uniquement</span>
+      <span class="legend-item"><span class="swatch" style="background:var(--field-light)"></span> Libre</span>
+    </div>
+
+    <div class="callout">
+      <h3>Un seul repère dans Affinity</h3>
+      <p style="font-size:0.95rem">
+        Affichage → Gestionnaire de repères → repère <strong>vertical à 520</strong>.
+        Puis Affichage → Verrouiller les repères.
+      </p>
+    </div>
+
+    <h3>Ce que ça veut dire concrètement</h3>
+    <ul class="plain">
+      <li><strong>Texte, logo, sujet principal</strong> → à droite de x = 520.</li>
+      <li><strong>Décor, dégradé, texture, motif</strong> → partout, y compris à gauche.</li>
+      <li><strong>Bords du canevas</strong> → utilisables. Attention seulement aux coins, arrondis par l'app.</li>
+    </ul>
+  </section>
+
+  <!-- ─── Ce que l'app ajoute ───────────────────────────── -->
+  <section>
+    <h2><span class="step">03</span> Ce que l'app dessine par-dessus</h2>
+
+    <p>
+      Trois choses s'ajoutent à ton image après coup. Les ignorer est la cause la plus fréquente
+      d'une bannière qui rend bien dans Affinity et mal dans l'app.
+    </p>
+
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr><th>Ajout</th><th>Effet</th><th>Conséquence pour toi</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Voile sombre</td>
+            <td class="val">noir 30 %</td>
+            <td class="note">Dans les listes uniquement. Ton image sera <strong>plus sombre</strong> que dans Affinity — évite de partir déjà très foncé.</td>
+          </tr>
+          <tr>
+            <td>Contour</td>
+            <td class="val">3 px noir</td>
+            <td class="note">Un liseré est tracé autour. Inutile d'en dessiner un : il ferait doublon.</td>
+          </tr>
+          <tr>
+            <td>Coins</td>
+            <td class="val">arrondis 12 px</td>
+            <td class="note">Les quatre angles sont rognés. Ne rien y placer de significatif.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <h3>Une info à me donner par bannière</h3>
+      <p style="font-size:0.95rem">
+        Le pseudo s'écrit en <strong>blanc</strong> ou en <strong>noir</strong> selon la bannière — c'est
+        stocké dans le catalogue, pas deviné. Pour chaque fichier, dis-moi lequel des deux contraste
+        le mieux avec ton tiers gauche. En cas de doute : blanc.
+      </p>
+    </div>
+  </section>
+
+  <!-- ─── Export ────────────────────────────────────────── -->
+  <section>
+    <h2><span class="step">04</span> L'export</h2>
+
+    <ol class="steps">
+      <li><div class="body">
+        <h3>Fichier → Exporter</h3>
+        <p>Choisir <code>WebP</code> dans la liste des formats. Pas PNG.</p>
+      </div></li>
+      <li><div class="body">
+        <h3>Qualité 80</h3>
+        <p>Au-delà, le gain visuel est nul et le poids grimpe. En dessous, les dégradés se cassent en bandes.</p>
+      </div></li>
+      <li><div class="body">
+        <h3>Vérifier le poids : moins de 150 Ko</h3>
+        <p>
+          Si ça dépasse, c'est presque toujours une photo ou une texture bruitée. Simplifier
+          plutôt que baisser la qualité.
+        </p>
+      </div></li>
+      <li><div class="body">
+        <h3>Déposer dans <code>public/banners/</code></h3>
+        <p>Le nom du fichier doit correspondre exactement à la table ci-dessous — c'est ce nom qui est déjà enregistré dans la base.</p>
+      </div></li>
+    </ol>
+
+    <div class="callout">
+      <h3>Pourquoi ce n'est pas du PNG</h3>
+      <p style="font-size:0.95rem">
+        Les bannières actuelles sont en PNG et pèsent jusqu'à <strong>5,7 Mo</strong> pour un affichage
+        large de 400 px. En WebP qualité 80, la même image tourne autour de 80 Ko — soit
+        <strong>70 fois moins</strong>, sans différence visible. Sur mobile en 4G, c'est la différence
+        entre une page instantanée et une page qui se charge par morceaux.
+      </p>
+    </div>
+  </section>
+
+  <!-- ─── Les six fichiers ──────────────────────────────── -->
+  <section>
+    <h2><span class="step">05</span> Les six fichiers</h2>
+
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr><th>Fichier</th><th>Attribué à</th><th>Rareté</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="val">pionnier-s0.webp</td><td>tous les joueurs actifs de la saison 0</td><td class="note">Rare</td></tr>
+          <tr><td class="val">grade-argent.webp</td><td>ELO final &lt; 900</td><td class="note">Commun</td></tr>
+          <tr><td class="val">grade-or.webp</td><td>900 – 1049</td><td class="note">Rare</td></tr>
+          <tr><td class="val">grade-diamant.webp</td><td>1050 – 1199</td><td class="note">Épique</td></tr>
+          <tr><td class="val">grade-master.webp</td><td>1200 – 1349</td><td class="note">Épique</td></tr>
+          <tr><td class="val">grade-grandmaster.webp</td><td>≥ 1350</td><td class="note">Légendaire</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Les cinq grades sont une déclinaison, pas cinq designs</h3>
+    <p>
+      On doit lire la progression d'un coup d'œil. Même composition, même placement, même
+      typographie s'il y en a — seuls la matière et la couleur montent en intensité.
+    </p>
+
+    <div class="grades">
+      <div class="grade">
+        <div class="chip" style="background:linear-gradient(135deg,#9AA5AD,#C8D2D8)"></div>
+        <div class="name">Argent</div>
+        <div class="file">mat, sobre</div>
+      </div>
+      <div class="grade">
+        <div class="chip" style="background:linear-gradient(135deg,#B8860B,#F2C511)"></div>
+        <div class="name">Or</div>
+        <div class="file">chaud, brillant</div>
+      </div>
+      <div class="grade">
+        <div class="chip" style="background:linear-gradient(135deg,#2E86AB,#7FE3F0)"></div>
+        <div class="name">Diamant</div>
+        <div class="file">froid, facetté</div>
+      </div>
+      <div class="grade">
+        <div class="chip" style="background:linear-gradient(135deg,#6B2FA0,#C77DFF)"></div>
+        <div class="name">Master</div>
+        <div class="file">profond, dense</div>
+      </div>
+      <div class="grade">
+        <div class="chip" style="background:linear-gradient(135deg,#8B1E3F,#FF4B4B,#F2C511)"></div>
+        <div class="name">Grand Master</div>
+        <div class="file">le seul à déborder</div>
+      </div>
+    </div>
+    <figcaption>
+      Suggestion de progression — à toi de trancher. Le principe qui compte : les quatre premiers
+      restent dans la même grammaire, le dernier casse la règle. C'est ce qui en fait un objectif.
+    </figcaption>
+
+    <div class="callout">
+      <h3>Réutilise les icônes de grade existantes</h3>
+      <p style="font-size:0.95rem">
+        <code>public/icons/ranks/</code> contient déjà les quinze badges affichés dans l'app.
+        Les intégrer comme élément commun raccroche visuellement les bannières au reste — et
+        t'épargne d'inventer un langage de plus.
+      </p>
+    </div>
+  </section>
+
+  <!-- ─── Ordre de production ───────────────────────────── -->
+  <section>
+    <h2><span class="step">06</span> Par quoi commencer</h2>
+
+    <p>
+      Le catalogue vit en base de données : ajouter une bannière ne demande
+      <strong>aucun redéploiement</strong>. Tu n'as donc aucune raison de tout produire d'un coup.
+    </p>
+
+    <ul class="plain">
+      <li><strong>D'abord une seule</strong> — n'importe laquelle. Elle sert à valider le format de bout en bout : zone sûre, voile, poids, lisibilité du pseudo.</li>
+      <li><strong>Puis Pionnier</strong>, celle que tout le monde recevra. C'est celle qui sera vue le plus.</li>
+      <li><strong>Puis les cinq grades</strong>, d'un bloc, pour garder la déclinaison cohérente.</li>
+    </ul>
+
+    <p>
+      Trois bannières soignées valent mieux que huit bâclées. Les manquantes s'affichent
+      proprement en « visuel à venir » — rien ne casse.
+    </p>
+  </section>
+
+  <!-- ─── Checklist ─────────────────────────────────────── -->
+  <section>
+    <h2><span class="step">07</span> Avant de me l'envoyer</h2>
+
+    <div class="card">
+      <ul class="check">
+        <li>Document en <strong>1800 × 400 px</strong>, RVB/8, sRGB</li>
+        <li>Tiers gauche (avant <strong>x = 520</strong>) sans détail fin ni texte</li>
+        <li>Testé avec un <strong>voile noir 30 %</strong> par-dessus — encore lisible ?</li>
+        <li>Exporté en <strong>WebP qualité 80</strong>, sous <strong>150 Ko</strong></li>
+        <li>Nommé exactement comme dans la table de l'étape 05</li>
+        <li>Couleur du pseudo décidée : <strong>blanc ou noir</strong></li>
+        <li>Déposé dans <code>public/banners/</code></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    Le ratio unique est défini une seule fois, dans <code>src/styles/variables.css</code>
+    (<code>--banner-aspect-ratio</code>). Le reste du code correspondant vit dans
+    <code>src/lib/utils/bannerUtils.ts</code> et
+    <code>scripts/seed-catalog.mjs</code> (noms de fichiers et raretés). Si une valeur de ce document
+    change, ces deux fichiers changent avec.
+  </footer>
+
+</div>

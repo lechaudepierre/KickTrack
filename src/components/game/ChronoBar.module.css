@@ -1,0 +1,235 @@
+/* Chronomètre des modes au temps.
+ *
+ * ATTENTION AUX COULEURS : ce bloc est posé sur le tableau de score, qui est
+ * CRÈME, pas sur le fond terrain. La première version utilisait
+ * `--color-text-primary` (blanc) et `rgba(255,255,255,…)` : le chrono était
+ * quasi illisible et la mention de classement invisible. Ici, tout se lit sur
+ * fond clair. */
+
+.wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    /* Assez large pour « 06:00 » à la grande taille, sans quoi la colonne
+       centrale comprime le chrono ou le casse en deux lignes. */
+    min-width: 5.5rem;
+}
+
+/* C'est un MODE CHRONO : le chronomètre est l'information principale de
+   l'écran, pas une décoration à côté du score. */
+.time {
+    font-size: 2.2rem;
+    font-weight: var(--weight-black);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+    color: var(--color-text-dark);
+    line-height: 1;
+    transition: color var(--transition-fast);
+}
+
+/* Les trente dernières secondes : ça doit se voir sans lire les chiffres. */
+.critical {
+    color: var(--color-danger);
+    animation: pulsation 1s ease-in-out infinite;
+}
+
+/* Le but en or n'affiche pas de temps : il ne veut plus rien dire. */
+.golden {
+    font-size: 1.05rem;
+    color: var(--medal-gold-text);
+    animation: pulsation 1.4s ease-in-out infinite;
+}
+
+.paused {
+    opacity: 0.4;
+}
+
+/* Emplacement du bonus : hauteur FIXE et débordement rogné.
+ *
+ * Toujours présent, même vide : sinon le chronomètre sauterait d'une ligne à
+ * chaque but. Et `overflow: hidden` garantit que l'animation ne sort JAMAIS du
+ * tableau de score — la version précédente le posait en absolu au-dessus du
+ * bloc et débordait par-dessus le reste de l'écran. */
+.bonusSlot {
+    display: block;
+    width: 100%;
+    height: 1.05rem;
+    overflow: hidden;
+    position: relative;
+    pointer-events: none;
+}
+
+.bonus {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    font-size: 0.9rem;
+    font-weight: var(--weight-black);
+    line-height: 1.05rem;
+    color: var(--color-primary);
+    white-space: nowrap;
+    animation: montee 1.5s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+
+.tag {
+    font-size: 0.6rem;
+    font-weight: var(--weight-black);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--medal-gold-text);
+    white-space: nowrap;
+}
+
+.unranked {
+    font-size: 0.55rem;
+    font-weight: var(--weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-dark-soft);
+    white-space: nowrap;
+}
+
+.pause {
+    margin-top: 4px;
+    padding: 3px var(--spacing-sm);
+    font-family: inherit;
+    font-size: 0.6rem;
+    font-weight: var(--weight-black);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-dark);
+    background: var(--color-surface-sunken);
+    border: var(--border-arcade-thin);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+}
+
+@media (hover: hover) {
+    .pause:hover {
+        background: var(--color-surface-raised);
+    }
+}
+
+@keyframes pulsation {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.45; }
+}
+
+/* Le bonus monte à l'intérieur de son emplacement, puis s'efface.
+   Les déplacements restent sous la hauteur du slot : rien ne dépasse. */
+@keyframes montee {
+    0%   { opacity: 0; transform: translateY(100%); }
+    22%  { opacity: 1; transform: translateY(0); }
+    70%  { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-100%); }
+}
+
+/* Une pulsation qui clignote sans arrêt est pénible pour qui a demandé moins
+   de mouvement — la couleur suffit à alerter. */
+@media (prefers-reduced-motion: reduce) {
+    .critical,
+    .golden,
+    .bonus {
+        animation: none;
+    }
+
+    .bonus { opacity: 1; transform: none; }
+}
+
+/* ─── Écran BAS (paysage sur téléphone) ──────────────────────────────────────
+   Détecté par la HAUTEUR disponible, pas par une classe : ce composant est
+   utilisé dans deux modes paysage différents, et une règle qui dépend de la
+   hauteur réelle vaut pour les deux — et pour tous les téléphones.
+
+   « Pause » passe À DROITE du chrono, donc juste à côté de « Finir le match »
+   (demande de Sacha, 22/08). Empilé, il imposait à lui seul une ligne de plus
+   au tableau de score. */
+/* ═══════════════════════════════════════════════════════════════════════════
+   PAS DE MEDIA QUERY ICI, ET C'EST LE POINT IMPORTANT
+   ═══════════════════════════════════════════════════════════════════════════
+   J'avais enveloppé ces règles dans `@media (max-height: 500px)`, en pensant
+   détecter le paysage par la hauteur disponible.
+
+   Ça ne marche PAS en rotation forcée : le téléphone est tenu DROIT, la fenêtre
+   fait donc 844 px de haut. Seul le CONTENU est pivoté à 90°. Une media query
+   mesure la fenêtre réelle, jamais un conteneur transformé — la règle ne
+   s'appliquait donc jamais dans ce mode, et Sacha voyait « hors classement » et
+   le bouton Pause revenir à chaque essai.
+
+   Ce composant ne sert QUE dans l'écran de match, qui est toujours en paysage.
+   Ces règles valent donc toujours. Pas de condition, pas de piège.
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* `display: contents` fait DISPARAÎTRE cette boîte de la mise en page : ses
+   enfants deviennent des éléments de la grille du tableau de score.
+   C'est ce qui permet de placer « Pause » à côté de « Finir le match »,
+   alors qu'ils vivent dans deux composants différents.
+   Sans ça, il aurait fallu remonter le bouton dans le parent — beaucoup de
+   plomberie pour un placement. */
+.wrap {
+    display: contents;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DISPOSITION DONNÉE PAR SACHA, DANS LE REPÈRE DU CODE
+   ═══════════════════════════════════════════════════════════════════════════
+   DEUX LIGNES, TROIS COLONNES — c'est la grille telle qu'elle s'affiche :
+
+              colonne 1        colonne 2   colonne 3
+       ligne 1  TIMER            PAUSE       FINIR LE MATCH
+       ligne 2  PROLONGATION
+
+   J'ai supposé pendant plusieurs essais que la rotation TRANSPOSAIT la grille
+   — que les colonnes devenaient des lignes. Les retours de Sacha montrent que
+   non : ce qu'on écrit en lignes se lit en lignes. La grille se dessine donc
+   telle qu'on veut la voir, sans conversion.
+
+   Je ne raisonne plus sur la rotation : je me trompais de sens une fois sur
+   deux. Sacha donne les coordonnées, je les écris telles quelles.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.time {
+    grid-column: 1;
+    grid-row: 1;
+    /* Plus grand, et collé à la ligne du dessous : l'écart entre le chrono et
+       « Prolongation » était plus large que nécessaire, au détriment du chrono
+       lui-même. */
+    font-size: 44cqh;
+    line-height: 0.92;
+    margin-bottom: -2px;
+}
+
+.tag {
+    grid-column: 1;
+    grid-row: 2;
+    font-size: 11cqh;
+    white-space: nowrap;
+}
+
+/* « Hors classement » disparaît en paysage : Sacha le sait, il a choisi le
+   mode lui-même, et cette ligne prenait la place du bouton Pause.
+   L'information reste en portrait et dans la fiche du mode. */
+.unranked {
+    display: none;
+}
+
+/* Même taille de texte et même hauteur que « Finir le match » : deux boutons
+   côte à côte qui ne se ressemblent pas donnent l'impression d'un défaut. */
+.pause {
+    grid-row: 1;
+    grid-column: 2;
+    justify-self: center;
+    align-self: center;
+    font-size: 13cqh;
+    padding: 0.3em 0.8em;
+    white-space: nowrap;
+}
+
+.bonusSlot {
+    position: absolute;
+    top: -0.2rem;
+    left: 0;
+    right: 0;
+    height: 0.8rem;
+}

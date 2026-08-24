@@ -16,6 +16,7 @@ import {
     ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import styles from './page.module.css';
+import { Button } from '@/components/common/ui';
 
 const venueTypes: { type: VenueType; label: string; icon: React.ElementType }[] = [
     { type: 'bar', label: 'Bar', icon: BuildingStorefrontIcon },
@@ -81,7 +82,7 @@ export default function AddVenuePage() {
             <div className={styles.contentWrapper}>
                 <div className={styles.header}>
                     <Link href="/venues" className={styles.backLink}>
-                        <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                        <ArrowLeftIcon style={{ width: '16px', height: '16px', marginRight: 'var(--spacing-sm)' }} />
                         Retour aux stades
                     </Link>
 
@@ -96,7 +97,7 @@ export default function AddVenuePage() {
 
                     {error && (
                         <div className={styles.errorBox}>
-                            <ExclamationTriangleIcon className="w-5 h-5" />
+                            <ExclamationTriangleIcon width={20} height={20} />
                             {error}
                         </div>
                     )}
@@ -122,8 +123,7 @@ export default function AddVenuePage() {
                             </label>
                             <div className={styles.typeGrid}>
                                 {venueTypes.map((vt) => (
-                                    <button
-                                        key={vt.type}
+                                    <button key={vt.type}
                                         type="button"
                                         onClick={() => setType(vt.type)}
                                         className={`${styles.typeButton} ${type === vt.type ? styles.typeButtonActive : styles.typeButtonInactive}`}
@@ -148,17 +148,9 @@ export default function AddVenuePage() {
                             />
                         </div>
 
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="btn-primary w-full"
-                            style={{ padding: 0, border: 'none', background: 'transparent' }}
-                        >
-                            <div className="btn-primary-shadow" />
-                            <div className="btn-primary-content" style={{ width: '100%' }}>
-                                {isLoading ? 'Création...' : 'Ajouter le stade'}
-                            </div>
-                        </button>
+                        <Button type="submit" disabled={isLoading} fullWidth>
+{isLoading ? 'Création...' : 'Ajouter le stade'}
+</Button>
                     </form>
                 </div>
             </div>
