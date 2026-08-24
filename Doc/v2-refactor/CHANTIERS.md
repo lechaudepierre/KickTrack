@@ -523,7 +523,7 @@ Vous trois jouez en V2 plusieurs soirées réelles, puis `v2 everyone`.
 | 2.2 | Inventaire en sous-collection | [fait] | moi |
 | 2.3 | `equipped` porté jusqu'aux classements | [fait] | moi |
 | 2.4 | `grantItem` idempotent | [fait] | moi |
-| 2.5 | Migration `bannerUtils` -> données | [fait] | moi — appliqué en prod |
+| 2.5 | Migration `bannerUtils` -> données | [en cours] | le repli statique sert encore |
 | 2.6 | Équipement + route validée serveur | [fait] | moi |
 | 2.7 | Format de bannière unifié (4:1 partout) | [fait] | moi |
 | 2.8 | Alléger les assets bannières | [a faire] | **Sacha** — re-export WebP |
@@ -553,10 +553,10 @@ Vous trois jouez en V2 plusieurs soirées réelles, puis `v2 everyone`.
 ### Bloc 4 — Monnaie & packs *(après septembre)*
 | | Chantier | État |
 |---|---|---|
-| 4.1 | Monnaie : solde + journal | [a faire] |
+| 4.1 | Monnaie : solde + journal | [reporte] |
 | 4.2 | Définition de pack au catalogue | [a faire] |
 | 4.3 | Tirage serveur + pity invisible | [a faire] |
-| 4.4 | Doublons -> monnaie | [a faire] |
+| 4.4 | Doublons -> monnaie | [abandonne] |
 | 4.5 | Animation d'ouverture | [a faire] |
 
 ### Bloc 5 — Design system *(en fond, continu)*
@@ -565,7 +565,7 @@ Vous trois jouez en V2 plusieurs soirées réelles, puis `v2 everyone`.
 | 5.1 | Réécrire les tokens | [fait] | palette **PROVISOIRE**, D12 ouverte |
 | 5.2 | Librairie de composants | [fait] | Button, Card, Input, Badge |
 | 5.3 | Migration page par page | [fait] | **0 couleur en dur** (471 au départ) |
-| 5.4 | Sortir Tailwind | [fait] | aucune trace restante |
+| 5.4 | Sortir Tailwind | [fait] | dernier `@apply` retiré le 23/08 + garde-fou |
 | 5.5 | Fiabiliser le fond terrain | [fait] | une seule définition, rayures relatives |
 
 ### Bloc 6 — Avatar 2D *(slots déjà déclarés, affichés « Bientôt »)*
@@ -574,7 +574,7 @@ Vous trois jouez en V2 plusieurs soirées réelles, puis `v2 everyone`.
 | 6.1 | Les 5 slots au catalogue | [a faire] | moi |
 | 6.2 | Rendu par calques + teinte CSS | [a faire] | moi + **Sacha** (assets) |
 | 6.3 | Avatar par défaut à l'inscription | [a faire] | moi |
-| 6.4 | Équipement validé serveur | [fait] | déjà couvert par 2.6 |
+| 6.4 | Équipement validé serveur | [fait] | `api/inventory/equip` |
 
 ### Bloc 7 — Modes de jeu / bibitif
 | | Chantier | État |
@@ -596,8 +596,8 @@ Rien commencé, volontairement le dernier.
 | 9.4 | Undo imparfait du multiplicateur | [fait] | l'état se rejoue depuis les buts |
 | 9.5 | Agrégations côté client | [fait] | plus aucune sur un chemin utilisateur |
 | 9.6 | Fichiers parasites à la racine | [fait] | `src.zip` ignoré, log sorti de l'index |
-| 9.7 | `goalsConceded` doublé en 2v2 | [a faire] | à documenter |
-| 9.8 | 2 comptes fantômes (inscriptions ratées) | [fait] | résolu par 0.7 |
+| 9.7 | `goalsConceded` doublé en 2v2 | [fait] | voulu, et documenté |
+| 9.8 | Comptes fantômes (inscriptions ratées) | [fait] | 2 joueurs bloqués, débloqués le 23/08 |
 | 9.9 | Erreur en fin de partie sans lieu | [fait] | — |
 | 9.10 | Page de match fragile aux ajouts de contenu | [en cours] | 1re passe faite, reste les dimensions figées |
 | 9.11 | Le mode de jeu n'existe pas dans les tournois | [fait] | + 3 bugs de tournoi trouvés au passage |
@@ -2545,6 +2545,7 @@ Déclenchement manuel (décision `31-saisons.md` : pas de calendrier automatique
 contenu réel existe déjà quand on arrive ici.
 
 ### 4.1 [reporte] Monnaie : solde + journal de transactions
+**Décision de Sacha (23/08) : pas de monnaie.** Les doublons s'affichent en `xN`, rien de plus.
 
 > **Reporté par Sacha le 21/08** : « pas besoin de monnaie tout de suite ». Le pack se gagne
 > en jouant et le doublon s'échangera. Rien dans le socle ne s'y oppose le jour où elle arrivera.
@@ -2594,7 +2595,34 @@ pas conservé — même API, donc les deux pages qui l'utilisaient continuent de
 Cible : **0 couleur hex** dans les `.module.css` hors `variables.css` (471 aujourd'hui, revérifié).
 - ATTENTION: Page pilote à choisir — voir décisions.
 
-### 5.4 [a faire] Sortir Tailwind
+### 5.4 [fait] Sortir Tailwind — *23 août 2026*
+
+Tailwind était bien retiré : aucune dépendance dans `package.json`, aucun
+`tailwind.config`, aucune directive dans le PostCSS. Le tableau de suivi disait
+« aucune trace restante ».
+
+**Il en restait une, et elle cassait quelque chose.** `GameTimer.module.css`
+était encore écrit en `@apply` :
+
+```css
+.container { @apply flex items-center gap-2; }
+.dot       { @apply w-2 h-2 bg-emerald-500 rounded-full animate-pulse; }
+.time      { @apply font-mono text-lg font-bold; }
+```
+
+Sans le plugin PostCSS, ces règles **ne produisent rien**. Le navigateur les
+ignore en silence. En match, cela donnait :
+- le point d'activité mesurait 0 x 0 — donc invisible ;
+- l'heure s'affichait dans la police et la taille du texte courant, sans chasse
+  fixe ni graisse, et tremblait à chaque seconde.
+
+C'est une des raisons pour lesquelles le chrono « ne se voyait pas assez ».
+Réécrit en tokens, avec `font-variant-numeric: tabular-nums` et une pulsation
+qui s'arrête si l'appareil demande moins d'animation.
+
+**Garde-fou ajouté** — `npm run check:tailwind`. Il refuse toute directive
+`@apply` ou `@tailwind` dans `src/**/*.css`, en ignorant les commentaires.
+Vérifié en le cassant exprès : il attrape bien la faute.
 ATTENTION: **Plus lourd que le doc ne le dit.** Le doc `10` parle de « ~2 pages » ; en réalité
 `@import "tailwindcss"` est dans [`globals.css:2`](../../src/app/globals.css#L2) et des classes
 utilitaires sont dans **12 fichiers**, dont `GameBoard.tsx` et `ProfileContent.tsx`.
@@ -2636,7 +2664,7 @@ Octroyé + équipé côté serveur à la création du compte : garantit qu'aucun
 ATTENTION: Sans déclencheur `onUserCreate` (voir 0.3), l'octroi doit être **idempotent** et revérifié au
 chargement de l'app, au cas où l'inscription serait interrompue.
 
-### 6.4 [a faire] Équipement validé serveur
+### 6.4 [fait] Équipement validé serveur
 L'item doit être dans `owned` et du bon type. Le chapeau est le seul déséquipable sans remplacement.
 
 ---
@@ -2916,17 +2944,49 @@ choisi. Vérifié en base : **`venues/none` n'existe pas**, et **5 parties porte
 - [fait] La route serveur saute la mise à jour quand `venueId` vaut `none`, et ne fait jamais échouer
   la clôture sur une erreur de stats de lieu (les données importantes sont déjà écrites).
 
-### 9.8 [a faire] BUG: Deux inscriptions ratées ont laissé des comptes fantômes
-`cyrcyr007.cl@gmail.com` et `tanguy.laurent@ulb.be` (18 février 2026) ont un compte
-d'authentification **mais aucun document Firestore**. Ils peuvent se connecter et n'ont pas de profil :
-l'app leur est inutilisable.
-- **Cause** : [`registerComplete`](../../src/lib/firebase/auth.ts) crée le compte Auth **avant** de
-  vérifier la disponibilité du pseudo et d'écrire le document. Si quoi que ce soit échoue entre les
-  deux, le compte Auth reste orphelin.
-- **À corriger** : rendre l'inscription atomique, ou ajouter une réparation au chargement
-  (compte Auth sans document -> renvoyer vers l'écran de choix de pseudo). La seconde option
-  résout aussi le cas Google du chantier 0.7 — même écran, même code.
-- **Ces 2 joueurs sont récupérables** : il suffit de leur créer leur document.
+### 9.8 [fait] Deux joueurs étaient bloqués sur un formulaire muet — *23 août 2026*
+
+**Le défaut.** Un compte peut exister côté Firebase Auth sans que son document
+`users` ait été créé : l'inscription s'est interrompue entre les deux écritures.
+
+`login()` renvoie alors `null`. Et la page de connexion faisait :
+
+```ts
+const user = await login(email, password);
+if (user) { setUser(user); router.push('/dashboard'); }
+```
+
+**Pas de `else`.** Le mot de passe était pourtant bon — Firebase avait accepté —
+mais il ne se passait rien : ni redirection, ni message d'erreur. Le joueur
+retapait son mot de passe indéfiniment sur un formulaire qui ne répondait pas.
+
+**L'état réel en production** (`npm run audit:comptes`, 23/08) :
+
+| | |
+|---|---|
+| Comptes Auth | 147 |
+| Profils Firestore | 141 |
+| Auth sans profil | **6** |
+| dont joueurs réellement bloqués | **2** |
+| dont comptes inertes (aucun fournisseur) | 4 |
+| Profils sans compte Auth | 0 |
+
+Ce n'était donc pas « 2 comptes fantômes » comme le disait le suivi, mais 6 —
+dont 2 vraies personnes, avec une adresse, qui pouvaient se connecter :
+`cyrcyr007.cl@gmail.com` et `tanguy.laurent@ulb.be`. Les 4 autres n'ont aucun
+fournisseur : personne ne peut s'y connecter, ils ne bloquent personne.
+
+**La correction.** La connexion envoie désormais vers `/welcome` quand le profil
+manque. Cette page existait déjà et disait le faire — `completeProfile` porte le
+commentaire « réparation d'une inscription interrompue (chantier 9.8) » — mais
+aucune connexion par mot de passe n'y menait. Seul le chemin Google y arrivait.
+
+Les deux joueurs peuvent maintenant terminer leur inscription en choisissant un
+pseudo, sans intervention.
+
+**⚠️ Reste à décider.** Les 4 comptes inertes du 7 janvier peuvent être
+supprimés de Firebase Auth. Ils ne gênent rien — c'est du rangement. Je n'y
+touche pas sans l'accord de Sacha : supprimer un compte est irréversible.
 
 ### 9.10 [en cours] La page de match casse dès qu'on y ajoute quoi que ce soit
 Signalé par Sacha : ajouter le badge de mode a décalé la mise en page et coupé le bouton
@@ -3087,7 +3147,7 @@ Le titre et le sous-titre de la préparation des équipes se posent directement 
 pas sur une carte : ils étaient en noir sur vert foncé. Passés en blanc avec contre-ombre, comme
 les titres de page.
 
-### 9.22 [a faire] `targetScore` est devenu vestigial
+### 9.22 [fait] `targetScore` est devenu vestigial — *23 août 2026*
 Le score cible d'un tournoi n'est plus demandé à la création (retiré le 21/08) et n'était déjà lu
 nulle part par le moteur de jeu : une partie se termine quand l'hôte le décide.
 

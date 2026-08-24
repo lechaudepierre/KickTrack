@@ -56,6 +56,19 @@ export default function LoginPage() {
             if (user) {
                 setUser(user);
                 router.push('/dashboard');
+            } else {
+                // Le mot de passe est bon — Firebase a accepté — mais aucun
+                // profil n'existe : l'inscription s'est interrompue entre la
+                // création du compte et celle du document (chantier 9.8).
+                //
+                // Sans cette branche, il ne se passait RIEN : pas de
+                // redirection, pas de message. Le joueur retapait son mot de
+                // passe indéfiniment sur un formulaire muet. Deux personnes
+                // étaient dans ce cas en production le 23/08.
+                //
+                // `/welcome` sait terminer l'inscription : il demande un pseudo
+                // et crée le document manquant.
+                router.push('/welcome');
             }
         } catch (err: unknown) {
             const error = err as { code?: string };

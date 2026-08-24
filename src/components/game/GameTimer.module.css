@@ -1,12 +1,56 @@
+/*
+ * LE CHRONOMÈTRE DE MATCH
+ *
+ * Ce fichier était écrit en `@apply`, une directive Tailwind. Tailwind a été
+ * retiré du projet (chantier 5.4) mais ces trois règles sont restées : elles
+ * ne produisaient donc PLUS RIEN.
+ *
+ * Conséquence visible en match : le point d'activité mesurait 0 x 0 — donc
+ * invisible — et l'heure s'affichait dans la police et la taille du texte
+ * courant, sans chasse fixe ni graisse. C'est une des raisons pour lesquelles
+ * le chrono « ne se voyait pas assez ».
+ *
+ * Réécrit en tokens (chantier 5.4, achevé le 23/08).
+ */
+
 .container {
-    @apply flex items-center gap-2;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
 }
 
+/*
+ * Le point qui bat : il dit que la partie court, sans occuper de place.
+ * Sa pulsation s'arrête si l'appareil demande moins d'animation.
+ */
 .dot {
-    @apply w-2 h-2 bg-emerald-500 rounded-full animate-pulse;
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: var(--radius-full);
+    background: var(--color-success);
+    animation: pulse 1.6s ease-in-out infinite;
 }
 
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dot {
+        animation: none;
+    }
+}
+
+/*
+ * Chasse fixe : sans elle, les chiffres n'ont pas tous la même largeur et le
+ * chrono tremble à chaque seconde.
+ */
 .time {
-    @apply font-mono text-lg font-bold;
+    font-family: monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
     color: var(--color-text-dark);
 }
