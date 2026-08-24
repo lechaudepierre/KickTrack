@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { getTournamentByPinCode, joinTournament } from '@/lib/firebase/tournaments';
@@ -32,13 +32,25 @@ function JoinTournamentContent() {
         }
     }, [authLoading, isAuthenticated, router]);
 
-    // Check for code in URL params
+    /*
+     * Rejoindre automatiquement depuis un lien ou un QR code.
+     *
+     * Le garde n'est pas une précaution de style : sans lui, cet effet
+     * rejoindrait DEUX FOIS si React le rejouait — ce qu'il fait en mode strict
+     * au développement, et à chaque rendu si l'on listait `handleJoin` dans les
+     * dépendances, puisque cette fonction est recréée à chaque fois.
+     *
+     * Un code se rejoint une fois. C'est ce que dit le garde, et c'est pour ça
+     * que `handleJoin` reste volontairement hors des dépendances.
+     */
+    const codeTraite = useRef<string | null>(null);
     useEffect(() => {
         const code = searchParams.get('code');
-        if (code) {
-            setPinCode(code);
-            handleJoin(code);
-        }
+        if (!code || codeTraite.current === code) return;
+        codeTraite.current = code;
+        setPinCode(code);
+        handleJoin(code);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- voir ci-dessus
     }, [searchParams]);
 
     const handleCodeChange = (value: string) => {

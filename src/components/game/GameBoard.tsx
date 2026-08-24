@@ -61,12 +61,19 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
         { withRank: true },
     );
 
-    // Time limit check (1 hour)
+    /*
+     * Limite d'une heure.
+     *
+     * On dépend de l'INSTANT de début, pas de l'objet `game` : celui-ci change
+     * de référence à chaque but, ce qui relancerait l'intervalle toutes les
+     * quelques secondes. L'instant de début, lui, ne bouge pas de la partie.
+     */
+    const debutMs = gameStartMs(game);
     useEffect(() => {
-        if (isViewer || !game.startTime) return;
+        if (isViewer || !debutMs) return;
 
         const checkTimeLimit = () => {
-            const debut = gameStartMs(game);
+            const debut = debutMs;
             if (debut === 0) return;
             const elapsedSeconds = Math.floor((Date.now() - debut) / 1000);
 
@@ -80,7 +87,7 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
         checkTimeLimit(); // Initial check
 
         return () => clearInterval(interval);
-    }, [game.startTime, isViewer, onTimeLimitReached]);
+    }, [debutMs, isViewer, onTimeLimitReached]);
     const [activeTeamIndex, setActiveTeamIndex] = useState<0 | 1 | null>(null);
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
     const [selectedPosition, setSelectedPosition] = useState<GoalPosition | null>(null);

@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
@@ -165,6 +165,18 @@ function CollectionView() {
     // sections de type pour former la leur.
     const allSections = useMemo(() => buildSections(catalog), [catalog]);
 
+    /**
+     * Le joueur possède-t-il cet item ?
+     *
+     * Un item de base est possédé sans figurer dans l'inventaire : c'est une
+     * propriété du catalogue, pas un octroi. La question se pose partout dans
+     * cette page, donc elle vit ici et nulle part ailleurs.
+     */
+    const possede = useCallback(
+        (item: CatalogItem) => isDefaultItem(item) || owned.has(item.id),
+        [owned],
+    );
+
     const sections = useMemo(() => {
         return allSections
             .filter(section => sectionFilter === 'all' || section.key === sectionFilter)
@@ -177,16 +189,8 @@ function CollectionView() {
             // Une section vide après filtrage disparaît, sinon la vue
             // « possédés » serait une liste de titres sans contenu.
             .filter(section => filter === 'all' || section.visibles.length > 0);
-    }, [allSections, filter, sectionFilter, owned]);
+    }, [allSections, filter, sectionFilter, possede]);
 
-    /**
-     * Le joueur possède-t-il cet item ?
-     *
-     * Un item de base est possédé sans figurer dans l'inventaire : c'est une
-     * propriété du catalogue, pas un octroi. La question se pose partout dans
-     * cette page, donc elle vit ici et nulle part ailleurs.
-     */
-    const possede = (item: CatalogItem) => isDefaultItem(item) || owned.has(item.id);
     const totalOwned = catalog.filter(possede).length;
 
     // Ce qu'un pack peut donner, et avec quelles chances. Le calcul vit dans

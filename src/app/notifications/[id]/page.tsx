@@ -16,7 +16,7 @@ import styles from './page.module.css';
 export default function AnnouncementDetailPage() {
     const router = useRouter();
     const { id } = useParams<{ id: string }>();
-    const { user, setUser } = useAuthStore();
+    const { setUser } = useAuthStore();
 
     const [announcement, setAnnouncement] = useState<Announcement | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -26,13 +26,21 @@ export default function AnnouncementDetailPage() {
             try {
                 const data = await getAnnouncementById(id);
                 setAnnouncement(data);
-                // Marquer comme lu dès l'ouverture — atomique via arrayUnion
-                if (user?.userId) {
-                    await markAnnouncementRead(user.userId, id);
-                    // Mise à jour optimiste du store pour que la liste reflète l'état immédiatement
-                    const alreadyRead = user.readAnnouncementIds || [];
-                    if (!alreadyRead.includes(id)) {
-                        setUser({ ...user, readAnnouncementIds: [...alreadyRead, id] });
+                /*
+                 * Marquer comme lu dès l'ouverture — atomique via arrayUnion.
+                 *
+                 * Le joueur est lu AU MOMENT DE L'APPEL, pas capturé par la
+                 * fermeture. C'est ce qui permet à cet effet de ne dépendre que
+                 * de `id` : dépendre de `user` le ferait boucler, puisqu'il
+                 * modifie `user` lui-même à la ligne suivante.
+                 */
+                const courant = useAuthStore.getState().user;
+                if (courant?.userId) {
+                    await markAnnouncementRead(courant.userId, id);
+                    // Mise à jour optimiste, pour que la liste suive tout de suite.
+                    const dejaLues = courant.readAnnouncementIds || [];
+                    if (!dejaLues.includes(id)) {
+                        setUser({ ...courant, readAnnouncementIds: [...dejaLues, id] });
                     }
                 }
             } catch (err) {
@@ -42,7 +50,7 @@ export default function AnnouncementDetailPage() {
             }
         };
         load();
-    }, [id, user?.userId]);
+    }, [id, setUser]);
 
     const formatDate = (date: Date) =>
         new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
