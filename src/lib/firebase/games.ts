@@ -284,11 +284,20 @@ export async function getUserGames(userId: string, limitCount: number = 10): Pro
 
     // ── Chemin rapide : le tri et la coupe se font côté serveur ──────────────
     try {
-        // Une marge, pas un doublement : `status == completed` est désormais
-        // filtré CÔTÉ SERVEUR, il ne reste que les parties avec invités à
-        // écarter ici, et elles sont minoritaires. Doubler la demande revenait
-        // à télécharger deux fois trop.
-        const marge = Math.min(limitCount + 30, 300);
+        /*
+         * Une marge, pas un doublement : `status == completed` est désormais
+         * filtré CÔTÉ SERVEUR, il ne reste que les parties avec invités à
+         * écarter ici, et elles sont minoritaires. Doubler la demande revenait
+         * à télécharger deux fois trop.
+         *
+         * ⚠️ Il y avait ici un SECOND plafond, `Math.min(…, 300)`, qui rendait
+         * tout `limitCount` supérieur à 270 sans effet — silencieusement.
+         * L'appelant croyait demander 500 parties et en recevait 300
+         * (chantier 9.47). Le plafond suit désormais la demande : c'est à
+         * l'appelant de savoir ce qu'il veut charger, pas à cette fonction de
+         * le corriger dans son dos.
+         */
+        const marge = limitCount + 30;
         const rapide = query(
             collection(db, GAMES_COLLECTION),
             where('playerIds', 'array-contains', userId),

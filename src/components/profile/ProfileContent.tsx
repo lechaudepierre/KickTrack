@@ -125,7 +125,29 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
         try {
             const [userData, gamesData] = await Promise.all([
                 getUserById(targetUserId),
-                getUserGames(targetUserId, 200)
+                /*
+                 * TOUTES les parties du joueur, ou presque — chantier 9.47.
+                 *
+                 * C'était 200. Or le profil calcule TOUTES ses statistiques
+                 * depuis cette liste : au-delà de la limite, les parties les
+                 * plus anciennes n'entrent dans aucun chiffre, sans que rien
+                 * ne le signale.
+                 *
+                 * Ce n'était pas théorique. Relevé le 24/08 sur la production :
+                 * le joueur le plus actif a 256 parties, le deuxième 223 — donc
+                 * 56 et 23 parties invisibles dans leur propre profil.
+                 *
+                 * Et la limite ne protégeait presque personne. Une partie pèse
+                 * 3 848 octets en moyenne : pour ce joueur, plafonner à 200
+                 * économisait 190 Ko sur 877, au prix de statistiques fausses.
+                 * Le profil médian, lui, a 4 parties et 16 Ko — la limite ne
+                 * l'a jamais concerné.
+                 *
+                 * 500 laisse le double de marge sur le plus gros profil actuel.
+                 * Au-delà, ce n'est plus la limite qu'il faudra relever mais la
+                 * requête qu'il faudra borner par saison, côté serveur.
+                 */
+                getUserGames(targetUserId, 500)
             ]);
 
             setProfileUser(userData);
