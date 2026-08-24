@@ -11,11 +11,10 @@ interface PlayerListProps {
     players: Player[];
     maxPlayers: number;
     currentUserId?: string;
-    hostId?: string;
     onKick?: (userId: string) => void;
 }
 
-export default function PlayerList({ players, maxPlayers, currentUserId, hostId, onKick }: PlayerListProps) {
+export default function PlayerList({ players, maxPlayers, currentUserId, onKick }: PlayerListProps) {
     // Le catalogue doit être chargé pour que `resolveBanner` réponde juste.
     useCatalog();
     // Une partie ne stocke que l'identité des joueurs. L'ELO, la bannière

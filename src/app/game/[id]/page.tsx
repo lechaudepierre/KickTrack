@@ -223,7 +223,17 @@ export default function GamePage() {
             <div className={`${styles.contentWrapper} ${isPortrait ? gameStyles.forcedLandscape : gameStyles.nativeLandscape}`}>
                 <FieldBackground />
                 {/* Header */}
-                <div className={`${styles.pageHeader} ${!isPortrait || isPortrait ? gameStyles.landscapeHeader : ''} justify-between`}>
+                {/*
+                    L'en-tête est TOUJOURS en disposition paysage : la page de
+                    match l'est aussi, que la rotation soit forcée
+                    (`forcedLandscape`) ou native (`nativeLandscape`).
+
+                    La condition était ici `!isPortrait || isPortrait`, qui est
+                    vraie quoi qu'il arrive — un reste de l'époque où l'en-tête
+                    variait. Écrit tel quel, ça se lit comme un choix alors que
+                    ça n'en est pas un.
+                */}
+                <div className={`${styles.pageHeader} ${gameStyles.landscapeHeader} justify-between`}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
                         <button onClick={() => {
                                 if (user?.userId === game.hostId) {
@@ -403,7 +413,6 @@ export default function GamePage() {
                     onEndGame={handleEndGame}
                     onChronoEnd={handleChronoEnd}
                     isViewer={user?.userId !== game.hostId}
-                    isPortrait={isPortrait}
                 />
             </div>
         </div>

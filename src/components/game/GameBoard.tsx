@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { Game, Team, Player, GoalPosition, GoalType } from '@/types';
+import { Game, Player, GoalPosition, GoalType } from '@/types';
 import { XMarkIcon, StarIcon } from '@heroicons/react/24/solid';
 import GameTimer from './GameTimer';
 import ChronoBar from './ChronoBar';
@@ -26,7 +26,6 @@ interface GameBoardProps {
     /** Fin déclenchée par le chronomètre : directe, sans confirmation. */
     onChronoEnd?: () => void;
     isViewer?: boolean;
-    isPortrait: boolean;
 }
 
 const positions: { value: GoalPosition; label: string; color: string; isNarrow?: boolean }[] = [
@@ -43,7 +42,7 @@ const goalTypes: { value: GoalType; label: string; description: string }[] = [
     { value: 'gamelle_rentrante', label: 'Gamelle Rentrante', description: 'Ressort et rentre' }
 ];
 
-export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGame, onChronoEnd, isViewer = false, isPortrait }: GameBoardProps) {
+export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGame, onChronoEnd, isViewer = false }: GameBoardProps) {
     const { play: playSound } = useSound({ volume: 0.7 });
     // Déclenche le chargement du catalogue : sans lui, les bannières ne
     // s'affichent qu'au rendu suivant.
@@ -137,8 +136,6 @@ export default function GameBoard({ game, onAddGoal, onTimeLimitReached, onEndGa
 
     const team1 = game.teams[0];
     const team2 = game.teams[1];
-    const totalPlayers = team1.players.length + team2.players.length;
-    const isFourPlayers = totalPlayers === 4;
 
     /* L'animation du score ne passe par AUCUN état.
      *

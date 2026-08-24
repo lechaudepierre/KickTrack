@@ -12,17 +12,13 @@ import { Game, Venue, User, Announcement } from '@/types';
 import VenueDropdown from '@/components/venues/VenueDropdown';
 import BottomNav from '@/components/common/BottomNav';
 import PlayerTitle from '@/components/common/PlayerTitle';
-import { calculateAdvancedStats, getPositionLabel, AdvancedStats, BadgeId } from '@/lib/utils/statsCalculator';
+import { calculateAdvancedStats, AdvancedStats, BadgeId } from '@/lib/utils/statsCalculator';
 import { BADGE_CONFIG } from '@/lib/utils/badgeConfig';
 import {
     ClockIcon,
-    MapPinIcon,
     FireIcon,
     TrophyIcon,
-    ChartBarIcon,
-    MagnifyingGlassIcon,
     ArrowRightOnRectangleIcon,
-    InformationCircleIcon,
     PencilIcon,
     XMarkIcon,
     UserPlusIcon,
@@ -30,7 +26,6 @@ import {
     UsersIcon,
     ArrowLeftIcon,
     CheckIcon,
-    PlusIcon,
     BoltIcon,
     ShieldCheckIcon,
     StarIcon,
@@ -51,8 +46,8 @@ import styles from './ProfileContent.module.css';
 import RankAvatar from '@/components/common/RankAvatar';
 import PlayerBanner from '@/components/common/PlayerBanner';
 import { getRankInfo } from '@/lib/utils/rankUtils';
+import { formatDate } from './profileHelpers';
 import { readLadder, LADDERS } from '@/lib/game/ladders';
-import { toDate } from '@/lib/game/dates';
 import { resolvePeakElo } from '@/lib/game/scoring';
 import { RankProgressBar, Button } from '@/components/common/ui';
 import SeasonHistory from './SeasonHistory';
@@ -303,42 +298,19 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
         );
     }
 
-    // `startedAt` arrive soit en Date, soit en Timestamp Firestore ({ seconds }).
-    const formatDate = (date: Date | { seconds: number } | null | undefined) => {
-        if (!date) return '';
-        const d = toDate(date);
-        return new Intl.DateTimeFormat('fr-FR', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-        }).format(d);
-    };
-
-    const getGameResult = (game: Game) => {
-        if (game.winner === undefined) return 'Nul';
-        const userTeamIndex = game.teams.findIndex(t => t.players.some(p => p.userId === profileUser.userId));
-        if (userTeamIndex === -1) return '?';
-        return game.winner === userTeamIndex ? 'Victoire' : 'Défaite';
-    };
-
-    const getOpponentNames = (game: Game) => {
-        const userTeamIndex = game.teams.findIndex(t => t.players.some(p => p.userId === profileUser.userId));
-        if (userTeamIndex === -1) return '';
-        const opponentTeamIndex = userTeamIndex === 0 ? 1 : 0;
-        return game.teams[opponentTeamIndex].players.map(p => p.username).join(' & ');
-    };
-
-    const getTeammateName = (game: Game) => {
-        const userTeam = game.teams.find(t => t.players.some(p => p.userId === profileUser.userId));
-        if (!userTeam || userTeam.players.length < 2) return null;
-        const teammate = userTeam.players.find(p => p.userId !== profileUser.userId);
-        return teammate?.username || null;
-    };
-
-    const getEloChange = (game: Game) => {
-        if (!game.eloChanges || !game.eloChanges[profileUser.userId]) return null;
-        return game.eloChanges[profileUser.userId].eloChange;
-    };
+    /*
+     * Les cinq fonctions qui vivaient ici — `formatDate`, `getGameResult`,
+     * `getOpponentNames`, `getTeammateName`, `getEloChange` — ont été
+     * supprimées le 24/08.
+     *
+     * `profileHelpers.ts` les porte déjà, à l'identique au caractère près,
+     * depuis le découpage du profil en onglets. Les copies locales n'étaient
+     * plus appelées que par `formatDate` : les quatre autres étaient mortes.
+     *
+     * Deux exemplaires de la même règle, c'est un bug qui attend : corriger
+     * l'un laisse l'autre en place, silencieusement. Et ici les morts étaient
+     * les premiers qu'un lecteur rencontrait.
+     */
 
     const handleLogout = async () => {
         await logout();

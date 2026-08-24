@@ -67,7 +67,15 @@ export async function getVenueById(venueId: string): Promise<Venue | null> {
 }
 
 // Check for duplicate venue
-export async function checkVenueDuplicate(name: string, address?: string): Promise<boolean> {
+/*
+ * Un stade du même nom existe-t-il déjà ?
+ *
+ * NOTE: le paramètre `address` a été retiré le 24/08 — il n'était utilisé ni
+ * par le corps de la fonction, ni par son unique appelant. Si un jour deux
+ * stades homonymes à des adresses différentes doivent coexister, c'est une
+ * décision de produit à prendre, pas un paramètre à rebrancher en silence.
+ */
+export async function checkVenueDuplicate(name: string): Promise<boolean> {
     const db = getFirebaseDb();
     const q = query(
         collection(db, VENUES_COLLECTION),
@@ -78,16 +86,15 @@ export async function checkVenueDuplicate(name: string, address?: string): Promi
     return !snapshot.empty;
 }
 
-// Update venue stats after a game
-export async function updateVenueStats(venueId: string, gameData: { playersCount: number }): Promise<void> {
-    const db = getFirebaseDb();
-    const venueRef = doc(db, VENUES_COLLECTION, venueId);
-
-    await updateDoc(venueRef, {
-        'stats.totalGames': firestoreIncrement(1),
-        'stats.lastGameAt': new Date()
-    });
-}
+/*
+ * `updateVenueStats` a été supprimée le 24/08.
+ *
+ * Plus AUCUN appel, ni client ni serveur : les compteurs par stade vivent
+ * désormais sur le profil des joueurs (`stats.venues`, chantier 9.36), et la
+ * fin de partie les tient elle-même. La fonction incrémentait donc un compteur
+ * que plus personne ne lisait — et son paramètre `gameData` n'était même pas
+ * utilisé par son propre corps.
+ */
 
 // Search venues by name
 export async function searchVenues(searchQuery: string): Promise<Venue[]> {

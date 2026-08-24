@@ -55,7 +55,7 @@ export async function sendFriendRequest(fromUserId: string, toUserId: string): P
     }
 
     const fromUser = fromUserSnap.data() as User;
-    const toUser = toUserSnap.data() as User;
+    // La lecture sert à vérifier que le compte existe ; son contenu, non.
 
     // Check if already friends
     if (fromUser.friends?.includes(toUserId)) {

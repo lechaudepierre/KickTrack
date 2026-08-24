@@ -12,7 +12,7 @@
 
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { UserGroupIcon, UsersIcon, UserPlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { UsersIcon, UserPlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import type { AdvancedStats } from '@/lib/utils/statsCalculator';
 import RankAvatar from '@/components/common/RankAvatar';
 import styles from './ProfileContent.module.css';

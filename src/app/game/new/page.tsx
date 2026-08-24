@@ -341,7 +341,6 @@ export default function NewGamePage() {
                         <PlayerList players={session.players}
                             maxPlayers={session.maxPlayers}
                             currentUserId={user?.userId}
-                            hostId={user?.userId}
                             onKick={handleKickPlayer}
                         />
 

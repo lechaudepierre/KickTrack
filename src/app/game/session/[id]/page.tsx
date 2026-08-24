@@ -115,7 +115,6 @@ export default function SessionWaitingPage() {
                 <PlayerList players={session.players}
                     maxPlayers={session.maxPlayers}
                     currentUserId={user?.userId}
-                    hostId={session.hostId}
                     onKick={isHost ? handleKick : undefined}
                 />
 

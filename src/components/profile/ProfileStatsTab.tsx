@@ -9,10 +9,7 @@
 
 import {
     ChartBarIcon,
-    BoltIcon,
     FireIcon,
-    ShieldCheckIcon,
-    SparklesIcon,
     InformationCircleIcon,
     TrophyIcon,
 } from '@heroicons/react/24/outline';
