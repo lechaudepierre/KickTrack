@@ -307,7 +307,7 @@ export default function FriendsPage() {
                                 return (
                                     <div className={styles.emptyState}>
                                         <UsersIcon className={styles.emptyIcon} />
-                                        <p>Tu n'as pas encore d'amis</p>
+                                        <p>Tu n&apos;as pas encore d&apos;amis</p>
                                     </div>
                                 );
                             } else {

@@ -190,7 +190,7 @@ export default function AdminAnnouncementsPage() {
                             <div className={styles.previewBox}>
                                 {content.trim()
                                     ? <div className={styles.markdownContent}><ReactMarkdown>{content}</ReactMarkdown></div>
-                                    : <p className={styles.emptyPreview}>Rien à afficher — écris du contenu d'abord.</p>
+                                    : <p className={styles.emptyPreview}>Rien à afficher — écris du contenu d&apos;abord.</p>
                                 }
                             </div>
                         ) : (
@@ -219,7 +219,7 @@ export default function AdminAnnouncementsPage() {
                     <h2 className={styles.sectionTitle}>Annonces publiées ({announcements.length})</h2>
 
                     {announcements.length === 0 ? (
-                        <p className={styles.emptyText}>Aucune annonce pour l'instant.</p>
+                        <p className={styles.emptyText}>Aucune annonce pour l&apos;instant.</p>
                     ) : (
                         <div className={styles.list}>
                             {announcements.map(item => (

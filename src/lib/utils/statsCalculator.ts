@@ -102,7 +102,7 @@ export function calculateAdvancedStats(
     }
 ): AdvancedStats {
     // 1. Filtrer les matchs selon les critères de base
-    let filteredGames = games.filter(g => {
+    const filteredGames = games.filter(g => {
         if (g.status !== 'completed') return false;
         if (g.isGuestGame) return false;
 

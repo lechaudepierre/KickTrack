@@ -102,7 +102,7 @@ export default function SessionWaitingPage() {
                     <button onClick={handleLeave} className={styles.backButton}>
                         <ArrowLeftIcon width={24} height={24} />
                     </button>
-                    <h1 className={styles.pageTitle}>Salle d'attente</h1>
+                    <h1 className={styles.pageTitle}>Salle d&apos;attente</h1>
                 </div>
 
                 <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)' }}>

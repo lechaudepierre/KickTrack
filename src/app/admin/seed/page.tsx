@@ -376,7 +376,7 @@ Tu peux maintenant aller voir tes stats.`);
 
                 <div style={{ padding: 'var(--spacing-lg)' }}>
                     <p style={{ marginBottom: 'var(--spacing-lg)' }}>
-                        Cette page crée des parties fictives pour tester l'affichage des statistiques avancées.
+                        Cette page crée des parties fictives pour tester l&apos;affichage des statistiques avancées.
                     </p>
 
                     {user && (

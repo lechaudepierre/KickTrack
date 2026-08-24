@@ -55,7 +55,7 @@ export default function NotificationsPage() {
                 ) : announcements.length === 0 ? (
                     <div className={styles.emptyState}>
                         <MegaphoneIcon className={styles.emptyIcon} />
-                        <p className={styles.emptyText}>Aucune nouveauté pour l'instant</p>
+                        <p className={styles.emptyText}>Aucune nouveauté pour l&apos;instant</p>
                         <p className={styles.emptySubtext}>Revenez bientôt !</p>
                     </div>
                 ) : (

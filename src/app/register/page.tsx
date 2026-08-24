@@ -96,7 +96,7 @@ export default function RegisterPage() {
 
                     <form onSubmit={handleCompleteRegister} className={styles.form}>
                         <div className={styles.formGroup}>
-                            <label className="input-label">Nom d'utilisateur</label>
+                            <label className="input-label">Nom d&apos;utilisateur</label>
                             <input
                                 type="text"
                                 placeholder="Votre pseudo"

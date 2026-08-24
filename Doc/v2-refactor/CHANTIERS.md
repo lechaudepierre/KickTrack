@@ -2454,11 +2454,19 @@ La page `/collection` est **déjà générique**. Il lui manque un mode lecture 
 équiper, et l'opposition « possédé par lui / pas possédé » au lieu de « possédé par moi ».
 Entrée depuis le profil d'un joueur.
 
-### 2.8 [a faire] Alléger les assets bannières
-12 Mo pour 4 bannières. `CreatorV1.png` = 5,7 Mo, `CreatorV3.png` = 5,2 Mo, pour un affichage à
-~400px de large. Sur mobile en 4G c'est brutal. `VéloTDF.png` (73 Ko) montre le bon ordre de grandeur.
-- `CreatorV1` et `CreatorV2` ne sont **référencés nulle part** -> assets morts, à supprimer.
-- Passage en WebP, cible < 150 Ko par bannière.
+### 2.8 [fait] Alléger les assets bannières — *constaté le 24 août 2026*
+C'était **12 Mo pour 4 bannières** — `CreatorV1.png` à 5,7 Mo pour un affichage à ~400 px de large.
+
+Relevé aujourd'hui : **1,0 Mo pour 24 bannières**, la plus lourde à 116 Ko, toutes sous la cible
+de 150 Ko. Les `CreatorV*.png` morts ont été supprimés.
+
+| format | nombre |
+|---|---|
+| WebP | 23 |
+| PNG | 1 — `VéloTDF.png` (72 Ko) |
+
+**Décision de Sacha (24/08) : on laisse `VéloTDF.png` en PNG.** Il pèse 72 Ko, soit moins que la
+moitié de la cible : le convertir ne rapporterait rien.
 
 ---
 
@@ -3215,9 +3223,9 @@ aucune connexion par mot de passe n'y menait. Seul le chemin Google y arrivait.
 Les deux joueurs peuvent maintenant terminer leur inscription en choisissant un
 pseudo, sans intervention.
 
-**⚠️ Reste à décider.** Les 4 comptes inertes du 7 janvier peuvent être
-supprimés de Firebase Auth. Ils ne gênent rien — c'est du rangement. Je n'y
-touche pas sans l'accord de Sacha : supprimer un compte est irréversible.
+**Décision de Sacha (24/08) : on ne supprime pas les 4 comptes inertes.**
+Ils n'ont aucun fournisseur, personne ne peut s'y connecter, ils ne bloquent
+rien. `npm run audit:comptes` reste là pour voir si le nombre grandit.
 
 ### 9.10 [en cours] La page de match casse dès qu'on y ajoute quoi que ce soit
 Signalé par Sacha : ajouter le badge de mode a décalé la mise en page et coupé le bouton
