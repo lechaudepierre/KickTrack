@@ -599,7 +599,7 @@ Rien commencé, volontairement le dernier.
 | 9.7 | `goalsConceded` doublé en 2v2 | [fait] | voulu, et documenté |
 | 9.44 | Feuille de style orpheline de 1 169 lignes | [fait] | supprimée + garde-fou `check:css` |
 | 9.45 | Passe de contraste | [fait] | 28 conteneurs, audit 105 -> 61 |
-| 9.46 | Le lint de fond | [en cours] | erreurs bloquantes faites ; restent `any` et deps |
+| 9.46 | Le lint de fond | [fait] | 85 -> 6, plus une seule erreur |
 | 9.47 | Le profil ne lit que 200 parties | [fait] | + un second plafond caché à 300 |
 | 9.8 | Comptes fantômes (inscriptions ratées) | [fait] | 2 joueurs bloqués, débloqués le 23/08 |
 | 9.9 | Erreur en fin de partie sans lieu | [fait] | — |
@@ -2577,6 +2577,67 @@ chiffre d'aujourd'hui sous une étiquette d'hier.
 
 **Le sélecteur ne s'affiche pas tant qu'il n'y a qu'une saison**, et il ne
 propose que les saisons où le joueur a réellement joué.
+
+### 9.46 [fait] Le lint de fond — *24 août 2026*
+
+`npx eslint src/` sortait **85 problèmes, dont 30 erreurs**. Il en reste **6**,
+tous des avertissements sur `<img>`.
+
+| règle | avant | après |
+|---|---|---|
+| `no-explicit-any` | 20 erreurs | **0** |
+| `react/no-unescaped-entities` | 8 erreurs | **0** |
+| `set-state-in-effect` | 1 erreur | **0** |
+| `prefer-const` | 1 erreur | **0** |
+| `no-unused-vars` | 32 | **0** |
+| `react-hooks/exhaustive-deps` | 17 | **0** |
+| `no-img-element` | 6 | 6 — laissé, voir plus bas |
+
+**Aucune de ces catégories n'était de la forme.** Chacune cachait quelque chose.
+
+- **Les 20 `any`** ne contournaient jamais un type manquant. Neuf étaient la
+  même conversion de date recopiée trois fois — celle que le chantier 9.2 avait
+  déjà unifiée dans `lib/game/dates.ts`. Un autre masquait `mvpId`, déclaré sur
+  `Game` depuis toujours. Deux parcouraient les équipes sans aucune
+  vérification, l'angle mort exact qui avait laissé passer une couleur d'équipe
+  malformée en tournoi.
+- **Le `set-state-in-effect`** était une boucle de rendu et des équipes remises
+  à zéro toutes seules (voir 9.46-a).
+- **Les 17 `exhaustive-deps`** étaient presque tous le même piège : un
+  `useEffect` appelant un `loadX()` absent de ses dépendances. **La correction
+  n'était pas d'ajouter l'objet `user`** — il vient d'un abonnement temps réel,
+  sa référence change après chaque partie. Le lister aurait rechargé amis,
+  stades, favoris et classement à chaque but marqué. Les chargements dépendent
+  désormais de `user?.userId`, qui ne bouge pas.
+
+**Trois corrections qui changent vraiment le comportement :**
+
+| | avant | après |
+|---|---|---|
+| Statut d'amitié sur un profil | figé jusqu'au rechargement de la page | suit la liste d'amis |
+| Limite d'une heure en match | l'intervalle se relançait à chaque but | posé une fois |
+| Rejoindre par lien / QR | pouvait rejoindre deux fois | une fois par code, garde explicite |
+
+**Ce qui reste, et pourquoi on le laisse.** Six `<img>` que Next voudrait voir
+en `next/image`. Ce n'est pas un oubli : ces images sont des bannières et des
+icônes de grade servies depuis `public/`, dont le poids est déjà maîtrisé
+(chantier 2.8 : 1,0 Mo pour 24 bannières). `next/image` ajouterait un service
+d'optimisation facturé par Vercel pour un gain nul.
+
+### 9.46-a [fait] La composition d'équipes se remettait à zéro — *24 août 2026*
+
+`TeamSetup` synchronisait ses équipes dans un `useEffect` dépendant de
+`players`. Or `players` est un TABLEAU : sa référence change sans que son
+contenu bouge — à chaque snapshot Firestore dans le lobby, et **à chaque rendu**
+en mode invité, où la liste était écrite en toutes lettres dans le JSX de
+l'appelant.
+
+Une composition faite à la main pouvait donc être effacée par l'arrivée d'un
+joueur, et le mode invité bouclait.
+
+`TeamSetup` compare désormais la **signature** de la liste — les identifiants,
+dans l'ordre — et non la référence du tableau. Le calcul se fait pendant le
+rendu, motif prévu par React pour un état qui dérive de ses props.
 
 ### 9.47 [fait] Le profil ignorait les parties les plus anciennes — *24 août 2026*
 
