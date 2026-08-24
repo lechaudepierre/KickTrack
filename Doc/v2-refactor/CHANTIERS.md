@@ -535,17 +535,20 @@ Vous trois jouez en V2 plusieurs soirées réelles, puis `v2 everyone`.
 
 ### Bloc 3 — Saisons
 
-> **Repoussé volontairement (décision de Sacha, 20/08).** « Le but, ça va être de retarder ça au
-> max. Une fois qu'on aura une V2 stable, on se posera sur : ok, une saison, qu'est-ce qu'elle
-> fait. » Les chantiers ci-dessous restent valables, mais rien ne commence avant que la V2 soit
-> stable et livrée. *(rien commencé)*
-| | Chantier | État | Qui |
+> **Le cadrage disait « rien commencé ».** C'était vrai le 20/08 ; ça ne l'est plus depuis le
+> 23/08. Tableau remis en accord avec le code le 24/08, **en vérifiant chaque ligne dans les
+> sources** — la moitié était fausse.
+
+| | Chantier | État | Où |
 |---|---|---|---|
-| 3.1 | Modèle de données + archive | [a faire] | moi |
-| 3.2 | Clôture (fige -> distribue -> reset) | [a faire] | moi |
-| 3.3 | Soft reset | [a faire] | moi — coefficient = **D5** |
-| 3.4 | Table de récompenses par grade | [a faire] | moi — attend les bannières |
-| 3.5 | Historique de saison sur le profil | [a faire] | moi |
+| 3.1 | Modèle de données + archive | [fait] | `seasons/{id}`, `/standings`, `users/{uid}/seasons/{id}` |
+| 3.2 | Clôture (fige -> distribue -> reset) | [fait] | `scripts/close-season.ts` |
+| 3.3 | Soft reset | [fait] | `seasonReset.ts`, `compress` k = 0.5 |
+| 3.4 | Table de récompenses par grade | [fait] | `season.config.mjs`, `recompenses.grades` |
+| 3.6 | Outil admin de clôture | [fait] | le script EST l'outil : confirmation tapée + simulation |
+| 3.7 | Marche arrière de clôture | [fait] | `scripts/rollback-season.mjs` — voir ci-dessous |
+| 3.5 | Historique de saison sur le profil | [a faire] | la donnée existe, **rien ne l'affiche** |
+| 3.8 | Filtre par saison sur le profil | [a faire] | dépend de 3.5 |
 | 3.6 | Outil admin de clôture + confirmation forte | [a faire] | moi |
 | 3.7 | Marche arrière de clôture | [a faire] | moi — plomberie déjà faite (2.9) |
 | 3.8 | Filtre par saison sur tout le profil | [a faire] | moi — dépend de 3.1 |
@@ -2475,7 +2478,7 @@ moitié de la cible : le convertir ne rapporterait rien.
 **Cadrage acté :** la période écoulée devient rétroactivement la **saison 0**. Septembre = on la
 clôture *et* on ouvre la saison 1. Il y a donc bien une distribution de récompenses dès maintenant.
 
-### 3.1 [a faire] Modèle de données des saisons
+### 3.1 [fait] Modèle de données des saisons — *23 août 2026*
 Aucune notion de saison n'existe dans le code (zéro occurrence, vérifié).
 - Définition de saison : `id`, `nom`, `debut`, `fin`, `statut`, référence de sa table de récompenses.
 - **Historique par joueur et par saison** — c'est ce qui porte les récompenses au grade :
@@ -2495,7 +2498,7 @@ Aucune notion de saison n'existe dans le code (zéro occurrence, vérifié).
 - À partir de la **saison 1**, `peakElo` est suivi en direct (mis à jour à chaque fin de partie
   côté serveur, chantier 0.4) — le « grade maximum atteint » devient exact pour de bon.
 
-### 3.2 [a faire] Clôture de saison — script admin local, ordre strict et idempotent
+### 3.2 [fait] Clôture de saison — script admin local, ordre strict et idempotent — *23 août 2026*
 Ordonnancement imposé par `31-saisons.md`, à respecter à la lettre :
 1. **Figer + archiver** le classement (snapshot à un instant précis ; les parties terminées après n'entrent pas)
 2. **Distribuer** les récompenses (via `grantItem`, identifiants d'octroi uniques)
@@ -2510,13 +2513,13 @@ une **action admin manuelle** par décision (doc `31`) — un script lancé depu
 compte de service est exactement le bon outil. Même code `grantItem`, contexte d'exécution différent.
 Le dossier [`scripts/`](../../scripts/) accueille déjà ce genre d'outil.
 
-### 3.3 [a faire] Soft reset
+### 3.3 [fait] Soft reset — *23 août 2026*
 Rapprochement des ELO vers 1000, sans effacement : l'écart se resserre, la hiérarchie reste.
 C'est la contrepartie obligatoire de l'ELO inflationniste.
 - ATTENTION: Coefficient à calibrer, traitement des inactifs à trancher — voir décisions.
 - L'ancien score n'est pas perdu : il vit dans l'archive de 3.1.
 
-### 3.4 [a faire] Table de récompenses par grade
+### 3.4 [fait] Table de récompenses par grade — *23 août 2026*
 Mécanique générique : une saison référence une table en données. Deux axes possibles :
 - **Palier de classement** : top 1 / top 3 / top 10
 - **Grade atteint** : une récompense par palier de grade franchi (Argent -> Or -> Diamant -> Master -> GrandMaster)
@@ -2559,19 +2562,42 @@ ATTENTION: dépend de 3.1 (modèle de données des saisons). À ne pas commencer
 « Saison 0 — Master II, 7ᵉ » sur le profil. C'est la contrepartie visible du reset : le joueur
 perd son ELO mais garde une trace permanente. Sans ça, le reset est vécu comme une punition sèche.
 
-### 3.7 [a faire] Marche arrière de clôture — **exigence explicite de Sacha**
+### 3.7 [fait] Marche arrière de clôture — *24 août 2026*
+
 « J'aimerais bien juste tester la mise en saison et dans les dix minutes revenir en arrière. »
 
-La plomberie existe (chantier 2.9). Reste à l'assembler :
-- Avant de muter quoi que ce soit, **archiver l'ELO d'avant reset de chaque joueur** — c'est ce qui
-  rend le soft reset annulable, pas seulement les récompenses.
-- `rollback-season.mjs` : `revokeBySourceRef(<id de clôture>)` + restauration des ELO depuis
-  l'archive + réouverture de la saison.
-- ATTENTION: Fenêtre de sécurité à définir : une annulation reste sûre tant qu'aucune partie n'a été jouée
-  après la clôture. Passé ce point, restaurer les ELO écraserait des parties légitimes. Le script
-  doit **détecter et refuser** ce cas plutôt que de l'écraser.
+**Le piège trouvé en vérifiant.** `revoke-season.mjs` ne rendait que les
+RÉCOMPENSES. La compression de l'ELO restait définitive — son propre en-tête le
+disait. Une clôture d'essai aurait donc comprimé l'ELO de 141 joueurs **sans
+retour possible**, à quelques semaines de septembre.
 
-### 3.6 [a faire] Outil admin de clôture
+**Deux corrections.**
+
+1. La clôture archive désormais l'état d'AVANT de chaque profil, dans
+   `users/{uid}/seasons/{id}.avant` : `elo`, `peakElo`, `seasonGames`,
+   `seasonId`, `playedPreviousSeason`. Sans ces quatre derniers, un retour
+   arrière laissait des compteurs faux.
+2. `scripts/rollback-season.mjs` (`npm run season:rollback`) défait **tout**,
+   dans l'ordre inverse : récompenses, ELO et compteurs, archives, instantané
+   du classement, réouverture de la saison.
+
+**La fenêtre de sécurité, et pourquoi elle est vraie.**
+Une annulation n'est sûre que tant qu'aucune partie n'a été jouée depuis la
+clôture — sinon restaurer les anciens ELO effacerait des résultats légitimes
+sans que personne ne le voie. Le script **détecte et refuse**. Il ne propose pas
+de forcer : passé ce point, le retour arrière n'est plus la bonne opération.
+
+Un garde-fou qui échoue en silence serait pire que pas de garde-fou. Vérifié sur
+la production : les **1 023** parties portent toutes `startedAt` en `Timestamp`,
+la requête renvoie 61 sur les 30 derniers jours et 0 dans le futur. La
+comparaison fonctionne donc réellement.
+
+ATTENTION: la saison suivante, ouverte par la clôture, n'est pas supprimée par le
+retour arrière — elle est laissée en base, à retirer à la main si elle gêne.
+
+### 3.6 [fait] Outil admin de clôture — *23 août 2026*
+Les deux exigences sont tenues : confirmation tapée (`CLOTURER-SAISON-0`) et simulation par défaut.
+Sacha a tranché que **le script suffit** — pas d'interface.
 Déclenchement manuel (décision `31-saisons.md` : pas de calendrier automatique).
 - [fait] **Confirmation forte exigée** (Sacha : « il ne faut pas le faire sans faire exprès ») : le
   script doit demander de retaper l'identifiant de la saison, pas un simple `y/n`.

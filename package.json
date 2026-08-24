@@ -27,6 +27,7 @@
     "audit:comptes": "tsx scripts/audit-comptes.ts",
     "audit:scores": "tsx scripts/audit-scores.ts",
     "season:close": "tsx scripts/close-season.ts",
+    "season:rollback": "node scripts/rollback-season.mjs",
     "season:revoke": "node scripts/revoke-season.mjs"
   },
   "dependencies": {

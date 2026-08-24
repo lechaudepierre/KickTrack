@@ -74,10 +74,27 @@ async function main() {
     titre('2. Classement final');
     const usersSnap = await db.collection('users').get();
 
+    /*
+     * L'état de chaque profil AVANT qu'on y touche.
+     *
+     * C'est ce qui rend la clôture annulable. `rollback-season.mjs` relit ces
+     * valeurs pour les remettre en place — sans elles, la compression de l'ELO
+     * serait définitive, et Sacha a demandé explicitement de pouvoir « tester
+     * la mise en saison et dans les dix minutes revenir en arrière ».
+     */
+    const avantParJoueur = new Map<string, Record<string, unknown>>();
+
     const standings: FinalStanding[] = usersSnap.docs
         .map(d => {
             const u = d.data();
             const st = u.stats ?? {};
+            avantParJoueur.set(d.id, {
+                elo: st.elo ?? 1000,
+                peakElo: st.peakElo ?? null,
+                seasonGames: st.seasonGames ?? null,
+                seasonId: st.seasonId ?? null,
+                playedPreviousSeason: st.playedPreviousSeason ?? null,
+            });
             const games = st.totalGames ?? 0;
             const peak = Math.max(st.peakElo ?? 0, st.elo ?? 1000);
             return {
@@ -193,6 +210,8 @@ async function main() {
             seasonId: config.from.id, label: config.from.label,
             rank: p.rank, elo: p.eloBefore, peakGrade: p.peakGrade,
             games: p.games, items: p.items, closedAt: now,
+            // Tout ce qu'il faut pour défaire exactement ce qui suit.
+            avant: avantParJoueur.get(p.userId) ?? null,
         });
         lot.update(userRef, {
             'stats.elo': p.eloAfter,
@@ -216,7 +235,9 @@ async function main() {
 
     ligne();
     ligne('═'.repeat(74));
-    ligne(`  Clôture terminée. Pour tout annuler (sauf l'ELO) :`);
+    ligne(`  Clôture terminée. Pour tout annuler, ELO COMPRIS :`);
+    ligne(`    node scripts/rollback-season.mjs ${config.from.id} --apply`);
+    ligne(`  Pour n'annuler que les récompenses :`);
     ligne(`    node scripts/revoke-season.mjs ${sourceRef} --apply`);
     ligne('═'.repeat(74));
     ligne();
