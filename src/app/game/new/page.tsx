@@ -16,7 +16,6 @@ import type { GameMode } from '@/lib/gamemodes/types';
 import { useFeature } from '@/lib/features';
 import { FieldBackground } from '@/components/FieldDecorations';
 import {
-    ArrowLeftIcon,
     UserIcon,
     UsersIcon
 } from '@heroicons/react/24/outline';
@@ -85,8 +84,18 @@ export default function NewGamePage() {
     }, []);
 
     // Heartbeat: keep session alive every 30s so it expires if host disconnects
+    /*
+     * On dépend de l'IDENTIFIANT de session, pas de l'objet.
+     *
+     * Lister `session` ferait boucler l'abonnement plus bas : il appelle
+     * `setSession`, ce qui changerait la référence, ce qui relancerait
+     * l'abonnement. L'identifiant, lui, ne change que si l'on change de
+     * session — c'est exactement la condition qui doit relancer.
+     */
+    const sessionId = session?.sessionId;
+
     useEffect(() => {
-        if (step !== 'waiting' || !session) return;
+        if (step !== 'waiting' || !sessionId) return;
 
         const interval = setInterval(() => {
             if (sessionRef.current) {
@@ -95,7 +104,7 @@ export default function NewGamePage() {
         }, 30_000);
 
         return () => clearInterval(interval);
-    }, [step, session?.sessionId]);
+    }, [step, sessionId]);
 
     useEffect(() => {
         const unsubscribe = initialize();
@@ -112,9 +121,9 @@ export default function NewGamePage() {
 
     // Subscribe to session updates
     useEffect(() => {
-        if (!session) return;
+        if (!sessionId) return;
 
-        const unsubscribe = subscribeToSession(session.sessionId, (updatedSession) => {
+        const unsubscribe = subscribeToSession(sessionId, (updatedSession) => {
             if (updatedSession) {
                 setSession(updatedSession);
                 // No auto-advance: host manually clicks "Lancer" when ready
@@ -122,7 +131,7 @@ export default function NewGamePage() {
         });
 
         return () => unsubscribe();
-    }, [session?.sessionId]);
+    }, [sessionId]);
 
     const handleCreateSession = async () => {
         if (!user) return;

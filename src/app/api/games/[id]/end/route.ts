@@ -205,7 +205,6 @@ export async function POST(
         // l'ancienne version écrivait une valeur absolue calculée avant, ce qui
         // faisait perdre une mise à jour si deux parties se terminaient en même temps.
         const today = new Date().toISOString().split('T')[0];
-        const nowIso = new Date().toISOString();
         /** Packs tombés pendant cette partie, par joueur. Renvoyé au client. */
         const packsEarned: Record<string, number> = {};
 

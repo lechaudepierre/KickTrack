@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Button, Input, PageHeader } from '@/components/common/ui';
+import { Button, PageHeader } from '@/components/common/ui';
 import { getVenues, searchVenues, getUserFavoriteVenues, toggleVenueFavorite } from '@/lib/firebase/firestore';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { Venue, VenueType } from '@/types';
@@ -37,7 +36,6 @@ const venueTypeLabels: Record<VenueType, string> = {
 };
 
 export default function VenuesPage() {
-    const router = useRouter();
     const { user } = useAuthStore();
     const [venues, setVenues] = useState<Venue[]>([]);
     const [isLoading, setIsLoading] = useState(true);

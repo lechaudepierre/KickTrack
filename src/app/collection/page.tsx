@@ -34,7 +34,7 @@ import { isAdmin } from '@/lib/utils/adminUtils';
 import { loadMyPacks, openPackRequest, type UnopenedPack } from '@/lib/collection/packsClient';
 import BottomNav from '@/components/common/BottomNav';
 import { FieldBackground } from '@/components/FieldDecorations';
-import type { CatalogItem, Equipped, ItemType, Rarity } from '@/types/collection';
+import type { CatalogItem, Equipped, Rarity } from '@/types/collection';
 
 import pageStyles from '@/styles/content-page.module.css';
 import styles from './page.module.css';

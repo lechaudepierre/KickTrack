@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import PlayerRow from '@/components/common/PlayerRow';
 import { usePlayerProfiles } from '@/lib/firebase/usePlayerProfiles';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { getGame, getUserGames, subscribeToGame } from '@/lib/firebase/games';
+import { getUserGames, subscribeToGame } from '@/lib/firebase/games';
 import { subscribeToSession, startGame } from '@/lib/firebase/game-sessions';
 import { completeTournamentMatch, getTournament } from '@/lib/firebase/tournaments';
 import { Game, Player, GoalPosition, Team } from '@/types';
@@ -53,7 +53,16 @@ export default function GameResultsPage() {
         game?.teams.flatMap(t => t.players.map(p => p.userId)) ?? [],
         { withRank: true },
     );
-    const [tournamentUpdated, setTournamentUpdated] = useState(false);
+    /*
+     * Le match de tournoi ne se clôt qu'une fois.
+     *
+     * C'était un `useState` — mais rien ne l'affichait : ce drapeau ne sert
+     * qu'à garder. Une ref dit exactement ça, et surtout elle ne provoque pas
+     * de rendu. C'est ce qui permet à `handleTournamentUpdate` de n'avoir
+     * aucune dépendance réactive, donc à l'abonnement de ne pas se relancer
+     * quand le drapeau bascule.
+     */
+    const tournoiDejaMisAJour = useRef(false);
 
     useEffect(() => {
         initialize();
@@ -61,27 +70,10 @@ export default function GameResultsPage() {
         // change rien à l'exécution — ça dit juste la vérité au compilateur.
     }, [initialize]);
 
-    // Real-time listener: picks up eloChanges even if written after initial load
-    useEffect(() => {
-        if (!gameId) return;
 
-        const unsubscribe = subscribeToGame(gameId, (gameData) => {
-            if (gameData) {
-                setGame(gameData);
-                setIsLoading(false);
-                loadH2HStats(gameData);
-                handleTournamentUpdate(gameData);
-            } else {
-                setIsLoading(false);
-            }
-        });
-
-        return () => unsubscribe();
-    }, [gameId]);
-
-    const handleTournamentUpdate = async (gameData: Game) => {
-        if (gameData.tournamentId && gameData.tournamentMatchId && gameData.status === 'completed' && gameData.winner !== undefined && !tournamentUpdated) {
-            setTournamentUpdated(true);
+    const handleTournamentUpdate = useCallback(async (gameData: Game) => {
+        if (gameData.tournamentId && gameData.tournamentMatchId && gameData.status === 'completed' && gameData.winner !== undefined && !tournoiDejaMisAJour.current) {
+            tournoiDejaMisAJour.current = true;
             try {
                 const tournament = await getTournament(gameData.tournamentId);
                 if (tournament) {
@@ -101,9 +93,9 @@ export default function GameResultsPage() {
                 console.error('Error updating tournament match:', err);
             }
         }
-    };
+    }, []);
 
-    const loadH2HStats = async (currentGame: Game) => {
+    const loadH2HStats = useCallback(async (currentGame: Game) => {
         try {
             const hostId = currentGame.hostId;
             const allHostGames = await getUserGames(hostId, 50); // Fetch last 50 games
@@ -138,20 +130,46 @@ export default function GameResultsPage() {
         } catch (error) {
             console.error('Error loading H2H stats:', error);
         }
-    };
+    }, []);
+
+    /*
+     * On dépend des CHAMPS de la partie, pas de son objet : `game` est mis à
+     * jour en temps réel, sa référence change à chaque écriture. L'identifiant
+     * de session et l'hôte, eux, ne changent pas.
+     */
+    const sessionId = game?.sessionId;
+    const hostId = game?.hostId;
+
+    // Real-time listener: picks up eloChanges even if written after initial load
+    useEffect(() => {
+        if (!gameId) return;
+
+        const unsubscribe = subscribeToGame(gameId, (gameData) => {
+            if (gameData) {
+                setGame(gameData);
+                setIsLoading(false);
+                loadH2HStats(gameData);
+                handleTournamentUpdate(gameData);
+            } else {
+                setIsLoading(false);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [gameId, loadH2HStats, handleTournamentUpdate]);
 
     // Listen for rematch (session update)
     useEffect(() => {
-        if (!game?.sessionId || user?.userId === game.hostId) return;
+        if (!sessionId || user?.userId === hostId) return;
 
-        const unsubscribe = subscribeToSession(game.sessionId, (session) => {
+        const unsubscribe = subscribeToSession(sessionId, (session) => {
             if (session?.status === 'active' && session.gameId && session.gameId !== gameId) {
                 router.push(`/game/${session.gameId}`);
             }
         });
 
         return () => unsubscribe();
-    }, [game?.sessionId, gameId, user?.userId, router]);
+    }, [sessionId, hostId, gameId, user?.userId, router]);
 
     const handleRematch = async () => {
         if (!game || !game.sessionId || isRematching) return;

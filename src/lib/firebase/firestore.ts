@@ -9,7 +9,6 @@ import {
     orderBy,
     limit,
     updateDoc,
-    increment as firestoreIncrement
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
 import { Venue, VenueInput, VenueFilters, Game } from '@/types';

@@ -1,6 +1,6 @@
 // Tournament-related TypeScript types
 
-import { Player, TeamColor, GameFormat } from './game';
+import { Player, TeamColor } from './game';
 
 export type TournamentFormat = '1v1' | '2v2';
 export type TournamentMode = 'round_robin' | 'bracket';
