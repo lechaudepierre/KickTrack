@@ -5,7 +5,9 @@
  * Ordre de priorité, du plus explicite au plus implicite :
  *   1. `equipped.banner` — ce que le joueur a choisi (le futur)
  *   2. `bannerId` sur le profil — l'ancien champ, migré vers 1.
- *   3. attribution historique par pseudo — le filet, à supprimer après migration
+ *
+ * L'étape 3 — l'attribution historique par pseudo — a disparu le 24/08 : elle
+ * faisait perdre sa bannière à qui changeait de pseudo.
  *
  * À chaque étape, on tente d'abord le CATALOGUE, puis le repli statique de
  * `bannerUtils`. Une bannière absente du catalogue continue donc de s'afficher :
@@ -26,12 +28,17 @@ export interface ResolvedBanner {
     name?: string;
 }
 
+/**
+ * Le pseudo ne sert plus : il n'entre plus dans la résolution depuis que
+ * l'attribution par pseudo a disparu (24/08). Paramètre retiré plutôt que
+ * gardé « au cas où » — un argument qu'on passe sans qu'il serve finit par
+ * faire croire qu'il compte.
+ */
 export function resolveBanner(
-    username: string,
     bannerId?: string | null,
     equipped?: Equipped | null
 ): ResolvedBanner | null {
-    const itemId = equipped?.banner?.itemId ?? resolveBannerId(username, bannerId);
+    const itemId = equipped?.banner?.itemId ?? resolveBannerId(bannerId);
     if (!itemId) return null;
 
     // 1. Le catalogue fait foi.

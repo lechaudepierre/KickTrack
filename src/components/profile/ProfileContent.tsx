@@ -53,7 +53,6 @@ import PlayerBanner from '@/components/common/PlayerBanner';
 import { getRankInfo } from '@/lib/utils/rankUtils';
 import { readLadder, LADDERS } from '@/lib/game/ladders';
 import { toDate } from '@/lib/game/dates';
-import { CREATOR_USERNAMES } from '@/lib/utils/bannerUtils';
 import { resolvePeakElo } from '@/lib/game/scoring';
 import { RankProgressBar, Button } from '@/components/common/ui';
 import ProfileTabs, { type ProfileTab } from './ProfileTabs';
@@ -418,7 +417,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                     </div>
                 </div>
 
-                <PlayerBanner username={profileUser.username}
+                <PlayerBanner
                     bannerId={profileUser.bannerId}
                     equipped={v2Enabled ? profileUser.equipped : null}
                     className={`${styles.profileHeader} ${styles.profileBannerBlock}`}
@@ -538,8 +537,20 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                     </button>
                 )}
 
+                {/*
+                    Ici s'affichait « CREATOR » pour trois pseudos écrits en dur.
+                    Deux défauts : le terme (c'est « Fondateur » depuis le 22/08)
+                    et surtout le principe — l'identité tenait à une chaîne que
+                    le joueur pouvait changer lui-même.
+
+                    C'est exactement ce que le socle collection remplace : les
+                    fondateurs possèdent le titre « Fondateur » et la bannière
+                    « creator », affichés par `PlayerTitle` et la bannière du
+                    profil, juste au-dessus. La date d'inscription redevient
+                    donc ce qu'elle est pour tout le monde.
+                */}
                 <p className={styles.joinDate}>
-                    {CREATOR_USERNAMES.includes(profileUser.username) ? 'CREATOR' : `Membre depuis ${formatDate(profileUser.createdAt)}`}
+                    Membre depuis {formatDate(profileUser.createdAt)}
                 </p>
 
                 {/* Filters Section */}

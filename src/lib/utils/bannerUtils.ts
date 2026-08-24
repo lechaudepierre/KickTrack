@@ -4,7 +4,8 @@
  * ⚠️ CE MODULE EST EN COURS DE MIGRATION VERS LE CATALOGUE FIRESTORE (chantier 2.5).
  *
  * Avant : le map `BANNERS` + les attributions en dur par pseudo
- * (`CREATOR_USERNAMES`, `SPECIAL_BANNERS`) étaient la seule source.
+ * (`CREATOR_USERNAMES`, `SPECIAL_BANNERS`) étaient la seule source. Elles ont
+ * disparu le 24/08 : voir `resolveBannerId` plus bas.
  * Après : chaque bannière est un item du catalogue, chaque attribution un
  * `grantItem` normal, et le joueur équipe via `equipped.banner`.
  *
@@ -74,12 +75,6 @@ const FALLBACK_BANNERS: Record<string, BannerConfig> = {
  * les lit pour créer les octrois correspondants, par `userId` cette fois.
  * Ne plus ajouter d'entrée ici — passer par le catalogue.
  */
-export const CREATOR_USERNAMES = ['Astroboy', 'PIGEON ou BAGARRE', 'lechauvepierre'];
-
-export const SPECIAL_BANNERS: Record<string, string> = {
-    'Matricule13': 'veloTDF',
-};
-
 export function getBannerConfig(bannerId: string | undefined | null): BannerConfig | null {
     if (!bannerId) return null;
     return FALLBACK_BANNERS[bannerId] ?? null;
@@ -90,18 +85,25 @@ export function getBannerPath(bannerId: string | undefined | null): string | nul
 }
 
 /**
- * Bannière à afficher pour un joueur.
- * L'ordre de priorité importe : ce que le joueur a explicitement équipé passe
- * avant l'attribution historique par pseudo.
+ * Bannière à afficher pour un joueur, depuis l'ancien champ `bannerId`.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * LE REPLI PAR PSEUDO A DISPARU — chantier 2.5, 24 août 2026
+ * ═══════════════════════════════════════════════════════════════════════════
+ * Cette fonction consultait deux listes de pseudos écrites en dur,
+ * `CREATOR_USERNAMES` et `SPECIAL_BANNERS`. Conséquence : **un fondateur qui
+ * changeait de pseudo perdait sa bannière.** L'identité tenait à une chaîne de
+ * caractères que le joueur pouvait modifier lui-même.
+ *
+ * Les quatre personnes concernées possèdent désormais leur bannière comme
+ * n'importe quel item, et l'ont équipée (migration appliquée le 24/08). Leur
+ * bannière suit donc leur compte, plus leur pseudo.
+ *
+ * Il ne reste que `bannerId`, l'ancien champ de profil, lu au cas où — un seul
+ * compte le porte encore, et il est cohérent avec son `equipped`.
  */
-export function resolveBannerId(
-    username: string,
-    profileBannerId?: string | null
-): string | null {
-    if (profileBannerId) return profileBannerId;
-    if (CREATOR_USERNAMES.includes(username)) return 'creator';
-    if (SPECIAL_BANNERS[username]) return SPECIAL_BANNERS[username];
-    return null;
+export function resolveBannerId(profileBannerId?: string | null): string | null {
+    return profileBannerId || null;
 }
 
 /** Voile appliqué sous le texte, pour qu'il reste lisible quelle que soit l'image. */

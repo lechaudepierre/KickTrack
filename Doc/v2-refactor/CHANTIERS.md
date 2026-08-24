@@ -523,7 +523,7 @@ Vous trois jouez en V2 plusieurs soirées réelles, puis `v2 everyone`.
 | 2.2 | Inventaire en sous-collection | [fait] | moi |
 | 2.3 | `equipped` porté jusqu'aux classements | [fait] | moi |
 | 2.4 | `grantItem` idempotent | [fait] | moi |
-| 2.5 | Migration `bannerUtils` -> données | [bloque] | données migrées ; 3 joueurs à équiper, attend le feu vert |
+| 2.5 | Migration `bannerUtils` -> données | [fait] | repli par pseudo supprimé le 24/08 |
 | 2.6 | Équipement + route validée serveur | [fait] | moi |
 | 2.7 | Format de bannière unifié (4:1 partout) | [fait] | moi |
 | 2.8 | Alléger les assets bannières | [a faire] | **Sacha** — re-export WebP |
@@ -861,43 +861,48 @@ inaffichables.
 par elle et n'ont aucune logique d'inventaire propre. Un identifiant d'octroi unique empêche tout
 double-octroi en cas de retry.
 
-### 2.5 [en cours] Migrer `bannerUtils` en données — *bloqué sur un feu vert*
+### 2.5 [fait] Une bannière suit un compte, plus un pseudo — *24 août 2026*
 
-**La migration de données est DÉJÀ APPLIQUÉE.** Relancée en simulation le
-24/08 : les quatre octrois répondent « déjà octroyé ». Le suivi disait
-« attend le feu vert » — c'était faux, quelqu'un l'a lancée.
+**Le défaut.** L'attribution se faisait par **pseudo écrit en dur**, dans deux
+listes de `bannerUtils` : `CREATOR_USERNAMES` et `SPECIAL_BANNERS`. Conséquence :
+**un fondateur qui changeait de pseudo perdait sa bannière.** Son identité
+tenait à une chaîne de caractères qu'il pouvait modifier lui-même.
 
-**Ce qui reste n'est pas ce qu'on croyait.** Les quatre personnes POSSÈDENT
-leur bannière, mais trois ne l'ont pas ÉQUIPÉE :
+**Ce que la simulation a révélé.** Le suivi disait « attend le feu vert ». Faux :
+la migration de données avait déjà été appliquée — les quatre octrois
+répondaient « déjà octroyé ».
 
-| joueur | possède | équipé |
-|---|---|---|
-| Astroboy | creator, distortion, titre_fondateur | **creator** |
-| lechauvepierre | creator, titre_fondateur | *(rien)* |
-| PIGEON ou BAGARRE | creator, titre_fondateur | *(rien)* |
-| Matricule13 | veloTDF | *(rien)* |
+Mais trois des quatre personnes **possédaient** leur bannière sans l'avoir
+**équipée**. Elles ne la voyaient que grâce au repli par pseudo : le supprimer
+la leur aurait fait perdre en silence, soit l'inverse exact du bug à corriger.
 
-Ces trois-là ne voient donc leur bannière que grâce au **repli par pseudo** de
-`bannerUtils.resolveBannerId`. Le supprimer maintenant la leur ferait perdre en
-silence — l'inverse exact du bug qu'on veut corriger.
+**Étape 4 ajoutée au script**, puis appliquée avec l'accord de Sacha : équiper
+la bannière possédée quand rien ne l'est. Elle n'écrase jamais un choix
+explicite et ne devine pas quand le joueur en possède plusieurs.
 
-**Étape 4 ajoutée au script** : équiper la bannière possédée quand RIEN n'est
-équipé. Elle n'écrase jamais un choix explicite, et ne devine pas quand le
-joueur possède plusieurs bannières — il choisira dans son profil.
+| joueur | équipé après migration |
+|---|---|
+| Astroboy | creator *(avait déjà choisi)* |
+| lechauvepierre | creator |
+| PIGEON ou BAGARRE | creator |
+| Matricule13 | veloTDF |
 
-Simulation du 24/08 : **3 à équiper**, 1 avait déjà choisi, 137 ne possèdent
-aucune bannière.
+**Puis le repli a été supprimé** — c'est ce que tout le chantier visait :
+- `CREATOR_USERNAMES` et `SPECIAL_BANNERS` n'existent plus ;
+- `resolveBannerId` ne lit plus que `bannerId`, l'ancien champ de profil ;
+- le paramètre `username` de `resolveBanner` est retiré, ainsi que le prop
+  `username` de `PlayerBanner` et ses 4 sites d'appel — un argument qu'on passe
+  sans qu'il serve finit par faire croire qu'il compte.
 
-**⚠️ ATTEND LE FEU VERT DE SACHA** — écriture sur des comptes réels :
-```
-node scripts/migrate-banners.mjs --apply
-```
-Une fois passée, le repli par pseudo de `bannerUtils` peut être supprimé, et
-avec lui le bug d'origine : **un fondateur qui change de pseudo perd sa
-bannière.**
+**Un second foyer du même défaut**, trouvé au passage : `ProfileContent`
+affichait un badge « CREATOR » d'après la même liste de pseudos. Deux problèmes
+— le terme (c'est « Fondateur » depuis le 22/08) et surtout le principe.
 
-BUG: Aujourd'hui l'attribution se fait **par pseudo en dur** ([`bannerUtils.ts:97`](../../src/lib/utils/bannerUtils.ts#L97)) :
-`CREATOR_USERNAMES` et `SPECIAL_BANNERS`.
+Retiré. Les fondateurs possèdent le titre « Fondateur » et la bannière
+« creator », affichés juste au-dessus par `PlayerTitle` et la bannière du
+profil. C'est précisément ce que le socle collection devait remplacer.
+ATTENTION: la ligne affiche désormais « Membre depuis … » pour tout le monde.
+Si Sacha veut une marque de fondateur, elle doit passer par un item.
 
 ### 2.6 [fait] UI d'équipement de bannière — *20 août 2026*
 [fait] [`BannerPicker.tsx`](../../src/components/profile/BannerPicker.tsx) dans la modale d'édition du
@@ -3092,8 +3097,19 @@ Ce n'est pas seulement du poids mort, c'est un **piège** : elle porte des noms
 de classes plausibles, elle s'ouvre, elle se modifie — et rien ne change à
 l'écran, sans qu'aucune erreur ne le dise.
 
-Supprimée. **Garde-fou ajouté** : `npm run check:css` refuse toute feuille de
-module que personne n'importe, et tout import qui ne pointe sur rien. Les
+Supprimée — et le balayage étendu aux **composants**, qui a sorti trois morts
+de plus :
+
+| fichier | lignes | pourquoi |
+|---|---|---|
+| `app/profile/page.module.css` | 1 169 | resté après le découpage du profil |
+| `components/PendingImplementation.tsx` + css | 238 | jamais branché |
+| `common/ProfileBanner.tsx` + css | 61 | jumeau mort de `PlayerBanner` |
+| `game/MatchPointFlames.tsx` + css | 55 | **explicitement remplacé en janvier** par le dégradé pulsé, jamais supprimé |
+| | **1 523** | |
+
+**Garde-fou ajouté** : `npm run check:css` refuse toute feuille de module ou
+composant que personne n'importe, et tout import qui ne pointe sur rien. Les
 imports se résolvent par chemin, pas par nom de fichier — un premier essai par
 nom donnait 0 orphelin, parce que quinze fichiers s'appellent
 `page.module.css`. Vérifié en réintroduisant une feuille orpheline : il

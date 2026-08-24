@@ -409,11 +409,10 @@ export default function LeaderboardPage() {
                                     ? searchFiltered!.map(({ entry: player, rank }) => {
                                         // La couleur du texte suit la bannière réellement
                                         // affichée, plus une liste de pseudos en dur.
-                                        const onBanner = !!resolveBanner(player.username, player.bannerId,
+                                        const onBanner = !!resolveBanner(player.bannerId,
                                             v2Enabled ? player.equipped : null);
                                         return (
                                             <PlayerBanner key={player.userId}
-                                                username={player.username}
                                                 bannerId={player.bannerId}
                                                 equipped={v2Enabled ? player.equipped : null}
                                                 className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.myItem : ''}`}
@@ -457,11 +456,10 @@ export default function LeaderboardPage() {
                                         const { entry: player, rank } = item;
                                         // La couleur du texte suit la bannière réellement
                                         // affichée, plus une liste de pseudos en dur.
-                                        const onBanner = !!resolveBanner(player.username, player.bannerId,
+                                        const onBanner = !!resolveBanner(player.bannerId,
                                             v2Enabled ? player.equipped : null);
                                         return (
                                             <PlayerBanner key={player.userId}
-                                                username={player.username}
                                                 bannerId={player.bannerId}
                                                 equipped={v2Enabled ? player.equipped : null}
                                                 className={`${styles.listItem} ${currentUser?.userId === player.userId ? styles.myItem : ''}`}

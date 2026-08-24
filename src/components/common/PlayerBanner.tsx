@@ -6,7 +6,6 @@ import { useCatalog } from '@/lib/collection/catalogClient';
 import type { Equipped } from '@/types/collection';
 
 interface PlayerBannerProps {
-    username: string;
     bannerId?: string | null;
     /** Cosmétiques équipés (chantier 2.3). Prioritaire sur `bannerId`. */
     equipped?: Equipped | null;
@@ -28,7 +27,6 @@ interface PlayerBannerProps {
  *   • Children render in normal flow — their layout (grid/flex) is unaffected.
  */
 export default function PlayerBanner({
-    username,
     bannerId,
     equipped,
     children,
@@ -38,7 +36,7 @@ export default function PlayerBanner({
 }: PlayerBannerProps) {
     // Déclenche le chargement du catalogue et re-rend quand il arrive.
     useCatalog();
-    const banner = resolveBanner(username, bannerId, equipped);
+    const banner = resolveBanner(bannerId, equipped);
 
     if (!banner) {
         return (

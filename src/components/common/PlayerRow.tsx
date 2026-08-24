@@ -56,10 +56,10 @@ export default function PlayerRow({
     onClick,
     trailing,
 }: PlayerRowProps) {
-    const surBanniere = !!resolveBanner(username, profile?.bannerId, profile?.equipped);
+    const surBanniere = !!resolveBanner(profile?.bannerId, profile?.equipped);
 
     return (
-        <PlayerBanner username={username}
+        <PlayerBanner
             bannerId={profile?.bannerId}
             equipped={profile?.equipped}
             className={`${styles.row} ${className ?? ''}`}
