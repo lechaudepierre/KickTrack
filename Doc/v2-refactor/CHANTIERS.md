@@ -562,9 +562,57 @@ Vous trois jouez en V2 plusieurs soirées réelles, puis `v2 everyone`.
 | 4.1 | Monnaie : solde + journal | [reporte] |
 | 4.2 | Définition de pack au catalogue | [fait] | `buildPackPool(catalog)` |
 | 4.3 | Tirage serveur | [fait] | `POST /api/packs/open` + `openPack` |
-| 4.3b | Pity invisible | [a faire] | valeurs PROVISOIRE, à trancher |
+| 4.3b | Pity invisible | [fait] | seuil = 5 packs, **PROVISOIRE** |
 | 4.4 | Doublons -> monnaie | [abandonne] | pas de monnaie |
 | 4.5 | Animation d'ouverture | [fait] | `PackOpening.tsx` |
+
+### 4.3b [fait] La garantie anti-malchance — *24 août 2026*
+
+**Le problème.** Au tirage pur, un légendaire tombe dans **1,4 %** des packs —
+un pack sur 72. À un pack toutes les dix parties qualifiantes, c'est **720
+parties** en moyenne. Sacha : « c'est beaucoup trop ».
+
+Et « en moyenne » est trompeur : le hasard pur ne garantit rien. Un joueur peut
+ouvrir cent packs sans rien voir. La garantie ne corrige pas la moyenne, elle
+corrige la **queue de la distribution**.
+
+**Invisible, et c'est le point.** Le compteur vit sur le profil et n'est
+**jamais renvoyé au client**. Le joueur ne sait pas qu'il approche : il a
+simplement l'impression d'avoir fini par avoir de la chance. Un compteur
+affiché transformerait l'ouverture en calcul, et les packs « inutiles » en
+corvée à expédier.
+
+- `lib/collection/pity.ts` — module pur, **16 tests**, dont un qui simule
+  cinquante ouvertures systématiquement malchanceuses et vérifie qu'on ne
+  dépasse jamais l'écart garanti.
+- Branché dans `openPack`, **dans la transaction** : le compteur est lu avec le
+  pack, donc deux ouvertures simultanées ne peuvent pas déclencher la garantie
+  deux fois.
+- Un légendaire tiré **par chance** remet aussi le compteur à zéro — sinon la
+  garantie s'enchaînerait juste après un coup de veine.
+
+**⚠️ PROVISOIRE — `SEUIL_PITY = 5`**, valeur donnée par Sacha le 24/08 :
+« toutes les cinq packs… cinquante parties pour avoir un légendaire, c'est déjà
+bien ».
+
+Relevé du 24/08 sur les 113 joueurs, pour situer :
+
+| | joueurs |
+|---|---|
+| médiane | **0 pack** — la moitié n'en a jamais gagné |
+| 1 pack ou plus | 40 (35 %) |
+| 5 packs ou plus | **11 (10 %)** |
+| 25 packs | 1 |
+
+À 5, un joueur sur dix atteindrait la garantie. **C'est défendable vu le peu
+que la plupart jouent** — le chiffre paraît généreux dans l'absolu, il ne l'est
+pas face à cette distribution.
+
+**⚠️ La vraie limite n'est pas le seuil : il n'existe que DEUX légendaires.**
+Le joueur le plus assidu déclencherait la garantie cinq fois et posséderait les
+deux dès sa dixième ouverture — le reste ne serait que des doublons. **Ajouter
+des légendaires vaudrait mieux que remonter le seuil.** C'est une question
+d'assets, pour Sacha.
 
 ### Bloc 5 — Design system *(en fond, continu)*
 | | Chantier | État | Qui |

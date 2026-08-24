@@ -15,6 +15,7 @@ import { Timestamp, type Firestore } from 'firebase-admin/firestore';
 import type { CatalogItem } from '@/types/collection';
 import { computePackEarning, packIdsToCreate } from './packEarning';
 import { drawFromPool, buildPackPool } from './packPool';
+import { lirePity, pityApres, poolPourCeTirage } from './pity';
 import { grantItem } from './grant';
 
 export interface GrantPacksResult {
@@ -127,14 +128,30 @@ export async function openPack(
         const pack = snap.data() ?? {};
         if (pack.itemId) return { itemId: pack.itemId as string, alreadyOpened: true };
 
-        const tire = drawFromPool(pool, Math.random);
+        const userSnap = await tx.get(userRef);
+
+        /*
+         * La garantie anti-malchance — chantier 4.3b.
+         *
+         * Le compteur est lu DANS la transaction, avec le pack : deux
+         * ouvertures simultanées ne peuvent donc pas déclencher la garantie
+         * deux fois sur le même compteur.
+         *
+         * Il n'est jamais renvoyé au client. C'est ce qui la rend invisible :
+         * le joueur ne sait pas qu'il approche, il a juste l'impression
+         * d'avoir fini par avoir de la chance.
+         */
+        const pity = lirePity(userSnap.data()?.pity);
+        const tire = drawFromPool(poolPourCeTirage(pool, pity), Math.random);
         if (!tire) throw new Error('Aucun item tirable au catalogue');
 
-        const userSnap = await tx.get(userRef);
         const unopened = Math.max(0, (userSnap.data()?.packsUnopened ?? 1) - 1);
 
         tx.update(packRef, { openedAt: Timestamp.now(), itemId: tire.id });
-        tx.update(userRef, { packsUnopened: unopened });
+        tx.update(userRef, {
+            packsUnopened: unopened,
+            pity: pityApres(pity, tire.rarity),
+        });
 
         return { itemId: tire.id, alreadyOpened: false };
     });
