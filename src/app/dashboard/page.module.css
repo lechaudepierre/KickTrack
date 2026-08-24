@@ -1,3 +1,11 @@
+/*
+ * RÈGLE — un bloc clair repose SA couleur de texte.
+ *
+ * `body` est en BLANC, sur le fond terrain. Un conteneur crème qui ne
+ * redéfinit pas `color` laisse ses enfants hériter du blanc : texte invisible
+ * sur beige, sans qu'aucune erreur ne le signale. Passe du 24/08.
+ */
+
 /* Dashboard - Flat Design */
 
 .screen {
@@ -248,6 +256,7 @@
 }
 
 .smallAction {
+    color: var(--color-text-dark);
     flex: 1;
     display: flex;
     align-items: center;
@@ -307,6 +316,7 @@
 }
 
 .statBox {
+    color: var(--color-text-dark);
     flex: 1;
     background: var(--color-surface);
     border: var(--border-arcade);

@@ -1,3 +1,15 @@
+/*
+ * RÈGLE — un bloc clair repose SA couleur de texte.
+ *
+ * `body` est en BLANC, sur le fond terrain. Un conteneur crème qui ne
+ * redéfinit pas `color` laisse ses enfants hériter du blanc : texte invisible
+ * sur beige, sans qu'aucune erreur ne le signale.
+ *
+ * Chaque carte ci-dessous pose donc `color`, et pas seulement ses enfants
+ * connus — un enfant ajouté demain hérite alors du bon. Passe du 24/08, après
+ * que le défaut a été vu sur le classement de tournoi.
+ */
+
 /* Profile Page Styles - Flat Design */
 
 .container {
@@ -504,6 +516,7 @@
 
 /* Form récente */
 .formCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -563,6 +576,7 @@
 
 /* Venue Card */
 .venueCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -610,6 +624,7 @@
 }
 
 .venueListItem {
+    color: var(--color-text-dark);
     display: flex;
     justify-content: space-between;
     padding: var(--spacing-sm) var(--spacing-md);
@@ -638,6 +653,7 @@
 }
 
 .goalCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -663,6 +679,7 @@
 
 /* Position Card */
 .positionCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -742,6 +759,7 @@
 }
 
 .detailItem {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -776,6 +794,7 @@
 }
 
 .formatCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -785,6 +804,7 @@
 }
 
 .formatCardActive {
+    color: var(--color-text-dark);
     border-color: var(--color-primary);
     background: var(--color-surface-raised);
 }
@@ -818,6 +838,7 @@
 }
 
 .gameCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     border-radius: var(--radius-md);
     padding: var(--spacing-md);
@@ -925,6 +946,7 @@
 }
 
 .perfectCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -955,6 +977,7 @@
 
 /* Podium - Top Teammates */
 .podiumCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     border: var(--border-arcade);
     border-radius: var(--radius-md);
@@ -1065,6 +1088,7 @@
 }
 
 .h2hCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -1170,6 +1194,7 @@
 
 /* Chart */
 .chartCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -1231,6 +1256,7 @@
 }
 
 .matchPointCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -1260,6 +1286,7 @@
 }
 
 .gamelleCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -1297,6 +1324,7 @@
 }
 
 .roleCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -1372,6 +1400,7 @@
  * `dvh` et non `vh` : sur mobile, la barre d'adresse mange la différence.
  */
 .modalContent {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     border: 4px solid var(--ink-700);
     border-radius: var(--radius-lg);
@@ -1516,6 +1545,7 @@
    référence reste celui du mode Normal, et la hiérarchie visuelle doit le dire
    sans qu'on ait besoin de l'écrire. */
 .ladderCard {
+    color: var(--color-text-dark);
     margin: var(--spacing-md) 0;
     padding: var(--spacing-sm) var(--spacing-md);
     background: var(--color-surface);

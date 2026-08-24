@@ -5,10 +5,16 @@
  * Corrige au passage le défaut connu : renommer son compte faisait perdre
  * sa bannière, puisque l'attribution dépendait du pseudo.
  *
- * Trois opérations, toutes idempotentes :
- * 1. octroi de `creator` aux 3 créateurs (résolus pseudo → userId)
+ * Quatre opérations, toutes idempotentes :
+ * 1. octroi de `creator` aux 3 fondateurs (résolus pseudo → userId)
  * 2. octroi des bannières spéciales (Matricule13 → veloTDF)
  * 3. `user.bannerId` existant → `equipped.banner`
+ * 4. équiper la bannière possédée quand RIEN n'est équipé
+ *
+ * L'étape 4 est celle qui permet de retirer le repli par pseudo. Sans elle,
+ * trois joueurs sur quatre possèdent leur bannière sans l'avoir équipée : ils
+ * ne la voient que grâce au repli, et le supprimer la leur ferait perdre en
+ * silence (relevé le 24/08).
  *
  * ⚠️ ÉCRIT SUR DES DOCUMENTS UTILISATEUR RÉELS. Simulation par défaut.
  *
@@ -107,6 +113,39 @@ async function main() {
     }
 
     console.log(`\n${users.size} profils parcourus : ${migrated} à migrer, ${alreadyOk} déjà à jour, ${orphan} orphelin(s).`);
+
+    // ─── 4 : équiper ce qui est possédé, si rien ne l'est ────────────────────
+    //
+    // C'est l'étape qui rend le repli par pseudo inutile. On n'équipe QUE si
+    // le joueur n'a rien choisi : on ne remplace jamais un choix explicite.
+    console.log('\n── Équiper la bannière possédée quand rien n\'est équipé ──\n');
+    let equipes = 0, deja = 0, sansItem = 0;
+
+    for (const doc of users.docs) {
+        const data = doc.data();
+        if (data.equipped?.banner?.itemId) { deja++; continue; }
+
+        const inv = await doc.ref.collection('inventory').get();
+        // Une seule bannière possédée : le choix est évident. Plusieurs : on
+        // ne devine pas à la place du joueur, il choisira dans son profil.
+        const bannieres = inv.docs
+            .map(d => d.id)
+            .filter(id => catalog.docs.find(c => c.id === id)?.data().type === 'banner');
+
+        if (bannieres.length === 0) { sansItem++; continue; }
+        if (bannieres.length > 1) {
+            console.log(` ~ ${(data.username ?? doc.id).padEnd(20)} ${bannieres.length} bannières possédées — laissé au joueur`);
+            continue;
+        }
+
+        console.log(` → ${(data.username ?? doc.id).padEnd(20)} equipped.banner = ${bannieres[0]}`);
+        if (APPLY) {
+            await doc.ref.update({ equipped: { ...(data.equipped ?? {}), banner: { itemId: bannieres[0] } } });
+        }
+        equipes++;
+    }
+
+    console.log(`\n${equipes} à équiper, ${deja} avaient déjà choisi, ${sansItem} ne possèdent aucune bannière.`);
     console.log(APPLY ? '\n[ok] Migration appliquée.' : '\n Rien n\'a été écrit. Relancer avec --apply.');
 }
 

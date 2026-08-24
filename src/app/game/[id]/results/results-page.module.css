@@ -1,3 +1,11 @@
+/*
+ * RÈGLE — un bloc clair repose SA couleur de texte.
+ *
+ * `body` est en BLANC, sur le fond terrain. Un conteneur crème qui ne
+ * redéfinit pas `color` laisse ses enfants hériter du blanc : texte invisible
+ * sur beige, sans qu'aucune erreur ne le signale. Passe du 24/08.
+ */
+
 .container {
     display: flex;
     flex-direction: column;
@@ -89,6 +97,7 @@
 
 /* Le bloc crème des chiffres, sous la bannière. */
 .statBody {
+    color: var(--color-text-dark);
     background-color: var(--color-surface);
     border: var(--border-arcade);
     border-radius: var(--radius-md);
@@ -323,6 +332,7 @@
 /* ─── Rank Banner ─────────────────────────────────────────────────────────── */
 
 .rankBanner {
+    color: var(--color-text-dark);
     width: 100%;
     background: var(--color-surface);
     border: var(--border-arcade);
@@ -423,6 +433,7 @@
    Lit uniquement des tokens (chantier 5.1).
    ──────────────────────────────────────────────────────────────────────────── */
 .gageCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     border: var(--border-arcade);
     border-radius: var(--radius-md);
@@ -479,6 +490,7 @@
    cette page sur laquelle le joueur peut agir tout de suite. D'où le bouton
    pleine largeur et l'accent jaune, réservé par la charte à « important ». */
 .packUnlocked {
+    color: var(--color-text-dark);
     width: 100%;
     display: flex;
     flex-direction: column;

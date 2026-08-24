@@ -523,7 +523,7 @@ Vous trois jouez en V2 plusieurs soirées réelles, puis `v2 everyone`.
 | 2.2 | Inventaire en sous-collection | [fait] | moi |
 | 2.3 | `equipped` porté jusqu'aux classements | [fait] | moi |
 | 2.4 | `grantItem` idempotent | [fait] | moi |
-| 2.5 | Migration `bannerUtils` -> données | [en cours] | le repli statique sert encore |
+| 2.5 | Migration `bannerUtils` -> données | [bloque] | données migrées ; 3 joueurs à équiper, attend le feu vert |
 | 2.6 | Équipement + route validée serveur | [fait] | moi |
 | 2.7 | Format de bannière unifié (4:1 partout) | [fait] | moi |
 | 2.8 | Alléger les assets bannières | [a faire] | **Sacha** — re-export WebP |
@@ -597,6 +597,9 @@ Rien commencé, volontairement le dernier.
 | 9.5 | Agrégations côté client | [fait] | plus aucune sur un chemin utilisateur |
 | 9.6 | Fichiers parasites à la racine | [fait] | `src.zip` ignoré, log sorti de l'index |
 | 9.7 | `goalsConceded` doublé en 2v2 | [fait] | voulu, et documenté |
+| 9.44 | Feuille de style orpheline de 1 169 lignes | [fait] | supprimée + garde-fou `check:css` |
+| 9.45 | Passe de contraste | [fait] | 28 conteneurs, audit 105 -> 61 |
+| 9.46 | Le lint de fond | [a faire] | 85 problèmes, 30 erreurs, tous antérieurs |
 | 9.8 | Comptes fantômes (inscriptions ratées) | [fait] | 2 joueurs bloqués, débloqués le 23/08 |
 | 9.9 | Erreur en fin de partie sans lieu | [fait] | — |
 | 9.10 | Page de match fragile aux ajouts de contenu | [en cours] | 1re passe faite, reste les dimensions figées |
@@ -858,18 +861,43 @@ inaffichables.
 par elle et n'ont aucune logique d'inventaire propre. Un identifiant d'octroi unique empêche tout
 double-octroi en cas de retry.
 
-### 2.5 [en cours] Migrer `bannerUtils` en données — *script prêt, pas appliqué*
-[fait] [`scripts/migrate-banners.mjs`](../../scripts/migrate-banners.mjs), **simulation par défaut**.
-[fait] Simulation exécutée : **4 octrois** à faire (3 créateurs + `Matricule13`), **0 profil à migrer** —
-ce qui confirme que `bannerId` n'avait jamais été écrit nulle part.
-[a faire] **Attend le feu vert** : première écriture sur des documents utilisateur réels.
-   `node scripts/migrate-banners.mjs --apply`
+### 2.5 [en cours] Migrer `bannerUtils` en données — *bloqué sur un feu vert*
 
-BUG: Aujourd'hui l'attribution se fait **par pseudo en dur** ([`bannerUtils.ts:26`](../../src/lib/utils/bannerUtils.ts#L26)) :
-`CREATOR_USERNAMES` et `SPECIAL_BANNERS`. Conséquence non voulue : **un créateur qui change de
-pseudo perd sa bannière.**
-- Chaque bannière devient un item du catalogue, chaque attribution un `grantItem` normal.
-- Script de migration : `user.bannerId` -> `equipped.banner`, octrois rétroactifs aux 3 créateurs et à `Matricule13`.
+**La migration de données est DÉJÀ APPLIQUÉE.** Relancée en simulation le
+24/08 : les quatre octrois répondent « déjà octroyé ». Le suivi disait
+« attend le feu vert » — c'était faux, quelqu'un l'a lancée.
+
+**Ce qui reste n'est pas ce qu'on croyait.** Les quatre personnes POSSÈDENT
+leur bannière, mais trois ne l'ont pas ÉQUIPÉE :
+
+| joueur | possède | équipé |
+|---|---|---|
+| Astroboy | creator, distortion, titre_fondateur | **creator** |
+| lechauvepierre | creator, titre_fondateur | *(rien)* |
+| PIGEON ou BAGARRE | creator, titre_fondateur | *(rien)* |
+| Matricule13 | veloTDF | *(rien)* |
+
+Ces trois-là ne voient donc leur bannière que grâce au **repli par pseudo** de
+`bannerUtils.resolveBannerId`. Le supprimer maintenant la leur ferait perdre en
+silence — l'inverse exact du bug qu'on veut corriger.
+
+**Étape 4 ajoutée au script** : équiper la bannière possédée quand RIEN n'est
+équipé. Elle n'écrase jamais un choix explicite, et ne devine pas quand le
+joueur possède plusieurs bannières — il choisira dans son profil.
+
+Simulation du 24/08 : **3 à équiper**, 1 avait déjà choisi, 137 ne possèdent
+aucune bannière.
+
+**⚠️ ATTEND LE FEU VERT DE SACHA** — écriture sur des comptes réels :
+```
+node scripts/migrate-banners.mjs --apply
+```
+Une fois passée, le repli par pseudo de `bannerUtils` peut être supprimé, et
+avec lui le bug d'origine : **un fondateur qui change de pseudo perd sa
+bannière.**
+
+BUG: Aujourd'hui l'attribution se fait **par pseudo en dur** ([`bannerUtils.ts:97`](../../src/lib/utils/bannerUtils.ts#L97)) :
+`CREATOR_USERNAMES` et `SPECIAL_BANNERS`.
 
 ### 2.6 [fait] UI d'équipement de bannière — *20 août 2026*
 [fait] [`BannerPicker.tsx`](../../src/components/profile/BannerPicker.tsx) dans la modale d'édition du
@@ -3053,6 +3081,68 @@ DEUX classements par stade : un seul endroit sait comment un compteur se lit.
 par-dessus ces classements. Comme ils lisent maintenant des compteurs de profil
 et non des parties, un compteur « saison en cours » devra être tenu de la même
 façon — surtout pas un retour à l'agrégation.
+
+### 9.44 [fait] Une feuille de style de 1 169 lignes que personne n'importait — *24 août 2026*
+
+`src/app/profile/page.module.css` restait après le découpage du profil en
+composants. Elle dupliquait des dizaines de classes de
+`ProfileContent.module.css`.
+
+Ce n'est pas seulement du poids mort, c'est un **piège** : elle porte des noms
+de classes plausibles, elle s'ouvre, elle se modifie — et rien ne change à
+l'écran, sans qu'aucune erreur ne le dise.
+
+Supprimée. **Garde-fou ajouté** : `npm run check:css` refuse toute feuille de
+module que personne n'importe, et tout import qui ne pointe sur rien. Les
+imports se résolvent par chemin, pas par nom de fichier — un premier essai par
+nom donnait 0 orphelin, parce que quinze fichiers s'appellent
+`page.module.css`. Vérifié en réintroduisant une feuille orpheline : il
+l'attrape.
+
+Contrairement au contrôle de contraste, celui-ci est FIABLE : un import se
+résout, il ne se devine pas. Il a donc sa place dans `npm run check`.
+
+### 9.45 [fait] Passe de contraste — *24 août 2026*
+
+28 conteneurs clairs reposent désormais leur couleur de texte, sur les écrans
+les plus vus :
+
+| fichier | cartes corrigées |
+|---|---|
+| `ProfileContent.module.css` | 18 |
+| `game/[id]/results/results-page.module.css` | 4 |
+| `dashboard/page.module.css` | 2 |
+| `content-page.module.css` (partagé) | 2 |
+| pages de tournoi | 13 (voir 9.3) |
+
+L'audit passe de **105 à 61** règles à regarder — dont 18 disparues avec la
+feuille orpheline. Ce qui reste est surtout sur des écrans secondaires
+(`feedback`, `admin`, `venues`).
+
+### 9.46 [a faire] Le lint de fond
+
+`npx eslint src/` sort **85 problèmes, dont 30 erreurs**. Aucun ne vient du
+travail des derniers jours — vérifié fichier par fichier, mes 11 fichiers sont
+propres à un avertissement pré-existant près.
+
+| règle | nombre | gravité |
+|---|---|---|
+| `@typescript-eslint/no-unused-vars` | 32 | avertissement |
+| `@typescript-eslint/no-explicit-any` | **20** | **erreur** |
+| `react-hooks/exhaustive-deps` | 17 | avertissement |
+| `react/no-unescaped-entities` | **8** | **erreur** |
+| `@next/next/no-img-element` | 6 | avertissement |
+| `react-hooks/set-state-in-effect` | **1** | **erreur** |
+| `prefer-const` | **1** | **erreur** |
+
+Les deux qui méritent un vrai regard :
+- **`set-state-in-effect`** — c'est le motif qui avait causé une boucle de rendu
+  au chantier 9.30. Un seul restant, à traiter.
+- **`exhaustive-deps` (17)** — chacun est un abonnement ou un chargement qui peut
+  se déclencher au mauvais moment. À regarder un par un, jamais en masse : les
+  corriger sans réfléchir change le moment où les effets tournent.
+
+Le reste (`any`, entités non échappées, `<img>`) est mécanique.
 
 ### 9.6 [fait] Fichiers parasites à la racine — *23 août 2026*
 - `src.zip` : 308 Ko, non suivis et non ignorés — une archive de travail à un doigt d'être
