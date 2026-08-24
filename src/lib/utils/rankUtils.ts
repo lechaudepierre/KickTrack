@@ -39,6 +39,21 @@ export interface RankInfo {
     iconPath: string;
 }
 
+/**
+ * Le nom affichable de chaque grade.
+ *
+ * `getRankInfo` calcule ce libellé depuis un ELO. Mais l'historique de saison
+ * archive le grade sous sa CLÉ (`master`), pas sous son ELO : il lui faut donc
+ * la table à part, plutôt qu'une seconde liste recopiée ailleurs.
+ */
+export const RANK_LABELS: Record<RankType, string> = {
+    argent: 'Argent',
+    or: 'Or',
+    diamant: 'Diamant',
+    master: 'Master',
+    grandmaster: 'Grand Master',
+};
+
 export const getRomanLevel = (level: number): string => {
     switch (level) {
         case 1: return 'I';

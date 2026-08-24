@@ -55,6 +55,7 @@ import { readLadder, LADDERS } from '@/lib/game/ladders';
 import { toDate } from '@/lib/game/dates';
 import { resolvePeakElo } from '@/lib/game/scoring';
 import { RankProgressBar, Button } from '@/components/common/ui';
+import SeasonHistory from './SeasonHistory';
 import ProfileTabs, { type ProfileTab } from './ProfileTabs';
 import ProfileHistoryTab from './ProfileHistoryTab';
 import ProfilePlayersTab from './ProfilePlayersTab';
@@ -473,6 +474,13 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                     image de fond arbitraire, une barre par-dessus serait
                     illisible sur la moitié des visuels. */}
                 <RankProgressBar elo={profileUser.stats.elo} />
+
+                {/* Saisons passées — chantier 3.5.
+                    Placé juste sous la progression courante : les deux
+                    répondent à la même question, « où j'en suis », l'une
+                    maintenant et l'autre avant. Ne rend rien tant qu'aucune
+                    saison n'est close. */}
+                <SeasonHistory userId={targetUserId} />
 
                 {/* Carte du classement Blitz — chantier 7.11.
                     Une carte À PART ENTIÈRE, pas une ligne de plus sur la carte

@@ -1,0 +1,60 @@
+/*
+ * HISTORIQUE DE SAISON
+ *
+ * Un bloc clair posé sur le fond terrain : il repose donc sa couleur de texte,
+ * sinon ses enfants héritent du blanc de `body` et deviennent invisibles.
+ */
+
+.bloc {
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: var(--color-surface);
+    color: var(--color-text-dark);
+    border: var(--border-arcade);
+    border-radius: var(--radius-md);
+}
+
+.titre {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+    color: var(--color-text-dark-soft);
+    margin-bottom: var(--spacing-sm);
+}
+
+.liste {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ligne {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs) var(--spacing-sm);
+}
+
+.saison {
+    font-weight: var(--weight-bold);
+    font-size: var(--text-base);
+}
+
+/* Le résultat lui-même : c'est ce qu'on vient lire. */
+.detail {
+    font-weight: var(--weight-medium);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Le nombre de parties est un contexte, pas le résultat : il s'efface. */
+.parties {
+    margin-left: auto;
+    font-size: var(--text-xs);
+    color: var(--color-text-dark-soft);
+    font-variant-numeric: tabular-nums;
+}

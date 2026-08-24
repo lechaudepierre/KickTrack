@@ -547,7 +547,7 @@ Vous trois jouez en V2 plusieurs soirées réelles, puis `v2 everyone`.
 | 3.4 | Table de récompenses par grade | [fait] | `season.config.mjs`, `recompenses.grades` |
 | 3.6 | Outil admin de clôture | [fait] | le script EST l'outil : confirmation tapée + simulation |
 | 3.7 | Marche arrière de clôture | [fait] | `scripts/rollback-season.mjs` — voir ci-dessous |
-| 3.5 | Historique de saison sur le profil | [a faire] | la donnée existe, **rien ne l'affiche** |
+| 3.5 | Historique de saison sur le profil | [fait] | `SeasonHistory.tsx`, sous la barre de progression |
 | 3.8 | Filtre par saison sur le profil | [a faire] | dépend de 3.5 |
 | 3.6 | Outil admin de clôture + confirmation forte | [a faire] | moi |
 | 3.7 | Marche arrière de clôture | [a faire] | moi — plomberie déjà faite (2.9) |
@@ -2558,9 +2558,24 @@ options, à trancher au moment du chantier 3.1 :
 
 ATTENTION: dépend de 3.1 (modèle de données des saisons). À ne pas commencer avant.
 
-### 3.5 [a faire] Affichage : historique de saison sur le profil
-« Saison 0 — Master II, 7ᵉ » sur le profil. C'est la contrepartie visible du reset : le joueur
-perd son ELO mais garde une trace permanente. Sans ça, le reset est vécu comme une punition sèche.
+### 3.5 [fait] Historique de saison sur le profil — *24 août 2026*
+
+« Saison 0 — Master, 7ᵉ » sur le profil. C'est la **contrepartie visible du reset** : le joueur
+perd son ELO mais garde une trace permanente. Sans ça, la clôture se vit comme une punition sèche.
+
+- `lib/firebase/useSeasonHistory.ts` — lit `users/{uid}/seasons`, la plus récente d'abord
+- `components/profile/SeasonHistory.tsx` — placé sous `RankProgressBar` : les deux répondent à la
+  même question, « où j'en suis », l'une maintenant et l'autre avant
+- `RANK_LABELS` ajouté à `rankUtils` : l'archive stocke le grade sous sa CLÉ (`master`), pas sous
+  son ELO — il fallait la table à part plutôt qu'une seconde liste recopiée
+
+**Ne rend rien tant qu'aucune saison n'est close**, ce qui est l'état actuel. Un bloc facultatif
+qui échoue à lire affiche « rien » plutôt qu'une erreur.
+
+NOTE: le hook mémorise DE QUI vient la lecture, pas seulement son résultat. Remettre l'état à zéro
+au début de l'effet aurait été un `setState` synchrone dans un effet — la règle que le chantier
+9.46 venait justement de purger. En gardant l'identifiant à côté des données, l'historique d'un
+autre joueur ne peut pas s'afficher un instant.
 
 ### 3.7 [fait] Marche arrière de clôture — *24 août 2026*
 
