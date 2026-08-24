@@ -8,6 +8,7 @@ import { formatPinCode, validatePinCode } from '@/lib/utils/code-generator';
 import { FieldBackground } from '@/components/FieldDecorations';
 import styles from '@/styles/content-page.module.css';
 import { PageHeader, Button } from '@/components/common/ui';
+import s from './page.module.css';
 
 function JoinTournamentContent() {
     const router = useRouter();
@@ -111,41 +112,25 @@ function JoinTournamentContent() {
                 <PageHeader title="Rejoindre Tournoi" />
 
                 {error && (
-                    <div className="error-box" style={{ marginBottom: 'var(--spacing-md)' }}>
+                    <div className={`error-box ${s.errorBox}`}>
                         {error}
                     </div>
                 )}
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)' }}>
-                    <div style={{ textAlign: 'center' }}>
-                        <p className="text-secondary" style={{ marginBottom: 'var(--spacing-lg)' }}>
+                <div className={s.form}>
+                    <div className={s.intro}>
+                        <p className={`text-secondary ${s.introText}`}>
                             Entrez le code fourni par l&apos;organisateur du tournoi
                         </p>
 
-                        <div style={{ position: 'relative' }}>
-                            <input
-                                type="text"
-                                value={pinCode}
-                                onChange={(e) => handleCodeChange(e.target.value)}
-                                placeholder="ABC-123"
-                                maxLength={7}
-                                style={{
-                                    width: '100%',
-                                    textAlign: 'center',
-                                    fontSize: '2.25rem',
-                                    fontFamily: 'monospace',
-                                    fontWeight: 700,
-                                    letterSpacing: '0.3em',
-                                    padding: '1.5rem',
-                                    background: 'var(--field-light)',
-                                    border: '2px solid rgba(255,255,255,0.1)',
-                                    borderRadius: 'var(--radius-lg)',
-                                    color: 'var(--field-dark)',
-                                    textTransform: 'uppercase',
-                                    outline: 'none'
-                                }}
-                            />
-                        </div>
+                        <input
+                            type="text"
+                            value={pinCode}
+                            onChange={(e) => handleCodeChange(e.target.value)}
+                            placeholder="ABC-123"
+                            maxLength={7}
+                            className={s.codeInput}
+                        />
                     </div>
 
                     <Button onClick={() => handleJoin()}
@@ -159,7 +144,7 @@ function JoinTournamentContent() {
                 </div>
 
                 {/* Back link */}
-                <div style={{ marginTop: 'var(--spacing-2xl)', textAlign: 'center' }}>
+                <div className={s.back}>
                     <Button onClick={() => router.push('/dashboard')} variant="ghost" size="sm">
                         Retour au tableau de bord
                     </Button>

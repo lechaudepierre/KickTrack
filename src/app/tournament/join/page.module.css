@@ -1,0 +1,51 @@
+/*
+ * REJOINDRE UN TOURNOI — un seul champ, le code PIN.
+ *
+ * Le champ est volontairement grand et très espacé : on le remplit à deux
+ * mains, souvent debout à côté de la table.
+ */
+
+.errorBox {
+    margin-bottom: var(--spacing-md);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+}
+
+.intro {
+    text-align: center;
+}
+
+.introText {
+    margin-bottom: var(--spacing-lg);
+}
+
+.codeInput {
+    width: 100%;
+    padding: var(--spacing-lg);
+    text-align: center;
+    font-size: 2.25rem;
+    font-family: monospace;
+    font-weight: var(--weight-bold);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    background: var(--field-light);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    color: var(--field-dark);
+    outline: none;
+}
+
+/* Le champ est le seul élément interactif de la page : sa prise de focus doit
+   se voir, sinon la navigation au clavier n'a aucun repère. */
+.codeInput:focus-visible {
+    border-color: var(--color-accent);
+}
+
+.back {
+    margin-top: var(--spacing-2xl);
+    text-align: center;
+}

@@ -2810,6 +2810,72 @@ Le test fige le comportement actuel sans l'approuver. Corriger la répartition
 changerait la forme des tableaux : c'est une décision de jeu, pas de
 refactoring. À trancher par Sacha.
 
+**Suite — le style en ligne dans les autres pages de tournoi.** [fait] *24 août 2026*
+
+Le même travers était présent partout. Les six pages sont faites.
+
+| page | lignes | `style={{}}` | couleurs en dur |
+|---|---|---|---|
+| `tournament/[id]/page.tsx` | 1 087 -> **637** | 93 -> **1** | 24 -> 0 |
+| `tournament/[id]/live/page.tsx` | 572 -> **322** | 61 -> **1** | 15 -> 0 |
+| `tournament/[id]/results/page.tsx` | 369 -> **206** | 38 -> **0** | 9 -> 0 |
+| `tournament/new/page.tsx` | 252 -> **244** | 18 -> **0** | 3 -> 0 |
+| `tournament/[id]/match/page.tsx` | 278 -> **208** | 17 -> **1** | 6 -> 0 |
+| `tournament/join/page.tsx` | 186 -> **171** | 7 -> **0** | 1 -> 0 |
+| | | **234 -> 3** | **58 -> 0** |
+
+Les trois `style={{}}` qui restent portent une valeur que la feuille de styles
+ne peut pas connaître, et passent tous par une variable CSS :
+- le dégradé d'avatar d'une équipe (lobby, match) ;
+- la hauteur d'une colonne du tableau à élimination, qui dépend du nombre de
+  matchs du premier tour (live).
+
+**La moitié du style de `new/page.tsx` ne servait à rien.** Chaque carte de
+sélection repeignait son texte en blanc quand elle était active :
+
+```tsx
+<p style={{ color: mode === 'bracket' ? 'white' : 'var(--color-text-dark)' }}>
+```
+
+Or `content-page.module.css` porte déjà `.selectionCardActive p { color: … !important }`.
+Le `!important` gagnait dans le cas actif, et le cas inactif ne faisait que
+répéter la couleur héritée du parent. Six ternaires recopiés pour rien.
+
+Seules les **icônes** avaient besoin d'être repeintes, parce que la règle
+partagée ne visait que `p` et `span`. Elle vise maintenant aussi `svg` : les
+icônes Heroicons tracent en `currentColor` et suivent d'elles-mêmes. Une règle
+au lieu de six ternaires.
+
+**Cinq tokens ajoutés** à `variables.css`, tous réutilisés par plusieurs pages :
+
+| token | usage |
+|---|---|
+| `--color-danger-tint` | fond des boutons d'action destructrice |
+| `--color-scrim` | voile derrière une modale |
+| `--color-hairline` | filet de séparation, fond d'en-tête de tableau |
+| `--color-text-dark-faint` | texte inactif : place vide, adversaire non désigné |
+| `--color-accent-tint` / `--color-success-tint` | surligner une ligne sans la repeindre |
+
+La page de résultats écrivait ses couleurs de podium en dur (`#FFD700`,
+`#C0C0C0`, `#CD7F32`) alors que `--medal-gold`, `--medal-silver-edge` et
+`--medal-bronze` existaient déjà.
+
+**Reste un avertissement de lint pré-existant** dans `join/page.tsx` :
+`useEffect` a une dépendance manquante (`handleJoin`). Non corrigé — le
+rattraper changerait le moment où un tournoi rejoint par lien se déclenche,
+et ce n'est pas du styling.
+
+**⚠️ Point signalé, pas tranché — la répartition des exemptions.**
+Le code annonce en commentaire « distribute byes evenly across the bracket for
+fairness ». Il ne le fait pas : l'espacement vaut `places / exemptions`, et
+`floor(i * 4/3)` donne 0, 1, 2 — les exemptions sont **contiguës** en tête de
+tableau. À 5 équipes, trois équipes passent le premier tour et deux d'entre
+elles se rencontrent aussitôt.
+
+Le test fige le comportement actuel sans l'approuver. Corriger la répartition
+changerait la forme des tableaux : c'est une décision de jeu, pas de
+refactoring. À trancher par Sacha.
+
 **Suite — le style en ligne dans les autres pages de tournoi.**
 Le même travers y était présent. Les deux plus grosses sont faites le 23/08 :
 

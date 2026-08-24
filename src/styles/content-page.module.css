@@ -233,8 +233,16 @@
     border-color: var(--ink-700);
 }
 
+/*
+ * Le contenu d'une carte sélectionnée passe en clair — texte ET icône.
+ *
+ * `svg` a été ajouté le 24/08 : sans lui, chaque page devait repeindre son
+ * icône à la main, en ligne, avec le même ternaire recopié six fois.
+ * Les icônes Heroicons tracent en `currentColor`, elles suivent donc.
+ */
 .selectionCardActive p,
-.selectionCardActive span {
+.selectionCardActive span,
+.selectionCardActive svg {
     color: var(--color-text-primary) !important;
 }
 

@@ -1,0 +1,64 @@
+/*
+ * NOUVEAU TOURNOI — le formulaire de création.
+ *
+ * L'essentiel du style venait déjà du module partagé `content-page`. Ce qui
+ * restait en ligne était surtout REDONDANT : chaque carte de sélection
+ * repeignait son texte en blanc quand elle était active, alors que
+ * `.selectionCardActive p` le fait déjà — et avec `!important`, donc le style
+ * en ligne ne servait à rien du tout.
+ *
+ * Il ne reste ici que ce qui n'existait nulle part.
+ */
+
+.errorBox {
+    margin-bottom: var(--spacing-md);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+/* Le bouton de mode et son bouton d'info, qui se pose par-dessus. */
+.modeSlot {
+    position: relative;
+}
+
+.modeButton {
+    width: 100%;
+}
+
+.cardTitle {
+    font-weight: var(--weight-medium);
+    font-size: var(--text-sm);
+}
+
+/*
+ * Le sous-titre d'une carte. Pas de variante « sélectionnée » ici : c'est un
+ * `<p>`, et la règle `.selectionCardActive p` du module partagé l'éclaircit
+ * déjà — avec `!important`, elle gagnerait de toute façon.
+ */
+.cardSubtitle {
+    margin-top: var(--spacing-xs);
+    font-size: 0.7rem;
+    color: var(--color-text-dark-soft);
+}
+
+.infoBox {
+    background: var(--color-accent-tint);
+    border: 2px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-sm);
+}
+
+.infoText {
+    font-size: var(--text-sm);
+    color: var(--color-text-dark);
+    font-weight: var(--weight-regular);
+}
+
+.submit {
+    margin-top: var(--spacing-md);
+}

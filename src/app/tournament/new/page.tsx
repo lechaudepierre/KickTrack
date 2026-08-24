@@ -17,6 +17,7 @@ import {
 } from '@heroicons/react/24/outline';
 import styles from '@/styles/content-page.module.css';
 import { PageHeader, Button } from '@/components/common/ui';
+import s from './page.module.css';
 import { MODES } from '@/lib/gamemodes/modes';
 import ModeInfoModal, { ModeInfoButton } from '@/components/game/ModeInfoModal';
 import type { GameMode } from '@/lib/gamemodes/types';
@@ -106,12 +107,12 @@ export default function NewTournamentPage() {
                 <PageHeader title="Nouveau Tournoi" />
 
                 {error && (
-                    <div className="error-box" style={{ marginBottom: 'var(--spacing-md)' }}>
+                    <div className={`error-box ${s.errorBox}`}>
                         {error}
                     </div>
                 )}
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+                <div className={s.form}>
                     {/* Venue Selection */}
                     <div>
                         <label className={styles.fieldLabel}>Stade</label>
@@ -159,15 +160,12 @@ export default function NewTournamentPage() {
                             <label className={styles.fieldLabel}>Mode de jeu</label>
                             <div className={styles.grid2}>
                                 {MODES.map(m => (
-                                    <div key={m.id} style={{ position: 'relative' }}>
+                                    <div key={m.id} className={s.modeSlot}>
                                         <button onClick={() => setModeId(m.id)}
-                                            className={`${styles.selectionCard} ${modeId === m.id ? styles.selectionCardActive : styles.selectionCardInactive}`}
+                                            className={`${styles.selectionCard} ${s.modeButton} ${modeId === m.id ? styles.selectionCardActive : styles.selectionCardInactive}`}
                                             aria-pressed={modeId === m.id}
-                                            style={{ width: '100%' }}
                                         >
-                                            <p style={{ fontWeight: 600, color: modeId === m.id ? 'white' : 'var(--color-text-dark)', fontSize: '0.875rem' }}>
-                                                {m.name}
-                                            </p>
+                                            <p className={s.cardTitle}>{m.name}</p>
                                         </button>
                                         <ModeInfoButton modeName={m.name} onClick={() => setInfoMode(m)} />
                                     </div>
@@ -185,16 +183,16 @@ export default function NewTournamentPage() {
                             <button onClick={() => setMode('round_robin')}
                                 className={`${styles.selectionCard} ${mode === 'round_robin' ? styles.selectionCardActive : styles.selectionCardInactive}`}
                             >
-                                <ListBulletIcon width={28} height={28} style={{ color: mode === 'round_robin' ? 'white' : 'var(--color-text-dark)' }} />
-                                <p style={{ fontWeight: 600, color: mode === 'round_robin' ? 'white' : 'var(--color-text-dark)', fontSize: '0.875rem' }}>Tous contre tous</p>
-                                <p style={{ fontSize: '0.7rem', color: mode === 'round_robin' ? 'rgba(255,255,255,0.7)' : 'rgba(51,51,51,0.5)', marginTop: '4px' }}>Max 8 equipes</p>
+                                <ListBulletIcon width={28} height={28} />
+                                <p className={s.cardTitle}>Tous contre tous</p>
+                                <p className={s.cardSubtitle}>Max 8 equipes</p>
                             </button>
                             <button onClick={() => setMode('bracket')}
                                 className={`${styles.selectionCard} ${mode === 'bracket' ? styles.selectionCardActive : styles.selectionCardInactive}`}
                             >
-                                <TrophyIcon width={28} height={28} style={{ color: mode === 'bracket' ? 'white' : 'var(--color-text-dark)' }} />
-                                <p style={{ fontWeight: 600, color: mode === 'bracket' ? 'white' : 'var(--color-text-dark)', fontSize: '0.875rem' }}>Eliminatoire</p>
-                                <p style={{ fontSize: '0.7rem', color: mode === 'bracket' ? 'rgba(255,255,255,0.7)' : 'rgba(51,51,51,0.5)', marginTop: '4px' }}>Bracket</p>
+                                <TrophyIcon width={28} height={28} />
+                                <p className={s.cardTitle}>Eliminatoire</p>
+                                <p className={s.cardSubtitle}>Bracket</p>
                             </button>
                         </div>
                     </div>
@@ -206,27 +204,21 @@ export default function NewTournamentPage() {
                             <button onClick={() => setFormat('1v1')}
                                 className={`${styles.selectionCard} ${format === '1v1' ? styles.selectionCardActive : styles.selectionCardInactive}`}
                             >
-                                <UserIcon width={28} height={28} style={{ color: format === '1v1' ? 'white' : 'var(--color-text-dark)' }} />
-                                <p style={{ fontWeight: 600, color: format === '1v1' ? 'white' : 'var(--color-text-dark)' }}>1 vs 1</p>
+                                <UserIcon width={28} height={28} />
+                                <p className={s.cardTitle}>1 vs 1</p>
                             </button>
                             <button onClick={() => setFormat('2v2')}
                                 className={`${styles.selectionCard} ${format === '2v2' ? styles.selectionCardActive : styles.selectionCardInactive}`}
                             >
-                                <UsersIcon width={28} height={28} style={{ color: format === '2v2' ? 'white' : 'var(--color-text-dark)' }} />
-                                <p style={{ fontWeight: 600, color: format === '2v2' ? 'white' : 'var(--color-text-dark)' }}>2 vs 2</p>
+                                <UsersIcon width={28} height={28} />
+                                <p className={s.cardTitle}>2 vs 2</p>
                             </button>
                         </div>
                     </div>
 
                     {/* Info Box */}
-                    <div style={{
-                        background: 'rgba(255, 215, 0, 0.2)',
-                        border: '2px solid var(--color-accent)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: 'var(--spacing-md)',
-                        marginTop: 'var(--spacing-sm)'
-                    }}>
-                        <p style={{ fontSize: '0.875rem', color: 'var(--color-text-dark)', fontWeight: 500 }}>
+                    <div className={s.infoBox}>
+                        <p className={s.infoText}>
                             {mode === 'round_robin'
                                 ? `Chaque equipe jouera contre toutes les autres. Maximum ${format === '1v1' ? '8 joueurs' : '8 equipes (16 joueurs)'}.`
                                 : `Format elimination directe avec tableau. ${format === '1v1' ? 'Joueurs individuels' : 'Equipes de 2'}.`
@@ -239,7 +231,7 @@ export default function NewTournamentPage() {
                         isLoading={isLoading}
                         variant="accent"
                         fullWidth
-                        style={{ marginTop: 'var(--spacing-md)' }}
+                        className={s.submit}
                     >
                         {isLoading ? 'Création...' : 'Créer le tournoi'}
                     </Button>
