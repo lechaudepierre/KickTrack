@@ -592,7 +592,7 @@ Rien commencé, volontairement le dernier.
 |---|---|---|---|
 | 9.1 | Score stocké deux fois | [fait] | dérivé des équipes |
 | 9.2 | `startTime` / `startedAt` en doublon | [fait] | + 9 conversions de date unifiées |
-| 9.3 | Découper les fichiers > 850 lignes | [a faire] | plus que 2 fichiers concernés |
+| 9.3 | Découper les fichiers > 850 lignes | [en cours] | reste la page de tournoi (1 087 l.) |
 | 9.4 | Undo imparfait du multiplicateur | [fait] | l'état se rejoue depuis les buts |
 | 9.5 | Agrégations côté client | [a faire] | à surveiller |
 | 9.6 | Fichiers parasites à la racine | [fait] | `src.zip` ignoré, log sorti de l'index |
@@ -2719,15 +2719,46 @@ On ne supprime pas `startTime` — il faudrait migrer 1 020 documents pour ne ri
 **toute lecture passe par `gameStartMs()`**, qui sait lequel lire : plus personne n'a à choisir, et
 c'est ce choix arbitraire qui m'avait fait perdre du temps sur le chronomètre.
 
-### 9.3 [a faire] Découper les gros fichiers
-Relevé le 23/08, après les chantiers 9.1, 9.2 et 9.4 :
-- `app/tournament/[id]/page.tsx` — **1 087 lignes**
-- `lib/firebase/tournaments.ts` — **935 lignes**
-- ~~`lib/firebase/games.ts`~~ — 582 lignes, repassé sous le seuil (les routes serveur en
-  ont vidé le calcul, le moteur de buts en a sorti les règles)
+### 9.3 [en cours] Découper les gros fichiers
+
+Relevé le 23/08 :
+- `app/tournament/[id]/page.tsx` — **1 087 lignes** — [a faire]
+- ~~`lib/firebase/tournaments.ts`~~ — 935 → **709 lignes** — [fait], voir ci-dessous
+- ~~`lib/firebase/games.ts`~~ — 582 lignes, repassé sous le seuil tout seul (les routes
+  serveur en ont vidé le calcul, le moteur de buts en a sorti les règles)
 - ~~`components/profile/ProfileContent.tsx`~~ — 701 lignes, repassé sous le seuil
 
-Il ne reste donc que **deux** fichiers concernés, et le plus gros est une page.
+**Ce qui est sorti de `tournaments.ts` — *23 août 2026*.**
+Les trois fonctions qui décident du déroulé d'un tournoi vivaient au milieu des
+appels Firestore alors qu'elles ne touchent à aucune base. Elles étaient donc
+intestables — et ce sont elles qui disent qui joue contre qui.
+
+`lib/tournament/format.ts` (275 l., pur) + `format.test.ts` — **47 tests** :
+- `genererMatchsRoundRobin` — méthode du cercle, tirage et ordre des tours
+- `genererTableau` — arbre à élimination, exemptions, noms de tours
+- `classementInitial`, `melanger`, `nomDeTour`
+
+Le hasard et les identifiants sont **injectés** (`opts.alea`, `opts.nouvelId`) :
+sans ça rien n'était vérifiable deux fois de suite.
+
+Ce que les tests ont établi :
+- le round-robin est **juste** jusqu'à 16 équipes — chaque paire se rencontre une
+  fois et une seule. J'avais cru le contraire : c'était mon test qui triait les
+  identifiants dans l'ordre alphabétique (`E10` avant `E2`) et la liste attendue
+  dans l'ordre numérique. Les deux ne divergent qu'à partir de dix équipes.
+- au passage : `generateId` était dupliqué, et trois avertissements de lint
+  dormaient dans le fichier (dont un `let` jamais réassigné).
+
+**⚠️ Point signalé, pas tranché — la répartition des exemptions.**
+Le code annonce en commentaire « distribute byes evenly across the bracket for
+fairness ». Il ne le fait pas : l'espacement vaut `places / exemptions`, et
+`floor(i * 4/3)` donne 0, 1, 2 — les exemptions sont **contiguës** en tête de
+tableau. À 5 équipes, trois équipes passent le premier tour et deux d'entre
+elles se rencontrent aussitôt.
+
+Le test fige le comportement actuel sans l'approuver. Corriger la répartition
+changerait la forme des tableaux : c'est une décision de jeu, pas de
+refactoring. À trancher par Sacha.
 
 ### 9.4 [fait] L'annulation d'un but ne soustrait plus, elle rejoue — *23 août 2026*
 
