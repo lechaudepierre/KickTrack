@@ -275,7 +275,10 @@ export function calculateAdvancedStats(
         }
 
         // Badge: MVP
-        if ((game as any).mvpId === userId) mvpGames++;
+        // `as any` retiré le 24/08 : `mvpId` est déclaré sur `Game` depuis
+        // toujours. Le cast ne contournait rien — il privait juste ce test de
+        // toute vérification.
+        if (game.mvpId === userId) mvpGames++;
 
         // Autres stats classiques
         totalGoalsConceded += opponentScore;

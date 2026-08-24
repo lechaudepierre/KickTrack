@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
 import { saisonCourante } from '@/lib/game/season';
+import { toDate } from '@/lib/game/dates';
 import { GameSession, Game, Player, Team, GameFormat } from '@/types';
 import { generatePinCode } from '@/lib/utils/code-generator';
 
@@ -119,9 +120,11 @@ export async function getSessionByPinCode(pinCode: string): Promise<GameSession 
 
     const session = snapshot.docs[0].data() as GameSession;
 
-    // Reject expired sessions (host may have left without proper cleanup)
-    const exp = (session.expiresAt as any)?.toDate ? (session.expiresAt as any).toDate() : new Date(session.expiresAt as any);
-    if (exp <= new Date()) return null;
+    // Une session périmée n'existe plus, même si l'hôte est parti sans nettoyer.
+    // `toDate` sait lire une Date comme un Timestamp Firestore (chantier 9.2) :
+    // c'est ce qui remplace les trois conversions à la main qui traînaient ici,
+    // chacune écrite avec deux `as any`.
+    if (toDate(session.expiresAt) <= new Date()) return null;
 
     return session;
 }
@@ -254,11 +257,7 @@ export async function getActiveSessions(): Promise<GameSession[]> {
     const snapshot = await getDocs(q);
     return snapshot.docs
         .map(d => d.data() as GameSession)
-        .filter(s => {
-            // Filter out expired sessions client-side (expiresAt may be Date or Firestore Timestamp)
-            const exp = (s.expiresAt as any)?.toDate ? (s.expiresAt as any).toDate() : new Date(s.expiresAt as any);
-            return exp > now.toDate();
-        });
+        .filter(s => toDate(s.expiresAt) > now.toDate());
 }
 
 // Subscribe to active sessions in real-time
@@ -274,11 +273,8 @@ export function subscribeToActiveSessions(
         const now = new Date();
         const sessions = snapshot.docs
             .map(d => d.data() as GameSession)
-            .filter(s => {
-                const exp = (s.expiresAt as any)?.toDate ? (s.expiresAt as any).toDate() : new Date(s.expiresAt as any);
-                // Only sessions not expired and with available slots
-                return exp > now && s.players.length < s.maxPlayers;
-            });
+            // Non périmée, et il reste de la place.
+            .filter(s => toDate(s.expiresAt) > now && s.players.length < s.maxPlayers);
         callback(sessions);
     });
 }

@@ -98,7 +98,7 @@ export default function GamePage() {
             window.history.pushState({ noBack: i }, '', window.location.href);
         }
 
-        const handlePopState = (e: PopStateEvent) => {
+        const handlePopState = () => {
             // Re-push multiple states immediately to keep the "trap" very deep
             for (let i = 0; i < 5; i++) {
                 window.history.pushState({ noBack: Date.now() + i }, '', window.location.href);
@@ -134,8 +134,9 @@ export default function GamePage() {
         try {
             await endGame(game.gameId);
             router.push(`/game/${gameId}/results`);
-        } catch (error: any) {
-            console.error('Error ending game:', error);
+        } catch (err: unknown) {
+            const error = err as { message?: string };
+            console.error('Error ending game:', err);
             setError(error.message || 'Erreur lors de la fin du match');
             setShowEndModal(false);
             setIsEndingGame(false);

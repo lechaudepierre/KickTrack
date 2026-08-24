@@ -53,7 +53,8 @@ export default function RegisterPage() {
             const user = await registerComplete(username, email, password);
             setUser(user);
             router.push('/');
-        } catch (err: any) {
+        } catch (e: unknown) {
+            const err = e as { code?: string; message?: string };
             console.error('Registration error:', err);
             let errorMessage = 'Erreur lors de l\'inscription';
 

@@ -129,7 +129,9 @@ export default function FriendsPage() {
                 const results = await searchUsersByUsername(searchQuery, user.userId);
                 setSearchResults(results);
             }
-        } catch (error: any) {
+        } catch (err: unknown) {
+            // `unknown` plutôt que `any` : on ne sait pas ce qui est levé.
+            const error = err as { message?: string };
             showStatus('error', error.message || 'Erreur');
         } finally {
             setPendingActions(prev => {
@@ -148,7 +150,9 @@ export default function FriendsPage() {
             await acceptFriendRequest(user.userId, fromUserId);
             showStatus('success', 'Ami ajoute !');
             await Promise.all([loadFriendRequests(), loadFriends()]);
-        } catch (error: any) {
+        } catch (err: unknown) {
+            // `unknown` plutôt que `any` : on ne sait pas ce qui est levé.
+            const error = err as { message?: string };
             showStatus('error', error.message || 'Erreur');
         } finally {
             setPendingActions(prev => {
@@ -167,7 +171,9 @@ export default function FriendsPage() {
             await rejectFriendRequest(user.userId, fromUserId);
             showStatus('success', 'Demande refusee');
             await loadFriendRequests();
-        } catch (error: any) {
+        } catch (err: unknown) {
+            // `unknown` plutôt que `any` : on ne sait pas ce qui est levé.
+            const error = err as { message?: string };
             showStatus('error', error.message || 'Erreur');
         } finally {
             setPendingActions(prev => {
@@ -186,7 +192,9 @@ export default function FriendsPage() {
             await removeFriend(user.userId, friendUserId);
             showStatus('success', 'Ami retire');
             await loadFriends();
-        } catch (error: any) {
+        } catch (err: unknown) {
+            // `unknown` plutôt que `any` : on ne sait pas ce qui est levé.
+            const error = err as { message?: string };
             showStatus('error', error.message || 'Erreur');
         } finally {
             setPendingActions(prev => {

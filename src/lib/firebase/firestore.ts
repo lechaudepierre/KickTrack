@@ -12,7 +12,7 @@ import {
     increment as firestoreIncrement
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
-import { Venue, VenueInput, VenueFilters } from '@/types';
+import { Venue, VenueInput, VenueFilters, Game } from '@/types';
 
 const VENUES_COLLECTION = 'venues';
 
@@ -139,8 +139,11 @@ export async function recalculateVenueStats(): Promise<void> {
             }
 
             // Gather all player IDs from both teams
-            game.teams?.forEach((team: any) => {
-                team.players?.forEach((player: any) => {
+            // Typé depuis `Game` : `any` ici privait de toute vérification le
+            // parcours des équipes — c'est ce genre d'angle mort qui avait
+            // laissé passer une couleur d'équipe malformée en tournoi.
+            (game as Game).teams?.forEach(team => {
+                team.players?.forEach(player => {
                     if (player.userId) {
                         playersByVenue.get(venueId)?.add(player.userId);
                     }
@@ -212,8 +215,8 @@ export async function getUserRecentVenues(userId: string): Promise<string[]> {
     snapshot.docs.forEach(doc => {
         const game = doc.data();
         // Check if user played in this game
-        const userPlayed = game.teams?.some((team: any) =>
-            team.players?.some((player: any) => player.userId === userId)
+        const userPlayed = (game as Game).teams?.some(team =>
+            team.players?.some(player => player.userId === userId)
         );
 
         if (userPlayed && game.venueId && game.venueId !== 'none') {
