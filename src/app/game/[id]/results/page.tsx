@@ -57,7 +57,9 @@ export default function GameResultsPage() {
 
     useEffect(() => {
         initialize();
-    }, []);
+        // `initialize` vient de Zustand : sa référence est stable, l'ajouter ne
+        // change rien à l'exécution — ça dit juste la vérité au compilateur.
+    }, [initialize]);
 
     // Real-time listener: picks up eloChanges even if written after initial load
     useEffect(() => {

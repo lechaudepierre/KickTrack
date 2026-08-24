@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Venue } from '@/types';
 import { getVenues, getUserFavoriteVenues, getUserRecentVenues, toggleVenueFavorite } from '@/lib/firebase/firestore';
 import { useAuthStore } from '@/lib/stores/authStore';
@@ -40,9 +40,7 @@ export default function VenueDropdown({
     // Store the order when dropdown opens - won't change while open
     const [sortOrder, setSortOrder] = useState<string[]>([]);
 
-    useEffect(() => {
-        loadData();
-    }, [user]);
+    const monId = user?.userId;
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -83,17 +81,23 @@ export default function VenueDropdown({
         }
     }, [isOpen, venues, favoriteVenues, recentVenues]); // Only recalculate when dropdown opens or data changes
 
-    const loadData = async () => {
+    /*
+     * On dépend de l'IDENTIFIANT du joueur, pas de son objet : `user` vient
+     * d'un abonnement temps réel, sa référence change à chaque mise à jour de
+     * profil. Recharger la liste des stades à chaque partie jouée n'aurait
+     * aucun sens.
+     */
+    const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
             const venueData = await getVenues();
             setVenues(venueData);
 
-            if (user) {
-                const favorites = await getUserFavoriteVenues(user.userId);
+            if (monId) {
+                const favorites = await getUserFavoriteVenues(monId);
                 setFavoriteVenues(favorites);
 
-                const recent = await getUserRecentVenues(user.userId);
+                const recent = await getUserRecentVenues(monId);
                 setRecentVenues(recent);
             }
         } catch (error) {
@@ -101,7 +105,11 @@ export default function VenueDropdown({
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [monId]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const handleToggleFavorite = async (venueId: string, e: React.MouseEvent) => {
         // Prevent both default action and propagation to parent elements

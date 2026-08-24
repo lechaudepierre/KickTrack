@@ -50,7 +50,8 @@ export default function AdminAnnouncementsPage() {
             return;
         }
         loadAnnouncements();
-    }, [user, authLoading]);
+        // `router` est stable dans Next : le lister ne provoque aucun rechargement.
+    }, [user, authLoading, router]);
 
     const loadAnnouncements = async () => {
         try {

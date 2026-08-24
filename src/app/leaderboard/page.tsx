@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useFeature } from '@/lib/features';
@@ -8,7 +8,7 @@ import { getVenueLeaderboard, getGlobalLeaderboard, getFriendsLeaderboard, Leade
 import { orderedLadders, LADDERS, type LadderId } from '@/lib/game/ladders';
 import { getFriends } from '@/lib/firebase/friends';
 import { Venue } from '@/types';
-import { FieldBackground } from '@/components/FieldDecorations';
+
 import BottomNav from '@/components/common/BottomNav';
 import VenueDropdown from '@/components/venues/VenueDropdown';
 import {
@@ -122,26 +122,29 @@ export default function LeaderboardPage() {
         };
     }, [initialize]);
 
-    useEffect(() => {
-        loadFriendIds();
-    }, [currentUser]);
+    /*
+     * On dépend des CHAMPS du joueur, pas de son objet.
+     *
+     * `currentUser` vient d'un abonnement temps réel : sa référence change à
+     * chaque mise à jour de son profil — après chaque partie, donc. Le lister
+     * tel quel rechargerait tout le classement à chaque fois. Son identifiant
+     * et son pseudo, eux, ne bougent quasiment jamais.
+     */
+    const monId = currentUser?.userId;
+    const monPseudo = currentUser?.username;
 
-    useEffect(() => {
-        loadLeaderboard();
-    }, [selectedVenue, filterType, friendIds, ladder]);
-
-    const loadFriendIds = async () => {
-        if (!currentUser) return;
+    const loadFriendIds = useCallback(async () => {
+        if (!monId) return;
         try {
-            const friends = await getFriends(currentUser.userId);
+            const friends = await getFriends(monId);
             // Include current user in the list for friends leaderboard
-            setFriendIds([currentUser.userId, ...friends.map(f => f.userId)]);
+            setFriendIds([monId, ...friends.map(f => f.userId)]);
         } catch (error) {
             console.error('Error loading friends:', error);
         }
-    };
+    }, [monId]);
 
-    const loadLeaderboard = async () => {
+    const loadLeaderboard = useCallback(async () => {
         const callId = ++loadCallIdRef.current;
         setIsLoading(true);
         try {
@@ -165,14 +168,14 @@ export default function LeaderboardPage() {
             if (callId !== loadCallIdRef.current) return;
 
             // Diagnostic + self-healing: if current user is missing from global leaderboard
-            if (ladder === 'normal' && filterType === 'general' && !selectedVenue && currentUser) {
-                const userInList = data.some(p => p.userId === currentUser.userId);
+            if (ladder === 'normal' && filterType === 'general' && !selectedVenue && monId) {
+                const userInList = data.some(p => p.userId === monId);
                 if (!userInList && data.length > 0) {
                     // Cross-check: does the user exist in friends leaderboard (same games, different filter)?
-                    const crossCheck = await getFriendsLeaderboard([currentUser.userId], 'all');
+                    const crossCheck = await getFriendsLeaderboard([monId], 'all');
                     if (crossCheck.length > 0) {
                         console.warn(
-                            `[Leaderboard Diagnostic] User "${currentUser.username}" (${currentUser.userId}) is MISSING from global leaderboard (${data.length} players) but EXISTS in friends cross-check with ${crossCheck[0].totalGames} games, Elo: ${crossCheck[0].elo}. Injecting user into global list.`
+                            `[Leaderboard Diagnostic] User "${monPseudo}" (${monId}) is MISSING from global leaderboard (${data.length} players) but EXISTS in friends cross-check with ${crossCheck[0].totalGames} games, Elo: ${crossCheck[0].elo}. Injecting user into global list.`
                         );
                         data.push(crossCheck[0]);
                         data.sort((a, b) => {
@@ -194,7 +197,15 @@ export default function LeaderboardPage() {
                 setIsLoading(false);
             }
         }
-    };
+    }, [selectedVenue, filterType, friendIds, ladder, monId, monPseudo]);
+
+    useEffect(() => {
+        loadFriendIds();
+    }, [loadFriendIds]);
+
+    useEffect(() => {
+        loadLeaderboard();
+    }, [loadLeaderboard]);
 
     const hasData = leaderboard.length > 0;
 

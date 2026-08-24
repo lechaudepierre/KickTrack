@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button, Input, PageHeader } from '@/components/common/ui';
@@ -50,11 +50,7 @@ export default function VenuesPage() {
         loadVenues();
     }, []);
 
-    useEffect(() => {
-        if (user) {
-            loadFavorites();
-        }
-    }, [user]);
+    const monId = user?.userId;
 
     const loadVenues = async () => {
         setIsLoading(true);
@@ -68,15 +64,24 @@ export default function VenuesPage() {
         }
     };
 
-    const loadFavorites = async () => {
-        if (!user) return;
+    /*
+     * On dépend de l'IDENTIFIANT du joueur, pas de son objet : `user` vient
+     * d'un abonnement temps réel, sa référence change à chaque mise à jour de
+     * profil. Son identifiant, lui, ne bouge pas.
+     */
+    const loadFavorites = useCallback(async () => {
+        if (!monId) return;
         try {
-            const favorites = await getUserFavoriteVenues(user.userId);
+            const favorites = await getUserFavoriteVenues(monId);
             setFavoriteVenues(favorites);
         } catch (error) {
             console.error('Error loading favorites:', error);
         }
-    };
+    }, [monId]);
+
+    useEffect(() => {
+        loadFavorites();
+    }, [loadFavorites]);
 
     const handleToggleFavorite = async (venueId: string, e: React.MouseEvent) => {
         e.preventDefault();

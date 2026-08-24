@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useFeature } from '@/lib/features';
@@ -111,11 +111,16 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
     const [relationshipStatus, setRelationshipStatus] = useState<'none' | 'pending' | 'friend'>('none');
     const [isActionPending, setIsActionPending] = useState(false);
 
-    useEffect(() => {
-        loadProfileData();
-    }, [targetUserId]);
-
-    const loadProfileData = async () => {
+    /*
+     * `useCallback` sur des props seulement — `targetUserId` et `isMe`.
+     *
+     * `currentUser` n'y figure PAS, et c'est délibéré : il vient d'un
+     * abonnement temps réel dont la référence change à chaque partie jouée.
+     * Le lister ici rechargerait 500 parties à chaque fois. Ce qui dépendait
+     * vraiment de lui — le statut d'amitié — a été sorti dans son propre effet
+     * juste en dessous.
+     */
+    const loadProfileData = useCallback(async () => {
         setIsLoading(true);
         try {
             const [userData, gamesData] = await Promise.all([
@@ -171,22 +176,31 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
 
                 const announcements = await getAnnouncements();
                 setAllAnnouncements(announcements);
-            } else if (currentUser) {
-                // Check relationship status
-                if (currentUser.friends?.includes(targetUserId)) {
-                    setRelationshipStatus('friend');
-                } else if (currentUser.friendRequestsSent?.includes(targetUserId)) {
-                    setRelationshipStatus('pending');
-                } else {
-                    setRelationshipStatus('none');
-                }
             }
         } catch (error) {
             console.error('Error loading profile data:', error);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [targetUserId, isMe]);
+
+    useEffect(() => {
+        loadProfileData();
+    }, [loadProfileData]);
+
+    /*
+     * Le statut d'amitié, à part.
+     *
+     * Il suit les listes du joueur connecté et doit se rafraîchir dès qu'elles
+     * changent — sinon un ajout d'ami n'apparaît qu'au rechargement de la page.
+     * On dépend des LISTES, pas de l'objet entier.
+     */
+    useEffect(() => {
+        if (isMe || !currentUser) return;
+        if (currentUser.friends?.includes(targetUserId)) setRelationshipStatus('friend');
+        else if (currentUser.friendRequestsSent?.includes(targetUserId)) setRelationshipStatus('pending');
+        else setRelationshipStatus('none');
+    }, [isMe, targetUserId, currentUser]);
 
     /*
      * Les saisons que ce joueur a réellement jouées.

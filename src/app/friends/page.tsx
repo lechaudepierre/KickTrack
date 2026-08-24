@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import {
@@ -57,13 +57,7 @@ export default function FriendsPage() {
         }
     }, [authLoading, isAuthenticated, router]);
 
-    // Load friend requests and friends on mount
-    useEffect(() => {
-        if (user) {
-            loadFriendRequests();
-            loadFriends();
-        }
-    }, [user]);
+    const monId = user?.userId;
 
     // Search debounce
     useEffect(() => {
@@ -87,28 +81,39 @@ export default function FriendsPage() {
         return () => clearTimeout(timer);
     }, [searchQuery, user]);
 
-    const loadFriendRequests = async () => {
-        if (!user) return;
+    /*
+     * On dépend de l'IDENTIFIANT du joueur, pas de son objet : `user` vient
+     * d'un abonnement temps réel, sa référence change à chaque mise à jour de
+     * profil. Son identifiant, lui, ne bouge pas.
+     */
+    const loadFriendRequests = useCallback(async () => {
+        if (!monId) return;
         try {
-            const requests = await getFriendRequests(user.userId);
+            const requests = await getFriendRequests(monId);
             setFriendRequests(requests);
         } catch (error) {
             console.error('Error loading friend requests:', error);
         }
-    };
+    }, [monId]);
 
-    const loadFriends = async () => {
-        if (!user) return;
+    const loadFriends = useCallback(async () => {
+        if (!monId) return;
         setIsLoading(true);
         try {
-            const friendsList = await getFriends(user.userId);
+            const friendsList = await getFriends(monId);
             setFriends(friendsList);
         } catch (error) {
             console.error('Error loading friends:', error);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [monId]);
+
+    // Load friend requests and friends on mount
+    useEffect(() => {
+        loadFriendRequests();
+        loadFriends();
+    }, [loadFriendRequests, loadFriends]);
 
     const showStatus = (type: 'success' | 'error', text: string) => {
         setStatusMessage({ type, text });
