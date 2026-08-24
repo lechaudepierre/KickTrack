@@ -17,6 +17,7 @@ import { getFirebaseDb, getFirebaseAuth } from './config';
 import { scoreFromTeams } from '@/lib/game/score';
 import { toMillis } from '@/lib/game/dates';
 import { appliquerBut, effetDuBut, rejouerButs, sansLeDernierBut } from '@/lib/game/goalEngine';
+import { countersFor, winRateOf } from '@/lib/game/venueStats';
 import {
     readLadder,
     gamesFieldPath,
@@ -422,18 +423,20 @@ export async function getVenueLeaderboard(venueId: string): Promise<VenueLeaderb
     const leaderboard: VenueLeaderboardEntry[] = [];
     for (const docSnap of snapshot.docs) {
         const data = docSnap.data();
-        const c = data.stats?.venues?.[venueId];
+        // Même lecture que le classement des amis filtré par stade : un seul
+        // endroit sait comment un compteur de stade se lit (chantier 9.5).
+        const c = countersFor(data.stats?.venues, venueId);
         // Jamais joué ici : le joueur n'apparaît pas dans ce classement.
-        if (!c || !c.games) continue;
+        if (!c.games) continue;
 
         leaderboard.push({
             userId: data.userId,
             username: data.username,
-            wins: c.wins ?? 0,
-            losses: Math.max(0, (c.games ?? 0) - (c.wins ?? 0)),
-            totalGames: c.games ?? 0,
-            goalsScored: c.goalsScored ?? 0,
-            winRate: c.games > 0 ? (c.wins ?? 0) / c.games : 0,
+            wins: c.wins,
+            losses: Math.max(0, c.games - c.wins),
+            totalGames: c.games,
+            goalsScored: c.goalsScored,
+            winRate: winRateOf(c),
             elo: data.stats?.elo,
             bannerId: data.bannerId,
             equipped: data.equipped,
@@ -449,88 +452,88 @@ export async function getVenueLeaderboard(venueId: string): Promise<VenueLeaderb
     return leaderboard;
 }
 
+/**
+ * Le classement des amis, éventuellement restreint à un stade.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * LE DÉFAUT QUE ÇA CORRIGE — chantier 9.5
+ * ═══════════════════════════════════════════════════════════════════════════
+ * Avec un stade sélectionné, cette fonction téléchargeait TOUTES les parties
+ * terminées de ce stade, puis les additionnait dans le navigateur. Son
+ * commentaire justifiait ce détour : « on garde la logique d'agrégation car on
+ * n'a pas de stats par stade sur l'User ».
+ *
+ * Ce n'est plus vrai depuis le chantier 9.36 : les compteurs par stade sont
+ * tenus sur le profil, dans `stats.venues`, mis à jour à la fin de chaque
+ * partie. Le détour ne servait donc plus à rien.
+ *
+ * Mesuré en production le 23/08, pour une seule ouverture de la page :
+ *
+ *   Coloc Présidentielle   310 parties   1 055 Ko
+ *   Cercle Polytechnique   214 parties     911 Ko
+ *
+ * contre **28 Ko** pour trente profils d'amis. Et ce coût-là ne grandit pas
+ * avec le nombre de parties jouées : il ne dépend que du nombre d'amis.
+ *
+ * Il n'y a plus qu'un seul chemin de lecture, avec ou sans filtre de stade :
+ * on lit les profils, on projette les compteurs voulus.
+ */
 export async function getFriendsLeaderboard(friendIds: string[], venueId?: string): Promise<LeaderboardEntry[]> {
     if (friendIds.length === 0) return [];
 
     const db = getFirebaseDb();
+    const parStade = !!venueId && venueId !== 'all';
 
-    // Si on filtre par stade, on garde la logique d'agrégation car on n'a pas de stats par stade sur l'User
-    if (venueId && venueId !== 'all') {
-        const q = query(
-            collection(db, GAMES_COLLECTION),
-            where('status', '==', 'completed'),
-            where('venueId', '==', venueId)
-        );
+    const classement: LeaderboardEntry[] = [];
 
-        const snapshot = await getDocs(q);
-        const games = snapshot.docs.map(doc => doc.data() as Game);
-        const playerStats = new Map<string, LeaderboardEntry>();
-
-        for (const game of games) {
-            if (game.winner === undefined || game.isGuestGame) continue;
-            for (let teamIndex = 0; teamIndex < game.teams.length; teamIndex++) {
-                const team = game.teams[teamIndex];
-                const isWinner = teamIndex === game.winner;
-                for (const player of team.players) {
-                    if (!friendIds.includes(player.userId) || player.userId.startsWith('guest_')) continue;
-                    const existing = playerStats.get(player.userId) || {
-                        userId: player.userId, username: player.username,
-                        wins: 0, losses: 0, totalGames: 0, goalsScored: 0, winRate: 0
-                    };
-                    existing.totalGames++;
-                    if (isWinner) existing.wins++; else existing.losses++;
-                    existing.goalsScored += game.goals.filter(g => g.scoredBy === player.userId).length;
-                    existing.winRate = existing.totalGames > 0 ? existing.wins / existing.totalGames : 0;
-                    playerStats.set(player.userId, existing);
-                }
-            }
-        }
-
-        const leaderboard = Array.from(playerStats.values());
-        if (leaderboard.length > 0) {
-            const userIds = leaderboard.map(e => e.userId);
-            for (let i = 0; i < userIds.length; i += 30) {
-                const batch = userIds.slice(i, i + 30);
-                const usersQ = query(collection(db, 'users'), where('userId', 'in', batch));
-                const usersSnap = await getDocs(usersQ);
-                usersSnap.forEach(d => {
-                    const u = d.data();
-                    const entry = playerStats.get(d.id);
-                    if (entry) {
-                        entry.elo = u.stats?.elo || 1000;
-                        entry.equipped = u.equipped;
-                        entry.bannerId = u.bannerId;
-                    }
-                });
-            }
-        }
-        return leaderboard.sort((a, b) => (b.elo || 1000) - (a.elo || 1000));
-    }
-
-    // SINON (Pas de filtre stade) : On query directement les profils des amis
-    const users: LeaderboardEntry[] = [];
+    // Firestore plafonne un `in` à 30 valeurs : on lit les amis par lots.
     for (let i = 0; i < friendIds.length; i += 30) {
-        const batch = friendIds.slice(i, i + 30);
-        const q = query(collection(db, 'users'), where('userId', 'in', batch));
+        const lot = friendIds.slice(i, i + 30);
+        const q = query(collection(db, 'users'), where('userId', 'in', lot));
         const snapshot = await getDocs(q);
+
         snapshot.forEach(doc => {
             const u = doc.data();
-            users.push({
+
+            // Cosmétiques et ELO : les mêmes quel que soit le filtre. L'ELO est
+            // GLOBAL — il ne se découpe pas par stade, et c'est volontaire.
+            const commun = {
                 userId: u.userId,
                 username: u.username,
-                wins: u.stats?.wins || 0,
-                losses: u.stats?.losses || 0,
-                totalGames: u.stats?.totalGames || 0,
-                goalsScored: u.stats?.goalsScored || 0,
-                winRate: u.stats?.winRate || 0,
                 elo: u.stats?.elo || 1000,
                 equipped: u.equipped,
-                bannerId: u.bannerId
+                bannerId: u.bannerId,
+            };
+
+            if (!parStade) {
+                classement.push({
+                    ...commun,
+                    wins: u.stats?.wins || 0,
+                    losses: u.stats?.losses || 0,
+                    totalGames: u.stats?.totalGames || 0,
+                    goalsScored: u.stats?.goalsScored || 0,
+                    winRate: u.stats?.winRate || 0,
+                });
+                return;
+            }
+
+            const c = countersFor(u.stats?.venues, venueId!);
+            // Jamais joué ici : l'ami n'apparaît pas dans ce classement — même
+            // règle que le classement général du stade.
+            if (!c.games) return;
+
+            classement.push({
+                ...commun,
+                wins: c.wins,
+                losses: Math.max(0, c.games - c.wins),
+                totalGames: c.games,
+                goalsScored: c.goalsScored,
+                winRate: winRateOf(c),
             });
         });
     }
 
-    return users.sort((a, b) => (b.elo || 1000) - (a.elo || 1000));
+    return classement.sort((a, b) => (b.elo || 1000) - (a.elo || 1000));
 }
 
 // Get global leaderboard from all completed games

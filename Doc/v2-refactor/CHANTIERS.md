@@ -594,7 +594,7 @@ Rien commencé, volontairement le dernier.
 | 9.2 | `startTime` / `startedAt` en doublon | [fait] | + 9 conversions de date unifiées |
 | 9.3 | Découper les fichiers > 850 lignes | [fait] | plus aucun fichier au-dessus du seuil |
 | 9.4 | Undo imparfait du multiplicateur | [fait] | l'état se rejoue depuis les buts |
-| 9.5 | Agrégations côté client | [a faire] | à surveiller |
+| 9.5 | Agrégations côté client | [fait] | plus aucune sur un chemin utilisateur |
 | 9.6 | Fichiers parasites à la racine | [fait] | `src.zip` ignoré, log sorti de l'index |
 | 9.7 | `goalsConceded` doublé en 2v2 | [a faire] | à documenter |
 | 9.8 | 2 comptes fantômes (inscriptions ratées) | [fait] | résolu par 0.7 |
@@ -2851,10 +2851,55 @@ parties sur mille, dont deux au vainqueur discutable — ça ne vaut pas de
 réécrire l'historique. `audit:scores` reste là pour surveiller que le compteur
 ne remonte pas.
 
-### 9.5 [a faire] Agrégations client-side
-`getUserGames` et les classements par lieu/amis rechargent **toutes** les parties et filtrent côté
-client. Acceptable à 100 joueurs. ATTENTION: Mais les classements **par saison** vont ajouter un filtre
-temporel par-dessus — à surveiller au bloc 3.
+### 9.5 [fait] Plus aucune agrégation côté client sur un chemin utilisateur — *23 août 2026*
+
+Trois lectures rapatriaient des parties entières pour les additionner dans le
+navigateur. Les trois sont réglées.
+
+| chemin | avant | après |
+|---|---|---|
+| Profil (`getUserGames`) | 892 Ko | requête triée et coupée côté serveur — chantier 9.33 |
+| Classement d'un stade | 1 055 Ko | compteurs du profil — chantier 9.36 |
+| **Classement des amis + stade** | **1 055 Ko** | **~28 Ko** — ci-dessous |
+
+**Le dernier — amis filtrés par stade.**
+Il téléchargeait toutes les parties terminées du stade, puis les additionnait.
+Son commentaire justifiait le détour : « on garde la logique d'agrégation car on
+n'a pas de stats par stade sur l'User ». Ce n'était plus vrai depuis le chantier
+9.36 — le commentaire avait survécu à sa raison d'être.
+
+Mesuré en production le 23/08, pour une seule ouverture :
+
+| stade | parties | poids |
+|---|---|---|
+| Coloc Présidentielle | 310 | **1 055 Ko** |
+| Cercle Polytechnique | 214 | 911 Ko |
+
+contre **28 Ko** pour trente profils d'amis. Et ce coût ne grandit plus avec le
+nombre de parties jouées : il ne dépend que du nombre d'amis.
+
+Il n'y a désormais qu'un seul chemin de lecture, avec ou sans filtre de stade :
+on lit les profils, on projette les compteurs voulus.
+
+**Vérifié avant de remplacer, pas après.** L'ancienne agrégation a été rejouée
+sur toute la production et comparée aux compteurs `stats.venues` :
+**129 compteurs, 0 écart**. La substitution est exacte.
+
+`countersFor` / `winRateOf` de `lib/game/venueStats.ts` servent maintenant aux
+DEUX classements par stade : un seul endroit sait comment un compteur se lit.
+
+**Ce qui reste, et pourquoi c'est acceptable :**
+- `getUserGames` garde un repli sans `limit` si l'index composite manque. Vérifié
+  le 23/08 : **l'index est en place en production**, le repli n'est pas le chemin
+  réel. Il ne sert qu'à ne rien casser pendant une reconstruction d'index.
+- `recalculateVenueStats` lit toutes les parties, mais n'est appelée que depuis
+  `/admin/seed`, derrière un bouton. C'est une opération de maintenance, pas un
+  chemin utilisateur.
+
+**Reste à surveiller pour la saison.** Le filtre temporel par saison va se poser
+par-dessus ces classements. Comme ils lisent maintenant des compteurs de profil
+et non des parties, un compteur « saison en cours » devra être tenu de la même
+façon — surtout pas un retour à l'agrégation.
 
 ### 9.6 [fait] Fichiers parasites à la racine — *23 août 2026*
 - `src.zip` : 308 Ko, non suivis et non ignorés — une archive de travail à un doigt d'être
