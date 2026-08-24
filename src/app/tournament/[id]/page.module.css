@@ -9,6 +9,18 @@
  * donc nommées par ce qu'elles SONT, pas par l'endroit où elles servent.
  */
 
+/*
+ * RÈGLE DE CETTE PAGE — un bloc clair repose SA couleur de texte.
+ *
+ * `body` est en blanc, sur le fond terrain. Un conteneur crème qui ne
+ * redéfinit pas `color` laisse donc ses enfants hériter du blanc : texte
+ * invisible sur beige. C'est arrivé au chronomètre le 22/08, à la fenêtre de
+ * fin de partie, et aux colonnes J / +/- / Pts de ce classement.
+ *
+ * Chaque conteneur clair ci-dessous pose donc `color` — pas seulement ses
+ * enfants connus. Un enfant ajouté demain hérite alors du bon.
+ */
+
 /* ─── Bandeau d'erreur ──────────────────────────────────────────────────── */
 
 .errorBox {
@@ -22,6 +34,7 @@
 /* ─── Carte d'en-tête : code PIN et format ──────────────────────────────── */
 
 .infoCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     border: var(--border-arcade);
     border-radius: var(--radius-md);
@@ -70,10 +83,15 @@
     margin-bottom: var(--spacing-sm);
 }
 
+
+/*
+ * Texte posé DIRECTEMENT sur le fond terrain, sans carte derrière : il doit
+ * être clair. En sombre il disparaît — c'est ce qui rendait les noms de tours
+ * du tableau (« Demi-finales ») illisibles, signalé par Sacha le 24/08.
+ */
 .sectionTitle {
     font-size: var(--text-sm);
-    color: var(--color-text-dark);
-    opacity: 0.6;
+    color: var(--color-text-secondary);
     font-weight: var(--weight-medium);
 }
 
@@ -92,6 +110,7 @@
 /* ─── Carte de joueur ou d'équipe ───────────────────────────────────────── */
 
 .card {
+    color: var(--color-text-dark);
     display: flex;
     align-items: center;
     gap: 12px;
@@ -108,6 +127,7 @@
 }
 
 .emptyBox {
+    color: var(--color-text-dark);
     padding: var(--spacing-lg);
     background: var(--color-surface);
     border: var(--border-arcade);
@@ -248,7 +268,7 @@
 
 .hint {
     font-size: var(--text-xs);
-    color: var(--color-text-dark-soft);
+    color: var(--color-text-secondary);
     text-align: center;
 }
 
@@ -275,7 +295,7 @@
     align-items: center;
     justify-content: center;
     gap: var(--spacing-sm);
-    color: var(--color-text-dark-soft);
+    color: var(--color-text-secondary);
 }
 
 .waitNoticeSpaced {
@@ -320,6 +340,7 @@
 }
 
 .slot {
+    color: var(--color-text-dark);
     padding: 12px;
     background: var(--color-surface);
     border: 2px dashed var(--ink-700);
@@ -351,8 +372,7 @@
 
 .slotLabel {
     font-size: var(--text-sm);
-    color: var(--color-text-dark);
-    opacity: 0.6;
+    color: var(--color-text-secondary);
     font-weight: var(--weight-medium);
     margin-bottom: var(--spacing-sm);
 }
@@ -371,6 +391,7 @@
 }
 
 .modal {
+    color: var(--color-text-dark);
     width: 100%;
     background: var(--color-surface-raised);
     border: var(--border-arcade);

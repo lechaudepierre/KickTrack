@@ -2799,6 +2799,48 @@ Deux tokens manquaient, ajoutés à `variables.css` :
 Corrigé au passage : le bouton « copier le code PIN » portait le fond rouge des
 boutons de suppression.
 
+### Retours de Sacha sur les pages de tournoi — *24 août 2026*
+
+Trois défauts signalés en testant. Les trois viennent du même endroit : le
+contenu des pages est posé **directement sur le fond terrain**, sans carte
+derrière, et `body` est en **blanc**.
+
+**1. Du texte blanc sur du beige.** Un conteneur crème qui ne redéfinit pas
+`color` laisse ses enfants hériter du blanc de `body`. Dans le classement de
+tournoi, les colonnes **J**, **+/-** et **Pts** ne posaient aucune couleur :
+elles s'affichaient en blanc sur crème, donc invisibles. Idem pour le score
+dans les cartes du tableau final.
+
+Ce n'était pas une régression du passage en CSS Module : le style en ligne
+d'origine ne posait pas de couleur non plus. Le défaut existait avant.
+
+Corrigé à la racine : **chaque conteneur clair pose désormais `color`**, pas
+seulement ses enfants connus. Un enfant ajouté demain hérite du bon.
+
+**2. « Demi-finales » en noir sur vert foncé.** L'inverse : du texte posé
+directement sur le terrain avec une couleur sombre. Corrigé sur les noms de
+tours, les titres de section, « TOURNOI TERMINE », les messages d'attente et
+les libellés de joueurs non assignés.
+
+**3. La fenêtre de fin de partie se coupait.** `.modalContent` n'avait **aucune
+hauteur maximale**, avec un `overflow: hidden` par-dessus : dès que le contenu
+dépassait l'écran — c'est le cas de « Terminer la partie », qui empile quatre
+options — le bas était purement coupé.
+
+Corrigé, et le même défaut cherché partout ailleurs : **trois autres fenêtres**
+étaient dans le même cas (profil ×2, choix du type de but pendant un match).
+Toutes ont maintenant une hauteur maximale en `dvh` et un corps qui défile.
+
+**Ce que j'ai essayé sans y arriver — un garde-fou de contraste.**
+J'ai écrit un contrôle « un fond clair doit poser sa couleur ». Il signale
+**105 règles**. La plupart vont bien : leurs enfants posent tous une couleur.
+Mais on ne peut pas le savoir depuis le CSS seul — il faudrait connaître
+l'arbre JSX.
+
+Un contrôle qui crie 105 fois, personne ne le lance. Il est donc **consultatif**
+(`npm run audit:contraste`) et **pas** dans `npm run check`. Il sert de liste de
+travail pour une passe de style, pas de barrière.
+
 **⚠️ Point signalé, pas tranché — la répartition des exemptions.**
 Le code annonce en commentaire « distribute byes evenly across the bracket for
 fairness ». Il ne le fait pas : l'espacement vaut `places / exemptions`, et

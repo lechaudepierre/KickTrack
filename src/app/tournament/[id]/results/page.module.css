@@ -6,6 +6,18 @@
  * (`--medal-gold`, `--medal-silver-edge`, `--medal-bronze`).
  */
 
+/*
+ * RÈGLE DE CETTE PAGE — un bloc clair repose SA couleur de texte.
+ *
+ * `body` est en blanc, sur le fond terrain. Un conteneur crème qui ne
+ * redéfinit pas `color` laisse donc ses enfants hériter du blanc : texte
+ * invisible sur beige. C'est arrivé au chronomètre le 22/08, à la fenêtre de
+ * fin de partie, et aux colonnes J / +/- / Pts de ce classement.
+ *
+ * Chaque conteneur clair ci-dessous pose donc `color` — pas seulement ses
+ * enfants connus. Un enfant ajouté demain hérite alors du bon.
+ */
+
 /* ─── Le vainqueur ──────────────────────────────────────────────────────── */
 
 .celebration {
@@ -31,14 +43,21 @@
     color: var(--ink-700);
 }
 
+
+/*
+ * Texte posé DIRECTEMENT sur le fond terrain, sans carte derrière : il doit
+ * être clair. En sombre il disparaît — c'est ce qui rendait les noms de tours
+ * du tableau (« Demi-finales ») illisibles, signalé par Sacha le 24/08.
+ */
 .title {
     font-size: var(--text-xl);
     font-weight: var(--weight-black);
-    color: var(--color-text-dark);
+    color: var(--color-text-primary);
     margin-bottom: var(--spacing-xs);
 }
 
 .winnerCard {
+    color: var(--color-text-dark);
     background: var(--medal-gold);
     border: var(--border-arcade);
     border-radius: var(--radius-lg);
@@ -76,6 +95,7 @@
 }
 
 .statCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     border: var(--border-arcade);
     border-radius: var(--radius-md);
@@ -110,13 +130,14 @@
 .sectionTitle {
     font-size: var(--text-base);
     font-weight: var(--weight-bold);
-    color: var(--color-text-dark);
+    color: var(--color-text-primary);
     margin-bottom: var(--spacing-sm);
 }
 
 /* ─── Classement final ──────────────────────────────────────────────────── */
 
 .standings {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     border: var(--border-arcade);
     border-radius: var(--radius-md);
@@ -214,7 +235,7 @@
 .roundName {
     font-size: var(--text-xs);
     font-weight: var(--weight-bold);
-    color: var(--color-text-dark-soft);
+    color: var(--color-text-secondary);
     margin-bottom: var(--spacing-sm);
     text-align: center;
 }
@@ -226,6 +247,7 @@
 }
 
 .matchCard {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     border: var(--border-arcade-thin);
     border-radius: var(--radius-sm);

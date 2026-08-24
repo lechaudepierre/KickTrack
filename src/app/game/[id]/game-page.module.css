@@ -102,16 +102,39 @@
     animation: fadeIn 0.3s ease-out;
 }
 
+/*
+ * La fenêtre ne dépasse jamais l'écran.
+ *
+ * Elle n'avait AUCUNE hauteur maximale, et un `overflow: hidden` par-dessus :
+ * dès que son contenu était plus haut que la vue — c'est le cas de « Terminer
+ * la partie », qui empile quatre options — le bas était purement coupé.
+ * Signalé par Sacha le 24/08 : « ça a l'air de se couper quand j'appuie sur
+ * les options pour quitter ».
+ *
+ * `dvh` et non `vh` : sur mobile, la barre d'adresse mange la différence.
+ * `100%` de plus, parce qu'un conteneur en `flex` peut refuser de se réduire
+ * sous la taille de son contenu sans un `min-height: 0`.
+ */
 .modalContent {
     position: relative;
+    display: flex;
+    flex-direction: column;
     width: 100%;
     max-width: 480px;
+    max-height: 100%;
+    max-height: calc(100dvh - 2 * var(--spacing-md));
+    min-height: 0;
     background-color: var(--color-surface);
     border: var(--border-arcade);
     border-radius: 2rem;
     overflow: hidden;
     box-shadow: 0 12px 0 rgba(0, 0, 0, 0.2);
     animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* L'en-tête reste visible pendant que le corps défile. */
+.modalContent > .modalHeader {
+    flex-shrink: 0;
 }
 
 @keyframes fadeIn {
@@ -173,6 +196,12 @@
        page sombre doit reposer sa couleur de texte. */
     color: var(--color-text-dark);
     padding: 2rem;
+
+    /* C'est ICI que ça défile, pas sur la page : l'en-tête doit rester en
+       place et le fond ne doit pas bouger derrière la fenêtre. */
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .modalBody>*+* {
@@ -202,13 +231,11 @@
 }
 
 @media (hover: hover) {
-@media (hover: hover) {
     .optionButton:hover {
         transform: translateY(-4px);
         box-shadow: 0 8px 0 var(--ink-700);
         filter: brightness(0.9);
     }
-}
 }
 
 .optionTitle {

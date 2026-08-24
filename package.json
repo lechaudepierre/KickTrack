@@ -22,6 +22,7 @@
     "venues:backfill": "node scripts/backfill-venue-stats.mjs",
     "item:grant": "node scripts/grant-item.mjs",
     "dev:phone": "next dev --hostname 0.0.0.0",
+    "audit:contraste": "node scripts/audit-contraste.mjs",
     "audit:comptes": "tsx scripts/audit-comptes.ts",
     "audit:scores": "tsx scripts/audit-scores.ts",
     "season:close": "tsx scripts/close-season.ts",

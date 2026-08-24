@@ -532,13 +532,26 @@
     backdrop-filter: blur(4px);
 }
 
+
+/*
+ * La fenêtre ne dépasse jamais l'écran.
+ *
+ * Sans hauteur maximale, un contenu plus haut que la vue est inatteignable —
+ * coupé s'il y a `overflow: hidden`, débordant hors de l'écran sinon. Le voile
+ * centre son contenu : ce qui dépasse sort donc des DEUX côtés, et le haut
+ * devient inaccessible.
+ *
+ * `dvh` et non `vh` : sur mobile, la barre d'adresse mange la différence.
+ */
 .modalContent {
     width: 100%;
     max-width: 480px;
+    max-height: calc(100dvh - 2 * var(--spacing-md));
     background-color: var(--color-surface);
     border: var(--border-arcade);
     border-radius: 1.5rem;
-    overflow: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     box-shadow: 0 12px 0 rgba(0, 0, 0, 0.2);
     animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }

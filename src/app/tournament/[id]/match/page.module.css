@@ -5,11 +5,24 @@
  * `--team-gradient`, parce que c'est une donnée d'affichage et non un style.
  */
 
+/*
+ * RÈGLE DE CETTE PAGE — un bloc clair repose SA couleur de texte.
+ *
+ * `body` est en blanc, sur le fond terrain. Un conteneur crème qui ne
+ * redéfinit pas `color` laisse donc ses enfants hériter du blanc : texte
+ * invisible sur beige. C'est arrivé au chronomètre le 22/08, à la fenêtre de
+ * fin de partie, et aux colonnes J / +/- / Pts de ce classement.
+ *
+ * Chaque conteneur clair ci-dessous pose donc `color` — pas seulement ses
+ * enfants connus. Un enfant ajouté demain hérite alors du bon.
+ */
+
 .errorBox {
     margin-bottom: var(--spacing-md);
 }
 
 .preview {
+    color: var(--color-text-dark);
     background: var(--color-surface);
     border: var(--border-arcade);
     border-radius: var(--radius-lg);
@@ -62,6 +75,7 @@
 }
 
 .notice {
+    color: var(--color-text-dark);
     background: var(--color-accent);
     border: var(--border-arcade);
     border-radius: var(--radius-md);
@@ -87,8 +101,14 @@
     margin-top: var(--spacing-lg);
 }
 
+
+/*
+ * Texte posé DIRECTEMENT sur le fond terrain, sans carte derrière : il doit
+ * être clair. En sombre il disparaît — c'est ce qui rendait les noms de tours
+ * du tableau (« Demi-finales ») illisibles, signalé par Sacha le 24/08.
+ */
 .waiting {
     text-align: center;
     padding: var(--spacing-lg);
-    color: var(--color-text-dark-soft);
+    color: var(--color-text-secondary);
 }

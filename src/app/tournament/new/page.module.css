@@ -10,6 +10,18 @@
  * Il ne reste ici que ce qui n'existait nulle part.
  */
 
+/*
+ * RÈGLE DE CETTE PAGE — un bloc clair repose SA couleur de texte.
+ *
+ * `body` est en blanc, sur le fond terrain. Un conteneur crème qui ne
+ * redéfinit pas `color` laisse donc ses enfants hériter du blanc : texte
+ * invisible sur beige. C'est arrivé au chronomètre le 22/08, à la fenêtre de
+ * fin de partie, et aux colonnes J / +/- / Pts de ce classement.
+ *
+ * Chaque conteneur clair ci-dessous pose donc `color` — pas seulement ses
+ * enfants connus. Un enfant ajouté demain hérite alors du bon.
+ */
+
 .errorBox {
     margin-bottom: var(--spacing-md);
 }
@@ -46,6 +58,7 @@
 }
 
 .infoBox {
+    color: var(--color-text-dark);
     background: var(--color-accent-tint);
     border: 2px solid var(--color-accent);
     border-radius: var(--radius-md);
