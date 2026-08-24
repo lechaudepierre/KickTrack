@@ -24,6 +24,7 @@ import {
     Team
 } from '@/types';
 import { generatePinCode } from '@/lib/utils/code-generator';
+import { saisonCourante } from '@/lib/game/season';
 import {
     classementInitial,
     genererMatchsRoundRobin,
@@ -694,6 +695,8 @@ export async function createTournamentGame(
         playerIds: teams.flatMap(t => t.players.map(p => p.userId)).filter(id => id !== ''),
         hostId: tournament.hostId,
         isGuestGame: hasGuestPlayers,
+        // La saison suit la partie, écrite une fois pour toutes (chantier 3.8).
+        seasonId: await saisonCourante(),
         // Le mode de jeu du tournoi s'applique à chacun de ses matchs
         // (chantier 9.11). C'est le contexte où le bibitif a le plus de sens :
         // plusieurs matchs d'affilée, au bar, entre les mêmes personnes.

@@ -99,6 +99,12 @@ export function calculateAdvancedStats(
     filters?: {
         venueId?: string | null;
         mode?: '1v1' | '2v2' | 'all';
+        /**
+         * La saison, ou `'all'`. Une partie sans `seasonId` est réputée
+         * appartenir à la saison 0 : c'est le cas des parties d'avant le
+         * 24/08 que le rattachement aurait manquées (chantier 3.8).
+         */
+        seasonId?: string | 'all' | null;
     }
 ): AdvancedStats {
     // 1. Filtrer les matchs selon les critères de base
@@ -110,6 +116,11 @@ export function calculateAdvancedStats(
             team.players?.some(player => player.userId.startsWith('guest_'))
         );
         if (hasGuestPlayers) return false;
+
+        // Filtre par saison
+        if (filters?.seasonId && filters.seasonId !== 'all') {
+            if ((g.seasonId ?? 'season_0') !== filters.seasonId) return false;
+        }
 
         // Filtre par stade
         if (filters?.venueId && g.venueId !== filters.venueId) return false;

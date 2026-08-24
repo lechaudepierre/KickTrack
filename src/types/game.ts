@@ -54,6 +54,16 @@ export interface Game {
      * `lib/game/dates.ts`, qui sait lequel lire — plus personne n'a à choisir.
      */
     startedAt: Date;
+    /**
+     * La saison à laquelle cette partie appartient.
+     *
+     * Écrit à la création, jamais recalculé. C'est ce qui permet de filtrer le
+     * profil par saison sans télécharger toutes les parties (chantier 3.8).
+     *
+     * Absent sur une partie antérieure au 24/08 qui n'aurait pas été reprise
+     * par `scripts/backfill-seasons.mjs` — la lecture doit donc le tolérer.
+     */
+    seasonId?: string;
     playerIds?: string[]; // For easier querying
     hostId: string;
     sessionId?: string;

@@ -548,7 +548,7 @@ Vous trois jouez en V2 plusieurs soirées réelles, puis `v2 everyone`.
 | 3.6 | Outil admin de clôture | [fait] | le script EST l'outil : confirmation tapée + simulation |
 | 3.7 | Marche arrière de clôture | [fait] | `scripts/rollback-season.mjs` — voir ci-dessous |
 | 3.5 | Historique de saison sur le profil | [fait] | `SeasonHistory.tsx`, sous la barre de progression |
-| 3.8 | Filtre par saison sur le profil | [a faire] | dépend de 3.5 |
+| 3.8 | Filtre par saison sur le profil | [fait] | `seasonId` sur la partie, 1 023 reprises |
 | 3.6 | Outil admin de clôture + confirmation forte | [a faire] | moi |
 | 3.7 | Marche arrière de clôture | [a faire] | moi — plomberie déjà faite (2.9) |
 | 3.8 | Filtre par saison sur tout le profil | [a faire] | moi — dépend de 3.1 |
@@ -602,7 +602,8 @@ Rien commencé, volontairement le dernier.
 | 9.7 | `goalsConceded` doublé en 2v2 | [fait] | voulu, et documenté |
 | 9.44 | Feuille de style orpheline de 1 169 lignes | [fait] | supprimée + garde-fou `check:css` |
 | 9.45 | Passe de contraste | [fait] | 28 conteneurs, audit 105 -> 61 |
-| 9.46 | Le lint de fond | [a faire] | 85 problèmes, 30 erreurs, tous antérieurs |
+| 9.46 | Le lint de fond | [en cours] | erreurs bloquantes faites ; restent `any` et deps |
+| 9.47 | Le profil ne lit que 200 parties | [a faire] | 2 joueurs déjà au-dessus |
 | 9.8 | Comptes fantômes (inscriptions ratées) | [fait] | 2 joueurs bloqués, débloqués le 23/08 |
 | 9.9 | Erreur en fin de partie sans lieu | [fait] | — |
 | 9.10 | Page de match fragile aux ajouts de contenu | [en cours] | 1re passe faite, reste les dimensions figées |
@@ -2541,22 +2542,69 @@ Mécanique générique : une saison référence une table en données. Deux axes
 - ATTENTION: Reste ouvert : faut-il un item distinct pour le **top 1** (« Champion saison 0 ») ?
   Non tranché, et non bloquant — ça s'ajoute au catalogue sans redéploiement.
 
-### 3.8 [a faire] Filtre par saison sur tout le profil
-Idée de Sacha (21/08) : « dans les stats il faudra un filtre par saison qui montre les stats,
-genre ça impacte tout le profil en fonction de la saison ».
+### 3.8 [fait] Filtre par saison sur tout le profil — *24 août 2026*
 
-Le profil a déjà un filtre de lieu et un filtre de format (1v1 / 2v2 / tous) qui reconfigurent
-l'ensemble des sections. **Le filtre de saison est le même mécanisme, avec une dimension de plus** :
-les statistiques avancées sont recalculées depuis les parties filtrées.
+**La décision.** Rien sur une partie ne disait à quelle saison elle
+appartenait. Deux options : borner par dates, ou écrire un `seasonId` sur la
+partie. **Sacha a tranché pour le `seasonId` (24/08)** — « le temps c'est
+chiant ».
 
-Ce qui manque aujourd'hui : rien sur une partie ne dit à quelle saison elle appartient. Deux
-options, à trancher au moment du chantier 3.1 :
-- borner par dates, en comparant `startedAt` à la fenêtre de la saison — aucune donnée à ajouter,
-  mais un calcul à chaque filtrage ;
-- écrire un `seasonId` sur chaque partie à sa clôture — plus direct, mais inutilisable pour les
-  967 parties déjà enregistrées sans reprise.
+Il a raison au-delà du confort : c'est ce qui rend possible un
+`where('seasonId', '==', …)` côté Firestore, donc de ne pas télécharger toutes
+les parties pour en garder un dixième.
 
-ATTENTION: dépend de 3.1 (modèle de données des saisons). À ne pas commencer avant.
+**L'objection de la doc tombe.** Elle disait le `seasonId` « inutilisable pour
+les 967 parties déjà enregistrées sans reprise ». Faux : elles appartiennent
+**toutes** à la saison 0, c'est sa définition même. `npm run seasons:backfill`
+les a rattachées — **1 023 parties**, de janvier à août, en une passe
+idempotente.
+
+- `lib/game/season.ts` — la saison ouverte, lue en base et mise en cache pour
+  la session. Pas une constante : au changement de saison, le script de clôture
+  suffit, aucun redéploiement.
+- Écrit à la création dans les deux chemins : partie libre et match de tournoi.
+- `statsCalculator` prend une dimension de plus, exactement comme le stade et
+  le format. **6 tests** sur ce seul filtre.
+
+**Ce que le filtre touche, et ce qu'il ne touche PAS.**
+
+| | filtré |
+|---|---|
+| Tout ce qui se calcule depuis les parties — victoires, buts, positions, gamelles, tête-à-tête, badges, parties récentes | **oui**, c'est un seul appel |
+| ELO, grade, place au classement, barre de progression | **non** |
+
+L'ELO n'est pas un agrégat : c'est une valeur *courante*. « Mon ELO en saison
+0 » n'a pas d'autre sens que sa valeur finale — déjà archivée, et affichée par
+le bloc « Saisons passées » (chantier 3.5). Filtrer la bannière donnerait un
+chiffre d'aujourd'hui sous une étiquette d'hier.
+
+**Le sélecteur ne s'affiche pas tant qu'il n'y a qu'une saison**, et il ne
+propose que les saisons où le joueur a réellement joué.
+
+### 9.47 [a faire] Le profil ne lit que les 200 dernières parties
+
+`getUserGames(targetUserId, 200)` : au-delà, les parties les plus anciennes
+n'entrent dans AUCUNE statistique du profil, quel que soit le filtre.
+
+Ce n'est pas théorique. Relevé le 24/08 sur les 772 parties terminées :
+
+| | parties |
+|---|---|
+| joueur le plus actif | **256** |
+| deuxième | **223** |
+| troisième | 192 |
+| médiane | 4 |
+
+**Deux joueurs sont déjà au-dessus de la limite** : leurs plus vieilles parties
+sont invisibles dans leur profil, aujourd'hui, y compris sans aucun filtre.
+
+Le filtre par saison rend le sujet plus pressant : après la première clôture,
+demander « saison 0 » à un gros joueur ne montrera qu'une partie de sa saison 0.
+
+La correction : filtrer **côté serveur** par `seasonId` quand une saison est
+choisie. Demande un index composite
+(`playerIds` array-contains + `status` + `seasonId` + `startedAt` desc), donc
+un déploiement d'index — c'est pour ça que c'est un chantier à part.
 
 ### 3.5 [fait] Historique de saison sur le profil — *24 août 2026*
 

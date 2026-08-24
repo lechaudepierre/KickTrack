@@ -26,6 +26,7 @@
     "audit:contraste": "node scripts/audit-contraste.mjs",
     "audit:comptes": "tsx scripts/audit-comptes.ts",
     "audit:scores": "tsx scripts/audit-scores.ts",
+    "seasons:backfill": "node scripts/backfill-seasons.mjs",
     "season:close": "tsx scripts/close-season.ts",
     "season:rollback": "node scripts/rollback-season.mjs",
     "season:revoke": "node scripts/revoke-season.mjs"

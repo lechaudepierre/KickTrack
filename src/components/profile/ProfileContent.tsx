@@ -86,6 +86,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
     // Filters state
     const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
     const [modeFilter, setModeFilter] = useState<'1v1' | '2v2' | 'all'>('all');
+    const [seasonFilter, setSeasonFilter] = useState<string>('all');
 
     // Head-to-head search state
     const [h2hSearchQuery, setH2hSearchQuery] = useState('');
@@ -170,17 +171,32 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
         }
     };
 
+    /*
+     * Les saisons que ce joueur a réellement jouées.
+     *
+     * Tirées de ses parties, pas de la liste des saisons : proposer un filtre
+     * « Saison 1 » à quelqu'un qui n'y a pas joué ne mène qu'à un profil vide.
+     * Tant qu'il n'y en a qu'une, le sélecteur ne s'affiche pas du tout.
+     */
+    const saisonsJouees = useMemo(() => {
+        const vues = new Set(allGames.map(g => g.seasonId ?? 'season_0'));
+        return [...vues].sort().reverse();
+    }, [allGames]);
+
     // Recalculate stats when filters change
     useEffect(() => {
         if (profileUser && allGames.length > 0) {
             const stats = calculateAdvancedStats(allGames, profileUser.userId, {
                 venueId: selectedVenue?.venueId,
-                mode: modeFilter
+                mode: modeFilter,
+                seasonId: seasonFilter,
             });
             setAdvancedStats(stats);
 
             // Update recent games based on filters
             const filtered = allGames.filter(g => {
+                // Une partie sans saison est de la saison 0 — voir 3.8.
+                if (seasonFilter !== 'all' && (g.seasonId ?? 'season_0') !== seasonFilter) return false;
                 if (selectedVenue && g.venueId !== selectedVenue.venueId) return false;
                 if (modeFilter !== 'all') {
                     const is2v2 = g.teams[0].players.length + g.teams[1].players.length === 4;
@@ -195,7 +211,7 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
             setAdvancedStats(calculateAdvancedStats([], profileUser.userId));
             setRecentGames([]);
         }
-    }, [selectedVenue, modeFilter, allGames, profileUser]);
+    }, [selectedVenue, modeFilter, seasonFilter, allGames, profileUser]);
 
     // Filter head-to-head based on search
     // Top 3 teammates by wins in 2v2
@@ -576,6 +592,26 @@ export default function ProfileContent({ targetUserId, isMe = false }: ProfileCo
                             >2v2</button>
                         </div>
                     </div>
+
+                    {/* Filtre par saison — chantier 3.8.
+                        Masqué tant qu'il n'y a qu'une saison : un sélecteur à
+                        une seule valeur n'apprend rien et prend de la place. */}
+                    {saisonsJouees.length > 1 && (
+                        <div className={styles.filterRow}>
+                            <div className={styles.segmentedControl}>
+                                <button className={`${styles.segment} ${seasonFilter === 'all' ? styles.segmentActive : ''}`}
+                                    onClick={() => setSeasonFilter('all')}
+                                >Toutes</button>
+                                {saisonsJouees.map(id => (
+                                    <button key={id}
+                                        className={`${styles.segment} ${seasonFilter === id ? styles.segmentActive : ''}`}
+                                        onClick={() => setSeasonFilter(id)}
+                                    >{id.replace('season_', 'S')}</button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <VenueDropdown selectedVenue={selectedVenue}
                         onSelectVenue={setSelectedVenue}
                         showNoneOption={true}

@@ -13,6 +13,7 @@ import {
     Timestamp
 } from 'firebase/firestore';
 import { getFirebaseDb } from './config';
+import { saisonCourante } from '@/lib/game/season';
 import { GameSession, Game, Player, Team, GameFormat } from '@/types';
 import { generatePinCode } from '@/lib/utils/code-generator';
 
@@ -199,6 +200,8 @@ export async function startGame(
         playerIds: sanitizedTeams.flatMap(t => t.players.map(p => p.userId || '')).filter(id => id !== ''),
         hostId: session.hostId,
         sessionId: session.sessionId,
+        // La saison suit la partie, écrite une fois pour toutes (chantier 3.8).
+        seasonId: await saisonCourante(),
         // Le mode suit la partie : c'est lui qui pilote l'affichage des gages.
         modeId: session.modeId || 'normal',
         isGuestGame: hasGuestPlayers // Mark guest games
