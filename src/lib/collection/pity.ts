@@ -25,9 +25,14 @@
  * ═══════════════════════════════════════════════════════════════════════════
  * ⚠️ PROVISOIRE — le seuil n'est pas tranché
  * ═══════════════════════════════════════════════════════════════════════════
- * `SEUIL_PITY = 5` est la valeur donnée par Sacha le 24/08 : « toutes les cinq
- * packs… je me dis cinquante parties pour avoir un légendaire, c'est déjà
- * bien ».
+ * `SEUIL_PITY = 10`, décision de Sacha le 24/08, à combiner avec le passage à
+ * **un pack toutes les 5 parties** : les deux ensemble donnent
+ * **10 × 5 = 50 parties par légendaire garanti**, exactement le chiffre qu'il
+ * visait — « cinquante parties pour avoir un légendaire, c'est déjà bien ».
+ *
+ * Les deux leviers ne visent pas les mêmes joueurs, et c'est pour ça qu'il faut
+ * les deux : la CADENCE ouvre le système à ceux qui jouent peu, la GARANTIE
+ * protège de la malchance ceux qui jouent beaucoup.
  *
  * Relevé du 24/08 sur les 113 joueurs, pour situer ce que ça donne vraiment :
  *
@@ -36,8 +41,8 @@
  *   5 packs ou plus  11 joueurs  (10 %)
  *   25 packs          1 joueur   (le plus assidu)
  *
- * À 5, un joueur sur dix atteindrait la garantie. C'est défendable vu le peu
- * que la plupart jouent.
+ * Ces chiffres étaient mesurés à un pack pour dix parties ; à un pack pour
+ * cinq, ils doublent à peu près.
  *
  * ATTENTION: la vraie limite n'est pas le seuil, c'est qu'il n'existe que
  * **DEUX** items légendaires. Le joueur le plus assidu déclencherait la
@@ -51,7 +56,7 @@
 import type { CatalogItem, Rarity } from '@/types/collection';
 
 /** Nombre de packs sans légendaire au bout duquel le suivant en garantit un. */
-export const SEUIL_PITY = 5; // PROVISOIRE — valeur de Sacha, 24/08
+export const SEUIL_PITY = 10; // PROVISOIRE — valeur de Sacha, 24/08
 
 /** La rareté que la garantie force. */
 export const RARETE_GARANTIE: Rarity = 'legendaire';

@@ -134,6 +134,32 @@ export const SEASON = {
         ],
     },
 
+    // ─── LES PACKS D'OUVERTURE DE SAISON ─────────────────────────────────────
+    //
+    // Décision de Sacha, 24/08 : « au début de saison on donnera un pack à tout
+    // le monde, deux packs pour ceux qui ont été master, trois packs pour ceux
+    // qui ont été grand master ».
+    //
+    // C'est un cadeau de BIENVENUE dans la nouvelle saison, pas une récompense
+    // de l'ancienne : il se donne à l'ouverture, avec l'ELO déjà remis à plat.
+    // Le grade qui compte reste le MEILLEUR ATTEINT dans la saison qui ferme —
+    // c'est la seule trace qu'il en reste une fois l'ELO comprimé.
+    //
+    // Le nombre n'est PAS cumulatif, contrairement aux items : un Grand Master
+    // reçoit trois packs, pas 1 + 2 + 3. On prend le plus haut palier atteint.
+    //
+    // Mettre `0` ou retirer la clé désactive complètement le cadeau.
+    //
+    packsDOuverture: {
+        // Pour quiconque a joué au moins une partie classée.
+        tous: 1,
+        // Par grade maximum atteint. Le plus haut palier l'emporte.
+        parGrade: {
+            master: 2,
+            grandmaster: 3,
+        },
+    },
+
     // ─── LA PHRASE À TAPER POUR EXÉCUTER ─────────────────────────────────────
     //
     // Le script la demande avant d'écrire quoi que ce soit. Elle contient

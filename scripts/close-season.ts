@@ -128,6 +128,21 @@ async function main() {
         ligne(`    ${id.padEnd(26)} ${String(n).padStart(4)} joueur(s)`);
     }
 
+    // Les packs d'ouverture, comptés par palier pour qu'on voie d'un coup
+    // d'oeil qui reçoit quoi avant d'écrire quoi que ce soit.
+    const totalPacks = plan.reduce((t, p) => t + p.packs, 0);
+    if (totalPacks > 0) {
+        ligne();
+        ligne(`  ${totalPacks} pack(s) d'ouverture pour ${config.to.label} :`);
+        const parNombre = new Map<number, number>();
+        for (const p of plan) {
+            if (p.packs > 0) parNombre.set(p.packs, (parNombre.get(p.packs) ?? 0) + 1);
+        }
+        for (const [nb, joueurs] of [...parNombre].sort((a, b) => b[0] - a[0])) {
+            ligne(`    ${String(nb)} pack(s)${' '.repeat(18)} ${String(joueurs).padStart(4)} joueur(s)`);
+        }
+    }
+
     titre('4. Effet sur l\'ELO');
     ligne('  ⚠️ Cette étape n\'est PAS réversible.');
     ligne();
@@ -239,6 +254,59 @@ async function main() {
         }
     }
     ligne(`  [ok] ${octroyes} récompense(s) octroyée(s), sourceRef « ${sourceRef} »`);
+
+    /*
+     * 3bis. Les packs d'ouverture — décision de Sacha, 24/08.
+     *
+     * Un cadeau de BIENVENUE dans la nouvelle saison : un pack pour tous, deux
+     * pour les Master, trois pour les Grand Master. Le nombre vient de
+     * `packsFor`, testé à part.
+     *
+     * Les identifiants sont DÉTERMINISTES (`{sourceRef}_pack_{i}`) : réécrire
+     * les mêmes documents n'en crée pas de nouveaux, comme pour les octrois.
+     *
+     * `packsUnopened` est en revanche RECALCULÉ depuis le nombre de packs non
+     * ouverts, pas incrémenté : un incrément doublerait si la clôture était
+     * rejouée, une dérivation non.
+     */
+    let lotPacks = db.batch();
+    let packsCrees = 0;
+    let joueursServis = 0;
+    let nPacks = 0;
+
+    for (const p of plan) {
+        if (p.packs <= 0) continue;
+        const userRef = db.collection('users').doc(p.userId);
+
+        for (let i = 0; i < p.packs; i++) {
+            lotPacks.set(userRef.collection('packs').doc(`${sourceRef}_pack_${i}`), {
+                index: -1,               // hors numérotation des packs gagnés
+                earnedAt: now,
+                source: 'saison',
+                sourceRef,
+            });
+            packsCrees++;
+        }
+        joueursServis++;
+
+        if (++nPacks % 100 === 0) { await lotPacks.commit(); lotPacks = db.batch(); }
+    }
+    if (nPacks % 100 !== 0) await lotPacks.commit();
+
+    // Le compteur de non-ouverts, dérivé et non incrémenté.
+    let lotCompteurs = db.batch();
+    let nc = 0;
+    for (const p of plan) {
+        if (p.packs <= 0) continue;
+        const userRef = db.collection('users').doc(p.userId);
+        const ouverts = await userRef.collection('packs').get();
+        const nonOuverts = ouverts.docs.filter(d => !d.data().itemId).length;
+        lotCompteurs.update(userRef, { packsUnopened: nonOuverts });
+        if (++nc % 200 === 0) { await lotCompteurs.commit(); lotCompteurs = db.batch(); }
+    }
+    if (nc % 200 !== 0) await lotCompteurs.commit();
+
+    ligne(`  [ok] ${packsCrees} pack(s) d'ouverture pour ${joueursServis} joueur(s)`);
 
     // 4 et 5. Archive, compression, remise à zéro.
     lot = db.batch();

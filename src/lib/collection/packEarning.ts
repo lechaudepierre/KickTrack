@@ -20,8 +20,25 @@
  * exclusivement côté serveur.
  */
 
-/** ⚠️ PROVISOIRE — à calibrer. Vivra en config serveur (bloc 4). */
-export const PARTIES_PAR_PACK = 10;
+/**
+ * ⚠️ PROVISOIRE — à calibrer. Vivra en config serveur (bloc 4).
+ *
+ * Passé de 10 à 5 le 24/08, décision de Sacha, sur les chiffres suivants : la
+ * médiane des joueurs est de **5 parties qualifiantes**. À un pack pour dix, le
+ * joueur médian n'en voyait donc JAMAIS.
+ *
+ * | | 1 pack / 10 | 1 pack / 5 |
+ * |---|---|---|
+ * | joueurs ayant au moins 1 pack | 40 (35 %) | **61 (54 %)** |
+ *
+ * C'est ce qui fait basculer la moitié des joueurs de « n'a jamais vu un pack »
+ * à « en a ouvert un ». La garantie anti-malchance, elle, ne pouvait rien pour
+ * eux : elle n'aide que ceux qui ouvrent déjà beaucoup.
+ *
+ * Changé sans risque : `packGames` était à zéro sur les 141 profils, personne
+ * n'avait encore gagné le moindre pack.
+ */
+export const PARTIES_PAR_PACK = 5;
 
 /**
  * La question du rétroactif ne se pose plus.

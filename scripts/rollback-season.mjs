@@ -159,6 +159,36 @@ for (const r of aRestaurer) {
 if (n % 200 !== 0) await lot.commit();
 console.log(`  [ok] ${aRestaurer.length} profil(s) restauré(s), archives effacées`);
 
+/*
+ * Les packs d'ouverture repartent aussi.
+ *
+ * On les reconnaît à leur `sourceRef`. Le compteur de non-ouverts est ensuite
+ * RECALCULÉ depuis ce qui reste, pas décrémenté : une dérivation ne peut pas
+ * dériver, un décrément si.
+ */
+let lotPacks = db.batch();
+let packsRetires = 0;
+let np = 0;
+for (const r of aRestaurer) {
+    const packs = await r.ref.collection('packs').where('sourceRef', '==', `${seasonId}_close`).get();
+    for (const d of packs.docs) { lotPacks.delete(d.ref); packsRetires++; }
+    if (++np % 100 === 0) { await lotPacks.commit(); lotPacks = db.batch(); }
+}
+if (np % 100 !== 0) await lotPacks.commit();
+
+if (packsRetires > 0) {
+    let lotCompteurs = db.batch();
+    let nc = 0;
+    for (const r of aRestaurer) {
+        const restants = await r.ref.collection('packs').get();
+        const nonOuverts = restants.docs.filter(d => !d.data().itemId).length;
+        lotCompteurs.update(r.ref, { packsUnopened: nonOuverts });
+        if (++nc % 200 === 0) { await lotCompteurs.commit(); lotCompteurs = db.batch(); }
+    }
+    if (nc % 200 !== 0) await lotCompteurs.commit();
+}
+console.log(`  [ok] ${packsRetires} pack(s) d'ouverture retiré(s)`);
+
 // L'instantané du classement disparaît aussi : il décrivait une clôture qui
 // n'a plus eu lieu.
 const standings = await db.collection('seasons').doc(seasonId).collection('standings').get();

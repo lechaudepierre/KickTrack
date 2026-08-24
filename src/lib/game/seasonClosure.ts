@@ -46,6 +46,26 @@ export interface SeasonCloseConfig {
     elo: EloResetConfig;
     placementGames: number;
     recompenses: RecompensesConfig;
+    /** Packs offerts à l'ouverture de la saison suivante. Absent = aucun. */
+    packsDOuverture?: PacksDOuvertureConfig;
+}
+
+/**
+ * Les packs offerts pour bien commencer la saison suivante.
+ *
+ * Décision de Sacha, 24/08 : un pack pour tout le monde, deux pour les Master,
+ * trois pour les Grand Master.
+ *
+ * C'est un cadeau de BIENVENUE, pas une récompense de la saison qui ferme :
+ * il se donne avec l'ELO déjà remis à plat. Mais le grade qui le détermine est
+ * le meilleur ATTEINT dans la saison close — c'est la seule trace qu'il en
+ * reste une fois l'ELO comprimé.
+ */
+export interface PacksDOuvertureConfig {
+    /** Pour quiconque a joué au moins une partie classée. */
+    tous?: number;
+    /** Par grade maximum atteint. Le plus haut palier l'emporte. */
+    parGrade?: Partial<Record<RankType, number>>;
 }
 
 /** Une ligne du classement final. */
@@ -73,6 +93,40 @@ export interface PlayerClosurePlan {
     eloAfter: number;
     peakGrade: RankType;
     games: number;
+    /** Packs offerts à l'ouverture de la saison suivante. */
+    packs: number;
+}
+
+/**
+ * Les packs d'ouverture dus à un joueur.
+ *
+ * **Pas cumulatif**, contrairement aux items : un Grand Master reçoit trois
+ * packs, pas 1 + 2 + 3. On prend le plus haut palier qu'il atteint, et le socle
+ * `tous` sert de plancher.
+ *
+ * Un grade non listé ne vaut rien de plus que le socle : c'est ce qui permet
+ * de n'écrire que `master` et `grandmaster` dans la config.
+ */
+export function packsFor(
+    standing: FinalStanding,
+    config: SeasonCloseConfig,
+): number {
+    const regle = config.packsDOuverture;
+    if (!regle) return 0;
+
+    const socle = Math.max(0, Math.floor(regle.tous ?? 0));
+    const rang = ORDRE_GRADES.indexOf(standing.peakGrade);
+    if (rang < 0) return socle;
+
+    // On balaie du plus haut grade atteint vers le bas et on garde le premier
+    // palier configuré : « le plus haut l'emporte », sans dépendre de l'ordre
+    // d'écriture dans la config.
+    let meilleur = socle;
+    for (const grade of ORDRE_GRADES.slice(0, rang + 1)) {
+        const n = regle.parGrade?.[grade];
+        if (typeof n === 'number' && n > meilleur) meilleur = Math.floor(n);
+    }
+    return meilleur;
 }
 
 /**
@@ -119,6 +173,7 @@ export function buildClosurePlan(
             username: s.username,
             rank: s.rank,
             items: itemsFor(s, config),
+            packs: packsFor(s, config),
             eloBefore: s.elo,
             eloAfter: applyEloReset(s.elo, config.elo),
             peakGrade: s.peakGrade,

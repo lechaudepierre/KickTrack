@@ -8,7 +8,9 @@ import {
     ORDRE_GRADES,
     type SeasonCloseConfig,
     type FinalStanding,
+    packsFor,
 } from './seasonClosure';
+import type { RankType } from '@/lib/utils/rankUtils';
 
 const config: SeasonCloseConfig = {
     from: { id: 'season_0', label: 'Saison 0' },
@@ -233,5 +235,59 @@ describe('summarize — le contrôle à blanc', () => {
 describe('l\'ordre des grades', () => {
     it('va du plus accessible au plus élevé', () => {
         expect(ORDRE_GRADES).toEqual(['argent', 'or', 'diamant', 'master', 'grandmaster']);
+    });
+});
+
+describe('packsFor — les packs d\'ouverture de saison', () => {
+    const base: SeasonCloseConfig = {
+        from: { id: 's0', label: 'Saison 0' },
+        to: { id: 's1', label: 'Saison 1' },
+        elo: { mode: 'compress', k: 0.5 },
+        placementGames: 3,
+        recompenses: { participation: [], parGrade: {}, grades_cumulatifs: true, parPlace: [] },
+        packsDOuverture: { tous: 1, parGrade: { master: 2, grandmaster: 3 } },
+    };
+    const joueur = (peakGrade: RankType): FinalStanding =>
+        ({ userId: 'u', username: 'u', rank: 1, elo: 1000, peakGrade, games: 10 });
+
+    it('sans configuration, personne ne reçoit rien', () => {
+        const sansPacks = { ...base, packsDOuverture: undefined };
+        expect(packsFor(joueur('grandmaster'), sansPacks)).toBe(0);
+    });
+
+    it('le socle vaut pour les grades non listés', () => {
+        for (const g of ['argent', 'or', 'diamant'] as RankType[]) {
+            expect(packsFor(joueur(g), base)).toBe(1);
+        }
+    });
+
+    it('un Master reçoit son palier', () => {
+        expect(packsFor(joueur('master'), base)).toBe(2);
+    });
+
+    it('un Grand Master reçoit le sien', () => {
+        expect(packsFor(joueur('grandmaster'), base)).toBe(3);
+    });
+
+    it('ce n\'est PAS cumulatif : le plus haut palier l\'emporte', () => {
+        // Un Grand Master reçoit 3, pas 1 + 2 + 3.
+        expect(packsFor(joueur('grandmaster'), base)).toBe(3);
+    });
+
+    it('un palier plus bas que le socle ne fait jamais perdre de packs', () => {
+        const bizarre = { ...base, packsDOuverture: { tous: 5, parGrade: { master: 2 } } };
+        expect(packsFor(joueur('master'), bizarre)).toBe(5);
+    });
+
+    it('un socle absent vaut zéro pour les grades non listés', () => {
+        const sansSocle = { ...base, packsDOuverture: { parGrade: { grandmaster: 3 } } };
+        expect(packsFor(joueur('or'), sansSocle)).toBe(0);
+        expect(packsFor(joueur('grandmaster'), sansSocle)).toBe(3);
+    });
+
+    it('l\'ordre d\'écriture dans la config n\'a aucune importance', () => {
+        const inverse = { ...base, packsDOuverture: { tous: 1, parGrade: { grandmaster: 3, master: 2 } } };
+        expect(packsFor(joueur('grandmaster'), inverse)).toBe(3);
+        expect(packsFor(joueur('master'), inverse)).toBe(2);
     });
 });

@@ -12,44 +12,44 @@ const avecRetro = { retroactif: true };
 const des = (granted: number, baseline = 0) => ({ granted, baseline });
 
 describe('computePackEarning — la dérivation', () => {
-    it('9 parties : rien encore', () => {
-        expect(computePackEarning(9, des(0), avecRetro)).toMatchObject({ due: 0, toGrant: 0, newPacksGranted: 0 });
+    it('juste avant le premier palier : rien encore', () => {
+        expect(computePackEarning(PARTIES_PAR_PACK - 1, des(0), avecRetro)).toMatchObject({ due: 0, toGrant: 0, newPacksGranted: 0 });
     });
 
-    it('la dixième partie donne le premier pack', () => {
-        expect(computePackEarning(10, des(0), avecRetro)).toMatchObject({ due: 1, toGrant: 1, newPacksGranted: 1 });
+    it('la partie du premier palier donne le premier pack', () => {
+        expect(computePackEarning(PARTIES_PAR_PACK, des(0), avecRetro)).toMatchObject({ due: 1, toGrant: 1, newPacksGranted: 1 });
     });
 
     it('entre deux paliers, rien ne tombe', () => {
-        for (const n of [11, 15, 19]) {
-            expect(computePackEarning(n, des(1), avecRetro).toGrant).toBe(0);
+        for (let ecart = 1; ecart < PARTIES_PAR_PACK; ecart++) {
+            expect(computePackEarning(PARTIES_PAR_PACK + ecart, des(1), avecRetro).toGrant).toBe(0);
         }
     });
 
     it('le palier suivant redonne exactement un pack', () => {
-        expect(computePackEarning(20, des(1), avecRetro).toGrant).toBe(1);
+        expect(computePackEarning(PARTIES_PAR_PACK * 2, des(1), avecRetro).toGrant).toBe(1);
     });
 
     it('un rattrapage donne tout ce qui manque d\'un coup', () => {
         // Le compteur avait pris du retard : 5 dus, 2 donnés.
-        expect(computePackEarning(50, des(2), avecRetro)).toMatchObject({ due: 5, toGrant: 3, newPacksGranted: 5 });
+        expect(computePackEarning(PARTIES_PAR_PACK * 5, des(2), avecRetro)).toMatchObject({ due: 5, toGrant: 3, newPacksGranted: 5 });
     });
 
     it('rejouer la même partie n\'octroie rien de plus', () => {
-        const premier = computePackEarning(10, des(0), avecRetro);
-        const second = computePackEarning(10, des(premier.newPacksGranted), avecRetro);
+        const premier = computePackEarning(PARTIES_PAR_PACK, des(0), avecRetro);
+        const second = computePackEarning(PARTIES_PAR_PACK, des(premier.newPacksGranted), avecRetro);
         expect(second.toGrant).toBe(0);
     });
 
     it('on ne reprend JAMAIS un pack déjà donné, même si des parties disparaissent', () => {
-        const r = computePackEarning(10, des(5), avecRetro);
+        const r = computePackEarning(PARTIES_PAR_PACK, des(5), avecRetro);
         expect(r.toGrant).toBe(0);
         expect(r.newPacksGranted).toBe(5);
     });
 
     it('un compteur négatif ou absurde ne casse rien', () => {
         expect(computePackEarning(-5, des(0), avecRetro).due).toBe(0);
-        expect(computePackEarning(30, des(-3), avecRetro).toGrant).toBe(3);
+        expect(computePackEarning(PARTIES_PAR_PACK * 3, des(-3), avecRetro).toGrant).toBe(3);
     });
 });
 
@@ -60,20 +60,21 @@ describe('computePackEarning — le premier passage sur un compte existant', () 
             .toEqual({ due: 0, toGrant: 0, newPacksGranted: 0, baseline: 255 });
     });
 
-    it('sans rétroactif : il gagne son pack aux 10 parties SUIVANTES, pas avant', () => {
-        const repere = computePackEarning(255, {}, { retroactif: false });
+    it('sans rétroactif : il gagne son pack au palier SUIVANT, pas avant', () => {
+        const DEPART = 255;
+        const repere = computePackEarning(DEPART, {}, { retroactif: false });
         const etat = { granted: repere.newPacksGranted, baseline: repere.baseline };
-        // 259 : neuf parties après le repère, toujours rien.
-        expect(computePackEarning(264, etat, { retroactif: false }).toGrant).toBe(0);
-        // 265 : dix parties pile, le pack tombe.
-        expect(computePackEarning(265, etat, { retroactif: false }).toGrant).toBe(1);
+        // Une partie avant le palier : toujours rien.
+        expect(computePackEarning(DEPART + PARTIES_PAR_PACK - 1, etat, { retroactif: false }).toGrant).toBe(0);
+        // Le palier pile : le pack tombe.
+        expect(computePackEarning(DEPART + PARTIES_PAR_PACK, etat, { retroactif: false }).toGrant).toBe(1);
     });
 
     it('deux joueurs très inégaux attendent exactement autant l\'un que l\'autre', () => {
         const gros = computePackEarning(259, {}, { retroactif: false });
         const petit = computePackEarning(3, {}, { retroactif: false });
         const apres = (dep: number, r: typeof gros) =>
-            computePackEarning(dep + 10, { granted: r.newPacksGranted, baseline: r.baseline }, { retroactif: false }).toGrant;
+            computePackEarning(dep + PARTIES_PAR_PACK, { granted: r.newPacksGranted, baseline: r.baseline }, { retroactif: false }).toGrant;
         expect(apres(259, gros)).toBe(1);
         expect(apres(3, petit)).toBe(1);
     });
@@ -84,7 +85,8 @@ describe('computePackEarning — le premier passage sur un compte existant', () 
     });
 
     it('avec rétroactif : tout l\'historique compte', () => {
-        expect(computePackEarning(255, {}, avecRetro).toGrant).toBe(25);
+        const parties = PARTIES_PAR_PACK * 25;
+        expect(computePackEarning(parties, {}, avecRetro).toGrant).toBe(25);
     });
 
     it('un nouveau compte n\'est pas concerné : zéro dans les deux cas', () => {
@@ -108,7 +110,7 @@ describe('identifiants de pack', () => {
     });
 
     it('le tout premier pack porte le numéro 1', () => {
-        const r = computePackEarning(10, des(0), avecRetro);
+        const r = computePackEarning(PARTIES_PAR_PACK, des(0), avecRetro);
         expect(packIdsToCreate(r)).toEqual(['pack_1']);
     });
 
@@ -121,8 +123,12 @@ describe('identifiants de pack', () => {
 });
 
 describe('le réglage', () => {
-    it('un pack toutes les dix parties', () => {
-        expect(PARTIES_PAR_PACK).toBe(10);
+    it('la cadence est une valeur de reglage, pas une regle', () => {
+        // On ne fige PAS le nombre : c'est un PROVISOIRE que Sacha ajuste --
+        // 10 au depart, 5 depuis le 24/08. Ce qui doit rester vrai, c'est
+        // qu'il soit utilisable comme palier.
+        expect(PARTIES_PAR_PACK).toBeGreaterThan(0);
+        expect(Number.isInteger(PARTIES_PAR_PACK)).toBe(true);
     });
 });
 

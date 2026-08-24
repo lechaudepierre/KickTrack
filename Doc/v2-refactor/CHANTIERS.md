@@ -562,9 +562,65 @@ Vous trois jouez en V2 plusieurs soirées réelles, puis `v2 everyone`.
 | 4.1 | Monnaie : solde + journal | [reporte] |
 | 4.2 | Définition de pack au catalogue | [fait] | `buildPackPool(catalog)` |
 | 4.3 | Tirage serveur | [fait] | `POST /api/packs/open` + `openPack` |
-| 4.3b | Pity invisible | [fait] | seuil = 5 packs, **PROVISOIRE** |
+| 4.3b | Pity invisible | [fait] | seuil = 10 packs, **PROVISOIRE** |
+| 4.6 | Économie des packs réglée | [fait] | 1 pack / 5 parties, + packs d'ouverture |
 | 4.4 | Doublons -> monnaie | [abandonne] | pas de monnaie |
 | 4.5 | Animation d'ouverture | [fait] | `PackOpening.tsx` |
+
+### 4.6 [fait] L'économie des packs, réglée — *24 août 2026*
+
+Trois décisions de Sacha le 24/08, prises sur des chiffres et non à l'instinct.
+
+**1. Un pack toutes les CINQ parties** (au lieu de dix).
+
+La médiane des joueurs est de **5 parties qualifiantes**. À un pack pour dix, le
+joueur médian n'en voyait donc *jamais*.
+
+| | 1 pack / 10 | 1 pack / 5 |
+|---|---|---|
+| au moins 1 pack | 40 joueurs (35 %) | **61 (54 %)** |
+| au moins 3 packs | 16 (14 %) | 30 (27 %) |
+
+C'est ce qui fait basculer **la moitié des joueurs** de « n'a jamais vu un
+pack » à « en a ouvert un ». La garantie ne pouvait rien pour eux : elle n'aide
+que ceux qui ouvrent déjà beaucoup.
+
+**2. La garantie passe à DIX packs.** Combinée à la cadence, ça donne
+`10 × 5 = 50 parties par légendaire garanti` — exactement le chiffre que Sacha
+visait. Les deux leviers ne visent pas les mêmes joueurs : la cadence ouvre le
+système à ceux qui jouent peu, la garantie protège de la malchance ceux qui
+jouent beaucoup.
+
+**3. Des packs à l'ouverture de saison** — « un pack à tout le monde, deux pour
+ceux qui ont été master, trois pour ceux qui ont été grand master ».
+
+Décrit dans `season.config.mjs`, calculé par `packsFor` (**8 tests**), distribué
+par la clôture. **Pas cumulatif** : un Grand Master reçoit trois packs, pas
+1 + 2 + 3.
+
+Contrôle à blanc du 24/08 :
+
+| packs | joueurs |
+|---|---|
+| 3 | 1 |
+| 2 | 11 |
+| 1 | 102 |
+| | **127 packs** |
+
+**Détails d'implémentation qui comptent :**
+- identifiants **déterministes** (`{sourceRef}_pack_{i}`) : rejouer la clôture
+  ne crée pas de doublons, comme pour les octrois ;
+- `packsUnopened` est **recalculé** depuis les packs non ouverts, jamais
+  incrémenté — un incrément doublerait sur un rejeu, une dérivation non ;
+- `season:rollback` les reprend, et recalcule le compteur de la même façon.
+
+**Changé sans risque** : `packGames` était à zéro sur les 141 profils. Personne
+n'avait encore gagné le moindre pack — parce que tout ce travail vit sur
+`sacha2`, qui a 28 commits d'avance sur `main`, dont la dernière version date
+du 24 mars.
+
+⚠️ **Il n'existe toujours que DEUX légendaires.** C'est la vraie limite, pas les
+seuils. Ajouter des items légendaires vaudrait mieux que tout autre réglage.
 
 ### 4.3b [fait] La garantie anti-malchance — *24 août 2026*
 
