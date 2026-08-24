@@ -715,7 +715,7 @@ Rien commencé, volontairement le dernier.
 | 9.48 | `season:close` ne démarrait pas | [fait] | `tsx` n'était pas une dépendance |
 | 9.8 | Comptes fantômes (inscriptions ratées) | [fait] | 2 joueurs bloqués, débloqués le 23/08 |
 | 9.9 | Erreur en fin de partie sans lieu | [fait] | — |
-| 9.10 | Page de match fragile aux ajouts de contenu | [en cours] | 1re passe faite, reste les dimensions figées |
+| 9.10 | Page de match fragile aux ajouts de contenu | [fait] | validé par Sacha le 24/08 |
 | 9.11 | Le mode de jeu n'existe pas dans les tournois | [fait] | + 3 bugs de tournoi trouvés au passage |
 | 9.12 | Pic d'ELO absent des comptes antérieurs | [fait] | reconstitué depuis `eloHistory` |
 | 9.13 | Unités de fenêtre dans un conteneur pivoté | [fait] | plus aucune, + garde-fou `check:match` |
@@ -2895,7 +2895,7 @@ pseudo, sans intervention.
 Ils n'ont aucun fournisseur, personne ne peut s'y connecter, ils ne bloquent
 rien. `npm run audit:comptes` reste là pour voir si le nombre grandit.
 
-### 9.10 [en cours] La page de match casse dès qu'on y ajoute quoi que ce soit
+### 9.10 [fait] La page de match casse dès qu'on y ajoute quoi que ce soit — *validé le 24 août 2026*
 Signalé par Sacha : ajouter le badge de mode a décalé la mise en page et coupé le bouton
 « Terminer ». Corrigé au cas par cas (positionnement absolu), mais la cause est structurelle.
 
@@ -3357,8 +3357,16 @@ vrai total, il faut repartir des parties.
 > Question de Sacha, le 24/08 : « j'ai l'impression qu'il y a des choses à
 > l'infini… c'est quand qu'on arrive à la fin ? »
 
-**Le refactoring V2 est fini à 88 %** : 72 chantiers faits, 10 restants — et
-**aucun des 10 n'est nécessaire pour septembre**.
+**Le refactoring V2 est TERMINÉ.** Sacha, le 24/08 : « on a fini du coup ? »
+— oui.
+
+Reste, et par sa décision, uniquement de l'optionnel :
+
+| | pourquoi c'est laissé |
+|---|---|
+| Ajouter des items légendaires | « c'est optionnel » — question d'assets |
+| Avatar 2D (bloc 6) | ni spec ni assets, optionnel de fin de liste |
+| Refonte de la formule 2v2 (1.6) | bloqué sur une décision d'équipe |
 
 | bloc | reste | nécessaire en septembre ? |
 |---|---|---|
