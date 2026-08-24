@@ -352,10 +352,20 @@
 /* Native Landscape Mode */
 .nativeLandscape {
     position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100dvh !important;
+    /*
+     * `inset: 0` et non `width: 100vw`.
+     *
+     * Ici le conteneur n'est PAS pivoté, donc `100vw` marchait. Mais c'est la
+     * seule unité de fenêtre qui restait dans ce fichier, et la règle du
+     * chantier 9.13 est sans exception : sur cette page, une superposition ne
+     * se dimensionne jamais en `vw`/`vh`. Le jour où quelqu'un déplace cette
+     * classe sous le conteneur pivoté, `100vw` désignerait la HAUTEUR de
+     * l'écran — sans qu'aucune erreur ne le dise.
+     *
+     * `inset: 0` remplit le bloc conteneur quel qu'il soit, et ignore au
+     * passage la largeur de la barre de défilement, que `100vw` compte.
+     */
+    inset: 0 !important;
     max-width: none !important;
     margin: 0 !important;
     padding: 0.5rem !important;

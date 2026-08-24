@@ -606,7 +606,7 @@ Rien commencé, volontairement le dernier.
 | 9.10 | Page de match fragile aux ajouts de contenu | [en cours] | 1re passe faite, reste les dimensions figées |
 | 9.11 | Le mode de jeu n'existe pas dans les tournois | [fait] | + 3 bugs de tournoi trouvés au passage |
 | 9.12 | Pic d'ELO absent des comptes antérieurs | [fait] | reconstitué depuis `eloHistory` |
-| 9.13 | Unités de fenêtre dans un conteneur pivoté | [en cours] | flash corrigé, vue spectateur à voir |
+| 9.13 | Unités de fenêtre dans un conteneur pivoté | [fait] | plus aucune, + garde-fou `check:match` |
 | 9.15 | Classes de bouton jamais définies | [fait] | 12 usages, 0 définition |
 | 9.16 | Le fond terrain défilait avec le contenu | [fait] | calque fixe derrière |
 | 9.17 | Lignes de terrain rendues visibles par erreur | [fait] | elles ne rendaient rien depuis toujours |
@@ -2819,9 +2819,27 @@ rien à voir avec l'écran.
 pourcentages. Règle notée dans le CSS : **ne jamais utiliser `100vw`/`100vh` sur une superposition
 de cette app.**
 
-[a faire] `.viewerMode` (vue spectateur) utilise encore `calc(100vh - 100px)` et `100vh`. Même
-cause probable, mais je ne peux pas vérifier le rendu de cette vue — à traiter avec le reste
-du chantier 9.10.
+[fait] **Terminé le 24/08.** `.viewerMode` n'existait plus dans le TSX : la vue spectateur est
+rendue par des conditions `isViewer` dans la mise en page normale. Ses **124 lignes de CSS**
+étaient mortes — supprimées, et avec elles les deux unités de fenêtre qui restaient à traiter.
+
+**Le garde-fou a trouvé deux cas que je n'avais pas vus.** `npm run check:match` refuse toute
+unité `vw`/`vh` dans les feuilles de la page de match. Il a immédiatement signalé :
+
+| | valeur | conséquence |
+|---|---|---|
+| `GameBoard.module.css` — la fenêtre en paysage hôte | `max-height: 85vh` | 85 % de la LARGEUR d'écran, donc bien plus que la place réelle |
+| `ModeInfoModal.module.css` — le panneau d'explication du mode | `max-height: 78vh` | idem |
+
+Les deux débordaient et se coupaient en bas. C'est la même famille que les fenêtres coupées
+signalées par Sacha le 24/08 — sauf que mon `grep 100vw\|100vh` était passé à côté : ces
+valeurs ne font ni 100 ni l'autre.
+
+Passées en pourcentage : le voile parent est en `inset: 0`, donc un `%` suit sa taille réelle,
+quelle que soit l'orientation.
+
+`dvh` reste permis — il n'est utilisé que hors du conteneur pivoté, et c'est la seule unité
+correcte pour la barre d'adresse mobile.
 
 ### 9.14 [a faire] Seuil du badge MVP relevé — *fait le 21 août 2026*
 Sacha : « 20 % de tes parties, c'est beaucoup trop. » Exact : en 2v2, un joueur sur deux est MVP
