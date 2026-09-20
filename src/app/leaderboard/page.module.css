@@ -164,10 +164,10 @@
 .listContainer {
     display: flex;
     flex-direction: column;
-}
-
-.listContainer > *:not(:last-child) {
-    margin-bottom: calc(-1 * var(--border-arcade-width));
+    /* Chaque ligne est une carte à part entière, avec de l'air entre deux
+       voisines. Avant, elles se chevauchaient de 3 px pour ne montrer qu'un
+       trait : Pierre trouvait le résultat trop serré (20/09/2026). */
+    gap: var(--spacing-sm);
 }
 
 .listHeader {
@@ -258,19 +258,6 @@
  * de l'ordre des feuilles de style, qui n'est pas garanti entre modules CSS. */
 .listItem.myItem {
     border-color: var(--medal-gold);
-
-    /* Le contour doré passe au-dessus des lignes voisines, sur ses QUATRE côtés.
-     *
-     * Les lignes se chevauchent de 3 px (`.listContainer`, marge négative) pour
-     * ne montrer qu'un seul trait entre deux voisines. Sans ordre d'empilement,
-     * c'est le suivant dans le flux qui gagne : le bord du HAUT de la ligne
-     * d'après recouvrait le bord du BAS du contour doré, qui apparaissait
-     * ouvert en bas.
-     *
-     * `position` est déjà `relative` via `.wrap`, mais on le repose ici : cette
-     * règle ne doit pas dépendre d'un autre module CSS pour fonctionner. */
-    position: relative;
-    z-index: 3;
 }
 
 /* Sur une ligne à bannière, l'image est posée en style inline : elle passe
