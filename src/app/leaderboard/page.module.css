@@ -167,7 +167,7 @@
     /* Chaque ligne est une carte à part entière, avec de l'air entre deux
        voisines. Avant, elles se chevauchaient de 3 px pour ne montrer qu'un
        trait : Pierre trouvait le résultat trop serré (20/09/2026). */
-    gap: var(--spacing-sm);
+    gap: 5px;
 }
 
 .listHeader {
@@ -229,12 +229,16 @@
     padding: var(--spacing-xs);
 }
 
+/* Les trois points séparent les trois tranches (le top 20, ton voisinage, la
+   queue). Sur le terrain vert, ils doivent se voir : blancs, gros, avec la
+   même ombre que les textes sur bannière. */
 .listSeparatorDots {
-    font-size: var(--text-base);
-    font-weight: var(--weight-bold);
-    color: rgba(26, 33, 24, 0.4);
-    text-align: center;
+    font-size: var(--text-2xl);
     line-height: 1;
+    font-weight: var(--weight-black);
+    color: var(--color-text-primary);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    text-align: center;
 }
 
 /* La ligne du joueur connecté : marquée par un liseré et une teinte, PAS par
