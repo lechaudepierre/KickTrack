@@ -68,7 +68,12 @@ export default function GoogleSignInButton({ label = 'Continuer avec Google' }: 
                 const code = (err as { code?: string })?.code;
                 // Fermer la fenêtre Google n'est pas une erreur : on se tait.
                 if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
-                    setError('La connexion Google a échoué. Réessaie ou utilise ton mot de passe.');
+                    // Le code Firebase est affiché : sans lui, impossible de
+                    // distinguer un domaine non autorisé d'un popup bloqué.
+                    console.error('[GoogleSignIn]', err);
+                    setError(
+                        `La connexion Google a échoué. Réessaie ou utilise ton mot de passe.${code ? ` (${code})` : ''}`
+                    );
                 }
             }
         } finally {
