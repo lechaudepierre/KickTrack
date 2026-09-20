@@ -17,19 +17,18 @@ avec des récompenses distribuées selon le grade atteint.
 
 ---
 
-## RAPPEL — action bloquante chez vous
+## RAPPEL — action bloquante chez vous [fait] — *20 septembre 2026*
 
-**`FIREBASE_SERVICE_ACCOUNT` doit être ajoutée aux variables d'environnement Vercel.**
-Sacha n'a pas les accès Vercel ; c'est son collègue qui les a.
+`FIREBASE_SERVICE_ACCOUNT` est posée sur Vercel depuis le 20/09 (Pierre), et la
+prod a été redéployée. Le même jour, deux correctifs ont été nécessaires pour
+que les routes API démarrent réellement sur Vercel : `firebase-admin` tirait
+`jose` v6 (ESM) via `require()`, refusé par le Node de Vercel — réglé en figeant
+`jwks-rsa` en version 3 (`overrides` dans `package.json`, commentaire en place).
 
-- Vercel -> le projet -> Settings -> Environment Variables
-- Nom : `FIREBASE_SERVICE_ACCOUNT`
-- Valeur : le contenu JSON **complet** de `serviceAccountKey.json`, sur une seule ligne
-- Puis redéployer
-
-Tant que ce n'est pas fait, le chantier 0.2 reste bloqué — et **c'est le seul trou de sécurité
-encore ouvert sur les 147 comptes réels** : aujourd'hui, n'importe quel joueur peut écrire l'ELO
-de n'importe qui depuis la console de son navigateur.
+Vérifié le 20/09 : les règles Firestore en ligne sont identiques au fichier du
+dépôt, `clientMayWriteStats()` vaut `false`. **La faille ELO est fermée de bout
+en bout** : le client ne peut plus écrire `stats`, et la route serveur
+`POST /api/games/:id/end` répond.
 
 ---
 
@@ -72,7 +71,7 @@ node scripts/set-feature.mjs v2 everyone --apply     ← à ne lancer qu'à la t
 
 | | Chantier | Bloc | État |
 |---|---|---|---|
-| 1 | **Refermer la faille ELO** — déployer la route serveur puis basculer `clientMayWriteStats` | 0.2 | [a faire] |
+| 1 | **Refermer la faille ELO** — déployer la route serveur puis basculer `clientMayWriteStats` | 0.2 | [fait] 20/09 |
 | 2 | **Connexion Google + écran de pseudo** — répare aussi les 2 comptes fantômes | 0.7 | [fait] |
 | 3 | **Design system** — bloc 5 complet | 5.1 -> 5.5 | [fait] |
 | 4 | **Modes de jeu / bibitif** | 7.1 -> 7.4 | [fait] |
