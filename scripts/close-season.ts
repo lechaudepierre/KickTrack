@@ -245,6 +245,12 @@ async function main() {
     ligne(`  [ok] Classement figé : ${standings.length} lignes dans seasons/${config.from.id}/standings`);
 
     // 3. Les récompenses.
+    //
+    // `grant.ts` importe `server-only`, qui lève une erreur hors d'un contexte
+    // serveur React — un script `tsx` n'en est pas un. Le script npm lance donc
+    // Node avec `--conditions=react-server`, ce qui résout `server-only` vers sa
+    // version vide, comme Next le fait côté serveur. Sans ça, la clôture
+    // s'arrêtait ici, classement figé mais rien distribué (constaté le 21/09).
     const { grantItem } = await import('../src/lib/collection/grant');
     let octroyes = 0;
     for (const p of plan) {
