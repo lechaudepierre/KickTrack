@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
+import VersionWatcher from "@/components/common/VersionWatcher";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -40,6 +41,13 @@ export default function RootLayout({
         <html lang="fr">
             <body className={inter.variable}>
                 {children}
+                {/*
+                    Surveille la version deployee et recharge la page quand le
+                    joueur fait tourner du code perime -- jamais pendant un
+                    match. Sans lui, une PWA ajoutee a l'ecran d'accueil garde
+                    son code indefiniment (constate le 21/09).
+                */}
+                <VersionWatcher />
                 <Analytics />
                 <SpeedInsights />
             </body>
