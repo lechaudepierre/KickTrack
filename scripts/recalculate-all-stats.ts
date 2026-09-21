@@ -11,7 +11,11 @@
  * npx tsx scripts/recalculate-all-stats.ts
  */
 
-import * as admin from 'firebase-admin';
+// Imports modulaires, et non `import * as admin` : sous tsx, qui compile en
+// CommonJS, `admin.credential` arrive `undefined`. Même correction que pour
+// les autres scripts d'administration (24/08).
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -24,11 +28,11 @@ if (!fs.existsSync(serviceAccountPath)) {
     process.exit(1);
 }
 
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccountPath),
+initializeApp({
+    credential: cert(JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'))),
 });
 
-const db = admin.firestore();
+const db = getFirestore();
 
 // ─── Types locaux ─────────────────────────────────────────────────────────────
 interface PlayerStats {
