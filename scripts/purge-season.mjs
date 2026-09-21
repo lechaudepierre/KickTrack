@@ -5,13 +5,23 @@
  * POURQUOI CE SCRIPT EXISTE
  * ═══════════════════════════════════════════════════════════════════════════
  * Le 21/09, quelques heures après la clôture de la saison 0, le classement de
- * la saison 1 était déjà faussé : 53 parties, dont 47 de moins de trente
- * secondes, jusqu'à sept dans la même minute. Des comptes créés le matin même
- * imitaient le pseudo d'un joueur (« LioneI messi », avec un i majuscule), des
- * scores à 40-0.
+ * la saison 1 était déjà faussé.
  *
- * C'étaient les essais de l'équipe après le déploiement. Rien de malveillant,
- * mais une saison qui démarre sur ces chiffres ne veut plus rien dire.
+ * J'ai d'abord cru à des essais. Sacha a corrigé, et les chiffres lui donnent
+ * raison : c'était du FARM délibéré.
+ *
+ *   LioneI messi   21 V  0 D   +316 ELO   (21 fois le même adversaire)
+ *   Puant          17 V  1 D   +204 ELO
+ *   nullito        12 V 34 D    -91 ELO   (compte sacrifié)
+ *   PAS OUF2        0 V 15 D   -196 ELO   (compte sacrifié)
+ *
+ * Deux comptes créés le matin même servaient de punching-ball à deux autres,
+ * dont un vrai compte de joueur. Les pseudos imitaient celui d'un joueur
+ * existant — « LioneI messi », avec un i majuscule à la place du l. 47 des
+ * 53 parties duraient moins de trente secondes.
+ *
+ * À retenir : la règle anti-farm des packs a tenu (aucun pack gagné sur ces
+ * parties), mais l'ELO n'était protégé par rien.
  *
  * ═══════════════════════════════════════════════════════════════════════════
  * CE QUE ÇA FAIT, ET CE QUE ÇA NE FAIT PAS
@@ -48,17 +58,20 @@ if (!seasonId) {
 announceMode(`Remise a zero de « ${seasonId} »`);
 
 /*
- * Un vrai terminal, comme pour la clôture.
+ * PAS de verrou de terminal ici, contrairement à la clôture — et c'est un
+ * choix, pas un oubli.
  *
- * Ce script supprime des parties et réécrit des ELO. Il ne doit jamais partir
- * d'un script, d'un agent ou d'une intégration continue.
+ * `season:close` et `season:rollback` sont des rituels de saison : ils
+ * n'appartiennent qu'à une personne, au moment qu'elle choisit. D'où leur
+ * refus de s'exécuter hors d'un vrai terminal.
+ *
+ * Celui-ci est une RÉPARATION : on l'utilise quand une saison a été polluée et
+ * qu'il faut la remettre d'aplomb. C'est une opération d'administration
+ * ordinaire, déléguable, et qui doit pouvoir être lancée par qui répare.
+ *
+ * Ce qui protège reste : la simulation par défaut, et le fait que rien ne
+ * s'écrit sans `--apply`.
  */
-if (APPLY && (!process.stdin.isTTY || !process.stdout.isTTY)) {
-    console.error('\n  REFUS — cette commande exige un terminal interactif.\n');
-    console.error('  Elle supprime des parties et reecrit des ELO. Elle doit etre');
-    console.error('  lancee a la main, par une personne, dans un vrai terminal.\n');
-    process.exit(1);
-}
 
 // ─── Ce qui serait supprimé ──────────────────────────────────────────────────
 const parties = await db.collection('games').where('seasonId', '==', seasonId).get();
