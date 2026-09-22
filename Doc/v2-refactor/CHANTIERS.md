@@ -3598,6 +3598,61 @@ d'environnement sur Vercel. Nécessaire dès le chantier 0.3.
 
 ---
 
+## Le drop V2 et ce qu'il a révélé — *21 septembre 2026*
+
+**`config/features` est passé sur `v2: everyone` le 21/09.** Jusque-là il valait
+`admins` : seuls les trois fondateurs voyaient la V2, alors que le code était
+déployé depuis des heures. Personne ne s'en était aperçu, et ça expliquait le
+« tout le monde ne voit pas la maj ».
+
+Le drapeau vit dans Firestore, pas dans le code : la bascule n'a demandé aucun
+redéploiement. C'était le but du dispositif.
+
+### 10.1 [a faire] Protéger l'ELO contre le farm
+
+**Décision de Sacha (21/09) : on garde en tête, pas le temps maintenant.** Le
+drop est passé avant, en connaissance de cause.
+
+**Ce qui s'est produit.** Quelques heures après l'ouverture de la saison 1, le
+classement était déjà truqué :
+
+| compte | bilan | ELO |
+|---|---|---|
+| LioneI messi | **21 V 0 D** | **+316** |
+| Puant | 17 V 1 D | +204 |
+| Lionel messi nullito | 12 V 34 D | -91 |
+| LIONEL MESSI PAS OUF2 | **0 V 15 D** | -196 |
+
+Deux comptes créés le matin même servaient de punching-ball. 21 fois le même
+duel. 47 des 53 parties duraient moins de trente secondes. Les pseudos imitaient
+celui d'un joueur existant — « LioneI messi », avec un i majuscule.
+
+La saison a été purgée (`npm run season:purge season_1 -- --apply`), mais
+**rien n'empêche de recommencer**.
+
+**Ce qui protège déjà, et ce qui manque.** La règle anti-farm existe, mais elle
+ne couvre que les packs — et elle a tenu : aucun pack gagné sur ces parties.
+
+```
+gameCountsForPacks({ winnerScore, hasGuests })   // 6 buts minimum, pas d'invités
+```
+
+**L'ELO, lui, n'est protégé par rien.**
+
+Trois règles à poser, la troisième étant celle qui manque vraiment :
+
+| règle | effet |
+|---|---|
+| Gagnant à 6 buts minimum | tue les parties bâclées |
+| Pas d'invités | déjà écrit pour les packs |
+| **Plafond de duels quotidiens entre deux mêmes joueurs** | **tue le farm en boucle** |
+
+La troisième aurait tout arrêté : 21 duels identiques dans la même matinée.
+
+ATTENTION: tant que ce n'est pas fait, le classement de saison est truquable en
+vingt minutes par n'importe qui — et il est désormais visible par les 154
+joueurs.
+
 ## Boîte à idées
 > Tout ce qui passe par la tête. Pas besoin que ce soit propre ou décidé — on trie plus tard.
 
